@@ -54,6 +54,7 @@ export default function PannelloSimulazione({ modeler, onEsci }) {
       if (action === 'exit') {
         if (t === 'bpmn:UserTask') aggiungi({ tipo: 'persona', n, testo: `Completata: ${nomeDi(element) || 'attività di una persona'}` })
         else if (t === 'bpmn:ServiceTask') aggiungi({ tipo: 'automatica', n, testo: `Eseguita: ${nomeDi(element) || 'attività automatica'}` })
+        else if (t === 'bpmn:CallActivity') aggiungi({ tipo: 'automatica', n, testo: `Conclusa la pratica richiamata: ${nomeDi(element) || element.businessObject.calledElement || 'processo richiamato'}` })
         else if (t === 'bpmn:IntermediateCatchEvent' && tipoBordo(element.businessObject) === 'messaggio') aggiungi({ tipo: 'messaggio', n, testo: `Messaggio arrivato: ${nomeDi(element) || element.businessObject.eventDefinitions?.[0]?.messageRef?.name || 'messaggio'}` })
         else if (t === 'bpmn:IntermediateCatchEvent') aggiungi({ tipo: 'attesa', n, testo: `Attesa finita: ${nomeDi(element) || 'attesa'}` })
       }

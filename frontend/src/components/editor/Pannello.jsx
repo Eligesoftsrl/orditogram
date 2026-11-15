@@ -49,6 +49,7 @@ export default function Pannello({ modeler, elemento, dati, onForm, onSeleziona 
   else if (is(elemento, 'bpmn:IntermediateCatchEvent') && tipoBordo(bo) === 'messaggio') { Contenuto = MessaggioInArrivo; titolo = 'Messaggio in arrivo'; Icona = Mail }
   else if (is(elemento, 'bpmn:IntermediateCatchEvent')) { Contenuto = Attesa; titolo = 'Attesa'; Icona = Hourglass }
   else if (is(elemento, 'bpmn:SubProcess')) { Contenuto = Sottoprocesso; titolo = 'Sottoprocesso'; Icona = Boxes }
+  else if (is(elemento, 'bpmn:CallActivity')) { Contenuto = ProcessoRichiamato; titolo = 'Processo richiamato'; Icona = Workflow }
   else if (is(elemento, 'bpmn:SequenceFlow')) { Contenuto = Freccia; titolo = 'Freccia'; Icona = ArrowRight }
   else if (is(elemento, 'bpmn:TextAnnotation')) { Contenuto = Nota; titolo = 'Nota'; Icona = Pencil }
   else if (is(elemento, 'bpmn:Task')) { Contenuto = TaskGenerico; titolo = 'Attività'; Icona = Square }
@@ -877,6 +878,41 @@ function Sottoprocesso(ctx) {
         </Suggerimento>
         {avvii !== 1 && <Suggerimento tono="avviso">Il sottoprocesso deve contenere esattamente un inizio.</Suggerimento>}
         <p className="text-[13px] text-grafite">{figli.length} {figli.length === 1 ? 'elemento' : 'elementi'} all'interno.</p>
+      </Sezione>
+      <Scadenze {...ctx} />
+    </>
+  )
+}
+
+function ProcessoRichiamato(ctx) {
+  const { bo, set, dati, modeler } = ctx
+  const proprio = modeler.get('canvas').getRootElement().businessObject.id
+  const processi = (dati.processi || []).filter(p => p.key !== proprio)
+  const scelto = (bo.calledElement || '').trim()
+  const noto = processi.find(p => p.key === scelto)
+  return (
+    <>
+      <Sezione><Nome {...ctx} placeholder="Es. Verifica tecnica" aiuto="Il passo come lo vede chi segue la pratica." /></Sezione>
+      <Sezione titolo="Processo da richiamare"
+               aiuto="Quando la pratica arriva qui si apre una pratica del processo scelto. Questa pratica aspetta che l'altra finisca, poi prosegue.">
+        <select className="campo" value={scelto} onChange={e => {
+          const p = processi.find(x => x.key === e.target.value)
+          set({ calledElement: e.target.value || undefined, ...(p && !bo.name ? { name: p.name } : {}) })
+        }}>
+          <option value="">Scegli un processo pubblicato…</option>
+          {scelto && !noto && <option value={scelto}>{scelto} (non pubblicato)</option>}
+          {processi.map(p => <option key={p.key} value={p.key}>{p.name} (versione {p.version})</option>)}
+        </select>
+        {!scelto && <Suggerimento tono="avviso">Scegli il processo da richiamare.</Suggerimento>}
+        {scelto && !noto && <Suggerimento tono="avviso">Il processo "{scelto}" non è pubblicato: pubblicalo prima di questo.</Suggerimento>}
+        {processi.length === 0 && <Suggerimento>Non ci sono altri processi pubblicati. Pubblica prima il processo da richiamare.</Suggerimento>}
+      </Sezione>
+      <Sezione titolo="Dati">
+        <Suggerimento>
+          La pratica richiamata riceve tutti i dati di questa pratica e ne prende il titolo. Quando finisce, i dati che ha raccolto
+          (per esempio un esito) tornano qui e si possono usare nelle decisioni e nei form successivi.
+          Si usa sempre l'ultima versione pubblicata del processo richiamato.
+        </Suggerimento>
       </Sezione>
       <Scadenze {...ctx} />
     </>

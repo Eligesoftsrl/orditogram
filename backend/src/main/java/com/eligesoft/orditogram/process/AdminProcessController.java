@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.activiti.bpmn.model.BpmnModel;
+import org.activiti.bpmn.model.CallActivity;
 import org.activiti.bpmn.model.Process;
 import org.activiti.bpmn.model.ServiceTask;
 import org.activiti.bpmn.model.UserTask;
@@ -223,6 +224,8 @@ public class AdminProcessController {
         ProcessValidator.DATI_DI_SISTEMA.forEach(v -> vars.putIfAbsent(v, "string"));
         // dati scritti dai connettori (es. numero di protocollo restituito da un'API)
         validator.datiProdotti(p).forEach(v -> vars.putIfAbsent(v, "string"));
+        // dati restituiti dai processi richiamati (call activity)
+        validator.datiDaiProcessiRichiamati(p).forEach(vars::putIfAbsent);
 
         ObjectNode root = mapper.createObjectNode();
         root.put("id", p.getId() + "-extensions");
@@ -239,6 +242,8 @@ public class AdminProcessController {
         ObjectNode mappings = ext.putObject("mappings");
         p.findFlowElementsOfType(UserTask.class, true).forEach(t -> mappings.putObject(t.getId()).put("mappingType", "MAP_ALL"));
         p.findFlowElementsOfType(ServiceTask.class, true).forEach(t -> mappings.putObject(t.getId()).put("mappingType", "MAP_ALL"));
+        // il processo richiamato riceve tutti i dati della pratica e alla fine li restituisce tutti
+        p.findFlowElementsOfType(CallActivity.class, true).forEach(c -> mappings.putObject(c.getId()).put("mappingType", "MAP_ALL"));
         ext.putObject("constants");
         return root.toPrettyString();
     }

@@ -30,6 +30,8 @@ class OrditogramPalette {
       out['create.parallel-gateway'] = this.voce('bpmn:ParallelGateway', 'bpmn-icon-gateway-parallel', 'Attività in parallelo', 'gateway')
       out['create.user-task'] = this.voce('bpmn:UserTask', 'bpmn-icon-user-task', 'Attività di una persona', 'activity')
       out['create.service-task'] = this.voce('bpmn:ServiceTask', 'bpmn-icon-service-task', 'Attività automatica', 'activity')
+      out['create.call-activity'] = this.voce('bpmn:CallActivity', 'bpmn-icon-call-activity',
+        'Processo richiamato: apre una pratica di un altro processo pubblicato e aspetta che finisca', 'activity')
       if (entries['create.subprocess-expanded']) out['create.subprocess-expanded'] = { ...entries['create.subprocess-expanded'], title: 'Sottoprocesso: un gruppo di passi con scadenze ed errori comuni' }
       out['create.attesa'] = this.voce('bpmn:IntermediateCatchEvent', 'bpmn-icon-intermediate-event-catch-timer',
         'Attesa: la pratica aspetta un tempo o una data (trascinala sul bordo di un\'attività per farne una scadenza)', 'event',
@@ -67,6 +69,7 @@ class OrditogramContextPad {
       if (entries['append.append-task']) {
         out['append.user-task'] = this.aggiungi('bpmn:UserTask', 'bpmn-icon-user-task', 'Aggiungi attività di una persona')
         out['append.service-task'] = this.aggiungi('bpmn:ServiceTask', 'bpmn-icon-service-task', 'Aggiungi attività automatica')
+        out['append.call-activity'] = this.aggiungi('bpmn:CallActivity', 'bpmn-icon-call-activity', 'Aggiungi processo richiamato')
         out['append.attesa'] = this.aggiungi('bpmn:IntermediateCatchEvent', 'bpmn-icon-intermediate-event-catch-timer',
           'Aggiungi attesa', { eventDefinitionType: 'bpmn:TimerEventDefinition' })
         out['append.messaggio'] = this.aggiungi('bpmn:IntermediateCatchEvent', 'bpmn-icon-intermediate-event-catch-message',
@@ -84,7 +87,7 @@ const SOSTITUZIONI = new Set([
   'replace-with-user-task', 'replace-with-service-task',
   'replace-with-exclusive-gateway', 'replace-with-parallel-gateway',
   'replace-with-none-start', 'replace-with-none-end',
-  'replace-with-expanded-subprocess',
+  'replace-with-expanded-subprocess', 'replace-with-call-activity',
   'replace-with-timer-intermediate-catch',
   'replace-with-timer-boundary', 'replace-with-non-interrupting-timer-boundary', 'replace-with-error-boundary',
   'replace-with-message-intermediate-catch', 'replace-with-message-boundary', 'replace-with-non-interrupting-message-boundary'
@@ -137,6 +140,7 @@ const IT = {
   'Create expanded sub-process': 'Sottoprocesso',
   'Sub-process (expanded)': 'Sottoprocesso',
   'Sub-process': 'Sottoprocesso',
+  'Call activity': 'Processo richiamato',
   'Timer intermediate catch event': 'Attesa',
   'Timer boundary event': 'Scadenza (chiude l\'attività)',
   'Timer boundary event (non-interrupting)': 'Sollecito (l\'attività resta aperta)',

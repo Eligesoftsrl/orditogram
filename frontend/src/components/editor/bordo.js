@@ -64,5 +64,5 @@ export function bordiDi(elemento) {
   return (elemento.attachers || []).map(a => ({ shape: a, tipo: tipoBordo(a.businessObject) }))
 }
 
-/** Attività su cui ha senso una strada di errore: automatiche e sottoprocessi. */
-export const puoFallire = (el) => is(el, 'bpmn:ServiceTask') || is(el, 'bpmn:SubProcess')
+/** Attività su cui ha senso una strada di errore: automatiche, sottoprocessi e processi richiamati. */
+export const puoFallire = (el) => is(el, 'bpmn:ServiceTask') || is(el, 'bpmn:SubProcess') || is(el, 'bpmn:CallActivity')

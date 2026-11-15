@@ -38,6 +38,7 @@ const TESTI = [
   [/^Intermediate Event$/, 'Attesa'],
   [/^Boundary Event$/, 'Evento sul bordo'],
   [/^SubProcess$/, 'Sottoprocesso'],
+  [/^Call Activity$/, 'Processo richiamato'],
   [/^Finished$/, 'Conclusa'],
   [/^Not supported$/, 'Non supportato']
 ]

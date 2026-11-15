@@ -12,6 +12,10 @@ Form avanzati, prima parte.
   valori (`visibileSe`). I campi nascosti non sono obbligatori e i loro valori non si salvano, sia
   dall'interfaccia sia dall'API pubblica; l'OpenAPI generata lo documenta.
 - Lo Studio controlla le condizioni al salvataggio del form (campo esistente, almeno un valore).
+- **Processi richiamati** (call activity): un processo apre una pratica di un altro processo pubblicato, le passa i
+  suoi dati e riprende quando finisce, con i dati raccolti. Nell'editor: *Processo richiamato*. La scheda della
+  pratica mostra le pratiche collegate. Controlli alla pubblicazione: processo richiamato pubblicato, niente
+  richiami di sé stesso o a vicenda.
 
 ## 0.11.0 (novembre 2026)
 
