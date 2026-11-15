@@ -67,7 +67,7 @@ CycloneDX) e **npm audit**. Ogni esecuzione mostra un riepilogo e conserva i rap
 alle gare. Le soglie bloccanti sono in `strumenti/analisi/riepilogo.py`; in locale:
 
 ```
-cd backend && mvn -Panalisi verify   # copertura (target/site/jacoco), SpotBugs, SBOM (target/bom.json)
+cd backend && mvn -Panalisi verify   # copertura (target/site/jacoco), SpotBugs, SBOM (target/classes/META-INF/sbom)
 ```
 
 ## Backup e ripristino

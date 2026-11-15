@@ -35,7 +35,8 @@ def semgrep(percorso):
 
 
 def spotbugs(percorso):
-    radice = ET.parse(percorso).getroot()
+    # il rapporto XML lo produce la nostra build, non arriva da fuori
+    radice = ET.parse(percorso).getroot()  # nosemgrep: python.lang.security.use-defused-xml-parse.use-defused-xml-parse
     righe, bloccanti = [], 0
     for b in radice.iter("BugInstance"):
         categoria, priorita, rango = b.get("category"), int(b.get("priority", 3)), int(b.get("rank", 20))
@@ -98,7 +99,7 @@ def sonar(percorso):
         for v in f.get("values", []):
             righe.append((f.get("property"), v.get("val"), str(v.get("count"))))
     righe.append(("Security hotspot da rivedere", str(dati.get("hotspots", {}).get("paging", {}).get("total", "?")), ""))
-    for i in dati.get("issues", {}).get("issues", [])[:60]:
+    for i in dati.get("issues", {}).get("issues", [])[:500]:
         impatti = ", ".join(f'{x.get("softwareQuality")}/{x.get("severity")}' for x in i.get("impacts", []))
         righe.append((impatti, i.get("rule", ""), f'{i.get("component", "").split(":", 1)[-1]}:{i.get("line", "")} {i.get("message", "")[:110]}'))
     bloccanti = 0 if stato.get("status") == "OK" else 1
@@ -125,7 +126,7 @@ def main():
     else:
         intestazione, righe, bloccanti = STRUMENTI[strumento](percorso)
         testo = (f"### {strumento}: {len(righe)} segnalazioni, {bloccanti} bloccanti\n\n"
-                 + (tabella(intestazione, righe[:200]) if righe else "Nessuna segnalazione.") + "\n")
+                 + (tabella(intestazione, righe[:400]) if righe else "Nessuna segnalazione.") + "\n")
     print(testo)
     riepilogo = os.environ.get("GITHUB_STEP_SUMMARY")
     if riepilogo:

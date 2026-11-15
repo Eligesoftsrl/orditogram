@@ -70,8 +70,8 @@ jobs:
             --argjson hotspots "$(api 'hotspots/search?projectKey=orditogram&ps=500')" \
             --argjson misure "$(api 'measures/component?component=orditogram&metricKeys=coverage,bugs,vulnerabilities,code_smells,security_hotspots,duplicated_lines_density,ncloc,security_rating,reliability_rating,sqale_rating')" \
             '{qualityGate: $qualityGate, issues: $issues, hotspots: $hotspots, misure: $misure}' > sonarqube.json
-          jq -r '.misure.component.measures[] | "\(.metric): \(.value)"' sonarqube.json
-          jq -r '.hotspots.hotspots[] | "HOTSPOT \(.vulnerabilityProbability) \(.securityCategory) \(.component | split(":")[1]):\(.line) \(.message)"' sonarqube.json
+          jq -r '(.misure.component.measures // [])[] | "\(.metric): \(.value)"' sonarqube.json
+          jq -r '(.hotspots.hotspots // [])[] | "HOTSPOT \(.vulnerabilityProbability) \(.securityCategory) \(.component | split(":")[1]):\(.line) \(.message)"' sonarqube.json
           python3 strumenti/analisi/riepilogo.py sonar sonarqube.json
       - uses: actions/upload-artifact@v4
         if: always()
@@ -119,8 +119,10 @@ jobs:
         if: always()
         run: |
           go install github.com/google/osv-scanner/v2/cmd/osv-scanner@v2.7.0
-          ~/go/bin/osv-scanner scan source -L backend/target/bom.json -L frontend/package-lock.json \
-            --format json --output osv.json || true
+          sbom=$(find backend/target -name '*.cdx.json' | head -1)
+          echo "Distinta delle librerie del backend: $sbom"
+          ~/go/bin/osv-scanner scan source -L "$sbom" -L frontend/package-lock.json \
+            --format json --output-file osv.json || true
           python3 strumenti/analisi/riepilogo.py osv osv.json
       - uses: actions/upload-artifact@v4
         if: always()
@@ -128,7 +130,7 @@ jobs:
           name: rapporto-spotbugs-librerie
           path: |
             backend/target/spotbugsXml.xml
-            backend/target/bom.json
+            backend/target/classes/META-INF/sbom/*.cdx.json
             osv.json
 
   npm-audit:

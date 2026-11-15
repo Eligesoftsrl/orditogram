@@ -125,7 +125,7 @@
   <profiles>
     <!--
       Analisi del codice (workflow "Analisi del codice" in CI): mvn -Panalisi verify
-      copertura dei test (JaCoCo), SpotBugs con FindSecBugs, distinta delle librerie (SBOM CycloneDX).
+      copertura dei test (JaCoCo), SpotBugs con FindSecBugs, distinta delle librerie (SBOM CycloneDX, configurata da Spring Boot).
     -->
     <profile>
       <id>analisi</id>
@@ -171,20 +171,10 @@
               </execution>
             </executions>
           </plugin>
+          <!-- distinta delle librerie: la configura Spring Boot (target/classes/META-INF/sbom/application.cdx.json) -->
           <plugin>
             <groupId>org.cyclonedx</groupId>
             <artifactId>cyclonedx-maven-plugin</artifactId>
-            <version>2.9.1</version>
-            <configuration>
-              <outputFormat>json</outputFormat>
-              <outputName>bom</outputName>
-            </configuration>
-            <executions>
-              <execution>
-                <phase>verify</phase>
-                <goals><goal>makeBom</goal></goals>
-              </execution>
-            </executions>
           </plugin>
         </plugins>
       </build>
