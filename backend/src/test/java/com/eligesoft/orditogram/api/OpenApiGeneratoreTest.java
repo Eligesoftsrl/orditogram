@@ -2,6 +2,7 @@ package com.eligesoft.orditogram.api;
 
 import com.eligesoft.orditogram.form.ValoriForm;
 import com.eligesoft.orditogram.webhook.TipiEvento;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -115,5 +116,17 @@ class OpenApiGeneratoreTest {
         } else if (nodo instanceof List<?> l) {
             l.forEach(v -> controllaRiferimenti(v, schemi));
         }
+    }
+
+    @Test
+    void schemaOpenApiDellaTabella() throws Exception {
+        Map<String, Object> s = OpenApiGeneratore.schemaCampo(ValoriForm.campi(new ObjectMapper().readTree(com.eligesoft.orditogram.form.TabelleFormTest.SPESE)).get(1));
+        assertEquals("array", s.get("type"));
+        assertEquals(3, s.get("maxItems"));
+        assertEquals(1, s.get("minItems"));
+        @SuppressWarnings("unchecked") Map<String, Object> riga = (Map<String, Object>) s.get("items");
+        assertEquals(List.of("descrizione", "importo"), riga.get("required"));
+        @SuppressWarnings("unchecked") Map<String, Object> props = (Map<String, Object>) riga.get("properties");
+        assertEquals(Map.of("type", "number", "title", "Importo", "minimum", new java.math.BigDecimal("0.01")), props.get("importo"));
     }
 }

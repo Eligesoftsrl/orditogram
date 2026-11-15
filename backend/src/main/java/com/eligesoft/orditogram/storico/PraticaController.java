@@ -1,6 +1,7 @@
 package com.eligesoft.orditogram.storico;
 
 import com.eligesoft.orditogram.form.FormService;
+import com.eligesoft.orditogram.form.ValoriForm;
 import com.eligesoft.orditogram.process.BpmnResourceService;
 import com.eligesoft.orditogram.user.CurrentUserService;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -295,6 +296,7 @@ public class PraticaController {
     private List<Map<String, Object>> dati(HistoricProcessInstance h) {
         Map<String, String> etichette = new LinkedHashMap<>();
         Map<String, String> tipi = new HashMap<>();
+        Map<String, List<Map<String, String>>> colonne = new HashMap<>();
         Process p = repositoryService.getBpmnModel(h.getProcessDefinitionId()).getMainProcess();
         List<String> formKeys = new ArrayList<>();
         p.findFlowElementsOfType(StartEvent.class).forEach(s -> { if (s.getFormKey() != null) formKeys.add(s.getFormKey()); });
@@ -305,6 +307,12 @@ public class PraticaController {
             for (JsonNode f : form.get("fields")) {
                 etichette.putIfAbsent(f.path("name").asText(), f.path("label").asText(f.path("name").asText()));
                 tipi.putIfAbsent(f.path("name").asText(), f.path("type").asText("text"));
+                if (ValoriForm.TABELLA.equals(f.path("type").asText())) {
+                    List<Map<String, String>> cc = new ArrayList<>();
+                    f.path("colonne").forEach(c -> cc.add(Map.of("nome", c.path("name").asText(),
+                        "label", c.path("label").asText(c.path("name").asText()), "tipo", c.path("type").asText("text"))));
+                    colonne.putIfAbsent(f.path("name").asText(), cc);
+                }
             }
         }
         etichette.putIfAbsent("avviataDa", "Avviata da");
@@ -318,6 +326,14 @@ public class PraticaController {
             if (NASCOSTE.contains(k) || !vars.containsKey(k)) continue;
             Object v = vars.get(k);
             if (v == null || v.toString().isBlank()) continue;
+            if (v instanceof List<?> righe && colonne.containsKey(k)) {
+                // tabella di righe: il testo è un riassunto, le righe e le colonne servono per mostrarla
+                if (righe.isEmpty()) continue;
+                out.add(Map.of("nome", k, "label", etichette.getOrDefault(k, k),
+                    "value", righe.size() + (righe.size() == 1 ? " riga" : " righe"), "tipo", ValoriForm.TABELLA,
+                    "righe", righe, "colonne", colonne.get(k)));
+                continue;
+            }
             String testo = "checkbox".equals(tipi.get(k)) ? (Boolean.TRUE.equals(v) ? "Sì" : "No") : v.toString();
             out.add(Map.of("nome", k, "label", etichette.getOrDefault(k, k), "value", testo,
                 "tipo", tipi.getOrDefault(k, "text")));

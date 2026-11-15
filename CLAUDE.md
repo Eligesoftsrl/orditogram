@@ -45,7 +45,9 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
 ### Concetti chiave
 - **Pratica** = istanza di processo Activiti. Titolo da un campo del form marcato `titolo`.
 - **Form**: JSON `{fields:[{name,label,type,required,readonly,options,titolo,visibileSe}], documenti, documentiObbligatori}`.
-  Tipi: text, textarea, number, date, select, checkbox. L'interfaccia invia i numeri come testo.
+  Tipi: text, textarea, number, date, select, checkbox, tabella. L'interfaccia invia i numeri come testo.
+  `{type:"tabella",colonne:[campi senza textarea],minRighe,maxRighe}`: valore = lista di oggetti, righe vuote tolte;
+  regole in `ValoriForm.righe/erroriTabella` e `formRegole.js righePiene/erroriTabella`, allineate.
   `{type:"sezione",label,help}` apre una sezione (non è un dato). `visibileSe:{campo,valori}` nasconde il campo:
   regole uguali in `ValoriForm.nascosti` (backend) e `lib/formCondizioni.js` (frontend), tienile allineate.
   Regole dei campi (`min`, `max`, `minLunghezza`, `maxLunghezza`, `formato`): `form/RegoleCampo.java` e

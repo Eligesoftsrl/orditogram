@@ -3,7 +3,8 @@ import { FileUp, Paperclip, X } from 'lucide-react'
 import { cx, dimensione, giorno } from '../lib/format.js'
 import { Button, Errore } from './ui.jsx'
 import { campiNascosti, eSezione, raggruppa, senzaNascosti } from '../lib/formCondizioni.js'
-import { erroriForm } from '../lib/formRegole.js'
+import { erroriForm, righePiene } from '../lib/formRegole.js'
+import { CampoTabella, TabellaLettura, righeIniziali } from './CampoTabella.jsx'
 
 /**
  * Form generato dalla definizione JSON (formKey del BPMN).
@@ -18,6 +19,8 @@ import { erroriForm } from '../lib/formRegole.js'
  * Regole:               min, max, minLunghezza, maxLunghezza, formato (vedi lib/formRegole.js), controllate
  *                       all'invio con il messaggio accanto al campo; il server le controlla di nuovo.
  * Sezioni:              { type: "sezione", label, help } divide i campi da compilare in gruppi con un titolo.
+ * Tabelle:              { type: "tabella", colonne: [campi senza textarea], minRighe, maxRighe } raccoglie più righe
+ *                       (vedi CampoTabella.jsx); le righe vuote non si inviano.
  *
  * I campi in sola lettura diventano un riepilogo in alto; quelli da compilare restano campi.
  * I campi nascosti dalle condizioni non si mostrano, non sono obbligatori e non vengono inviati.
@@ -31,6 +34,10 @@ export default function DynamicForm({ form, initialValues = {}, onSubmit, disabl
   const [values, setValues] = useState(() => {
     const v = {}
     modificabili.forEach(f => {
+      if (f.type === 'tabella') {
+        v[f.name] = righeIniziali(f, f.precompila === false ? null : initialValues[f.name])
+        return
+      }
       const vuoto = f.type === 'checkbox' ? false : (f.default ?? '')
       v[f.name] = f.precompila === false ? vuoto : (initialValues[f.name] ?? vuoto)
     })
@@ -58,7 +65,9 @@ export default function DynamicForm({ form, initialValues = {}, onSubmit, disabl
       return
     }
     setErrore('')
-    onSubmit(senzaNascosti(campi, values, initialValues), files)
+    const daInviare = { ...values }
+    campi.forEach(f => { if (f.type === 'tabella' && f.name in daInviare) daInviare[f.name] = righePiene(f, daInviare[f.name]) })
+    onSubmit(senzaNascosti(campi, daInviare, initialValues), files)
   }
 
   const nascosti = campiNascosti(campi, { ...initialValues, ...values })
@@ -67,6 +76,7 @@ export default function DynamicForm({ form, initialValues = {}, onSubmit, disabl
   const riepilogo = lettura.filter(f => {
     if (nascosti.has(f.name)) return false
     const v = initialValues[f.name]
+    if (f.type === 'tabella') return Array.isArray(v) && v.length > 0
     return v !== undefined && v !== null && String(v).trim() !== ''
   })
 
@@ -82,11 +92,15 @@ export default function DynamicForm({ form, initialValues = {}, onSubmit, disabl
       {riepilogo.length > 0 && (
         <dl className="grid gap-x-6 gap-y-3 rounded-pannello bg-carta px-4 py-4 sm:grid-cols-2">
           {riepilogo.map(f => (
-            <div key={f.name} className={cx(f.type === 'textarea' && 'sm:col-span-2')}>
+            <div key={f.name} className={cx(['textarea', 'tabella'].includes(f.type) && 'sm:col-span-2')}>
               <dt className="text-[13px] text-grafite">{f.label || f.name}</dt>
-              <dd className="mt-0.5 whitespace-pre-line break-words text-[15px] text-pino-900">
-                {mostraValore(f, initialValues[f.name])}
-              </dd>
+              {f.type === 'tabella' ? (
+                <dd><TabellaLettura colonne={f.colonne} righe={initialValues[f.name]} /></dd>
+              ) : (
+                <dd className="mt-0.5 whitespace-pre-line break-words text-[15px] text-pino-900">
+                  {mostraValore(f, initialValues[f.name])}
+                </dd>
+              )}
             </div>
           ))}
         </dl>
@@ -130,6 +144,7 @@ function mostraValore(f, v) {
 }
 
 function Campo({ f, value, onChange, disabled, errore }) {
+  if (f.type === 'tabella') return <CampoTabella f={f} value={value} onChange={onChange} disabled={disabled} errore={errore} />
   const id = `campo-${f.name}`
   const largo = f.type === 'textarea'
   const idErrore = `${id}-errore`

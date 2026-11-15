@@ -7,6 +7,7 @@ import IterRail from '../components/IterRail.jsx'
 import Approfondimenti from '../components/Approfondimenti.jsx'
 import { Badge, Button, Caricamento, Errore, Pannello, useToast } from '../components/ui.jsx'
 import { BadgeScadenza } from '../components/Scadenza.jsx'
+import { TabellaLettura } from '../components/CampoTabella.jsx'
 
 /** Scheda di una pratica: dove si trova, i suoi dati, documenti e storico. */
 export default function PraticaPage() {
@@ -118,11 +119,15 @@ export default function PraticaPage() {
               : (
                 <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
                   {p.dati.map(d => (
-                    <div key={d.nome} className={d.tipo === 'textarea' || String(d.value).length > 60 ? 'sm:col-span-2' : ''}>
-                      <dt className="text-[13px] text-grafite">{d.label}</dt>
-                      <dd className="mt-0.5 whitespace-pre-line break-words text-[15px] text-pino-900">
-                        {d.tipo === 'date' ? giorno(d.value) : d.value}
-                      </dd>
+                    <div key={d.nome} className={d.tipo === 'textarea' || d.tipo === 'tabella' || String(d.value).length > 60 ? 'sm:col-span-2' : ''}>
+                      <dt className="text-[13px] text-grafite">{d.label}{d.tipo === 'tabella' && <span>, {d.value}</span>}</dt>
+                      {d.tipo === 'tabella' ? (
+                        <dd><TabellaLettura righe={d.righe} colonne={(d.colonne || []).map(c => ({ name: c.nome, label: c.label, type: c.tipo }))} /></dd>
+                      ) : (
+                        <dd className="mt-0.5 whitespace-pre-line break-words text-[15px] text-pino-900">
+                          {d.tipo === 'date' ? giorno(d.value) : d.value}
+                        </dd>
+                      )}
                     </div>
                   ))}
                 </dl>

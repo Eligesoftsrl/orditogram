@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   TextAlignStart, Braces, CalendarDays, ChevronDown, ChevronUp, CircleCheck, Copy, Eye, Hash, Heading, ListChecks,
-  Plus, Save, SquareCheck, Trash, Type, X
+  Plus, Save, SquareCheck, Table2, Trash, Type, X
 } from 'lucide-react'
 import { api } from '../api.js'
 import { cx, quando } from '../lib/format.js'
@@ -10,7 +10,14 @@ import { SEZIONE, condizione, descriviCondizione, eSezione, valoriPossibili } fr
 import { FORMATI, descriviRegole } from '../lib/formRegole.js'
 
 const NESSUNA_REGOLA = { min: undefined, max: undefined, minLunghezza: undefined, maxLunghezza: undefined,
-  formato: undefined, espressione: undefined, messaggioFormato: undefined }
+  formato: undefined, espressione: undefined, messaggioFormato: undefined, colonne: undefined, minRighe: undefined, maxRighe: undefined }
+const TIPI_COLONNA = ['text', 'number', 'date', 'select', 'checkbox']
+const colonnaIniziale = () => ({ _id: Math.random(), _nomeAuto: true, name: 'descrizione', label: 'Descrizione', type: 'text' })
+/** Proprietà in più quando un campo diventa di quel tipo. */
+const perTipo = (tipo, f = {}) => ({
+  ...(tipo === 'select' && !f.options ? { options: ['Opzione 1', 'Opzione 2'] } : {}),
+  ...(tipo === 'tabella' ? { colonne: f.colonne?.length ? f.colonne : [colonnaIniziale()], titolo: undefined } : {})
+})
 import { Badge, Button, Caricamento, Errore, Pannello, Vuoto, useToast } from './ui.jsx'
 
 const TIPI = [
@@ -19,7 +26,8 @@ const TIPI = [
   { id: 'number', label: 'Numero', icona: Hash },
   { id: 'date', label: 'Data', icona: CalendarDays },
   { id: 'select', label: 'Scelta', icona: ListChecks },
-  { id: 'checkbox', label: 'Sì / no', icona: SquareCheck }
+  { id: 'checkbox', label: 'Sì / no', icona: SquareCheck },
+  { id: 'tabella', label: 'Tabella', icona: Table2 }
 ]
 
 const DOCUMENTI = [
@@ -73,7 +81,7 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
     setErrore(''); setVistaJson(false)
     try {
       const f = await api.form(k)
-      const def = { ...NUOVO, ...f, fields: (f.fields || []).map(x => ({ ...x, _id: Math.random() })) }
+      const def = { ...NUOVO, ...f, fields: (f.fields || []).map(conId) }
       setChiave(k); setNuovo(false); setForm(def); setOriginale(JSON.stringify(pulisci(def)))
     } catch (e) { setErrore(e.message) }
   }
@@ -100,8 +108,7 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
     ...f,
     fields: [...f.fields, tipo === SEZIONE
       ? { _id: Math.random(), _aperto: true, type: SEZIONE, label: '' }
-      : { _id: Math.random(), _aperto: true, _nomeAuto: true, type: tipo, label: '', name: '',
-          ...(tipo === 'select' ? { options: ['Opzione 1', 'Opzione 2'] } : {}) }]
+      : { _id: Math.random(), _aperto: true, _nomeAuto: true, type: tipo, label: '', name: '', ...perTipo(tipo) }]
   }))
 
   const salva = async () => {
@@ -121,7 +128,7 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
     if (!vistaJson) { setTestoJson(json); setVistaJson(true); return }
     try {
       const f = JSON.parse(testoJson)
-      setForm({ ...NUOVO, ...f, fields: (f.fields || []).map(x => ({ ...x, _id: Math.random() })) })
+      setForm({ ...NUOVO, ...f, fields: (f.fields || []).map(conId) })
       setVistaJson(false); setErrore('')
     } catch (e) { setErrore('JSON non valido: ' + e.message) }
   }
@@ -139,7 +146,8 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
     if (!form) return null
     const esempi = {}
     form.fields.filter(f => f.readonly && !eSezione(f)).forEach(f => {
-      esempi[f.name] = f.type === 'checkbox' ? true : f.type === 'date' ? '2026-10-15' : (f.label ? `Esempio di ${f.label.toLowerCase()}` : 'Esempio')
+      esempi[f.name] = f.type === 'tabella' ? [esempioRiga(f)]
+        : f.type === 'checkbox' ? true : f.type === 'date' ? '2026-10-15' : (f.label ? `Esempio di ${f.label.toLowerCase()}` : 'Esempio')
     })
     return { def: pulisci(form), esempi }
   }, [form])
@@ -237,6 +245,29 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
   )
 }
 
+/** Identificativi interni per i campi e le colonne delle tabelle. */
+function conId(x) {
+  return { ...x, _id: Math.random(), ...(Array.isArray(x.colonne) ? { colonne: x.colonne.map(c => ({ ...c, _id: Math.random() })) } : {}) }
+}
+
+/** Una riga d'esempio per l'anteprima di una tabella in sola lettura. */
+function esempioRiga(f) {
+  return Object.fromEntries((f.colonne || []).map(c => [c.name,
+    c.type === 'checkbox' ? true : c.type === 'number' ? '10' : c.type === 'date' ? '2026-10-15'
+      : c.type === 'select' ? (c.options || [])[0] : (c.label || 'Esempio')]))
+}
+
+/** Le proprietà valorizzate di un campo o di una colonna, senza quelle interne dell'editor. */
+function senzaVuoti(f) {
+  const c = {}
+  Object.entries(f).forEach(([k, v]) => {
+    if (k.startsWith('_') || v === '' || v === undefined || v === false) return
+    if (k === 'options' && f.type !== 'select') return
+    c[k] = v
+  })
+  return c
+}
+
 /** Il form da salvare: senza le proprietà interne dell'editor e senza valori vuoti. */
 function pulisci(form) {
   const out = {}
@@ -249,12 +280,9 @@ function pulisci(form) {
       if (f.help) sez.help = f.help
       return sez
     }
-    const c = {}
-    Object.entries(f).forEach(([k, v]) => {
-      if (k.startsWith('_') || v === '' || v === undefined || v === false) return
-      if (k === 'options' && f.type !== 'select') return
-      c[k] = v
-    })
+    const c = senzaVuoti(f)
+    if (f.type === 'tabella') c.colonne = (f.colonne || []).map(col => ({ type: 'text', ...senzaVuoti(col) }))
+    else { delete c.colonne; delete c.minRighe; delete c.maxRighe }
     if (f.precompila === false) c.precompila = false
     if (!c.type) c.type = 'text'
     return c
@@ -274,7 +302,9 @@ function CampoEditor({ f, i, n, catalogo, campi, onChange, onSu, onGiu, onTogli,
     const clean = name.replace(/[^a-zA-Z0-9_-]/g, '')
     const noto = catalogo[clean]
     // riuso di un dato già presente in altri form: propone etichetta e tipo
-    if (noto && !f.label) onChange({ name: clean, label: noto.label, type: noto.type, options: noto.options, _nomeAuto: false })
+    if (noto && !f.label) onChange({ name: clean, label: noto.label, type: noto.type, options: noto.options,
+      ...(noto.colonne ? { colonne: noto.colonne.map(c => ({ ...c, _id: Math.random() })), minRighe: noto.minRighe, maxRighe: noto.maxRighe } : {}),
+      _nomeAuto: false })
     else onChange({ name: clean, _nomeAuto: false })
   }
 
@@ -312,7 +342,7 @@ function CampoEditor({ f, i, n, catalogo, campi, onChange, onSu, onGiu, onTogli,
           </div>
           <div>
             <label className="etichetta">Tipo</label>
-            <select className="campo" value={f.type || 'text'} onChange={e => onChange({ ...NESSUNA_REGOLA, type: e.target.value, ...(e.target.value === 'select' && !f.options ? { options: ['Opzione 1', 'Opzione 2'] } : {}) })}>
+            <select className="campo" value={f.type || 'text'} onChange={e => onChange({ ...NESSUNA_REGOLA, type: e.target.value, ...perTipo(e.target.value, f) })}>
               {TIPI.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
             </select>
           </div>
@@ -335,7 +365,9 @@ function CampoEditor({ f, i, n, catalogo, campi, onChange, onSu, onGiu, onTogli,
             {!f.readonly && f.type === 'text' && <Spunta checked={!!f.titolo} onChange={v => onChange({ titolo: v })}>Usa come titolo della pratica</Spunta>}
           </div>
 
-          {!f.readonly && <RegoleEditor f={f} onChange={onChange} />}
+          {f.type === 'tabella' && <ColonneEditor f={f} onChange={onChange} />}
+
+          {!f.readonly && f.type !== 'tabella' && <RegoleEditor f={f} onChange={onChange} />}
 
           <div className="sm:col-span-2">
             <CondizioneEditor f={f} campi={campi} onChange={visibileSe => onChange({ visibileSe })} />
@@ -385,6 +417,91 @@ function RegoleEditor({ f, onChange }) {
           <div><label className="etichetta">Messaggio se non va bene</label><input className="campo" value={v('messaggioFormato')} onChange={imposta('messaggioFormato')} placeholder="Es. scrivi anno/numero, come 2026/123" /></div>
         </>
       )}
+    </div>
+  )
+}
+
+/** Colonne di una tabella di righe, con tipo, obbligo, opzioni e regole; numero di righe ammesse. */
+function ColonneEditor({ f, onChange }) {
+  const colonne = f.colonne || []
+  const [aperta, setAperta] = useState(null)
+  const cambia = (i, patch) => onChange({ colonne: colonne.map((c, j) => j === i ? { ...c, ...patch } : c) })
+  const sposta = (i, d) => { const a = [...colonne]; [a[i], a[i + d]] = [a[i + d], a[i]]; onChange({ colonne: a }) }
+  const aggiungi = () => {
+    const c = { _id: Math.random(), _nomeAuto: true, name: '', label: '', type: 'text' }
+    onChange({ colonne: [...colonne, c] }); setAperta(c._id)
+  }
+  const righe = (k) => (e) => onChange({ [k]: e.target.value.trim() === '' ? undefined : e.target.value.replace(/[^0-9]/g, '') })
+  return (
+    <div className="space-y-3 rounded-campo bg-carta px-3 py-3 sm:col-span-2">
+      <p className="text-[15px] font-medium text-pino-900">Colonne</p>
+      <ul className="space-y-2">
+        {colonne.map((c, i) => {
+          const Tipo = TIPI.find(t => t.id === (c.type || 'text')) || TIPI[0]
+          const dettagli = [Tipo.label, c.name, c.required && 'obbligatoria', descriviRegole(c)].filter(Boolean).join(', ')
+          return (
+            <li key={c._id ?? i} className="rounded-campo border border-linea bg-white">
+              <div className="flex items-center gap-2 px-2.5 py-1.5">
+                <Tipo.icona className="size-4 shrink-0 text-pino-700" />
+                <button type="button" onClick={() => setAperta(aperta === c._id ? null : c._id)} className="min-w-0 flex-1 text-left">
+                  <span className="block truncate text-[15px] text-pino-900">{c.label || <span className="text-nebbia">Senza etichetta</span>}</span>
+                  <span className="block truncate text-xs text-grafite">{dettagli}</span>
+                </button>
+                <IconBtn label="Sposta a sinistra" disabled={i === 0} onClick={() => sposta(i, -1)}><ChevronUp className="size-4" /></IconBtn>
+                <IconBtn label="Sposta a destra" disabled={i === colonne.length - 1} onClick={() => sposta(i, 1)}><ChevronDown className="size-4" /></IconBtn>
+                <IconBtn label="Elimina la colonna" disabled={colonne.length === 1} pericolo
+                         onClick={() => onChange({ colonne: colonne.filter((_, j) => j !== i) })}><Trash className="size-4" /></IconBtn>
+              </div>
+              {aperta === c._id && (
+                <div className="grid gap-3 border-t border-linea px-2.5 py-3 sm:grid-cols-2">
+                  <div>
+                    <label className="etichetta" htmlFor={`col-etichetta-${c._id}`}>Etichetta</label>
+                    <input id={`col-etichetta-${c._id}`} className="campo" autoFocus={!c.label} value={c.label || ''} placeholder="Es. Importo"
+                           onChange={e => cambia(i, c._nomeAuto || !c.name ? { label: e.target.value, name: nomeDaEtichetta(e.target.value), _nomeAuto: true } : { label: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="etichetta" htmlFor={`col-nome-${c._id}`}>Nome della colonna</label>
+                    <input id={`col-nome-${c._id}`} className="campo font-mono text-sm" value={c.name || ''} placeholder="importo"
+                           onChange={e => cambia(i, { name: e.target.value.replace(/[^a-zA-Z0-9_]/g, ''), _nomeAuto: false })} />
+                  </div>
+                  <div>
+                    <label className="etichetta" htmlFor={`col-tipo-${c._id}`}>Tipo</label>
+                    <select id={`col-tipo-${c._id}`} className="campo" value={c.type || 'text'}
+                            onChange={e => cambia(i, { ...NESSUNA_REGOLA, type: e.target.value, ...perTipo(e.target.value, c) })}>
+                      {TIPI.filter(t => TIPI_COLONNA.includes(t.id)).map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex items-end pb-2">
+                    <Spunta checked={!!c.required} onChange={v => cambia(i, { required: v })}>Obbligatoria in ogni riga</Spunta>
+                  </div>
+                  {c.type === 'select' && (
+                    <div className="sm:col-span-2">
+                      <label className="etichetta">Opzioni</label>
+                      <Opzioni valori={c.options || []} onChange={options => cambia(i, { options })} />
+                    </div>
+                  )}
+                  <RegoleEditor f={c} onChange={patch => cambia(i, patch)} />
+                </div>
+              )}
+            </li>
+          )
+        })}
+      </ul>
+      <div className="flex flex-wrap items-end gap-3">
+        <Button misura="sm" icona={Plus} onClick={aggiungi} disabled={colonne.length >= 20}>Aggiungi colonna</Button>
+        {!f.readonly && (
+          <>
+            <div className="w-32">
+              <label className="etichetta" htmlFor={`righe-min-${f._id}`}>Righe minime</label>
+              <input id={`righe-min-${f._id}`} className="campo h-9" inputMode="numeric" value={f.minRighe ?? ''} onChange={righe('minRighe')} placeholder="Nessuna" />
+            </div>
+            <div className="w-32">
+              <label className="etichetta" htmlFor={`righe-max-${f._id}`}>Righe massime</label>
+              <input id={`righe-max-${f._id}`} className="campo h-9" inputMode="numeric" value={f.maxRighe ?? ''} onChange={righe('maxRighe')} placeholder="500" />
+            </div>
+          </>
+        )}
+      </div>
     </div>
   )
 }

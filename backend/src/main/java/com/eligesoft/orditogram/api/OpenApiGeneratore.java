@@ -247,6 +247,7 @@ public final class OpenApiGeneratore {
             case "date" -> obj("type", "string", "format", "date");
             case "checkbox" -> obj("type", "boolean");
             case "select" -> obj("type", "string", "enum", c.opzioni());
+            case ValoriForm.TABELLA -> schemaTabella(c);
             default -> obj("type", "string");
         };
         s.put("title", c.etichetta());
@@ -258,6 +259,28 @@ public final class OpenApiGeneratore {
                 + (c.obbligatorio() ? ", e in quel caso è obbligatorio" : "") + "; altrimenti il valore viene ignorato.");
         if (!descrizione.isEmpty()) s.put("description", String.join(" ", descrizione));
         if ("checkbox".equals(c.tipo()) && c.obbligatorio()) s.put("const", true);
+        return s;
+    }
+
+    /** Una tabella: array di righe, ogni riga un oggetto con le colonne. */
+    private static Map<String, Object> schemaTabella(ValoriForm.Campo c) {
+        Map<String, Object> props = new LinkedHashMap<>();
+        List<String> obbligatorie = new ArrayList<>();
+        for (ValoriForm.Campo k : c.colonne()) {
+            props.put(k.nome(), schemaCampo(k));
+            if (k.obbligatorio()) obbligatorie.add(k.nome());
+        }
+        Map<String, Object> riga = obj("type", "object", "additionalProperties", false, "properties", props);
+        if (!obbligatorie.isEmpty()) riga.put("required", obbligatorie);
+        Map<String, Object> s = obj("type", "array", "items", riga);
+        Map<String, String> r = c.regole() != null ? c.regole() : Map.of();
+        try {
+            if (r.containsKey("minRighe")) s.put("minItems", Integer.valueOf(r.get("minRighe")));
+            s.put("maxItems", r.containsKey("maxRighe") ? Integer.valueOf(r.get("maxRighe")) : ValoriForm.MAX_RIGHE);
+        } catch (NumberFormatException e) {
+            s.put("maxItems", ValoriForm.MAX_RIGHE);
+        }
+        if (c.obbligatorio() && !s.containsKey("minItems")) s.put("minItems", 1);
         return s;
     }
 
@@ -315,6 +338,11 @@ public final class OpenApiGeneratore {
             case "date" -> "2026-10-15";
             case "checkbox" -> true;
             case "select" -> c.opzioni().isEmpty() ? "" : c.opzioni().get(0);
+            case ValoriForm.TABELLA -> {
+                Map<String, Object> riga = new LinkedHashMap<>();
+                for (ValoriForm.Campo k : c.colonne()) riga.put(k.nome(), esempio(k));
+                yield List.of(riga);
+            }
             default -> n.contains("email") || n.contains("pec") ? "mario.rossi@example.com"
                 : n.contains("codicefiscale") ? "RSSMRA80A01H501U"
                 : n.contains("telefono") ? "+39 06 1234567"

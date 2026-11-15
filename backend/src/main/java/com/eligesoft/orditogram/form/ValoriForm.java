@@ -19,6 +19,9 @@ import java.util.*;
  * Campi condizionali: "visibileSe": { "campo": "esito", "valori": ["Serve integrazione"] } mostra il campo solo
  * se l'altro campo ha uno dei valori indicati (per un sì/no: "true" o "false"). Un campo nascosto non è
  * obbligatorio e il suo valore non viene salvato.
+ * Tabelle di righe: { "type": "tabella", "colonne": [ { "name", "label", "type", "required", "options", regole } ],
+ * "minRighe", "maxRighe" } raccoglie un elenco di righe (es. le voci di una spesa); il valore è una lista di oggetti
+ * { colonna: valore }. Le colonne sono di tipo text, number, date, select o checkbox, con le stesse regole dei campi.
  */
 public final class ValoriForm {
 
@@ -26,7 +29,11 @@ public final class ValoriForm {
 
     /** Un campo modificabile del form, come lo vede chi lo compila (o chi chiama l'API). */
     public record Campo(String nome, String etichetta, String tipo, boolean obbligatorio, List<String> opzioni,
-                        String aiuto, Condizione visibileSe, Map<String, String> regole) {
+                        String aiuto, Condizione visibileSe, Map<String, String> regole, List<Campo> colonne) {
+        public Campo(String nome, String etichetta, String tipo, boolean obbligatorio, List<String> opzioni,
+                     String aiuto, Condizione visibileSe, Map<String, String> regole) {
+            this(nome, etichetta, tipo, obbligatorio, opzioni, aiuto, visibileSe, regole, List.of());
+        }
         public Campo(String nome, String etichetta, String tipo, boolean obbligatorio, List<String> opzioni, String aiuto) {
             this(nome, etichetta, tipo, obbligatorio, opzioni, aiuto, null, Map.of());
         }
@@ -37,7 +44,15 @@ public final class ValoriForm {
     }
 
     /** Proprietà del campo che sono regole di validazione (vedi RegoleCampo). */
-    static final List<String> REGOLE = List.of("min", "max", "minLunghezza", "maxLunghezza", "formato", "espressione", "messaggioFormato");
+    static final List<String> REGOLE = List.of("min", "max", "minLunghezza", "maxLunghezza", "formato", "espressione",
+        "messaggioFormato", "minRighe", "maxRighe");
+
+    /** Tipo del campo che raccoglie più righe (vedi in alto). */
+    public static final String TABELLA = "tabella";
+    /** Tipi ammessi per le colonne di una tabella. */
+    public static final Set<String> TIPI_COLONNA = Set.of("text", "number", "date", "select", "checkbox");
+    /** Righe al massimo in una tabella, anche se il form non lo dice. */
+    public static final int MAX_RIGHE = 500;
 
     /** Il campo si mostra solo se il campo indicato ha uno di questi valori. */
     public record Condizione(String campo, List<String> valori) {
@@ -54,7 +69,7 @@ public final class ValoriForm {
     /** Un valore non valido, con il nome del campo e il motivo. */
     public record Errore(String campo, String messaggio) {}
 
-    public static final Set<String> TIPI = Set.of("text", "textarea", "number", "date", "select", "checkbox");
+    public static final Set<String> TIPI = Set.of("text", "textarea", "number", "date", "select", "checkbox", TABELLA);
 
     /** Campi che si possono compilare (esclusi quelli in sola lettura), nell'ordine del form. */
     public static List<Campo> campi(JsonNode form) {
@@ -70,9 +85,87 @@ public final class ValoriForm {
             if ("select".equals(tipo)) f.path("options").forEach(o -> opzioni.add(o.asText()));
             String aiuto = f.hasNonNull("help") ? f.get("help").asText() : f.hasNonNull("aiuto") ? f.get("aiuto").asText() : null;
             out.add(new Campo(nome, f.path("label").asText(nome), tipo, f.path("required").asBoolean(false),
-                List.copyOf(opzioni), aiuto, condizione(f), regole(f)));
+                List.copyOf(opzioni), aiuto, condizione(f), regole(f), TABELLA.equals(tipo) ? colonne(f) : List.of()));
         }
         return out;
+    }
+
+    /** Le colonne di una tabella, come campi (senza condizioni). */
+    static List<Campo> colonne(JsonNode tabella) {
+        List<Campo> out = new ArrayList<>();
+        for (JsonNode c : tabella.path("colonne")) {
+            String nome = c.path("name").asText("");
+            if (nome.isBlank()) continue;
+            String tipo = c.path("type").asText("text");
+            if (!TIPI_COLONNA.contains(tipo)) tipo = "text";
+            List<String> opzioni = new ArrayList<>();
+            if ("select".equals(tipo)) c.path("options").forEach(o -> opzioni.add(o.asText()));
+            out.add(new Campo(nome, c.path("label").asText(nome), tipo, c.path("required").asBoolean(false),
+                List.copyOf(opzioni), c.hasNonNull("help") ? c.get("help").asText() : null, null, regole(c)));
+        }
+        return List.copyOf(out);
+    }
+
+    /** Il nodo JSON di una colonna della tabella, per le regole. */
+    private static JsonNode nodoColonna(JsonNode tabella, String nome) {
+        for (JsonNode c : tabella.path("colonne")) if (nome.equals(c.path("name").asText())) return c;
+        return tabella;
+    }
+
+    /**
+     * Le righe della tabella tenendo solo le colonne previste e togliendo le righe vuote; null se il valore non è
+     * una lista. Serve all'interfaccia, che invia anche le righe lasciate in bianco.
+     */
+    @SuppressWarnings("unchecked")
+    static List<Map<String, Object>> righe(Campo tabella, Object valore) {
+        if (!(valore instanceof List<?> lista)) return null;
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Object r : lista) {
+            if (!(r instanceof Map<?, ?> riga)) continue;
+            Map<String, Object> pulita = new LinkedHashMap<>();
+            for (Campo c : tabella.colonne()) {
+                Object v = ((Map<String, Object>) riga).get(c.nome());
+                if (v != null && !(v instanceof String s && s.isBlank()) && !(Boolean.FALSE.equals(v))) pulita.put(c.nome(), v);
+            }
+            if (pulita.isEmpty()) continue;
+            for (Campo c : tabella.colonne())
+                if ("checkbox".equals(c.tipo())) pulita.putIfAbsent(c.nome(), false);
+            out.add(pulita);
+        }
+        return out;
+    }
+
+    /** Problemi delle righe di una tabella: numero di righe, colonne obbligatorie, regole. Al massimo tre. */
+    static List<String> erroriTabella(JsonNode nodo, Campo tabella, List<Map<String, Object>> righe, LocalDate oggi) {
+        List<String> out = new ArrayList<>();
+        Integer min = RegoleCampo.intero(nodo.get("minRighe")), max = RegoleCampo.intero(nodo.get("maxRighe"));
+        int limite = max != null ? Math.min(max, MAX_RIGHE) : MAX_RIGHE;
+        if (min != null && righe.size() < min) out.add("servono almeno " + min + (min == 1 ? " riga" : " righe"));
+        if (righe.size() > limite) out.add("al massimo " + limite + (limite == 1 ? " riga" : " righe"));
+        for (int i = 0; i < righe.size() && out.size() < 3; i++) {
+            Map<String, Object> riga = righe.get(i);
+            for (Campo c : tabella.colonne()) {
+                Object v = riga.get(c.nome());
+                String msg;
+                if (c.obbligatorio() && "checkbox".equals(c.tipo())) msg = Boolean.TRUE.equals(v) ? null : "va spuntato";
+                else if (c.obbligatorio() && (v == null || v.toString().isBlank())) msg = "è obbligatorio";
+                else msg = v == null ? null : erroreCella(c, nodoColonna(nodo, c.nome()), v, oggi);
+                if (msg != null) {
+                    out.add("riga " + (i + 1) + ", " + c.etichetta() + ": " + msg);
+                    if (out.size() >= 3) break;
+                }
+            }
+        }
+        return out;
+    }
+
+    private static String erroreCella(Campo c, JsonNode nodo, Object v, LocalDate oggi) {
+        try {
+            Object n = normalizza(c, v);
+            return RegoleCampo.controlla(nodo, c.tipo(), n, oggi);
+        } catch (IllegalArgumentException e) {
+            return e.getMessage();
+        }
     }
 
     static Map<String, String> regole(JsonNode f) {
@@ -144,8 +237,13 @@ public final class ValoriForm {
         Map<String, Object> in = body != null ? body : Map.of();
         if (form == null || !form.has("fields")) return new HashMap<>(in);
         Map<String, Object> out = new HashMap<>();
-        for (Campo c : campi(form))
-            if (in.containsKey(c.nome())) out.put(c.nome(), in.get(c.nome()));
+        for (Campo c : campi(form)) {
+            if (!in.containsKey(c.nome())) continue;
+            if (TABELLA.equals(c.tipo())) {
+                List<Map<String, Object>> righe = righe(c, in.get(c.nome()));
+                if (righe != null) out.put(c.nome(), righe);
+            } else out.put(c.nome(), in.get(c.nome()));
+        }
         out.keySet().removeAll(nascosti(form, unisci(contesto, out)));
         return out;
     }
@@ -163,7 +261,8 @@ public final class ValoriForm {
             if (!c.obbligatorio() || nascosti.contains(c.nome())) continue;
             Object v = vars.get(c.nome());
             boolean vuoto = v == null || v.toString().isBlank()
-                || ("checkbox".equals(c.tipo()) && !Boolean.TRUE.equals(v));
+                || ("checkbox".equals(c.tipo()) && !Boolean.TRUE.equals(v))
+                || (TABELLA.equals(c.tipo()) && !(v instanceof List<?> l && !l.isEmpty()));
             if (vuoto) mancanti.add(c.etichetta());
         }
         return mancanti;
@@ -181,7 +280,15 @@ public final class ValoriForm {
             if (f.path("readonly").asBoolean(false) || sezione(f)) continue;
             String nome = f.path("name").asText("");
             if (nome.isBlank() || nascosti.contains(nome) || !vars.containsKey(nome)) continue;
-            String msg = RegoleCampo.controlla(f, f.path("type").asText("text"), vars.get(nome), oggi);
+            String tipo = f.path("type").asText("text");
+            if (TABELLA.equals(tipo)) {
+                Campo tabella = new Campo(nome, f.path("label").asText(nome), tipo, false, List.of(), null, null, Map.of(), colonne(f));
+                List<Map<String, Object>> righe = righe(tabella, vars.get(nome));
+                List<String> problemi = righe == null ? List.of("deve essere un elenco di righe") : erroriTabella(f, tabella, righe, oggi);
+                if (!problemi.isEmpty()) out.add(new Errore(nome, String.join("; ", problemi)));
+                continue;
+            }
+            String msg = RegoleCampo.controlla(f, tipo, vars.get(nome), oggi);
             if (msg != null) out.add(new Errore(nome, msg));
         }
         return out;
@@ -245,7 +352,7 @@ public final class ValoriForm {
             if (!c.obbligatorio() || nascosti.contains(c.nome())
                 || errori.stream().anyMatch(x -> x.campo().equals(c.nome()))) continue;
             Object v = valori.get(c.nome());
-            if (v == null) errori.add(new Errore(c.nome(), "obbligatorio"));
+            if (v == null || (v instanceof List<?> l && l.isEmpty())) errori.add(new Errore(c.nome(), "obbligatorio"));
             else if ("checkbox".equals(c.tipo()) && !Boolean.TRUE.equals(v)) errori.add(new Errore(c.nome(), "deve essere true"));
         }
         return new Esito(valori, errori);
@@ -255,8 +362,33 @@ public final class ValoriForm {
         public boolean valido() { return errori.isEmpty(); }
     }
 
+    @SuppressWarnings("unchecked")
     static Object normalizza(Campo c, Object v) {
         switch (c.tipo()) {
+            case TABELLA -> {
+                if (!(v instanceof List<?> lista)) throw new IllegalArgumentException("deve essere un elenco di righe (array di oggetti)");
+                if (lista.size() > MAX_RIGHE) throw new IllegalArgumentException("al massimo " + MAX_RIGHE + " righe");
+                Map<String, Campo> colonne = new LinkedHashMap<>();
+                c.colonne().forEach(k -> colonne.put(k.nome(), k));
+                List<Map<String, Object>> out = new ArrayList<>();
+                for (int i = 0; i < lista.size(); i++) {
+                    if (!(lista.get(i) instanceof Map<?, ?> riga))
+                        throw new IllegalArgumentException("riga " + (i + 1) + ": deve essere un oggetto { colonna: valore }");
+                    Map<String, Object> norm = new LinkedHashMap<>();
+                    for (var e : ((Map<String, Object>) riga).entrySet()) {
+                        Campo k = colonne.get(e.getKey());
+                        if (k == null) throw new IllegalArgumentException("riga " + (i + 1) + ": colonna \"" + e.getKey()
+                            + "\" non prevista" + suggerimento(e.getKey(), colonne.keySet()));
+                        Object x = e.getValue();
+                        if (x == null || (x instanceof String s && s.isBlank())) continue;
+                        try { norm.put(k.nome(), normalizza(k, x)); }
+                        catch (IllegalArgumentException ex) { throw new IllegalArgumentException("riga " + (i + 1) + ", " + k.etichetta() + ": " + ex.getMessage()); }
+                    }
+                    for (Campo k : c.colonne()) if ("checkbox".equals(k.tipo())) norm.putIfAbsent(k.nome(), false);
+                    out.add(norm);
+                }
+                return out;
+            }
             case "number" -> {
                 if (v instanceof Number) return v;
                 if (v instanceof String s) {

@@ -112,6 +112,7 @@ public class StoricoService {
             Object v = values.get(name);
             String text;
             if ("checkbox".equals(f.path("type").asText())) text = Boolean.TRUE.equals(v) ? "Sì" : "No";
+            else if (v instanceof List<?> righe) text = righe.isEmpty() ? "" : righe.size() + (righe.size() == 1 ? " riga" : " righe");
             else text = v == null ? "" : v.toString().trim();
             if (text.isEmpty()) continue;
             out.add(Map.of("label", f.path("label").asText(name), "value", text));
