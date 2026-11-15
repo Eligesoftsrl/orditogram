@@ -231,7 +231,8 @@ public final class OpenApiGeneratore {
         List<String> obbligatori = new ArrayList<>();
         for (ValoriForm.Campo c : p.campi()) {
             props.put(c.nome(), schemaCampo(c));
-            if (c.obbligatorio()) obbligatori.add(c.nome());
+            // un campo condizionale può essere nascosto: non è mai obbligatorio nello schema
+            if (c.obbligatorio() && c.visibileSe() == null) obbligatori.add(c.nome());
         }
         Map<String, Object> s = obj("type", "object", "title", "Dati di avvio: " + p.nome(),
             "additionalProperties", false, "properties", props);
@@ -249,7 +250,12 @@ public final class OpenApiGeneratore {
             default -> obj("type", "string");
         };
         s.put("title", c.etichetta());
-        if (c.aiuto() != null && !c.aiuto().isBlank()) s.put("description", c.aiuto());
+        List<String> descrizione = new ArrayList<>();
+        if (c.aiuto() != null && !c.aiuto().isBlank()) descrizione.add(c.aiuto());
+        if (c.visibileSe() != null)
+            descrizione.add("Si usa solo se " + c.visibileSe().campo() + " vale " + String.join(" o ", c.visibileSe().valori())
+                + (c.obbligatorio() ? ", e in quel caso è obbligatorio" : "") + "; altrimenti il valore viene ignorato.");
+        if (!descrizione.isEmpty()) s.put("description", String.join(" ", descrizione));
         if ("checkbox".equals(c.tipo()) && c.obbligatorio()) s.put("const", true);
         return s;
     }

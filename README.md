@@ -237,9 +237,27 @@ Tutto quello che segue si imposta dall'editor e dal costruttore dei form; le tab
 | `precompila: false` | non ripropone il valore precedente (utile nei cicli verifica ↔ revisione) |
 | `titolo: true` | il valore diventa il titolo della pratica |
 | stesso `name` in più form | è lo stesso dato della pratica |
+| `visibileSe: { campo, valori }` | il campo compare solo se l'altro campo ha uno dei valori indicati |
 
 Il backend accetta solo i campi modificabili dichiarati nel form e controlla gli obbligatori:
 un utente non può impostare dati che il form non prevede.
+
+**Sezioni.** Un elemento `{ "type": "sezione", "label": "Dati del richiedente", "help": "…" }` apre una sezione:
+i campi che seguono, fino alla sezione successiva, compaiono sotto quel titolo. Non è un dato della pratica.
+Nel costruttore si aggiunge con il pulsante *Sezione*; una sezione senza campi visibili non si mostra.
+
+**Campi condizionali.** Nel costruttore, *Mostra solo se* lega un campo a un campo a scelta o sì/no:
+
+```json
+{ "name": "noteIntegrazione", "label": "Cosa chiedere", "type": "textarea", "required": true,
+  "visibileSe": { "campo": "esito", "valori": ["Serve integrazione"] } }
+```
+
+Per un sì/no i valori sono `"true"` o `"false"`. La condizione può guardare anche un campo in sola lettura
+(vale il dato già presente nella pratica). Un campo nascosto non è obbligatorio e il suo valore non viene
+salvato, né dall'interfaccia né dall'API pubblica; chi dipende da un campo nascosto è nascosto anche lui.
+Nella documentazione OpenAPI un campo condizionale non è mai tra gli obbligatori e la sua descrizione
+spiega quando si usa. Lo Studio rifiuta condizioni su campi che non esistono nel form.
 
 ## Documenti e firme
 

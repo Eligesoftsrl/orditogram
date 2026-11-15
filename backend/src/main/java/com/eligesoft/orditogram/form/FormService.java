@@ -120,6 +120,11 @@ public class FormService {
             throw bad("Nel form \"" + formKey + "\" \"documenti\" deve essere: carica, lettura o modifica");
         Set<String> names = new HashSet<>();
         for (JsonNode f : fields) {
+            if (ValoriForm.sezione(f)) {
+                if (f.path("label").asText("").isBlank())
+                    throw bad("Nel form \"" + formKey + "\" c'è una sezione senza titolo");
+                continue;
+            }
             String name = f.path("name").asText("");
             if (name.isBlank()) throw bad("Nel form \"" + formKey + "\" c'è un campo senza nome");
             if (!name.matches("[a-zA-Z][\\w-]*"))
@@ -130,6 +135,22 @@ public class FormService {
                 throw bad("Campo \"" + name + "\": tipo \"" + type + "\" non supportato");
             if ("select".equals(type) && !f.path("options").isArray())
                 throw bad("Campo \"" + name + "\": un select deve avere \"options\"");
+        }
+        // condizioni: devono guardare un altro campo dello stesso form e indicare almeno un valore
+        for (JsonNode f : fields) {
+            if (!f.has("visibileSe")) continue;
+            String name = f.path("name").asText("");
+            ValoriForm.Condizione c = ValoriForm.condizione(f);
+            if (ValoriForm.sezione(f))
+                throw bad("Nel form \"" + formKey + "\" una sezione non può avere una condizione");
+            if (c == null)
+                throw bad("Campo \"" + name + "\": in \"visibileSe\" indica il \"campo\" da cui dipende");
+            if (c.campo().equals(name))
+                throw bad("Campo \"" + name + "\": la condizione non può dipendere dal campo stesso");
+            if (!names.contains(c.campo()))
+                throw bad("Campo \"" + name + "\": la condizione dipende da \"" + c.campo() + "\", che non è nel form");
+            if (c.valori().isEmpty() || c.valori().stream().anyMatch(String::isBlank))
+                throw bad("Campo \"" + name + "\": la condizione deve indicare almeno un valore");
         }
         return node;
     }

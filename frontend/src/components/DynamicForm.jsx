@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { FileUp, Paperclip, X } from 'lucide-react'
 import { cx, dimensione, giorno } from '../lib/format.js'
 import { Button, Errore } from './ui.jsx'
+import { campiNascosti, eSezione, raggruppa, senzaNascosti } from '../lib/formCondizioni.js'
 
 /**
  * Form generato dalla definizione JSON (formKey del BPMN).
@@ -11,14 +12,17 @@ import { Button, Errore } from './ui.jsx'
  *                       documentiObbligatori: true
  * Proprietà dei campi:  name, label, type (text, number, date, textarea, select, checkbox),
  *                       required, readonly, default, options, placeholder, help,
- *                       precompila: false (non riproporre il valore precedente, utile nei cicli)
+ *                       precompila: false (non riproporre il valore precedente, utile nei cicli),
+ *                       visibileSe: { campo, valori } (il campo compare solo se l'altro ha uno di quei valori)
+ * Sezioni:              { type: "sezione", label, help } divide i campi da compilare in gruppi con un titolo.
  *
  * I campi in sola lettura diventano un riepilogo in alto; quelli da compilare restano campi.
+ * I campi nascosti dalle condizioni non si mostrano, non sono obbligatori e non vengono inviati.
  */
 export default function DynamicForm({ form, initialValues = {}, onSubmit, disabled, busy, avvio, mostraTitolo = true }) {
   const campi = form.fields || []
-  const lettura = campi.filter(f => f.readonly)
-  const modificabili = campi.filter(f => !f.readonly)
+  const lettura = campi.filter(f => f.readonly && !eSezione(f))
+  const modificabili = campi.filter(f => !f.readonly && !eSezione(f))
   const conAllegati = avvio && form.documenti === 'carica'
 
   const [values, setValues] = useState(() => {
@@ -40,10 +44,14 @@ export default function DynamicForm({ form, initialValues = {}, onSubmit, disabl
       return
     }
     setErrore('')
-    onSubmit(values, files)
+    onSubmit(senzaNascosti(campi, values, initialValues), files)
   }
 
+  const nascosti = campiNascosti(campi, { ...initialValues, ...values })
+  const gruppi = raggruppa(campi.filter(f => !f.readonly && !nascosti.has(f.name)))
+
   const riepilogo = lettura.filter(f => {
+    if (nascosti.has(f.name)) return false
     const v = initialValues[f.name]
     return v !== undefined && v !== null && String(v).trim() !== ''
   })
@@ -70,13 +78,21 @@ export default function DynamicForm({ form, initialValues = {}, onSubmit, disabl
         </dl>
       )}
 
-      {modificabili.length > 0 && (
-        <div className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
-          {modificabili.map(f => (
-            <Campo key={f.name} f={f} value={values[f.name]} onChange={v => set(f.name, v)} disabled={disabled} />
-          ))}
-        </div>
-      )}
+      {gruppi.map((g, i) => (
+        <section key={g.sezione ? `sezione-${i}` : 'campi'} className={cx(g.sezione && 'border-t border-linea pt-5')}>
+          {g.sezione && (
+            <div className="mb-4">
+              <h4 className="font-display text-[17px] font-semibold text-pino-900">{g.sezione.label}</h4>
+              {g.sezione.help && <p className="mt-0.5 max-w-prose text-[14px] text-grafite">{g.sezione.help}</p>}
+            </div>
+          )}
+          <div className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
+            {g.campi.map(f => (
+              <Campo key={f.name} f={f} value={values[f.name]} onChange={v => set(f.name, v)} disabled={disabled} />
+            ))}
+          </div>
+        </section>
+      ))}
 
       {conAllegati && <Allegati files={files} setFiles={setFiles} obbligatori={form.documentiObbligatori} disabled={disabled} />}
 

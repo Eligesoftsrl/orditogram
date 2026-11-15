@@ -221,8 +221,13 @@ public class BpmController {
         Task task = taskRuntime.task(id);
         checkNotTakenByOthers(task);
         JsonNode form = forms.load(task.getFormKey());
-        Map<String, Object> vars = valoriAmmessi(form, body);
-        controllaObbligatori(form, vars);
+        // i dati già nella pratica servono alle condizioni che guardano campi in sola lettura
+        Map<String, Object> pratica = new HashMap<>();
+        taskRuntime.variables(TaskPayloadBuilder.variables().withTaskId(id).build())
+            .forEach(v -> pratica.put(v.getName(), v.getValue()));
+        Map<String, Object> vars = ValoriForm.ammessi(form, body, pratica);
+        List<String> mancanti = ValoriForm.obbligatoriMancanti(form, vars, pratica);
+        if (!mancanti.isEmpty()) throw bad("Compila i campi obbligatori: " + String.join(", ", mancanti));
 
         if (task.getAssignee() == null) {
             taskRuntime.claim(TaskPayloadBuilder.claim().withTaskId(id).build());

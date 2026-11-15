@@ -44,8 +44,10 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
 
 ### Concetti chiave
 - **Pratica** = istanza di processo Activiti. Titolo da un campo del form marcato `titolo`.
-- **Form**: JSON `{fields:[{name,label,type,required,readonly,options,titolo}], documenti, documentiObbligatori}`.
+- **Form**: JSON `{fields:[{name,label,type,required,readonly,options,titolo,visibileSe}], documenti, documentiObbligatori}`.
   Tipi: text, textarea, number, date, select, checkbox. L'interfaccia invia i numeri come testo.
+  `{type:"sezione",label,help}` apre una sezione (non è un dato). `visibileSe:{campo,valori}` nasconde il campo:
+  regole uguali in `ValoriForm.nascosti` (backend) e `lib/formCondizioni.js` (frontend), tienile allineate.
 - Estensioni BPMN proprie: namespace `http://orditogram.it/bpmn`, prefisso `orditogram:`
   (es. `<orditogram:datiMessaggio>motivoRinuncia</orditogram:datiMessaggio>`); estensioni Activiti per il resto.
 - **Sicurezza**: due catene. `/api/v1/**` (ordine 1): solo chiavi API, stateless. Tutto il resto (ordine 2):
@@ -96,3 +98,5 @@ laura, paolo, chiara, giulia: password `password`.
   4) documenti da modello (lettere, provvedimenti); 5) tabelle decisionali DMN; 6) multi-ente / white label;
   7) versioni dei form e ruolo "analista del cliente"; 8) cruscotti; 9) libreria di modelli di processo;
   10) documentazione automatica del processo; 11) assistente IA per analisti.
+- **Da fare (richiesta di Filippo)**: Call Activity, cioè un processo pubblicato richiamato da un altro
+  (oggi il validatore la rifiuta; il sottoprocesso incorporato invece è già gestito).

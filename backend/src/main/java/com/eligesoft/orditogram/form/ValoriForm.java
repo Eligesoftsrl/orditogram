@@ -13,7 +13,12 @@ import java.util.*;
  * quali campi si accettano, quali sono obbligatori, che tipo devono avere, come si ricava il titolo della pratica.
  *
  * Il form è il JSON salvato nello Studio: { "fields": [ { "name", "label", "type", "required", "readonly",
- * "options", "titolo" } ], "documenti": "carica", "documentiObbligatori": true }.
+ * "options", "titolo", "visibileSe" } ], "documenti": "carica", "documentiObbligatori": true }.
+ *
+ * Sezioni: un elemento { "type": "sezione", "label", "help" } divide il form in parti; non è un dato.
+ * Campi condizionali: "visibileSe": { "campo": "esito", "valori": ["Serve integrazione"] } mostra il campo solo
+ * se l'altro campo ha uno dei valori indicati (per un sì/no: "true" o "false"). Un campo nascosto non è
+ * obbligatorio e il suo valore non viene salvato.
  */
 public final class ValoriForm {
 
@@ -21,7 +26,23 @@ public final class ValoriForm {
 
     /** Un campo modificabile del form, come lo vede chi lo compila (o chi chiama l'API). */
     public record Campo(String nome, String etichetta, String tipo, boolean obbligatorio, List<String> opzioni,
-                        String aiuto) {}
+                        String aiuto, Condizione visibileSe) {
+        public Campo(String nome, String etichetta, String tipo, boolean obbligatorio, List<String> opzioni, String aiuto) {
+            this(nome, etichetta, tipo, obbligatorio, opzioni, aiuto, null);
+        }
+    }
+
+    /** Il campo si mostra solo se il campo indicato ha uno di questi valori. */
+    public record Condizione(String campo, List<String> valori) {
+        public boolean soddisfatta(Object valore) {
+            if (valore == null) return false;
+            String s = valore.toString().trim();
+            return !s.isEmpty() && valori.contains(s);
+        }
+    }
+
+    /** Tipo dell'elemento che apre una sezione del form (non è un campo). */
+    public static final String SEZIONE = "sezione";
 
     /** Un valore non valido, con il nome del campo e il motivo. */
     public record Errore(String campo, String messaggio) {}
@@ -33,7 +54,7 @@ public final class ValoriForm {
         List<Campo> out = new ArrayList<>();
         if (form == null || !form.has("fields")) return out;
         for (JsonNode f : form.get("fields")) {
-            if (f.path("readonly").asBoolean(false)) continue;
+            if (f.path("readonly").asBoolean(false) || sezione(f)) continue;
             String nome = f.path("name").asText("");
             if (nome.isBlank()) continue;
             String tipo = f.path("type").asText("text");
@@ -42,9 +63,55 @@ public final class ValoriForm {
             if ("select".equals(tipo)) f.path("options").forEach(o -> opzioni.add(o.asText()));
             String aiuto = f.hasNonNull("help") ? f.get("help").asText() : f.hasNonNull("aiuto") ? f.get("aiuto").asText() : null;
             out.add(new Campo(nome, f.path("label").asText(nome), tipo, f.path("required").asBoolean(false),
-                List.copyOf(opzioni), aiuto));
+                List.copyOf(opzioni), aiuto, condizione(f)));
         }
         return out;
+    }
+
+    static boolean sezione(JsonNode f) {
+        return SEZIONE.equals(f.path("type").asText(""));
+    }
+
+    /** La condizione "visibileSe" del campo, o null. Accetta anche "valore" singolo al posto di "valori". */
+    static Condizione condizione(JsonNode f) {
+        JsonNode c = f.path("visibileSe");
+        if (!c.isObject() || c.path("campo").asText("").isBlank()) return null;
+        List<String> valori = new ArrayList<>();
+        if (c.path("valori").isArray()) c.get("valori").forEach(v -> valori.add(v.asText().trim()));
+        else if (c.has("valore")) valori.add(c.get("valore").asText().trim());
+        return new Condizione(c.get("campo").asText().trim(), List.copyOf(valori));
+    }
+
+    /**
+     * Nomi dei campi nascosti dalle loro condizioni, dati i valori (del form e della pratica).
+     * Un campo che dipende da un campo nascosto è nascosto anche lui.
+     */
+    public static Set<String> nascosti(JsonNode form, Map<String, Object> valori) {
+        Set<String> out = new HashSet<>();
+        if (form == null || !form.has("fields")) return out;
+        Map<String, Condizione> condizioni = new LinkedHashMap<>();
+        for (JsonNode f : form.get("fields")) {
+            Condizione c = condizione(f);
+            String nome = f.path("name").asText("");
+            if (c != null && !nome.isBlank()) condizioni.put(nome, c);
+        }
+        boolean cambiato = true;
+        while (cambiato) {
+            cambiato = false;
+            for (var e : condizioni.entrySet()) {
+                if (out.contains(e.getKey())) continue;
+                Condizione c = e.getValue();
+                Object v = out.contains(c.campo()) ? null : valori.get(c.campo());
+                if (!c.soddisfatta(v)) { out.add(e.getKey()); cambiato = true; }
+            }
+        }
+        return out;
+    }
+
+    private static Map<String, Object> unisci(Map<String, Object> contesto, Map<String, Object> valori) {
+        Map<String, Object> tutti = new HashMap<>(contesto != null ? contesto : Map.of());
+        tutti.putAll(valori);
+        return tutti;
     }
 
     /**
@@ -53,19 +120,34 @@ public final class ValoriForm {
      * Senza form (processi semplici) si accetta il corpo così com'è.
      */
     public static Map<String, Object> ammessi(JsonNode form, Map<String, Object> body) {
+        return ammessi(form, body, Map.of());
+    }
+
+    /**
+     * Come sopra, togliendo i valori dei campi nascosti dalle condizioni.
+     * Il contesto sono i dati già presenti nella pratica (servono se la condizione guarda un campo in sola lettura).
+     */
+    public static Map<String, Object> ammessi(JsonNode form, Map<String, Object> body, Map<String, Object> contesto) {
         Map<String, Object> in = body != null ? body : Map.of();
         if (form == null || !form.has("fields")) return new HashMap<>(in);
         Map<String, Object> out = new HashMap<>();
         for (Campo c : campi(form))
             if (in.containsKey(c.nome())) out.put(c.nome(), in.get(c.nome()));
+        out.keySet().removeAll(nascosti(form, unisci(contesto, out)));
         return out;
     }
 
     /** Etichette dei campi obbligatori non compilati (un sì/no obbligatorio deve essere "sì"). */
     public static List<String> obbligatoriMancanti(JsonNode form, Map<String, Object> vars) {
+        return obbligatoriMancanti(form, vars, Map.of());
+    }
+
+    /** Come sopra; i campi nascosti dalle condizioni non sono obbligatori. */
+    public static List<String> obbligatoriMancanti(JsonNode form, Map<String, Object> vars, Map<String, Object> contesto) {
         List<String> mancanti = new ArrayList<>();
+        Set<String> nascosti = nascosti(form, unisci(contesto, vars));
         for (Campo c : campi(form)) {
-            if (!c.obbligatorio()) continue;
+            if (!c.obbligatorio() || nascosti.contains(c.nome())) continue;
             Object v = vars.get(c.nome());
             boolean vuoto = v == null || v.toString().isBlank()
                 || ("checkbox".equals(c.tipo()) && !Boolean.TRUE.equals(v));
@@ -114,8 +196,12 @@ public final class ValoriForm {
                 errori.add(new Errore(nome, ex.getMessage()));
             }
         }
+        // i campi nascosti dalle condizioni non si salvano e non sono obbligatori
+        Set<String> nascosti = nascosti(form, valori);
+        valori.keySet().removeAll(nascosti);
         for (Campo c : perNome.values()) {
-            if (!c.obbligatorio() || errori.stream().anyMatch(x -> x.campo().equals(c.nome()))) continue;
+            if (!c.obbligatorio() || nascosti.contains(c.nome())
+                || errori.stream().anyMatch(x -> x.campo().equals(c.nome()))) continue;
             Object v = valori.get(c.nome());
             if (v == null) errori.add(new Errore(c.nome(), "obbligatorio"));
             else if ("checkbox".equals(c.tipo()) && !Boolean.TRUE.equals(v)) errori.add(new Errore(c.nome(), "deve essere true"));
