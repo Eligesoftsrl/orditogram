@@ -7,6 +7,13 @@ server:
   error:
     include-message: always           # i messaggi di errore arrivano al frontend
 
+# Righe di log su una riga sola: gli a capo nei messaggi (anche da dati degli utenti) diventano spazi,
+# così nessuno può inserire righe false nel log (CWE-117). Le tracce delle eccezioni restano su più righe.
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %5p [%t] %logger{39} : %replace(%m){'[\\r\\n]+', ' '}%n%wEx"
+    file: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %5p [%t] %logger{39} : %replace(%m){'[\\r\\n]+', ' '}%n%wEx"
+
 management:
   endpoints:
     web:

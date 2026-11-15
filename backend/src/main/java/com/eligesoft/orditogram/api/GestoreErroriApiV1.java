@@ -66,12 +66,8 @@ public class GestoreErroriApiV1 {
 
     @ExceptionHandler(org.activiti.engine.ActivitiException.class)
     public ResponseEntity<Map<String, Object>> motore(org.activiti.engine.ActivitiException e) {
-        Throwable c = e;
-        while (c != null) {
-            if (c instanceof IllegalStateException || c instanceof IllegalArgumentException)
-                return risposta(409, "conflitto", c.getMessage(), List.of());
-            c = c.getCause() == c ? null : c.getCause();
-        }
+        RuntimeException causa = com.eligesoft.orditogram.ApiExceptionHandler.causaApplicativa(e);
+        if (causa != null) return risposta(409, "conflitto", causa.getMessage(), List.of());
         log.warn("Errore del motore nell'API pubblica", e);
         return risposta(500, "errore_processo", "Errore nell'esecuzione del processo: " + e.getMessage(), List.of());
     }

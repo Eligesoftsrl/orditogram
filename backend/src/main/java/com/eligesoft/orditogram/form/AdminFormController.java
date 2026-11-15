@@ -22,6 +22,7 @@ import java.util.*;
 @RestController
 @RequestMapping("/api/admin/forms")
 public class AdminFormController {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AdminFormController.class);
 
     private final com.eligesoft.orditogram.registro.RegistroService registro;
 
@@ -67,13 +68,13 @@ public class AdminFormController {
         Set<String> inBozza = new HashSet<>();
         for (ProcessDefinition d : repositoryService.createProcessDefinitionQuery().latestVersion().list()) {
             try { processi.put(d.getKey(), repositoryService.getBpmnModel(d.getId()).getMainProcess()); }
-            catch (Exception ignored) { /* definizione illeggibile: si salta */ }
+            catch (Exception e) { log.debug("Definizione illeggibile, saltata: {}", e.getMessage()); }
         }
         for (ProcessoBozza b : bozze.findAll()) {
             try {
                 Process p = bpmn.parse(b.getXml().getBytes(StandardCharsets.UTF_8)).getMainProcess();
                 if (p != null) { processi.put(b.getChiave(), p); inBozza.add(b.getChiave()); }
-            } catch (Exception ignored) { /* bozza non valida: si salta */ }
+            } catch (Exception e) { log.debug("Bozza {} non valida, saltata: {}", b.getChiave(), e.getMessage()); }
         }
         Map<String, List<Map<String, Object>>> out = new HashMap<>();
         processi.forEach((chiave, p) -> {

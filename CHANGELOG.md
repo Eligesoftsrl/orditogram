@@ -32,6 +32,16 @@ Form avanzati, prima parte.
   riportati alle sue versioni anche dove Activiti le fissava, Tomcat 10.1.62, driver PostgreSQL 42.7.14,
   Bouncy Castle 1.87, React Router 7, DOMPurify corretto; Tailwind tra gli strumenti di sviluppo.
 
+- **Correzioni dalla prima analisi del codice**: espressioni regolari riscritte senza rischio di blocco (email,
+  mappature delle chiamate API); controllo `X-Requested-With` contro il CSRF esteso a ogni accesso dal browser,
+  non solo a Keycloak ed Entra ID; log su una riga sola contro le righe false; transazione dei webhook coerente;
+  rollback esplicito su pubblicazione, importazione dei pacchetti e avvio con allegati; eccezioni non più ignorate
+  in silenzio; azioni di GitHub fissate per impronta. Interfaccia: etichette collegate ai campi nello Studio
+  (Form, Utenti), area degli allegati usabile da tastiera, errori di caricamento sempre gestiti.
+
+**Aggiornamento**: chi chiama l'API interna (`/api`, non `/api/v1`) da un browser o da uno script che manda
+cookie o `Origin` deve aggiungere l'intestazione `X-Requested-With: XMLHttpRequest`, come già fa l'interfaccia.
+
 ## 0.11.0 (novembre 2026)
 
 Il prodotto si chiama **Orditogram**.

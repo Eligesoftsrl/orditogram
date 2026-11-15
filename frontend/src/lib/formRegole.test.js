@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { codiceFiscaleValido, controlla, descriviRegole, erroriForm, ibanValido, partitaIvaValida } from './formRegole.js'
+import { codiceFiscaleValido, controlla, emailValida, descriviRegole, erroriForm, ibanValido, partitaIvaValida } from './formRegole.js'
 
 const OGGI = '2026-11-15'
 
@@ -34,6 +34,8 @@ describe('regole dei campi (uguali al backend)', () => {
     expect(controlla({ type: 'text', formato: 'iban' }, 'IT60 X054 2811 1010 0000 0123 456')).toBeNull()
     expect(controlla({ type: 'text', formato: 'cap' }, '1018')).toBe('deve essere un CAP di 5 cifre')
     expect(controlla({ type: 'text', formato: 'email' }, 'mario@')).toBe('deve essere un indirizzo email valido')
+    expect(emailValida('protocollo@pec.comune.it')).toBe(true)
+    for (const no of ['@x.it', 'a@@b.it', 'a@b@c.it', 'a b@c.it', 'a@b.c', 'a@.it', 'a@bit']) expect(emailValida(no)).toBe(false)
     expect(controlla({ type: 'text', formato: 'telefono' }, '+39 06 1234567')).toBeNull()
   })
 

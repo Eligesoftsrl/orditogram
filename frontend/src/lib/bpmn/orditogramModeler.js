@@ -153,7 +153,7 @@ const IT = {
 
 function traduci(template, replacements = {}) {
   const t = IT[template] || template
-  return t.replace(/{([^}]+)}/g, (_, key) => replacements[key] ?? `{${key}}`)
+  return t.replace(/\{(\w+)\}/g, (_, key) => replacements[key] ?? `{${key}}`)
 }
 export const italianoModule = { translate: ['value', traduci] }
 

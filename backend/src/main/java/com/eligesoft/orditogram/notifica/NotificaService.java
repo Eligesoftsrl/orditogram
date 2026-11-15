@@ -63,8 +63,10 @@ public class NotificaService {
      * Restituisce null se manca.
      */
     public static JavaMailSender configurato(JavaMailSender s) {
-        if (s instanceof org.springframework.mail.javamail.JavaMailSenderImpl i && (i.getHost() == null || i.getHost().isBlank()))
-            return null;
+        if (s instanceof org.springframework.mail.javamail.JavaMailSenderImpl i) {
+            String host = i.getHost();
+            if (host == null || host.isBlank()) return null;
+        }
         return s;
     }
 

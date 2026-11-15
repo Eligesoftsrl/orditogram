@@ -88,7 +88,7 @@ export default function Shell() {
 
         {menu && (
           <div className="fixed inset-0 z-40 lg:hidden">
-            <div className="absolute inset-0 bg-pino-950/50" onClick={() => setMenu(false)} />
+            <button type="button" aria-label="Chiudi il menu" className="absolute inset-0 cursor-default bg-pino-950/50" onClick={() => setMenu(false)} />
             <aside className="absolute inset-y-0 left-0 w-[272px] animate-entra">{barra}</aside>
           </div>
         )}

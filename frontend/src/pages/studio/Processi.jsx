@@ -27,10 +27,10 @@ export default function Processi() {
       setLista(l)
       setBozze(b)
       const s = l.find(p => p.key === (selezionaKey || scelto?.key)) || l[0]
-      if (s) apri(s)
+      if (s) void apri(s)
     } catch (e) { setErrore(e.message) }
   }
-  useEffect(() => { load() }, [])
+  useEffect(() => { void load() }, [])
 
   const apri = async (p) => {
     setScelto(p); setXml('')
@@ -44,7 +44,7 @@ export default function Processi() {
       navigate(`/studio/editor/${r.chiave}`)
     } catch (e) {
       if (!sovrascrivi && /esistono già/.test(e.message)) {
-        if (confirm(e.message + '\n\nSovrascriverli con quelli del pacchetto? I processi in produzione che li usano vedranno subito la nuova versione.')) importa(file, true)
+        if (confirm(e.message + '\n\nSovrascriverli con quelli del pacchetto? I processi in produzione che li usano vedranno subito la nuova versione.')) void importa(file, true)
       } else toast.errore(e.message)
     }
   }
@@ -79,7 +79,7 @@ export default function Processi() {
           <Button icona={Upload} onClick={() => setCarica(true)}>Carica BPMN</Button>
           <Button variante="primario" icona={Plus} onClick={() => setNuovo(true)}>Nuovo processo</Button>
           <input ref={inputPacchetto} type="file" accept=".zip" className="hidden"
-                 onChange={e => { const f = e.target.files[0]; e.target.value = ''; if (f) importa(f) }} />
+                 onChange={e => { const f = e.target.files[0]; e.target.value = ''; if (f) void importa(f) }} />
         </div>
       </header>
 
@@ -160,7 +160,7 @@ export default function Processi() {
       <NuovoProcesso aperto={nuovo} onClose={() => setNuovo(false)}
                      esistenti={[...(lista || []).map(p => p.key), ...bozze.map(b => b.chiave)]}
                      onCrea={(chiave, nome) => navigate(`/studio/editor/${chiave}?nome=${encodeURIComponent(nome)}`)} />
-      <CaricaProcesso aperto={carica} onClose={() => setCarica(false)} onDeploy={(key) => { setCarica(false); load(key) }} />
+      <CaricaProcesso aperto={carica} onClose={() => setCarica(false)} onDeploy={(key) => { setCarica(false); void load(key) }} />
     </div>
   )
 }

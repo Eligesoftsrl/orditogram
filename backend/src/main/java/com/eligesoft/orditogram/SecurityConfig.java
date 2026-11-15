@@ -60,7 +60,7 @@ public class SecurityConfig {
     @Order(1)
     public SecurityFilterChain apiPubblica(HttpSecurity http, ChiaviApiService chiavi, ApiProperties api) throws Exception {
         http.securityMatcher("/api/v1/**")
-            .csrf(csrf -> csrf.disable())
+            .csrf(csrf -> csrf.disable())  // NOSONAR: solo chiave API nell'intestazione, nessun cookie né sessione
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .httpBasic(b -> b.disable())
             .formLogin(f -> f.disable())
@@ -107,9 +107,9 @@ public class SecurityConfig {
                                            ObjectProvider<OrditogramOidcUserService> oidcUserService,
                                            OidcProperties oidc,
                                            @Value("${app.login.locale:true}") boolean loginLocale) throws Exception {
-        http.csrf(csrf -> csrf.disable())
-            // con la sessione del provider: le richieste che modificano dati devono arrivare dal frontend di Orditogram
-            // (intestazione X-Requested-With, che un altro sito non può aggiungere): protezione CSRF
+        // CSRF: il token di Spring non serve perché le richieste che modificano dati da un browser devono avere
+        // l'intestazione X-Requested-With, che un altro sito non può aggiungere (vedi FiltroRichiesteSessione).
+        http.csrf(csrf -> csrf.disable())  // NOSONAR: protezione CSRF con l'intestazione personalizzata, sotto
             .addFilterAfter(new FiltroRichiesteSessione(), org.springframework.security.web.authentication.AnonymousAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 // pagina di errore di Spring (es. 404): risponde con il codice giusto anche a chi non è autenticato
@@ -150,18 +150,28 @@ public class SecurityConfig {
     }
 
     /**
-     * Se l'utente è autenticato con la sessione del provider (cookie), le richieste che modificano dati
-     * devono avere l'intestazione X-Requested-With: un modulo o uno script di un altro sito non può aggiungerla.
+     * Protezione CSRF. Le richieste all'API che modificano dati e arrivano da un browser devono avere l'intestazione
+     * X-Requested-With: un modulo o uno script di un altro sito non può aggiungerla senza il permesso CORS.
+     * Da un browser = sessione del provider, oppure cookie, Origin o Sec-Fetch-Site, che i browser mandano da soli
+     * (anche con le credenziali Basic ricordate). Le integrazioni server-to-server con Basic non li mandano.
      */
     static class FiltroRichiesteSessione extends OncePerRequestFilter {
         private static final Set<String> SICURI = Set.of("GET", "HEAD", "OPTIONS");
 
+        static boolean daBrowser(HttpServletRequest req) {
+            var autenticazione = SecurityContextHolder.getContext().getAuthentication();
+            // chi non ha fatto l'accesso (es. sistemi esterni su /api/messaggi con la loro chiave) non ha nulla da rubare
+            if (autenticazione == null || !autenticazione.isAuthenticated()
+                || autenticazione instanceof org.springframework.security.authentication.AnonymousAuthenticationToken) return false;
+            return autenticazione instanceof OAuth2AuthenticationToken
+                || req.getHeader("Cookie") != null || req.getHeader("Origin") != null || req.getHeader("Sec-Fetch-Site") != null;
+        }
+
         @Override
         protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
                 throws ServletException, IOException {
-            boolean sessione = SecurityContextHolder.getContext().getAuthentication() instanceof OAuth2AuthenticationToken;
             boolean api = req.getRequestURI().startsWith(req.getContextPath() + "/api/");
-            if (sessione && api && !SICURI.contains(req.getMethod()) && req.getHeader("X-Requested-With") == null) {
+            if (api && !SICURI.contains(req.getMethod()) && req.getHeader("X-Requested-With") == null && daBrowser(req)) {
                 res.sendError(HttpServletResponse.SC_FORBIDDEN, "Richiesta non consentita");
                 return;
             }

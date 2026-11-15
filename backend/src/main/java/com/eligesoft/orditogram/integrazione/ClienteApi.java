@@ -26,7 +26,7 @@ public final class ClienteApi {
     public static final String PERCORSO_STATO = "@stato";
     public static final String PERCORSO_CORPO = "@corpo";
 
-    private static final Pattern RIGA_MAPPATURA = Pattern.compile("^\\s*([a-zA-Z][\\w-]*)\\s*=\\s*(\\S.*?)\\s*$");
+    private static final Pattern NOME_MAPPATURA = Pattern.compile("[a-zA-Z][\\w-]*");
     private static final Pattern SEGMENTO = Pattern.compile("([^.\\[\\]]+)|\\[(\\d+)]");
     private static final int MAX_CORPO = 2 * 1024 * 1024;
 
@@ -155,9 +155,12 @@ public final class ClienteApi {
     public static List<String[]> righe(String mappatura) {
         List<String[]> out = new ArrayList<>();
         if (mappatura == null) return out;
+        // "nome = valore": diviso al primo "=", senza espressioni con ripetizioni annidate (tempo lineare)
         for (String riga : mappatura.split("\\R")) {
-            Matcher m = RIGA_MAPPATURA.matcher(riga);
-            if (m.matches()) out.add(new String[]{m.group(1), m.group(2)});
+            int uguale = riga.indexOf('=');
+            if (uguale < 0) continue;
+            String nome = riga.substring(0, uguale).strip(), valore = riga.substring(uguale + 1).strip();
+            if (!valore.isEmpty() && NOME_MAPPATURA.matcher(nome).matches()) out.add(new String[]{nome, valore});
         }
         return out;
     }

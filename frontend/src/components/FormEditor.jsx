@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import {
   TextAlignStart, Braces, CalendarDays, ChevronDown, ChevronUp, CircleCheck, Copy, Eye, Hash, Heading, ListChecks,
   Plus, Save, SquareCheck, Table2, Trash, Type, X
@@ -11,8 +11,11 @@ import { FORMATI, descriviRegole } from '../lib/formRegole.js'
 
 const NESSUNA_REGOLA = { min: undefined, max: undefined, minLunghezza: undefined, maxLunghezza: undefined,
   formato: undefined, espressione: undefined, messaggioFormato: undefined, colonne: undefined, minRighe: undefined, maxRighe: undefined }
+/** Identificativi interni dell'editor (chiavi di React): basta un contatore, non serve casualità. */
+let ultimoId = 0
+const nuovoId = () => ++ultimoId
 const TIPI_COLONNA = ['text', 'number', 'date', 'select', 'checkbox']
-const colonnaIniziale = () => ({ _id: Math.random(), _nomeAuto: true, name: 'descrizione', label: 'Descrizione', type: 'text' })
+const colonnaIniziale = () => ({ _id: nuovoId(), _nomeAuto: true, name: 'descrizione', label: 'Descrizione', type: 'text' })
 /** Proprietà in più quando un campo diventa di quel tipo. */
 const perTipo = (tipo, f = {}) => ({
   ...(tipo === 'select' && !f.options ? { options: ['Opzione 1', 'Opzione 2'] } : {}),
@@ -54,6 +57,7 @@ function nomeDaEtichetta(s) {
  *  onEliminato:  chiamato dopo aver eliminato la versione su database
  */
 export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoIniziale = false, suggerimento = '', onSalvato, onEliminato }) {
+  const uid = useId()
   const [catalogo, setCatalogo] = useState({})
   const [sorgente, setSorgente] = useState(null)
   const [chiave, setChiave] = useState(nuovoIniziale ? suggerimento : chiaveIniziale)
@@ -85,7 +89,7 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
       setChiave(k); setNuovo(false); setForm(def); setOriginale(JSON.stringify(pulisci(def)))
     } catch (e) { setErrore(e.message) }
   }
-  useEffect(() => { if (!nuovoIniziale && chiaveIniziale) apri(chiaveIniziale) }, [chiaveIniziale, nuovoIniziale])
+  useEffect(() => { if (!nuovoIniziale && chiaveIniziale) void apri(chiaveIniziale) }, [chiaveIniziale, nuovoIniziale])
 
   const json = useMemo(() => form ? JSON.stringify(pulisci(form), null, 2) : '', [form])
   const modificato = form && json && JSON.stringify(JSON.parse(json)) !== originale
@@ -100,15 +104,15 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
   })
   const togli = (i) => setForm(f => ({ ...f, fields: f.fields.filter((_, j) => j !== i) }))
   const duplica = (i) => setForm(f => {
-    const c = { ...f.fields[i], _id: Math.random(), name: f.fields[i].name + 'Copia', label: f.fields[i].label + ' (copia)' }
+    const c = { ...f.fields[i], _id: nuovoId(), name: f.fields[i].name + 'Copia', label: f.fields[i].label + ' (copia)' }
     const a = [...f.fields]; a.splice(i + 1, 0, c)
     return { ...f, fields: a }
   })
   const aggiungi = (tipo) => setForm(f => ({
     ...f,
     fields: [...f.fields, tipo === SEZIONE
-      ? { _id: Math.random(), _aperto: true, type: SEZIONE, label: '' }
-      : { _id: Math.random(), _aperto: true, _nomeAuto: true, type: tipo, label: '', name: '', ...perTipo(tipo) }]
+      ? { _id: nuovoId(), _aperto: true, type: SEZIONE, label: '' }
+      : { _id: nuovoId(), _aperto: true, _nomeAuto: true, type: tipo, label: '', name: '', ...perTipo(tipo) }]
   }))
 
   const salva = async () => {
@@ -186,21 +190,21 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
                     <Pannello titolo="Impostazioni">
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div className="sm:col-span-2">
-                          <label className="etichetta">Titolo</label>
-                          <input className="campo" value={form.title || ''} onChange={e => aggiorna({ title: e.target.value })} />
+                          <label className="etichetta" htmlFor={`${uid}-1`}>Titolo</label>
+                          <input id={`${uid}-1`} className="campo" value={form.title || ''} onChange={e => aggiorna({ title: e.target.value })} />
                         </div>
                         <div className="sm:col-span-2">
-                          <label className="etichetta">Istruzioni per chi compila</label>
-                          <textarea rows={2} className="campo" value={form.description || ''} onChange={e => aggiorna({ description: e.target.value })}
+                          <label className="etichetta" htmlFor={`${uid}-2`}>Istruzioni per chi compila</label>
+                          <textarea id={`${uid}-2`} rows={2} className="campo" value={form.description || ''} onChange={e => aggiorna({ description: e.target.value })}
                                     placeholder="Es. Controlla dati e allegati prima di confermare." />
                         </div>
                         <div>
-                          <label className="etichetta">Testo del pulsante</label>
-                          <input className="campo" value={form.submitLabel || ''} onChange={e => aggiorna({ submitLabel: e.target.value })} placeholder="Conferma" />
+                          <label className="etichetta" htmlFor={`${uid}-3`}>Testo del pulsante</label>
+                          <input id={`${uid}-3`} className="campo" value={form.submitLabel || ''} onChange={e => aggiorna({ submitLabel: e.target.value })} placeholder="Conferma" />
                         </div>
                         <div>
-                          <label className="etichetta">Documenti della pratica</label>
-                          <select className="campo" value={form.documenti || ''} onChange={e => aggiorna({ documenti: e.target.value || undefined })}>
+                          <label className="etichetta" htmlFor={`${uid}-4`}>Documenti della pratica</label>
+                          <select id={`${uid}-4`} className="campo" value={form.documenti || ''} onChange={e => aggiorna({ documenti: e.target.value || undefined })}>
                             {DOCUMENTI.map(d => <option key={d.id} value={d.id}>{d.label}</option>)}
                           </select>
                           <p className="mt-1 text-[13px] text-grafite">{DOCUMENTI.find(d => d.id === (form.documenti || ''))?.aiuto}</p>
@@ -247,7 +251,7 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
 
 /** Identificativi interni per i campi e le colonne delle tabelle. */
 function conId(x) {
-  return { ...x, _id: Math.random(), ...(Array.isArray(x.colonne) ? { colonne: x.colonne.map(c => ({ ...c, _id: Math.random() })) } : {}) }
+  return { ...x, _id: nuovoId(), ...(Array.isArray(x.colonne) ? { colonne: x.colonne.map(c => ({ ...c, _id: nuovoId() })) } : {}) }
 }
 
 /** Una riga d'esempio per l'anteprima di una tabella in sola lettura. */
@@ -291,6 +295,7 @@ function pulisci(form) {
 }
 
 function CampoEditor({ f, i, n, catalogo, campi, onChange, onSu, onGiu, onTogli, onDuplica }) {
+  const uid = useId()
   const [aperto, setAperto] = useState(!!f._aperto)
   if (eSezione(f)) return <SezioneEditor {...{ f, i, n, onChange, onSu, onGiu, onTogli, aperto, setAperto }} />
   const Tipo = TIPI.find(t => t.id === (f.type || 'text')) || TIPI[0]
@@ -303,7 +308,7 @@ function CampoEditor({ f, i, n, catalogo, campi, onChange, onSu, onGiu, onTogli,
     const noto = catalogo[clean]
     // riuso di un dato già presente in altri form: propone etichetta e tipo
     if (noto && !f.label) onChange({ name: clean, label: noto.label, type: noto.type, options: noto.options,
-      ...(noto.colonne ? { colonne: noto.colonne.map(c => ({ ...c, _id: Math.random() })), minRighe: noto.minRighe, maxRighe: noto.maxRighe } : {}),
+      ...(noto.colonne ? { colonne: noto.colonne.map(c => ({ ...c, _id: nuovoId() })), minRighe: noto.minRighe, maxRighe: noto.maxRighe } : {}),
       _nomeAuto: false })
     else onChange({ name: clean, _nomeAuto: false })
   }
@@ -331,29 +336,29 @@ function CampoEditor({ f, i, n, catalogo, campi, onChange, onSu, onGiu, onTogli,
       {aperto && (
         <div className="grid gap-3 border-t border-linea px-3 py-3 sm:grid-cols-2">
           <div>
-            <label className="etichetta">Etichetta</label>
-            <input className="campo" autoFocus={!f.label} value={f.label || ''} onChange={e => cambiaEtichetta(e.target.value)} placeholder="Es. Numero di protocollo" />
+            <label className="etichetta" htmlFor={`${uid}-5`}>Etichetta</label>
+            <input id={`${uid}-5`} className="campo" autoFocus={!f.label} value={f.label || ''} onChange={e => cambiaEtichetta(e.target.value)} placeholder="Es. Numero di protocollo" />
           </div>
           <div>
-            <label className="etichetta">Nome del dato</label>
-            <input className="campo font-mono text-sm" list={listId} value={f.name || ''} onChange={e => cambiaNome(e.target.value)} placeholder="numeroDiProtocollo" />
+            <label className="etichetta" htmlFor={`${uid}-6`}>Nome del dato</label>
+            <input id={`${uid}-6`} className="campo font-mono text-sm" list={listId} value={f.name || ''} onChange={e => cambiaNome(e.target.value)} placeholder="numeroDiProtocollo" />
             <datalist id={listId}>{Object.values(catalogo).map(c => <option key={c.name} value={c.name}>{c.label}</option>)}</datalist>
             <p className="mt-1 text-xs text-grafite">Stesso nome in più form = stesso dato della pratica.</p>
           </div>
           <div>
-            <label className="etichetta">Tipo</label>
-            <select className="campo" value={f.type || 'text'} onChange={e => onChange({ ...NESSUNA_REGOLA, type: e.target.value, ...perTipo(e.target.value, f) })}>
+            <label className="etichetta" htmlFor={`${uid}-7`}>Tipo</label>
+            <select id={`${uid}-7`} className="campo" value={f.type || 'text'} onChange={e => onChange({ ...NESSUNA_REGOLA, type: e.target.value, ...perTipo(e.target.value, f) })}>
               {TIPI.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
             </select>
           </div>
           <div>
-            <label className="etichetta">Aiuto per chi compila</label>
-            <input className="campo" value={f.help || ''} onChange={e => onChange({ help: e.target.value })} placeholder="Facoltativo" />
+            <label className="etichetta" htmlFor={`${uid}-8`}>Aiuto per chi compila</label>
+            <input id={`${uid}-8`} className="campo" value={f.help || ''} onChange={e => onChange({ help: e.target.value })} placeholder="Facoltativo" />
           </div>
 
           {f.type === 'select' && (
             <div className="sm:col-span-2">
-              <label className="etichetta">Opzioni</label>
+              <p className="etichetta">Opzioni</p>
               <Opzioni valori={f.options || []} onChange={options => onChange({ options })} />
             </div>
           )}
@@ -380,30 +385,31 @@ function CampoEditor({ f, i, n, catalogo, campi, onChange, onSu, onGiu, onTogli,
 
 /** Regole di validazione secondo il tipo: limiti per numeri e date, lunghezza e formato per i testi. */
 function RegoleEditor({ f, onChange }) {
+  const uid = useId()
   const tipo = f.type || 'text'
   const v = (k) => f[k] ?? ''
   const imposta = (k) => (e) => onChange({ [k]: e.target.value.trim() === '' ? undefined : e.target.value })
   if (tipo === 'number') return (
     <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
-      <div><label className="etichetta">Valore minimo</label><input className="campo" inputMode="decimal" value={v('min')} onChange={imposta('min')} placeholder="Nessuno" /></div>
-      <div><label className="etichetta">Valore massimo</label><input className="campo" inputMode="decimal" value={v('max')} onChange={imposta('max')} placeholder="Nessuno" /></div>
+      <div><label className="etichetta" htmlFor={`${uid}-9`}>Valore minimo</label><input id={`${uid}-9`} className="campo" inputMode="decimal" value={v('min')} onChange={imposta('min')} placeholder="Nessuno" /></div>
+      <div><label className="etichetta" htmlFor={`${uid}-10`}>Valore massimo</label><input id={`${uid}-10`} className="campo" inputMode="decimal" value={v('max')} onChange={imposta('max')} placeholder="Nessuno" /></div>
     </div>
   )
   if (tipo === 'date') return (
     <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
-      <div><label className="etichetta">Non prima del</label><input className="campo" value={v('min')} onChange={imposta('min')} placeholder="oggi, oppure 2026-01-31" /></div>
-      <div><label className="etichetta">Non dopo il</label><input className="campo" value={v('max')} onChange={imposta('max')} placeholder="oggi, oppure 2026-12-31" /></div>
+      <div><label className="etichetta" htmlFor={`${uid}-11`}>Non prima del</label><input id={`${uid}-11`} className="campo" value={v('min')} onChange={imposta('min')} placeholder="oggi, oppure 2026-01-31" /></div>
+      <div><label className="etichetta" htmlFor={`${uid}-12`}>Non dopo il</label><input id={`${uid}-12`} className="campo" value={v('max')} onChange={imposta('max')} placeholder="oggi, oppure 2026-12-31" /></div>
     </div>
   )
   if (tipo !== 'text' && tipo !== 'textarea') return null
   return (
     <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
-      <div><label className="etichetta">Caratteri minimi</label><input className="campo" inputMode="numeric" value={v('minLunghezza')} onChange={imposta('minLunghezza')} placeholder="Nessuno" /></div>
-      <div><label className="etichetta">Caratteri massimi</label><input className="campo" inputMode="numeric" value={v('maxLunghezza')} onChange={imposta('maxLunghezza')} placeholder="Nessuno" /></div>
+      <div><label className="etichetta" htmlFor={`${uid}-13`}>Caratteri minimi</label><input id={`${uid}-13`} className="campo" inputMode="numeric" value={v('minLunghezza')} onChange={imposta('minLunghezza')} placeholder="Nessuno" /></div>
+      <div><label className="etichetta" htmlFor={`${uid}-14`}>Caratteri massimi</label><input id={`${uid}-14`} className="campo" inputMode="numeric" value={v('maxLunghezza')} onChange={imposta('maxLunghezza')} placeholder="Nessuno" /></div>
       {tipo === 'text' && (
         <div className="sm:col-span-2">
-          <label className="etichetta">Formato</label>
-          <select className="campo" value={v('formato')} onChange={e => onChange({ formato: e.target.value || undefined,
+          <label className="etichetta" htmlFor={`${uid}-15`}>Formato</label>
+          <select id={`${uid}-15`} className="campo" value={v('formato')} onChange={e => onChange({ formato: e.target.value || undefined,
             ...(e.target.value !== 'espressione' ? { espressione: undefined, messaggioFormato: undefined } : {}) })}>
             <option value="">Testo libero</option>
             {FORMATI.map(x => <option key={x.id} value={x.id}>{x.label}</option>)}
@@ -413,8 +419,8 @@ function RegoleEditor({ f, onChange }) {
       )}
       {tipo === 'text' && f.formato === 'espressione' && (
         <>
-          <div><label className="etichetta">Espressione regolare</label><input className="campo font-mono text-sm" value={v('espressione')} onChange={imposta('espressione')} placeholder="[0-9]{4}/[0-9]+" /></div>
-          <div><label className="etichetta">Messaggio se non va bene</label><input className="campo" value={v('messaggioFormato')} onChange={imposta('messaggioFormato')} placeholder="Es. scrivi anno/numero, come 2026/123" /></div>
+          <div><label className="etichetta" htmlFor={`${uid}-16`}>Espressione regolare</label><input id={`${uid}-16`} className="campo font-mono text-sm" value={v('espressione')} onChange={imposta('espressione')} placeholder="[0-9]{4}/[0-9]+" /></div>
+          <div><label className="etichetta" htmlFor={`${uid}-17`}>Messaggio se non va bene</label><input id={`${uid}-17`} className="campo" value={v('messaggioFormato')} onChange={imposta('messaggioFormato')} placeholder="Es. scrivi anno/numero, come 2026/123" /></div>
         </>
       )}
     </div>
@@ -428,7 +434,7 @@ function ColonneEditor({ f, onChange }) {
   const cambia = (i, patch) => onChange({ colonne: colonne.map((c, j) => j === i ? { ...c, ...patch } : c) })
   const sposta = (i, d) => { const a = [...colonne]; [a[i], a[i + d]] = [a[i + d], a[i]]; onChange({ colonne: a }) }
   const aggiungi = () => {
-    const c = { _id: Math.random(), _nomeAuto: true, name: '', label: '', type: 'text' }
+    const c = { _id: nuovoId(), _nomeAuto: true, name: '', label: '', type: 'text' }
     onChange({ colonne: [...colonne, c] }); setAperta(c._id)
   }
   const righe = (k) => (e) => onChange({ [k]: e.target.value.trim() === '' ? undefined : e.target.value.replace(/[^0-9]/g, '') })
@@ -476,7 +482,7 @@ function ColonneEditor({ f, onChange }) {
                   </div>
                   {c.type === 'select' && (
                     <div className="sm:col-span-2">
-                      <label className="etichetta">Opzioni</label>
+                      <p className="etichetta">Opzioni</p>
                       <Opzioni valori={c.options || []} onChange={options => cambia(i, { options })} />
                     </div>
                   )}
@@ -508,6 +514,7 @@ function ColonneEditor({ f, onChange }) {
 
 /** Titolo e istruzioni di una sezione del form. */
 function SezioneEditor({ f, i, n, onChange, onSu, onGiu, onTogli, aperto, setAperto }) {
+  const uid = useId()
   return (
     <div className={cx('rounded-campo border border-dashed bg-carta/60', aperto ? 'border-pino-200' : 'border-linea')}>
       <div className="flex items-center gap-2 px-3 py-2">
@@ -525,12 +532,12 @@ function SezioneEditor({ f, i, n, onChange, onSu, onGiu, onTogli, aperto, setApe
       {aperto && (
         <div className="grid gap-3 border-t border-linea px-3 py-3 sm:grid-cols-2">
           <div>
-            <label className="etichetta">Titolo della sezione</label>
-            <input className="campo" autoFocus={!f.label} value={f.label || ''} onChange={e => onChange({ label: e.target.value })} placeholder="Es. Dati del richiedente" />
+            <label className="etichetta" htmlFor={`${uid}-18`}>Titolo della sezione</label>
+            <input id={`${uid}-18`} className="campo" autoFocus={!f.label} value={f.label || ''} onChange={e => onChange({ label: e.target.value })} placeholder="Es. Dati del richiedente" />
           </div>
           <div>
-            <label className="etichetta">Istruzioni</label>
-            <input className="campo" value={f.help || ''} onChange={e => onChange({ help: e.target.value })} placeholder="Facoltative" />
+            <label className="etichetta" htmlFor={`${uid}-19`}>Istruzioni</label>
+            <input id={`${uid}-19`} className="campo" value={f.help || ''} onChange={e => onChange({ help: e.target.value })} placeholder="Facoltative" />
           </div>
         </div>
       )}

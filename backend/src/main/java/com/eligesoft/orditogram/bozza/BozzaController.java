@@ -167,7 +167,7 @@ public class BozzaController {
      * Se ci sono form con lo stesso nome ma contenuto diverso e sovrascrivi=false, risponde 409 con l'elenco.
      */
     @PostMapping(value = "/pacchetti", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<Map<String, Object>> importa(@RequestParam("file") MultipartFile file,
                                                        @RequestParam(defaultValue = "false") boolean sovrascrivi) throws IOException {
         String xml = null;

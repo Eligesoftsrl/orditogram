@@ -63,6 +63,12 @@ class RegoleCampoTest {
         assertNotNull(prova("{\"formato\":\"cap\"}", "text", "1018"));
         assertNull(prova("{\"formato\":\"email\"}", "text", "mario.rossi@comune.roma.it"));
         assertEquals("deve essere un indirizzo email valido", prova("{\"formato\":\"email\"}", "text", "mario@"));
+        assertTrue(RegoleCampo.emailValida("protocollo@pec.comune.it"));
+        for (String no : new String[]{"@x.it", "a@@b.it", "a@b@c.it", "a b@c.it", "a@b.c", "a@.it", "a@bit"})
+            assertFalse(RegoleCampo.emailValida(no), no);
+        // tempo lineare anche su testi lunghi e maliziosi (prima: espressione con backtracking)
+        String lungo = "a@" + "b.".repeat(50_000) + "!";
+        assertFalse(RegoleCampo.emailValida(lungo));
         assertNull(prova("{\"formato\":\"telefono\"}", "text", "+39 06 1234567"));
         assertNotNull(prova("{\"formato\":\"telefono\"}", "text", "chiamami"));
     }

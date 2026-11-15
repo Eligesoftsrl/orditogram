@@ -105,4 +105,14 @@ class ClienteApiTest {
         assertEquals("[numeroProtocollo, dataProtocollo]",
             ClienteApi.datiDaMappatura("numeroProtocollo = numero\nriga sbagliata\ndataProtocollo = data").toString());
     }
+
+    @Test
+    void righeDellaMappatura() {
+        var r = ClienteApi.righe("  esito =  stato.codice  \nnote= testo con = dentro\n1nome = x\nvuoto =   \n= solo valore\nsenza uguale");
+        assertEquals(2, r.size());
+        assertArrayEquals(new String[]{"esito", "stato.codice"}, r.get(0));
+        assertArrayEquals(new String[]{"note", "testo con = dentro"}, r.get(1));
+        // tempo lineare anche su una riga lunghissima (prima: espressione con backtracking)
+        assertTrue(ClienteApi.righe("a =" + " ".repeat(100_000) + "x" + " ".repeat(100_000) + "\u0000").size() <= 1);
+    }
 }

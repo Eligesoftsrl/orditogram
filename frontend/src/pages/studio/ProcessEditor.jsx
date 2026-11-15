@@ -186,7 +186,7 @@ export default function ProcessEditor() {
     })
 
     let annullato = false
-    ;(async () => {
+    void (async () => {
       let xml, informazioni
       try {
         const b = await api.bozza(chiave)

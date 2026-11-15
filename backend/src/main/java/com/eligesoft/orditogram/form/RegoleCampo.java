@@ -25,6 +25,19 @@ public final class RegoleCampo {
 
     private RegoleCampo() {}
 
+    /**
+     * Indirizzo email plausibile: una sola @, niente spazi, un punto nel dominio seguito da almeno due caratteri.
+     * Scritto senza espressione regolare per restare lineare su qualsiasi testo (uguale in lib/formRegole.js).
+     */
+    public static boolean emailValida(String s) {
+        if (s == null || s.length() > 254 || s.chars().anyMatch(Character::isWhitespace)) return false;
+        int at = s.indexOf('@');
+        if (at < 1 || at != s.lastIndexOf('@')) return false;
+        String dominio = s.substring(at + 1);
+        int punto = dominio.lastIndexOf('.');
+        return punto > 0 && dominio.length() - punto - 1 >= 2;
+    }
+
     public static final Set<String> FORMATI = Set.of("email", "codiceFiscale", "partitaIva", "cap", "telefono", "iban", "espressione");
 
     /** Lunghezza massima di un'espressione scritta dall'analista e di un testo su cui la si prova. */
@@ -33,7 +46,6 @@ public final class RegoleCampo {
     /** Passi massimi dell'espressione regolare su un valore: oltre, il valore si considera non valido (difesa da ReDoS). */
     static final int MAX_PASSI = 1_000_000;
 
-    private static final Pattern EMAIL = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$");
     private static final Pattern CF_PERSONA = Pattern.compile("^[A-Z]{6}[0-9LMNPQRSTUV]{2}[A-EHLMPRST][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]$");
     private static final Pattern UNDICI_CIFRE = Pattern.compile("^[0-9]{11}$");
     private static final Pattern CAP = Pattern.compile("^[0-9]{5}$");
@@ -79,7 +91,7 @@ public final class RegoleCampo {
     private static String formato(String formato, String s, JsonNode campo) {
         String compatto = s.replace(" ", "").toUpperCase(Locale.ROOT);
         return switch (formato) {
-            case "email" -> EMAIL.matcher(s).matches() ? null : "deve essere un indirizzo email valido";
+            case "email" -> emailValida(s) ? null : "deve essere un indirizzo email valido";
             case "codiceFiscale" -> codiceFiscaleValido(compatto) ? null : "deve essere un codice fiscale valido";
             case "partitaIva" -> partitaIvaValida(compatto) ? null : "deve essere una partita IVA valida (11 cifre)";
             case "cap" -> CAP.matcher(s).matches() ? null : "deve essere un CAP di 5 cifre";

@@ -17,7 +17,7 @@ const A_ISO = { minuti: ['PT', 'M'], ore: ['PT', 'H'], giorni: ['P', 'D'], setti
 
 export function durata(n, unita) {
   const [pre, suf] = A_ISO[unita] || A_ISO.giorni
-  return `${pre}${Math.max(1, parseInt(n, 10) || 1)}${suf}`
+  return `${pre}${Math.max(1, Number.parseInt(n, 10) || 1)}${suf}`
 }
 
 /** "P30D" → { n: 30, unita: 'giorni' }; null se non è una durata semplice. */

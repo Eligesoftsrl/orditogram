@@ -69,7 +69,7 @@ export default function Scrivania() {
                 <ul className="divide-y divide-linea">
                   {libere.map(t => (
                     <RigaAttivita key={t.id} t={t} azione={
-                      <Button misura="sm" icona={Hand} attesa={presa === t.id} onClick={(e) => { e.preventDefault(); prendi(t) }}>
+                      <Button misura="sm" icona={Hand} attesa={presa === t.id} onClick={(e) => { e.preventDefault(); void prendi(t) }}>
                         Lavora
                       </Button>
                     } />

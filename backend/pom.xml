@@ -198,6 +198,8 @@
               <threshold>Low</threshold>
               <xmlOutput>true</xmlOutput>
               <failOnError>false</failOnError>
+              <!-- falsi positivi verificati, ognuno con il motivo -->
+              <excludeFilterFile>${project.basedir}/../strumenti/analisi/spotbugs-esclusioni.xml</excludeFilterFile>
               <plugins>
                 <plugin>
                   <groupId>com.h3xstream.findsecbugs</groupId>

@@ -131,7 +131,18 @@ public class DocumentoService {
     }
 
     /** Un file pronto da allegare (es. a un'email). */
-    public record Allegato(String nome, String contentType, byte[] contenuto) {}
+    public record Allegato(String nome, String contentType, byte[] contenuto) {
+        @Override public boolean equals(Object o) {
+            return o instanceof Allegato a && java.util.Objects.equals(nome, a.nome)
+                && java.util.Objects.equals(contentType, a.contentType) && java.util.Arrays.equals(contenuto, a.contenuto);
+        }
+        @Override public int hashCode() {
+            return 31 * java.util.Objects.hash(nome, contentType) + java.util.Arrays.hashCode(contenuto);
+        }
+        @Override public String toString() {
+            return "Allegato[" + nome + ", " + contentType + ", " + (contenuto == null ? 0 : contenuto.length) + " byte]";
+        }
+    }
 
     /**
      * Ultima versione di ogni documento della pratica, con il contenuto.

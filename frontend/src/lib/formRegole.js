@@ -20,13 +20,22 @@ export const FORMATI = [
   { id: 'espressione', label: 'Personalizzato (espressione regolare)' }
 ]
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 const CF_PERSONA = /^[A-Z]{6}[0-9LMNPQRSTUV]{2}[A-EHLMPRST][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]$/
 const UNDICI_CIFRE = /^[0-9]{11}$/
 const CAP = /^[0-9]{5}$/
 const TELEFONO = /^\+?[0-9][0-9 ./-]{5,19}$/
 const IBAN = /^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$/
 const MAX_ESPRESSIONE = 300
+
+/** Una sola @, niente spazi, un punto nel dominio seguito da almeno due caratteri (come RegoleCampo.emailValida). */
+export function emailValida(s) {
+  if (typeof s !== 'string' || s.length > 254 || /\s/.test(s)) return false
+  const at = s.indexOf('@')
+  if (at < 1 || at !== s.lastIndexOf('@')) return false
+  const dominio = s.slice(at + 1)
+  const punto = dominio.lastIndexOf('.')
+  return punto > 0 && dominio.length - punto - 1 >= 2
+}
 
 export function partitaIvaValida(p) {
   if (!UNDICI_CIFRE.test(p)) return false
@@ -70,7 +79,7 @@ const data = (v, oggi) => {
 }
 const giorno = (iso, origine) => String(origine).trim().toLowerCase() === 'oggi'
   ? 'giorno di oggi' : iso.split('-').reverse().join('/')
-const numero = (v) => v === undefined || v === null || v === '' || isNaN(Number(v)) ? null : Number(v)
+const numero = (v) => v === undefined || v === null || v === '' || Number.isNaN(Number(v)) ? null : Number(v)
 const testoNumero = (n) => String(n).replace('.', ',')
 
 /** Il messaggio d'errore per il valore, o null se va bene (un campo vuoto lo controllano gli obbligatori). */
@@ -81,7 +90,7 @@ export function controlla(f, valore, oggi = oggiIso()) {
   const tipo = f.type || 'text'
   if (tipo === 'number') {
     const n = Number(s)
-    if (isNaN(n)) return 'deve essere un numero'
+    if (Number.isNaN(n)) return 'deve essere un numero'
     const min = numero(f.min), max = numero(f.max)
     if (min !== null && n < min) return `deve essere almeno ${testoNumero(min)}`
     if (max !== null && n > max) return `deve essere al massimo ${testoNumero(max)}`
@@ -102,7 +111,7 @@ export function controlla(f, valore, oggi = oggiIso()) {
 function formato(f, s) {
   const compatto = s.replace(/ /g, '').toUpperCase()
   switch (f.formato) {
-    case 'email': return EMAIL.test(s) ? null : 'deve essere un indirizzo email valido'
+    case 'email': return emailValida(s) ? null : 'deve essere un indirizzo email valido'
     case 'codiceFiscale': return codiceFiscaleValido(compatto) ? null : 'deve essere un codice fiscale valido'
     case 'partitaIva': return partitaIvaValida(compatto) ? null : 'deve essere una partita IVA valida (11 cifre)'
     case 'cap': return CAP.test(s) ? null : 'deve essere un CAP di 5 cifre'
