@@ -23,6 +23,8 @@ Form avanzati, prima parte.
 - **Analisi del codice in CI**: SonarQube Community, Semgrep, SpotBugs con FindSecBugs, OSV-Scanner e npm audit a
   ogni modifica, con riepilogo e rapporti conservati; distinta delle librerie (SBOM) e copertura dei test con
   `mvn -Panalisi verify`.
+- **Librerie aggiornate** dopo la prima analisi: Spring Boot 3.5.16 (Tomcat, Spring, Jackson corretti),
+  Bouncy Castle 1.87, React Router 7, DOMPurify corretto; Tailwind tra gli strumenti di sviluppo.
 
 ## 0.11.0 (novembre 2026)
 

@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.5.7</version>
+    <version>3.5.16</version>
     <relativePath/>
   </parent>
 
@@ -83,7 +83,7 @@
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcpkix-jdk18on</artifactId>
-      <version>1.84</version>
+      <version>1.87</version>
     </dependency>
 
     <!-- Test: motore e applicazione veri, database in memoria (H2) -->
