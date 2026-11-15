@@ -20,7 +20,8 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
 - **backend/**: Java 21, Spring Boot 3.5.16, **Activiti 8.8.1** (non Flowable: tieni allineate le versioni di
   Spring Boot e Activiti), Spring Security 6.5, JPA/Hibernate 6, PostgreSQL (H2 in memoria nei test).
   Pacchetto radice `com.eligesoft.orditogram`.
-- **frontend/**: React 18, Vite, Tailwind 4, bpmn-js 17 (+ token simulation), lucide-react, Vitest.
+- **frontend/**: React 19, Vite 8, Tailwind 4, bpmn-js 18 (+ token simulation 1.x), lucide-react, Vitest 5, Node 24.
+  Librerie sempre all'ultima versione: l'unico vincolo è Activiti nel backend (vedi sotto).
 - **esempi/accesso-atti/**: processo dimostrativo completo (legge 241/1990) con form e pacchetto `.orditogram.zip`.
 - **docker-compose.yml**: postgres + backend + frontend (nginx), Keycloak di prova con `--profile keycloak`.
 - **strumenti/**: backup e ripristino, script SQL per svuotare le pratiche.
@@ -91,13 +92,15 @@ laura, paolo, chiara, giulia: password `password`.
 - Activiti: i dati dei messaggi vanno impostati con `setVariables` prima di `messageEventReceived`;
   le espressioni `${...}` negli output dei mapping sono rifiutate; il clock del motore si legge pigramente.
 - Le email partono dopo il commit (`TransactionSynchronization`); senza `spring.mail.host` restano "non inviate".
-- bpmn-js: estensioni moddle `activiti` e `orditogram`; la simulazione usa `bpmn-js-token-simulation` 0.35.
+- bpmn-js: estensioni moddle `activiti` e `orditogram`; la simulazione usa `bpmn-js-token-simulation` 1.x.
 
 ## Stato e roadmap
 - **0.9** fondamenta: ricerca paginata, registro, Docker, test, CI, backup.
 - **0.10** integrazioni: API pubblica `/api/v1`, chiavi, OpenAPI generata, webhook firmati.
 - **0.11** nuovo nome Orditogram, Maven Wrapper, questo file.
-- Codice su GitHub (`Eligesoftsrl/orditogram`), CI verde: 46 test del backend, compreso `ApiPubblicaIntegrationTest`.
+- Codice su GitHub (`Eligesoftsrl/orditogram`), CI verde: 76 test del backend, compreso `ApiPubblicaIntegrationTest`;
+  analisi del codice (SonarQube, Semgrep, SpotBugs, OSV, npm audit) con soglie bloccanti, falsi positivi motivati
+  in `strumenti/analisi/`.
 - **Prossime fasi**: 3) form avanzati (sezioni, campi condizionali, tabelle di righe, validazioni);
   4) documenti da modello (lettere, provvedimenti); 5) tabelle decisionali DMN; 6) multi-ente / white label;
   7) versioni dei form e ruolo "analista del cliente"; 8) cruscotti; 9) libreria di modelli di processo;

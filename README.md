@@ -4,7 +4,7 @@ Piattaforma di processo: l'analista disegna il BPMN e configura i form, Orditogr
 Attività per gruppi, documenti con versioni e verifica delle firme, notifiche, storico completo.
 Nessun codice da scrivere per un nuovo processo.
 
-**Stack:** JDK 21, Spring Boot 3.5, Activiti 8.8, PostgreSQL, React 18 + Tailwind 4.
+**Stack:** JDK 21, Spring Boot 3.5, Activiti 8.8, PostgreSQL, React 19 + Vite 8 + Tailwind 4.
 
 ## Avvio con Docker (il modo più semplice)
 
@@ -16,6 +16,10 @@ docker compose up -d
 Orditogram risponde su http://localhost:8081 (utente `admin`, password `ADMIN_PASSWORD_INIZIALE` del file `.env`).
 Per i dati di prova metti `UTENTI_DI_PROVA=true` e `SERVIZI_DI_PROVA=true`. Con `--profile keycloak` parte anche un
 Keycloak di prova su http://localhost:8180.
+
+In produzione imposta `ORDITOGRAM_INDIRIZZO` con il nome con cui gli utenti aprono Orditogram (es.
+`orditogram.ente.it`): nginx passa sempre quel nome al backend, che lo usa per i link e per i redirect
+dell'accesso con Keycloak o Entra ID, invece dell'intestazione `Host` mandata da chi chiama.
 
 Tutte le impostazioni di `application.yml` si possono dare come variabili d'ambiente (es. `app.calendario.zona`
 diventa `APP_CALENDARIO_ZONA`, `spring.mail.host` diventa `SPRING_MAIL_HOST`). Il backend espone
@@ -71,7 +75,9 @@ cd backend && mvn -Panalisi verify   # copertura (target/site/jacoco), SpotBugs,
 ```
 
 Un falso positivo si segna con il motivo, così resta tracciato per le gare: `// NOSONAR: motivo` o `// nosemgrep`
-nel codice, oppure una voce commentata in `strumenti/analisi/spotbugs-esclusioni.xml`. Le azioni di GitHub sono
+nel codice, oppure una voce commentata in `strumenti/analisi/spotbugs-esclusioni.xml` o, per le librerie, in
+`strumenti/analisi/osv-scanner.toml` (con una data entro cui ricontrollarla). Le soglie sono attive: un problema
+sopra soglia ferma la CI. Le azioni di GitHub sono
 fissate per impronta (SHA), con la versione nel commento.
 
 **Protezione CSRF.** Il token CSRF di Spring è spento di proposito: l'API `/api/v1` usa solo la chiave

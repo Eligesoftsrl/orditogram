@@ -115,8 +115,8 @@ export default function DynamicForm({ form, initialValues = {}, onSubmit, disabl
             </div>
           )}
           <div className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
-            {g.campi.map(f => (
-              <Campo key={f.name} f={f} value={values[f.name]} onChange={v => set(f.name, v)} disabled={disabled} errore={erroriCampi[f.name]} />
+            {g.campi.map((f, i) => (
+              <Campo key={f.name || `senza-nome-${i}`} f={f} value={values[f.name]} onChange={v => set(f.name, v)} disabled={disabled} errore={erroriCampi[f.name]} />
             ))}
           </div>
         </section>

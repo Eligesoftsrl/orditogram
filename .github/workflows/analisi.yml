@@ -2,8 +2,9 @@
 # applica nelle gare PA): SonarQube Community, Semgrep, SpotBugs con FindSecBugs, OSV-Scanner sulle
 # librerie (Java e npm), npm audit. I rapporti restano tra gli artefatti di ogni esecuzione.
 #
-# Soglie bloccanti: vedi strumenti/analisi/riepilogo.py. ANALISI_BLOCCANTE è "false" finché non
-# abbiamo sistemato i problemi della prima analisi; poi diventa "true" e le soglie fermano la CI.
+# Soglie bloccanti: vedi strumenti/analisi/riepilogo.py. Con ANALISI_BLOCCANTE "true" un problema sopra
+# soglia ferma la CI. I falsi positivi si motivano in strumenti/analisi (spotbugs-esclusioni.xml,
+# osv-scanner.toml) o nel codice (// NOSONAR, // nosemgrep), così restano tracciati.
 name: Analisi del codice
 
 on:
@@ -13,7 +14,7 @@ on:
   workflow_dispatch:
 
 env:
-  ANALISI_BLOCCANTE: "false"
+  ANALISI_BLOCCANTE: "true"
 
 jobs:
   sonarqube:
@@ -121,7 +122,8 @@ jobs:
           go install github.com/google/osv-scanner/v2/cmd/osv-scanner@v2.7.0
           sbom=$(find backend/target -name '*.cdx.json' | head -1)
           echo "Distinta delle librerie del backend: $sbom"
-          ~/go/bin/osv-scanner scan source -L "$sbom" -L frontend/package-lock.json \
+          ~/go/bin/osv-scanner scan source --config strumenti/analisi/osv-scanner.toml \
+            -L "$sbom" -L frontend/package-lock.json \
             --format json --output-file osv.json || true
           python3 strumenti/analisi/riepilogo.py osv osv.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
@@ -142,7 +144,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
         with:
-          node-version: "22"
+          node-version: "24"
       - name: npm audit (librerie usate in produzione)
         run: |
           npm audit --omit=dev --json > npm-audit.json || true
