@@ -1,0 +1,10 @@
+{
+  "title": "Nuova pratica",
+  "fields": [
+    { "name": "oggetto", "label": "Oggetto", "type": "text", "required": true },
+    { "name": "descrizione", "label": "Descrizione", "type": "textarea" },
+    { "name": "priorita", "label": "Priorità", "type": "select",
+      "options": ["Bassa", "Media", "Alta"], "default": "Media" }
+  ],
+  "submitLabel": "Apri pratica"
+}

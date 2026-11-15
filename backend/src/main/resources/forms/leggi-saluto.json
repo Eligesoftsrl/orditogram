@@ -1,0 +1,8 @@
+{
+  "title": "Ecco il tuo saluto",
+  "fields": [
+    { "name": "saluto", "label": "Saluto generato dal sistema", "type": "text", "readonly": true },
+    { "name": "piaciuto", "label": "Ti è piaciuto?", "type": "checkbox" }
+  ],
+  "submitLabel": "Chiudi pratica"
+}

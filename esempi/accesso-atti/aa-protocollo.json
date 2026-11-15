@@ -1,0 +1,12 @@
+{
+  "title": "Protocollazione manuale",
+  "description": "Il servizio di protocollo non ha risposto. Registra l'istanza nel protocollo e riporta qui numero e data: la pratica prosegue da sola.",
+  "fields": [
+    { "name": "oggetto", "label": "Oggetto", "type": "text", "readonly": true },
+    { "name": "richiedente", "label": "Richiedente", "type": "text", "readonly": true },
+    { "name": "numeroProtocollo", "label": "Numero di protocollo", "type": "text", "required": true },
+    { "name": "dataProtocollo", "label": "Data di protocollo", "type": "date", "required": true }
+  ],
+  "documenti": "lettura",
+  "submitLabel": "Conferma protocollo"
+}

@@ -1,0 +1,22 @@
+{
+  "id": "pratica-extensions",
+  "name": "pratica-extensions",
+  "extensions": {
+    "pratica": {
+      "properties": {
+        "p-oggetto":     { "id": "p-oggetto",     "name": "oggetto",     "type": "string", "required": false },
+        "p-descrizione": { "id": "p-descrizione", "name": "descrizione", "type": "string", "required": false },
+        "p-priorita":    { "id": "p-priorita",    "name": "priorita",    "type": "string", "required": false },
+        "p-avviataDa":   { "id": "p-avviataDa",   "name": "avviataDa",   "type": "string", "required": false },
+        "p-esito":       { "id": "p-esito",       "name": "esito",       "type": "string", "required": false },
+        "p-note":        { "id": "p-note",        "name": "note",        "type": "string", "required": false },
+        "p-chiusaDa":    { "id": "p-chiusaDa",    "name": "chiusaDa",    "type": "string", "required": false },
+        "p-chiusaIl":    { "id": "p-chiusaIl",    "name": "chiusaIl",    "type": "string", "required": false }
+      },
+      "mappings": {
+        "gestisciPratica": { "mappingType": "MAP_ALL" }
+      },
+      "constants": {}
+    }
+  }
+}

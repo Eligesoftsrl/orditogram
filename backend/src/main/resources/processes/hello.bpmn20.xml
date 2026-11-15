@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:activiti="http://activiti.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+             targetNamespace="http://example.com/hello">
+
+  <process id="hello" name="Hello World BPMN" isExecutable="true">
+
+    <startEvent id="start" name="Inizio"/>
+    <sequenceFlow id="f1" sourceRef="start" targetRef="inserisciNome"/>
+
+    <!-- Task utente 1: chiede il nome -->
+    <userTask id="inserisciNome" name="Inserisci il tuo nome"
+              activiti:candidateGroups="operatori"
+              activiti:formKey="inserisci-nome"/>
+    <sequenceFlow id="f2" sourceRef="inserisciNome" targetRef="creaSaluto"/>
+
+    <!-- Task automatico: bean Spring "greetingConnector" -->
+    <serviceTask id="creaSaluto" name="Crea saluto" implementation="greetingConnector"/>
+    <sequenceFlow id="f3" sourceRef="creaSaluto" targetRef="leggiSaluto"/>
+
+    <!-- Task utente 2: mostra il risultato -->
+    <userTask id="leggiSaluto" name="Leggi il saluto"
+              activiti:candidateGroups="operatori"
+              activiti:formKey="leggi-saluto"/>
+    <sequenceFlow id="f4" sourceRef="leggiSaluto" targetRef="end"/>
+
+    <endEvent id="end" name="Fine"/>
+  </process>
+
+  <!-- Coordinate grafiche: servono a bpmn-js / modeler per disegnare il diagramma -->
+  <bpmndi:BPMNDiagram id="diagram">
+    <bpmndi:BPMNPlane id="plane" bpmnElement="hello">
+      <bpmndi:BPMNShape id="s_start" bpmnElement="start"><dc:Bounds x="100" y="120" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_nome" bpmnElement="inserisciNome"><dc:Bounds x="190" y="98" width="120" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_saluto" bpmnElement="creaSaluto"><dc:Bounds x="360" y="98" width="120" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_leggi" bpmnElement="leggiSaluto"><dc:Bounds x="530" y="98" width="120" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_end" bpmnElement="end"><dc:Bounds x="700" y="120" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="e_f1" bpmnElement="f1"><di:waypoint x="136" y="138"/><di:waypoint x="190" y="138"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f2" bpmnElement="f2"><di:waypoint x="310" y="138"/><di:waypoint x="360" y="138"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f3" bpmnElement="f3"><di:waypoint x="480" y="138"/><di:waypoint x="530" y="138"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f4" bpmnElement="f4"><di:waypoint x="650" y="138"/><di:waypoint x="700" y="138"/></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

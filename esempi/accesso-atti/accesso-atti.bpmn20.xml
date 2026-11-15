@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Accesso agli atti (legge 241/1990, DPR 184/2006): processo dimostrativo di Orditogram.
+  Mostra: protocollazione tramite API con strada di errore, email al cittadino, sollecito settimanale,
+  termine di 30 giorni sul sottoprocesso (silenzio-rigetto), controinteressati con attesa di 10 giorni,
+  sottoprocesso di richiesta integrazioni con termine di 10 giorni,
+  rinuncia del richiedente come messaggio in arrivo (dal portale o registrata a mano).
+-->
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:activiti="http://activiti.org/bpmn"
+             xmlns:orditogram="http://orditogram.it/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+             id="Definitions_accessoAtti" targetNamespace="http://orditogram.it/processi">
+  <message id="rinunciaRichiedente" name="rinunciaRichiedente"/>
+  <process id="accessoAtti" name="Accesso agli atti" isExecutable="true" activiti:candidateStarterGroups="operatori">
+    <documentation>Richiesta di accesso ai documenti amministrativi (art. 22 e seguenti della legge 241/1990): protocollazione, istruttoria entro 30 giorni, controinteressati, integrazioni, comunicazione dell'esito.</documentation>
+    <startEvent id="inizio" name="Istanza ricevuta" activiti:formKey="aa-istanza"/>
+    <serviceTask id="protocolla" name="Protocolla l'istanza" implementation="apiConnector">
+      <extensionElements>
+        <activiti:field name="metodo" stringValue="POST"/>
+        <activiti:field name="url" stringValue="http://localhost:8080/api/demo/protocollo"/>
+        <activiti:field name="credenziale" stringValue="protocollo-demo"/>
+        <activiti:field name="intestazioni" stringValue="X-Ente: comune-demo"/>
+        <activiti:field name="corpo" stringValue='{&#10;  "oggetto": "Accesso agli atti: ${oggetto}",&#10;  "mittente": "${richiedente}",&#10;  "verso": "entrata"&#10;}'/>
+        <activiti:field name="risposta" stringValue="numeroProtocollo = numero&#10;dataProtocollo = data"/>
+        <activiti:field name="timeout" stringValue="20"/>
+        <activiti:field name="inErrore" stringValue="Segui la strada di errore"/>
+      </extensionElements>
+    </serviceTask>
+    <boundaryEvent id="erroreProtocollo" name="Protocollo non disponibile" attachedToRef="protocolla">
+      <errorEventDefinition/>
+    </boundaryEvent>
+    <userTask id="protocolloManuale" name="Protocolla a mano" activiti:candidateGroups="operatori" activiti:formKey="aa-protocollo"/>
+    <serviceTask id="confermaRicezione" name="Conferma ricezione al cittadino" implementation="emailConnector">
+      <extensionElements>
+        <activiti:field name="destinatari" stringValue="campo:emailRichiedente"/>
+        <activiti:field name="oggetto" stringValue="Richiesta di accesso agli atti: protocollo ${numeroProtocollo}"/>
+        <activiti:field name="testo" stringValue='Gentile ${richiedente},&#10;&#10;la sua richiesta di accesso agli atti "${oggetto}" è stata registrata con il protocollo n. ${numeroProtocollo} del ${dataProtocollo}.&#10;&#10;Il procedimento si conclude entro 30 giorni (art. 25 della legge 241/1990).&#10;&#10;Cordiali saluti&#10;Ufficio Relazioni con il Pubblico'/>
+        <activiti:field name="allegati" stringValue="Nessuno"/>
+      </extensionElements>
+    </serviceTask>
+    <subProcess id="istruttoria" name="Istruttoria (30 giorni)">
+      <startEvent id="iInizio"/>
+      <userTask id="esame" name="Esamina la richiesta" activiti:candidateGroups="responsabili" activiti:formKey="aa-esame"/>
+      <boundaryEvent id="sollecitoEsame" name="Sollecito settimanale" attachedToRef="esame" cancelActivity="false">
+        <timerEventDefinition><timeCycle>R3/P7D</timeCycle></timerEventDefinition>
+      </boundaryEvent>
+      <serviceTask id="notificaSollecito" name="Invia sollecito" implementation="notificaConnector">
+        <extensionElements>
+          <activiti:field name="destinatario" stringValue="gruppo:responsabili"/>
+          <activiti:field name="titolo" stringValue="Sollecito: accesso agli atti ${numeroProtocollo}"/>
+          <activiti:field name="messaggio" stringValue='La richiesta "${oggetto}" di ${richiedente} è ancora da esaminare. Il termine di 30 giorni decorre dal protocollo.'/>
+        </extensionElements>
+      </serviceTask>
+      <endEvent id="iFineSollecito" name="Sollecito inviato"/>
+      <exclusiveGateway id="esitoEsame" name="Esito dell'esame?" default="i9"/>
+      <endEvent id="iFineIntegrazione" name="Integrazione necessaria"/>
+      <serviceTask id="avvisoControinteressati" name="Avvisa i controinteressati" implementation="emailConnector">
+        <extensionElements>
+          <activiti:field name="destinatari" stringValue="campo:emailControinteressati"/>
+          <activiti:field name="oggetto" stringValue="Comunicazione ai controinteressati: richiesta di accesso ${numeroProtocollo}"/>
+          <activiti:field name="testo" stringValue="Gentile controinteressato,&#10;&#10;ai sensi dell'art. 3 del DPR 184/2006 le comunichiamo che è stata presentata una richiesta di accesso ai documenti: &quot;${documentiRichiesti}&quot;.&#10;&#10;Entro 10 giorni dal ricevimento può presentare una motivata opposizione, anche per via telematica.&#10;&#10;Ufficio Relazioni con il Pubblico"/>
+          <activiti:field name="allegati" stringValue="Nessuno"/>
+        </extensionElements>
+      </serviceTask>
+      <intermediateCatchEvent id="attesaOpposizioni" name="10 giorni per le opposizioni">
+        <timerEventDefinition activiti:businessCalendarName="proroga"><timeDuration>P10D</timeDuration></timerEventDefinition>
+      </intermediateCatchEvent>
+      <userTask id="decisione" name="Decidi sulla richiesta" activiti:candidateGroups="responsabili" activiti:formKey="aa-decisione"/>
+      <endEvent id="iFine" name="Decisione presa"/>
+      <sequenceFlow id="i1" sourceRef="iInizio" targetRef="esame"/>
+      <sequenceFlow id="i2" sourceRef="esame" targetRef="esitoEsame"/>
+      <sequenceFlow id="i3" sourceRef="sollecitoEsame" targetRef="notificaSollecito"/>
+      <sequenceFlow id="i4" sourceRef="notificaSollecito" targetRef="iFineSollecito"/>
+      <sequenceFlow id="i5" name="Serve integrazione" sourceRef="esitoEsame" targetRef="iFineIntegrazione">
+        <conditionExpression xsi:type="tFormalExpression">${esito == 'Serve integrazione'}</conditionExpression>
+      </sequenceFlow>
+      <sequenceFlow id="i6" name="Controinteressati" sourceRef="esitoEsame" targetRef="avvisoControinteressati">
+        <conditionExpression xsi:type="tFormalExpression">${esito == 'Ci sono controinteressati'}</conditionExpression>
+      </sequenceFlow>
+      <sequenceFlow id="i7" sourceRef="avvisoControinteressati" targetRef="attesaOpposizioni"/>
+      <sequenceFlow id="i8" sourceRef="attesaOpposizioni" targetRef="decisione"/>
+      <sequenceFlow id="i9" name="Altrimenti" sourceRef="esitoEsame" targetRef="decisione"/>
+      <sequenceFlow id="i10" sourceRef="decisione" targetRef="iFine"/>
+    </subProcess>
+    <boundaryEvent id="termine30" name="Termine di 30 giorni" attachedToRef="istruttoria">
+      <timerEventDefinition activiti:businessCalendarName="proroga"><timeDuration>P30D</timeDuration></timerEventDefinition>
+    </boundaryEvent>
+    <boundaryEvent id="rinuncia" name="Rinuncia del richiedente" attachedToRef="istruttoria">
+      <extensionElements><orditogram:datiMessaggio>motivoRinuncia</orditogram:datiMessaggio></extensionElements>
+      <messageEventDefinition messageRef="rinunciaRichiedente"/>
+    </boundaryEvent>
+    <endEvent id="archiviataRinuncia" name="Archiviata per rinuncia"/>
+    <serviceTask id="notificaSilenzio" name="Avvisa il responsabile" implementation="notificaConnector">
+      <extensionElements>
+        <activiti:field name="destinatario" stringValue="gruppo:responsabili"/>
+        <activiti:field name="titolo" stringValue="Termine scaduto: accesso agli atti ${numeroProtocollo}"/>
+        <activiti:field name="messaggio" stringValue='Sono trascorsi 30 giorni senza una decisione sulla richiesta "${oggetto}": si è formato il silenzio-rigetto.'/>
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="emailSilenzio" name="Informa il cittadino" implementation="emailConnector">
+      <extensionElements>
+        <activiti:field name="destinatari" stringValue="campo:emailRichiedente"/>
+        <activiti:field name="oggetto" stringValue="Richiesta di accesso agli atti ${numeroProtocollo}: termine decorso"/>
+        <activiti:field name="testo" stringValue="Gentile ${richiedente},&#10;&#10;sono decorsi 30 giorni dalla sua richiesta senza un provvedimento espresso: ai sensi dell'art. 25, comma 4, della legge 241/1990 la richiesta si intende respinta.&#10;&#10;Può presentare ricorso al TAR o chiedere il riesame al Difensore civico entro 30 giorni.&#10;&#10;Ufficio Relazioni con il Pubblico"/>
+        <activiti:field name="allegati" stringValue="Nessuno"/>
+      </extensionElements>
+    </serviceTask>
+    <endEvent id="fineSilenzio" name="Silenzio-rigetto"/>
+    <exclusiveGateway id="serveIntegrazione" name="Serve integrazione?" default="f8"/>
+    <subProcess id="integrazioni" name="Richiesta di integrazioni">
+      <startEvent id="rInizio"/>
+      <serviceTask id="emailIntegrazione" name="Chiedi le integrazioni" implementation="emailConnector">
+        <extensionElements>
+          <activiti:field name="destinatari" stringValue="campo:emailRichiedente"/>
+          <activiti:field name="oggetto" stringValue="Richiesta di accesso agli atti ${numeroProtocollo}: servono integrazioni"/>
+          <activiti:field name="testo" stringValue="Gentile ${richiedente},&#10;&#10;per completare l'esame della sua richiesta abbiamo bisogno di:&#10;${noteIstruttoria}&#10;&#10;Le chiediamo di inviarle entro 10 giorni. Il termine di 30 giorni ricomincia dalla ricezione della richiesta completa (art. 6 del DPR 184/2006).&#10;&#10;Ufficio Relazioni con il Pubblico"/>
+          <activiti:field name="allegati" stringValue="Nessuno"/>
+        </extensionElements>
+      </serviceTask>
+      <userTask id="registraIntegrazioni" name="Registra le integrazioni" activiti:candidateGroups="operatori" activiti:formKey="aa-integrazioni"/>
+      <endEvent id="rFine" name="Integrazioni ricevute"/>
+      <sequenceFlow id="r1" sourceRef="rInizio" targetRef="emailIntegrazione"/>
+      <sequenceFlow id="r2" sourceRef="emailIntegrazione" targetRef="registraIntegrazioni"/>
+      <sequenceFlow id="r3" sourceRef="registraIntegrazioni" targetRef="rFine"/>
+    </subProcess>
+    <boundaryEvent id="nessunaRisposta" name="Nessuna risposta in 10 giorni" attachedToRef="integrazioni">
+      <timerEventDefinition activiti:businessCalendarName="proroga"><timeDuration>P10D</timeDuration></timerEventDefinition>
+    </boundaryEvent>
+    <endEvent id="archiviata" name="Archiviata per mancata integrazione"/>
+    <serviceTask id="comunicaEsito" name="Comunica l'esito al cittadino" implementation="emailConnector">
+      <extensionElements>
+        <activiti:field name="destinatari" stringValue="campo:emailRichiedente, iniziatore"/>
+        <activiti:field name="oggetto" stringValue="Richiesta di accesso agli atti ${numeroProtocollo}: ${decisione}"/>
+        <activiti:field name="testo" stringValue='Gentile ${richiedente},&#10;&#10;la sua richiesta di accesso agli atti "${oggetto}" è stata: ${decisione}.&#10;&#10;Motivazione:&#10;${motivazioneDecisione}&#10;&#10;In allegato i documenti della pratica.&#10;&#10;Ufficio Relazioni con il Pubblico'/>
+        <activiti:field name="allegati" stringValue="Tutti i documenti della pratica"/>
+      </extensionElements>
+    </serviceTask>
+    <endEvent id="fine" name="Procedimento concluso"/>
+    <sequenceFlow id="f1" sourceRef="inizio" targetRef="protocolla"/>
+    <sequenceFlow id="f2" sourceRef="protocolla" targetRef="confermaRicezione"/>
+    <sequenceFlow id="f3" sourceRef="erroreProtocollo" targetRef="protocolloManuale"/>
+    <sequenceFlow id="f4" sourceRef="protocolloManuale" targetRef="confermaRicezione"/>
+    <sequenceFlow id="f5" sourceRef="confermaRicezione" targetRef="istruttoria"/>
+    <sequenceFlow id="m1" sourceRef="rinuncia" targetRef="archiviataRinuncia"/>
+    <sequenceFlow id="s1" sourceRef="termine30" targetRef="notificaSilenzio"/>
+    <sequenceFlow id="s2" sourceRef="notificaSilenzio" targetRef="emailSilenzio"/>
+    <sequenceFlow id="s3" sourceRef="emailSilenzio" targetRef="fineSilenzio"/>
+    <sequenceFlow id="f6" sourceRef="istruttoria" targetRef="serveIntegrazione"/>
+    <sequenceFlow id="f7" name="Sì" sourceRef="serveIntegrazione" targetRef="integrazioni">
+      <conditionExpression xsi:type="tFormalExpression">${esito == 'Serve integrazione'}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="f8" name="Altrimenti" sourceRef="serveIntegrazione" targetRef="comunicaEsito"/>
+    <sequenceFlow id="f9" sourceRef="comunicaEsito" targetRef="fine"/>
+    <sequenceFlow id="f10" name="Riesame" sourceRef="integrazioni" targetRef="istruttoria"/>
+    <sequenceFlow id="b1" sourceRef="nessunaRisposta" targetRef="archiviata"/>
+  </process>
+  <bpmndi:BPMNDiagram id="Diagram_accessoAtti">
+    <bpmndi:BPMNPlane id="Plane_accessoAtti" bpmnElement="accessoAtti">
+      <bpmndi:BPMNShape id="s_inizio" bpmnElement="inizio"><dc:Bounds x="80" y="282" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_protocolla" bpmnElement="protocolla"><dc:Bounds x="160" y="260" width="100" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_erroreProtocollo" bpmnElement="erroreProtocollo"><dc:Bounds x="232" y="322" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_protocolloManuale" bpmnElement="protocolloManuale"><dc:Bounds x="300" y="400" width="100" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_confermaRicezione" bpmnElement="confermaRicezione"><dc:Bounds x="450" y="260" width="100" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_istruttoria" bpmnElement="istruttoria" isExpanded="true"><dc:Bounds x="620" y="120" width="820" height="360"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_iInizio" bpmnElement="iInizio"><dc:Bounds x="650" y="282" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_esame" bpmnElement="esame"><dc:Bounds x="720" y="260" width="100" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_sollecitoEsame" bpmnElement="sollecitoEsame"><dc:Bounds x="722" y="322" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_notificaSollecito" bpmnElement="notificaSollecito"><dc:Bounds x="690" y="380" width="100" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_iFineSollecito" bpmnElement="iFineSollecito"><dc:Bounds x="830" y="402" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_esitoEsame" bpmnElement="esitoEsame"><dc:Bounds x="870" y="275" width="50" height="50"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_iFineIntegrazione" bpmnElement="iFineIntegrazione"><dc:Bounds x="957" y="402" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_avvisoControinteressati" bpmnElement="avvisoControinteressati"><dc:Bounds x="960" y="150" width="100" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_attesaOpposizioni" bpmnElement="attesaOpposizioni"><dc:Bounds x="1100" y="172" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_decisione" bpmnElement="decisione"><dc:Bounds x="1200" y="260" width="100" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_iFine" bpmnElement="iFine"><dc:Bounds x="1360" y="282" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_termine30" bpmnElement="termine30"><dc:Bounds x="1082" y="462" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_rinuncia" bpmnElement="rinuncia"><dc:Bounds x="742" y="462" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_archiviataRinuncia" bpmnElement="archiviataRinuncia"><dc:Bounds x="742" y="552" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_notificaSilenzio" bpmnElement="notificaSilenzio"><dc:Bounds x="1050" y="530" width="100" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_emailSilenzio" bpmnElement="emailSilenzio"><dc:Bounds x="1200" y="530" width="100" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fineSilenzio" bpmnElement="fineSilenzio"><dc:Bounds x="1370" y="552" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_serveIntegrazione" bpmnElement="serveIntegrazione"><dc:Bounds x="1500" y="275" width="50" height="50"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_integrazioni" bpmnElement="integrazioni" isExpanded="true"><dc:Bounds x="1050" y="660" width="500" height="180"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_rInizio" bpmnElement="rInizio"><dc:Bounds x="1080" y="732" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_emailIntegrazione" bpmnElement="emailIntegrazione"><dc:Bounds x="1150" y="710" width="100" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_registraIntegrazioni" bpmnElement="registraIntegrazioni"><dc:Bounds x="1290" y="710" width="100" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_rFine" bpmnElement="rFine"><dc:Bounds x="1430" y="732" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_nessunaRisposta" bpmnElement="nessunaRisposta"><dc:Bounds x="1482" y="822" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_archiviata" bpmnElement="archiviata"><dc:Bounds x="1482" y="890" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_comunicaEsito" bpmnElement="comunicaEsito"><dc:Bounds x="1600" y="260" width="100" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fine" bpmnElement="fine"><dc:Bounds x="1760" y="282" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="e_f1" bpmnElement="f1"><di:waypoint x="116" y="300"/><di:waypoint x="160" y="300"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f2" bpmnElement="f2"><di:waypoint x="260" y="300"/><di:waypoint x="450" y="300"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f3" bpmnElement="f3"><di:waypoint x="250" y="358"/><di:waypoint x="250" y="440"/><di:waypoint x="300" y="440"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f4" bpmnElement="f4"><di:waypoint x="400" y="440"/><di:waypoint x="500" y="440"/><di:waypoint x="500" y="340"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f5" bpmnElement="f5"><di:waypoint x="550" y="300"/><di:waypoint x="620" y="300"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_i1" bpmnElement="i1"><di:waypoint x="686" y="300"/><di:waypoint x="720" y="300"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_i2" bpmnElement="i2"><di:waypoint x="820" y="300"/><di:waypoint x="870" y="300"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_i3" bpmnElement="i3"><di:waypoint x="740" y="358"/><di:waypoint x="740" y="380"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_i4" bpmnElement="i4"><di:waypoint x="790" y="420"/><di:waypoint x="830" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_i5" bpmnElement="i5"><di:waypoint x="895" y="325"/><di:waypoint x="895" y="420"/><di:waypoint x="957" y="420"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_i6" bpmnElement="i6"><di:waypoint x="895" y="275"/><di:waypoint x="895" y="190"/><di:waypoint x="960" y="190"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_i7" bpmnElement="i7"><di:waypoint x="1060" y="190"/><di:waypoint x="1100" y="190"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_i8" bpmnElement="i8"><di:waypoint x="1136" y="190"/><di:waypoint x="1250" y="190"/><di:waypoint x="1250" y="260"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_i9" bpmnElement="i9"><di:waypoint x="920" y="300"/><di:waypoint x="1200" y="300"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_i10" bpmnElement="i10"><di:waypoint x="1300" y="300"/><di:waypoint x="1360" y="300"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_m1" bpmnElement="m1"><di:waypoint x="760" y="498"/><di:waypoint x="760" y="552"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_s1" bpmnElement="s1"><di:waypoint x="1100" y="498"/><di:waypoint x="1100" y="530"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_s2" bpmnElement="s2"><di:waypoint x="1150" y="570"/><di:waypoint x="1200" y="570"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_s3" bpmnElement="s3"><di:waypoint x="1300" y="570"/><di:waypoint x="1370" y="570"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f6" bpmnElement="f6"><di:waypoint x="1440" y="300"/><di:waypoint x="1500" y="300"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f7" bpmnElement="f7"><di:waypoint x="1525" y="325"/><di:waypoint x="1525" y="660"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f8" bpmnElement="f8"><di:waypoint x="1550" y="300"/><di:waypoint x="1600" y="300"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f9" bpmnElement="f9"><di:waypoint x="1700" y="300"/><di:waypoint x="1760" y="300"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f10" bpmnElement="f10"><di:waypoint x="1050" y="750"/><di:waypoint x="1000" y="750"/><di:waypoint x="1000" y="480"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_r1" bpmnElement="r1"><di:waypoint x="1116" y="750"/><di:waypoint x="1150" y="750"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_r2" bpmnElement="r2"><di:waypoint x="1250" y="750"/><di:waypoint x="1290" y="750"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_r3" bpmnElement="r3"><di:waypoint x="1390" y="750"/><di:waypoint x="1430" y="750"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_b1" bpmnElement="b1"><di:waypoint x="1500" y="858"/><di:waypoint x="1500" y="890"/></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

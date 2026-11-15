@@ -1,0 +1,146 @@
+server:
+  port: 8080
+  servlet:
+    session:
+      cookie:
+        same-site: lax                # il cookie di sessione (accesso con provider) non parte da altri siti
+  error:
+    include-message: always           # i messaggi di errore arrivano al frontend
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info          # solo lo stato di salute e la versione: nient'altro all'esterno
+  endpoint:
+    health:
+      probes:
+        enabled: true                 # /actuator/health/liveness e /readiness per Kubernetes
+  health:
+    mail:
+      enabled: false                  # un server email lento non deve far risultare Orditogram "non in salute"
+
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/orditogram}
+    username: ${DB_UTENTE:orditogram}
+    password: ${DB_PASSWORD:orditogram}
+  jpa:
+    hibernate:
+      ddl-auto: update                # crea le tabelle applicative (utenti, form, documenti, storico, notifiche)
+    open-in-view: false
+  servlet:
+    multipart:
+      max-file-size: 50MB             # dimensione massima di un singolo documento
+      max-request-size: 200MB         # dimensione massima di un caricamento (più documenti insieme)
+  activiti:
+    database-schema-update: true      # crea/aggiorna le tabelle ACT_* su Postgres
+    history-level: audit              # serve per storico e pratiche concluse
+    db-history-used: true             # crea le tabelle ACT_HI_* (in Activiti 7/8 è false di default)
+    check-process-definitions: true   # deploya automaticamente i .bpmn20.xml
+    process-definition-location-prefix: classpath:/processes/
+    async-executor-activate: true     # fa scattare scadenze, solleciti e attese (timer del BPMN)
+
+  # Accesso con un identity provider OIDC: togli il commento al provider che usi.
+  # Indirizzo di ritorno da registrare sul provider: <indirizzo di Orditogram>/login/oauth2/code/<nome>
+  # (in sviluppo: http://localhost:5173/login/oauth2/code/keycloak)
+  # security:
+  #   oauth2:
+  #     client:
+  #       registration:
+  #         keycloak:
+  #           client-name: Keycloak dell'ente
+  #           client-id: orditogram
+  #           client-secret: ${KEYCLOAK_SECRET}
+  #           scope: openid, profile, email
+  #         entra:
+  #           client-name: Microsoft (account dell'ente)
+  #           client-id: ${ENTRA_CLIENT_ID}
+  #           client-secret: ${ENTRA_SECRET}
+  #           scope: openid, profile, email
+  #       provider:
+  #         keycloak:
+  #           issuer-uri: https://login.ente.it/realms/ente
+  #         entra:
+  #           issuer-uri: https://login.microsoftonline.com/${ENTRA_TENANT_ID}/v2.0
+
+  # Email per le notifiche: togli il commento e compila per attivarla.
+  # mail:
+  #   host: smtp.example.com
+  #   port: 587
+  #   username: utente
+  #   password: segreta
+  #   properties:
+  #     mail.smtp.auth: true
+  #     mail.smtp.starttls.enable: true
+
+app:
+  admin:
+    password-iniziale: admin          # solo al primo avvio, quando non esiste nessun utente
+  documenti:
+    dir: ./data/documenti             # cartella dove vengono archiviati i file caricati
+  notifiche:
+    mittente: noreply@example.com
+  demo:
+    utenti: true                      # crea gli utenti di esempio mancanti all'avvio (metti false in produzione)
+    servizi: true                     # servizi di prova (es. /api/demo/protocollo) per provare il connettore API
+
+  login:
+    locale: true                      # false: la pagina di accesso mostra solo i provider OIDC
+  oidc:
+    claim-utente: preferred_username  # Keycloak e Entra ID: il nome utente / l'email
+    claim-gruppi: groups              # Keycloak: aggiungi il mapper "Group Membership"; oppure realm_access.roles
+    sincronizza-gruppi: true          # i gruppi di Orditogram seguono quelli del provider a ogni accesso
+    crea-utenti: true
+    # gruppo-admin: orditogram-admin
+    # mappa-gruppi:                   # Entra ID manda gli ID dei gruppi: qui li si traduce
+    #   "00000000-0000-0000-0000-000000000000": analisti
+
+  # API pubblica /api/v1 (chiavi create in Studio → Integrazioni; documentazione su /api/v1/openapi.json).
+  api:
+    richieste-al-minuto: 600          # per sistema esterno; 0 = nessun limite
+    cors-origini: []                  # siti che chiamano l'API direttamente dal browser, es. [https://portale.ente.it]
+
+  # Webhook: avvisi firmati verso i sistemi esterni (configurati in Studio → Integrazioni).
+  webhook:
+    invio-automatico: true
+    intervallo-ms: 5000               # ogni quanto si cercano avvisi da consegnare
+    timeout-secondi: 10               # attesa massima della risposta del destinatario
+    conservazione-giorni: 30          # le consegne concluse più vecchie si eliminano ogni notte
+
+  # Chiave per cifrare i segreti conservati nel database (es. quelli dei webhook). Impostala in produzione
+  # e non cambiarla: con un'altra chiave i segreti salvati non si leggono più.
+  sicurezza:
+    chiave-cifratura: ${ORDITOGRAM_CHIAVE_CIFRATURA:${ITER_CHIAVE_CIFRATURA:}}   # ITER_: nome usato fino alla 0.10
+
+  # Sistemi esterni che possono inviare messaggi alle pratiche (POST /api/messaggi/{nome}, intestazione X-API-Key).
+  messaggi:
+    chiavi:
+      portale-demo: ${PORTALE_API_KEY:}   # imposta la variabile d'ambiente: senza chiave il sistema non è abilitato
+
+  # Calendario dell'ente per i termini "in giorni lavorativi" o "prorogati se festivi".
+  # Le festività nazionali (compresi Pasqua e Lunedì dell'Angelo) sono già incluse.
+  calendario:
+    giorni-non-lavorativi: [SATURDAY, SUNDAY]
+    festivita-nazionali: true
+    zona: Europe/Rome                 # i giorni si contano in questo fuso, anche se il server è in UTC
+    festivita: []                     # es. ["06-29 Santi Pietro e Paolo (patrono)", "2026-12-07 Chiusura uffici"]
+                                      # MM-GG = ogni anno, AAAA-MM-GG = una volta sola
+
+  # Credenziali per le chiamate API dei processi. L'analista nel BPMN sceglie solo il NOME:
+  # token e password restano qui (o in variabili d'ambiente) e non finiscono mai nel diagramma.
+  #   tipo: bearer  -> Authorization: Bearer <token>
+  #   tipo: basic   -> Authorization: Basic <utente:password>
+  #   tipo: header  -> <intestazione>: <valore>     (es. X-API-Key)
+  credenziali:
+    protocollo-demo:
+      tipo: header
+      intestazione: X-API-Key
+      valore: ${PROTOCOLLO_API_KEY:chiave-di-prova}
+    # pagopa:
+    #   tipo: bearer
+    #   token: ${PAGOPA_TOKEN}
+    # anagrafe:
+    #   tipo: basic
+    #   utente: orditogram
+    #   password: ${ANAGRAFE_PASSWORD}

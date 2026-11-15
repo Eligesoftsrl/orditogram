@@ -1,0 +1,22 @@
+{
+  "id": "hello-extensions",
+  "name": "hello-extensions",
+  "extensions": {
+    "hello": {
+      "properties": {
+        "p-nome":      { "id": "p-nome",      "name": "nome",      "type": "string",  "required": false },
+        "p-saluto":    { "id": "p-saluto",    "name": "saluto",    "type": "string",  "required": false },
+        "p-piaciuto":  { "id": "p-piaciuto",  "name": "piaciuto",  "type": "boolean", "required": false },
+        "p-avviataDa": { "id": "p-avviataDa", "name": "avviataDa", "type": "string",  "required": false },
+        "p-chiusaDa":  { "id": "p-chiusaDa",  "name": "chiusaDa",  "type": "string",  "required": false },
+        "p-chiusaIl":  { "id": "p-chiusaIl",  "name": "chiusaIl",  "type": "string",  "required": false }
+      },
+      "mappings": {
+        "inserisciNome": { "mappingType": "MAP_ALL" },
+        "creaSaluto":    { "mappingType": "MAP_ALL" },
+        "leggiSaluto":   { "mappingType": "MAP_ALL" }
+      },
+      "constants": {}
+    }
+  }
+}

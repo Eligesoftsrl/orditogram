@@ -1,0 +1,71 @@
+# Orditogram completo: database, backend, frontend.
+#   docker compose up -d                        -> http://localhost:8081
+#   docker compose --profile keycloak up -d     -> anche un Keycloak di prova su http://localhost:8180
+# Le impostazioni si cambiano nel file .env (vedi .env.example).
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NOME:-orditogram}
+      POSTGRES_USER: ${DB_UTENTE:-orditogram}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-orditogram}
+    ports:
+      - "${DB_PORTA:-5432}:5432"            # togli in produzione: il database non serve fuori da Docker
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_UTENTE:-orditogram} -d ${DB_NOME:-orditogram}"]
+      interval: 10s
+      retries: 10
+
+  backend:
+    build: ./backend
+    image: orditogram-backend:${ORDITOGRAM_VERSIONE:-latest}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NOME:-orditogram}
+      SPRING_DATASOURCE_USERNAME: ${DB_UTENTE:-orditogram}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-orditogram}
+      APP_ADMIN_PASSWORD_INIZIALE: ${ADMIN_PASSWORD_INIZIALE:-admin}
+      APP_DEMO_UTENTI: ${UTENTI_DI_PROVA:-false}
+      APP_DEMO_SERVIZI: ${SERVIZI_DI_PROVA:-false}
+      APP_NOTIFICHE_MITTENTE: ${EMAIL_MITTENTE:-noreply@example.com}
+      SPRING_MAIL_HOST: ${SMTP_HOST:-}
+      SPRING_MAIL_PORT: ${SMTP_PORTA:-587}
+      SPRING_MAIL_USERNAME: ${SMTP_UTENTE:-}
+      SPRING_MAIL_PASSWORD: ${SMTP_PASSWORD:-}
+      PROTOCOLLO_API_KEY: ${PROTOCOLLO_API_KEY:-chiave-di-prova}
+      PORTALE_API_KEY: ${PORTALE_API_KEY:-}
+      ORDITOGRAM_CHIAVE_CIFRATURA: ${ORDITOGRAM_CHIAVE_CIFRATURA:-}
+      APP_API_CORSORIGINI: ${API_CORS_ORIGINI:-}
+      JAVA_OPTS: ${JAVA_OPTS:--XX:MaxRAMPercentage=75}
+    volumes:
+      - documenti:/app/data
+
+  frontend:
+    build: ./frontend
+    image: orditogram-frontend:${ORDITOGRAM_VERSIONE:-latest}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${ORDITOGRAM_PORTA:-8081}:80"
+
+  # Keycloak di prova (solo con --profile keycloak). Realm e utenti si creano dalla console admin.
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    profiles: ["keycloak"]
+    command: start-dev
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    ports:
+      - "8180:8080"
+
+volumes:
+  pgdata:
+  documenti:

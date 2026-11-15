@@ -1,0 +1,2110 @@
+{
+ "openapi": "3.1.0",
+ "info": {
+  "title": "Orditogram – API pubblica",
+  "version": "1 (Orditogram 0.10.0)",
+  "description": "API per i sistemi esterni (portali, gestionali, app): avviare pratiche, seguirne lo stato, scambiare documenti e messaggi. I percorsi di avvio e i messaggi sono generati dai processi pubblicati: i dati richiesti sono quelli dei form disegnati nello Studio.\n\n**Autenticazione**: una chiave creata in Studio → Integrazioni, nell'intestazione `X-API-Key` oppure come `Authorization: Bearer <chiave>`. Ogni chiave ha i suoi permessi e può essere limitata ad alcuni processi.\n\n**Errori**: sempre nel formato `{\"errore\": {\"codice\", \"messaggio\", \"campi\"}}`; il codice è stabile.\n\n**Avvisi (webhook)**: Orditogram può chiamare un tuo indirizzo quando succede qualcosa (vedi la sezione webhooks). Ogni avviso è firmato con HMAC-SHA256 nell'intestazione `X-Orditogram-Firma`."
+ },
+ "servers": [
+  {
+   "url": "http://localhost:8080/api/v1",
+   "description": "Questa installazione"
+  }
+ ],
+ "security": [
+  {
+   "chiaveApi": []
+  },
+  {
+   "bearer": []
+  }
+ ],
+ "tags": [
+  {
+   "name": "Processi",
+   "description": "Le tipologie di pratica che si possono avviare"
+  },
+  {
+   "name": "Pratiche",
+   "description": "Avvio, ricerca, stato e storico"
+  },
+  {
+   "name": "Documenti",
+   "description": "Documenti delle pratiche"
+  },
+  {
+   "name": "Messaggi",
+   "description": "Messaggi attesi dalle pratiche (es. integrazioni, pagamenti, rinunce)"
+  },
+  {
+   "name": "Sistema",
+   "description": "Verifica della chiave e documentazione"
+  }
+ ],
+ "paths": {
+  "/processi": {
+   "get": {
+    "tags": [
+     "Processi"
+    ],
+    "operationId": "elencoProcessi",
+    "summary": "Processi che la chiave può usare",
+    "description": "Ultima versione di ogni processo pubblicato, con i dati da inviare all'avvio e i messaggi che riceve.",
+    "responses": {
+     "200": {
+      "description": "Elenco dei processi",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/Processo"
+         }
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Chiave mancante o non valida",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Errore"
+        }
+       }
+      }
+     },
+     "429": {
+      "description": "Troppe richieste: riprova dopo i secondi indicati in Retry-After"
+     }
+    }
+   }
+  },
+  "/processi/{chiave}": {
+   "get": {
+    "tags": [
+     "Processi"
+    ],
+    "operationId": "processo",
+    "summary": "Un processo",
+    "parameters": [
+     {
+      "name": "chiave",
+      "in": "path",
+      "required": true,
+      "description": "Chiave del processo (es. accessoAtti)",
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Il processo",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Processo"
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Processo non trovato",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Errore"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Chiave mancante o non valida",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Errore"
+        }
+       }
+      }
+     },
+     "429": {
+      "description": "Troppe richieste: riprova dopo i secondi indicati in Retry-After"
+     }
+    }
+   }
+  },
+  "/processi/accessoAtti/pratiche": {
+   "post": {
+    "tags": [
+     "Pratiche"
+    ],
+    "operationId": "avvia_accessoAtti",
+    "summary": "Avvia: Accesso agli atti",
+    "description": "Legge 241/1990\n\nVersione 3. Allegati all'avvio: obbligatori.\n\nDati: `oggetto` (obbligatorio), `emailRichiedente` (obbligatorio), `tipoAccesso` (obbligatorio), `importo`, `privacy` (obbligatorio)",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/Avvio_accessoAtti"
+       },
+       "example": {
+        "riferimento": "DOM-2026-0042",
+        "dati": {
+         "oggetto": "Oggetto",
+         "emailRichiedente": "mario.rossi@example.com",
+         "tipoAccesso": "Visione",
+         "importo": 100,
+         "privacy": true
+        }
+       }
+      },
+      "multipart/form-data": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "richiesta": {
+          "type": "string",
+          "contentMediaType": "application/json",
+          "description": "Il JSON di avvio (stesso formato del corpo JSON)"
+         },
+         "documenti": {
+          "type": "array",
+          "items": {
+           "type": "string",
+           "contentMediaType": "application/octet-stream"
+          },
+          "description": "Almeno un documento"
+         }
+        },
+        "required": [
+         "richiesta",
+         "documenti"
+        ]
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Pratica avviata",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PraticaCreata"
+        }
+       }
+      }
+     },
+     "200": {
+      "description": "Esisteva già una pratica con lo stesso riferimento: è quella",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PraticaCreata"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Dati non validi (dettagli in errore.campi)",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Errore"
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "La chiave non può avviare questo processo",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Errore"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Chiave mancante o non valida",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Errore"
+        }
+       }
+      }
+     },
+     "429": {
+      "description": "Troppe richieste: riprova dopo i secondi indicati in Retry-After"
+     }
+    }
+   }
+  },
+  "/pratiche": {
+   "get": {
+    "tags": [
+     "Pratiche"
+    ],
+    "operationId": "cercaPratiche",
+    "summary": "Cerca pratiche",
+    "description": "Pratiche dei processi consentiti alla chiave, le più recenti prima.",
+    "parameters": [
+     {
+      "name": "processo",
+      "in": "query",
+      "required": false,
+      "description": "Chiave del processo",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "stato",
+      "in": "query",
+      "required": false,
+      "description": "Stato",
+      "schema": {
+       "type": "string",
+       "enum": [
+        "in_corso",
+        "conclusa"
+       ]
+      }
+     },
+     {
+      "name": "riferimento",
+      "in": "query",
+      "required": false,
+      "description": "Il tuo riferimento, indicato all'avvio",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "dal",
+      "in": "query",
+      "required": false,
+      "description": "Avviate da questa data (inclusa)",
+      "schema": {
+       "type": "string",
+       "format": "date"
+      }
+     },
+     {
+      "name": "al",
+      "in": "query",
+      "required": false,
+      "description": "Avviate fino a questa data (inclusa)",
+      "schema": {
+       "type": "string",
+       "format": "date"
+      }
+     },
+     {
+      "name": "pagina",
+      "in": "query",
+      "required": false,
+      "description": "Numero di pagina, da 0",
+      "schema": {
+       "type": "integer",
+       "minimum": 0,
+       "default": 0
+      }
+     },
+     {
+      "name": "dimensione",
+      "in": "query",
+      "required": false,
+      "description": "Pratiche per pagina",
+      "schema": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 200,
+       "default": 50
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Una pagina di pratiche",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PaginaPratiche"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Chiave mancante o non valida",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Errore"
+        }
+       }
+      }
+     },
+     "429": {
+      "description": "Troppe richieste: riprova dopo i secondi indicati in Retry-After"
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "Pratiche"
+    ],
+    "operationId": "avviaPratica",
+    "summary": "Avvia una pratica (qualunque processo)",
+    "description": "Come i percorsi /processi/{chiave}/pratiche, con il processo indicato nel corpo. Per allegare documenti usa il percorso del processo.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "oneOf": [
+         {
+          "$ref": "#/components/schemas/AvvioGenerico_accessoAtti"
+         }
+        ],
+        "discriminator": {
+         "propertyName": "processo",
+         "mapping": {
+          "accessoAtti": "#/components/schemas/AvvioGenerico_accessoAtti"
+         }
+        }
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Pratica avviata",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PraticaCreata"
+        }
+       }
+      }
+     },
+     "200": {
+      "description": "Esisteva già una pratica con lo stesso riferimento: è quella",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PraticaCreata"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Dati non validi (dettagli in errore.campi)",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Errore"
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "La chiave non può avviare questo processo",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Errore"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Chiave mancante o non valida",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Errore"
+        }
+       }
+      }
+     },
+     "429": {
+      "description": "Troppe richieste: riprova dopo i secondi indicati in Retry-After"
+     }
+    }
+   }
+  },
+  "/pratiche/{id}": {
+   "get": {
+    "tags": [
+     "Pratiche"
+    ],
+    "operationId": "pratica",
+    "summary": "Stato e dati di una pratica",
+    "description": "Attività in corso, scadenze, messaggi attesi e tutti i dati raccolti finora.",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "description": "Id della pratica",
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "La pratica",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Pratica"
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Pratica non trovata",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Errore"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Chiave mancante o non valida",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Errore"
+        }
+       }
+      }
+     },
+     "429": {
+      "description": "Troppe richieste: riprova dopo i secondi indicati in Retry-After"
+     }
+    }
+   }
+  },
+  "/pratiche/{id}/storico": {
+   "get": {
+    "tags": [
+     "Pratiche"
+    ],
+    "operationId": "storico",
+    "summary": "Storico della pratica",
+    "description": "Chi ha fatto cosa e quando, in ordine cronologico.",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "description": "Id della pratica",
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Eventi",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/EventoStorico"
+         }
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Chiave mancante o non valida",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Errore"
+        }
+       }
+      }
+     },
+     "429": {
+      "description": "Troppe richieste: riprova dopo i secondi indicati in Retry-After"
+     }
+    }
+   }
+  },
+  "/pratiche/{id}/documenti": {
+   "get": {
+    "tags": [
+     "Documenti"
+    ],
+    "operationId": "documenti",
+    "summary": "Documenti della pratica",
+    "description": "Con tutte le versioni e l'esito della verifica della firma.",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "description": "Id della pratica",
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Documenti",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/Documento"
+         }
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Chiave mancante o non valida",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Errore"
+        }
+       }
+      }
+     },
+     "429": {
+      "description": "Troppe richieste: riprova dopo i secondi indicati in Retry-After"
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "Documenti"
+    ],
+    "operationId": "aggiungiDocumento",
+    "summary": "Aggiungi un documento",
+    "description": "Solo per pratiche in corso. Con `documento` si carica una nuova versione di un documento esistente.",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "description": "Id della pratica",
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "multipart/form-data": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "file": {
+          "type": "string",
+          "contentMediaType": "application/octet-stream"
+         },
+         "nota": {
+          "type": "string"
+         },
+         "documento": {
+          "type": "integer",
+          "description": "Id del documento di cui caricare una nuova versione"
+         }
+        },
+        "required": [
+         "file"
+        ]
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Versione caricata",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/VersioneDocumento"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Chiave mancante o non valida",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Errore"
+        }
+       }
+      }
+     },
+     "429": {
+      "description": "Troppe richieste: riprova dopo i secondi indicati in Retry-After"
+     }
+    }
+   }
+  },
+  "/pratiche/{id}/documenti/versioni/{versione}": {
+   "get": {
+    "tags": [
+     "Documenti"
+    ],
+    "operationId": "scaricaDocumento",
+    "summary": "Scarica una versione",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "description": "Id della pratica",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "versione",
+      "in": "path",
+      "required": true,
+      "description": "Id della versione",
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Il file",
+      "content": {
+       "application/octet-stream": {
+        "schema": {
+         "type": "string",
+         "contentMediaType": "application/octet-stream"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Chiave mancante o non valida",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Errore"
+        }
+       }
+      }
+     },
+     "429": {
+      "description": "Troppe richieste: riprova dopo i secondi indicati in Retry-After"
+     }
+    }
+   }
+  },
+  "/messaggi/rinunciaRichiedente": {
+   "post": {
+    "tags": [
+     "Messaggi"
+    ],
+    "operationId": "messaggio_rinunciaRichiedente",
+    "summary": "Messaggio: rinunciaRichiedente",
+    "description": "Atteso da: Accesso agli atti. Indica la pratica con `pratica` (id) oppure con `cerca` (dati della pratica, es. il numero di protocollo). Dati ammessi: motivoRinuncia.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+         "pratica": {
+          "type": "string",
+          "description": "Id della pratica"
+         },
+         "cerca": {
+          "type": "object",
+          "description": "Dati con cui trovare la pratica, es. {\"numeroProtocollo\": \"2026/000123\"}",
+          "additionalProperties": {
+           "type": [
+            "string",
+            "number",
+            "boolean"
+           ]
+          }
+         },
+         "dati": {
+          "$ref": "#/components/schemas/DatiMessaggio_rinunciaRichiedente"
+         }
+        }
+       },
+       "example": {
+        "cerca": {
+         "riferimento": "DOM-2026-0042"
+        },
+        "dati": {
+         "motivoRinuncia": "…"
+        }
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Messaggio consegnato",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "consegnato": {
+           "type": "boolean"
+          },
+          "pratiche": {
+           "type": "array",
+           "items": {
+            "type": "string"
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Nessuna pratica sta aspettando il messaggio",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Errore"
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Il criterio corrisponde a più pratiche",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Errore"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Chiave mancante o non valida",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Errore"
+        }
+       }
+      }
+     },
+     "429": {
+      "description": "Troppe richieste: riprova dopo i secondi indicati in Retry-After"
+     }
+    }
+   }
+  },
+  "/pratiche/{id}/messaggi/{nome}": {
+   "post": {
+    "tags": [
+     "Messaggi"
+    ],
+    "operationId": "messaggioAllaPratica",
+    "summary": "Messaggio a una pratica precisa",
+    "description": "Per qualunque messaggio che la pratica sta aspettando (vedi `messaggiAttesi` nella pratica).",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "description": "Id della pratica",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "nome",
+      "in": "path",
+      "required": true,
+      "description": "Nome del messaggio",
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "dati": {
+          "type": "object",
+          "additionalProperties": {
+           "type": [
+            "string",
+            "number",
+            "boolean"
+           ]
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Messaggio consegnato",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "consegnato": {
+           "type": "boolean"
+          },
+          "pratiche": {
+           "type": "array",
+           "items": {
+            "type": "string"
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Nessuna pratica sta aspettando il messaggio",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Errore"
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Il criterio corrisponde a più pratiche",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Errore"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Chiave mancante o non valida",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Errore"
+        }
+       }
+      }
+     },
+     "429": {
+      "description": "Troppe richieste: riprova dopo i secondi indicati in Retry-After"
+     }
+    }
+   }
+  },
+  "/io": {
+   "get": {
+    "tags": [
+     "Sistema"
+    ],
+    "operationId": "io",
+    "summary": "Chi sono",
+    "description": "Per verificare la chiave: nome del sistema, permessi, processi consentiti.",
+    "responses": {
+     "200": {
+      "description": "La chiave",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Identita"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Chiave mancante o non valida",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Errore"
+        }
+       }
+      }
+     },
+     "429": {
+      "description": "Troppe richieste: riprova dopo i secondi indicati in Retry-After"
+     }
+    }
+   }
+  },
+  "/openapi.json": {
+   "get": {
+    "tags": [
+     "Sistema"
+    ],
+    "operationId": "openapi",
+    "summary": "Questo documento",
+    "description": "Limitato ai processi consentiti alla chiave. Importalo in Postman, Swagger o in un generatore di client.",
+    "responses": {
+     "200": {
+      "description": "Documento OpenAPI 3.1",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Chiave mancante o non valida",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Errore"
+        }
+       }
+      }
+     },
+     "429": {
+      "description": "Troppe richieste: riprova dopo i secondi indicati in Retry-After"
+     }
+    }
+   }
+  }
+ },
+ "webhooks": {
+  "pratica.avviata": {
+   "post": {
+    "summary": "Una nuova pratica è partita (dall'interfaccia o dall'API)",
+    "description": "Orditogram invia l'evento con una POST al tuo indirizzo. Rispondi con un codice 2xx entro 10 secondi: altrimenti Orditogram riprova dopo 1 minuto, 5 minuti, 30 minuti, 2, 6, 12 e 24 ore. Lo stesso evento può arrivare più di una volta: usa `id` per riconoscere i duplicati.",
+    "parameters": [
+     {
+      "name": "X-Orditogram-Firma",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string"
+      },
+      "description": "t=<secondi>,v1=<HMAC-SHA256 esadecimale di \"t.corpo\" con il segreto del webhook>"
+     },
+     {
+      "name": "X-Orditogram-Evento",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "const": "pratica.avviata"
+      }
+     },
+     {
+      "name": "X-Orditogram-Consegna",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string"
+      },
+      "description": "Id della consegna (cambia a ogni evento, resta uguale nei tentativi)"
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/Evento"
+       }
+      }
+     }
+    },
+    "responses": {
+     "2XX": {
+      "description": "Evento ricevuto"
+     }
+    }
+   }
+  },
+  "pratica.conclusa": {
+   "post": {
+    "summary": "La pratica è arrivata alla fine del processo",
+    "description": "Orditogram invia l'evento con una POST al tuo indirizzo. Rispondi con un codice 2xx entro 10 secondi: altrimenti Orditogram riprova dopo 1 minuto, 5 minuti, 30 minuti, 2, 6, 12 e 24 ore. Lo stesso evento può arrivare più di una volta: usa `id` per riconoscere i duplicati.",
+    "parameters": [
+     {
+      "name": "X-Orditogram-Firma",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string"
+      },
+      "description": "t=<secondi>,v1=<HMAC-SHA256 esadecimale di \"t.corpo\" con il segreto del webhook>"
+     },
+     {
+      "name": "X-Orditogram-Evento",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "const": "pratica.conclusa"
+      }
+     },
+     {
+      "name": "X-Orditogram-Consegna",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string"
+      },
+      "description": "Id della consegna (cambia a ogni evento, resta uguale nei tentativi)"
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/Evento"
+       }
+      }
+     }
+    },
+    "responses": {
+     "2XX": {
+      "description": "Evento ricevuto"
+     }
+    }
+   }
+  },
+  "pratica.annullata": {
+   "post": {
+    "summary": "La pratica è stata chiusa prima della fine",
+    "description": "Orditogram invia l'evento con una POST al tuo indirizzo. Rispondi con un codice 2xx entro 10 secondi: altrimenti Orditogram riprova dopo 1 minuto, 5 minuti, 30 minuti, 2, 6, 12 e 24 ore. Lo stesso evento può arrivare più di una volta: usa `id` per riconoscere i duplicati.",
+    "parameters": [
+     {
+      "name": "X-Orditogram-Firma",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string"
+      },
+      "description": "t=<secondi>,v1=<HMAC-SHA256 esadecimale di \"t.corpo\" con il segreto del webhook>"
+     },
+     {
+      "name": "X-Orditogram-Evento",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "const": "pratica.annullata"
+      }
+     },
+     {
+      "name": "X-Orditogram-Consegna",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string"
+      },
+      "description": "Id della consegna (cambia a ogni evento, resta uguale nei tentativi)"
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/Evento"
+       }
+      }
+     }
+    },
+    "responses": {
+     "2XX": {
+      "description": "Evento ricevuto"
+     }
+    }
+   }
+  },
+  "attivita.creata": {
+   "post": {
+    "summary": "Un'attività è pronta per essere lavorata da un utente o da un gruppo",
+    "description": "Orditogram invia l'evento con una POST al tuo indirizzo. Rispondi con un codice 2xx entro 10 secondi: altrimenti Orditogram riprova dopo 1 minuto, 5 minuti, 30 minuti, 2, 6, 12 e 24 ore. Lo stesso evento può arrivare più di una volta: usa `id` per riconoscere i duplicati.",
+    "parameters": [
+     {
+      "name": "X-Orditogram-Firma",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string"
+      },
+      "description": "t=<secondi>,v1=<HMAC-SHA256 esadecimale di \"t.corpo\" con il segreto del webhook>"
+     },
+     {
+      "name": "X-Orditogram-Evento",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "const": "attivita.creata"
+      }
+     },
+     {
+      "name": "X-Orditogram-Consegna",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string"
+      },
+      "description": "Id della consegna (cambia a ogni evento, resta uguale nei tentativi)"
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/Evento"
+       }
+      }
+     }
+    },
+    "responses": {
+     "2XX": {
+      "description": "Evento ricevuto"
+     }
+    }
+   }
+  },
+  "attivita.assegnata": {
+   "post": {
+    "summary": "Un utente ha preso in carico un'attività",
+    "description": "Orditogram invia l'evento con una POST al tuo indirizzo. Rispondi con un codice 2xx entro 10 secondi: altrimenti Orditogram riprova dopo 1 minuto, 5 minuti, 30 minuti, 2, 6, 12 e 24 ore. Lo stesso evento può arrivare più di una volta: usa `id` per riconoscere i duplicati.",
+    "parameters": [
+     {
+      "name": "X-Orditogram-Firma",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string"
+      },
+      "description": "t=<secondi>,v1=<HMAC-SHA256 esadecimale di \"t.corpo\" con il segreto del webhook>"
+     },
+     {
+      "name": "X-Orditogram-Evento",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "const": "attivita.assegnata"
+      }
+     },
+     {
+      "name": "X-Orditogram-Consegna",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string"
+      },
+      "description": "Id della consegna (cambia a ogni evento, resta uguale nei tentativi)"
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/Evento"
+       }
+      }
+     }
+    },
+    "responses": {
+     "2XX": {
+      "description": "Evento ricevuto"
+     }
+    }
+   }
+  },
+  "attivita.completata": {
+   "post": {
+    "summary": "Un'attività è stata completata",
+    "description": "Orditogram invia l'evento con una POST al tuo indirizzo. Rispondi con un codice 2xx entro 10 secondi: altrimenti Orditogram riprova dopo 1 minuto, 5 minuti, 30 minuti, 2, 6, 12 e 24 ore. Lo stesso evento può arrivare più di una volta: usa `id` per riconoscere i duplicati.",
+    "parameters": [
+     {
+      "name": "X-Orditogram-Firma",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string"
+      },
+      "description": "t=<secondi>,v1=<HMAC-SHA256 esadecimale di \"t.corpo\" con il segreto del webhook>"
+     },
+     {
+      "name": "X-Orditogram-Evento",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "const": "attivita.completata"
+      }
+     },
+     {
+      "name": "X-Orditogram-Consegna",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string"
+      },
+      "description": "Id della consegna (cambia a ogni evento, resta uguale nei tentativi)"
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/Evento"
+       }
+      }
+     }
+    },
+    "responses": {
+     "2XX": {
+      "description": "Evento ricevuto"
+     }
+    }
+   }
+  },
+  "messaggio.ricevuto": {
+   "post": {
+    "summary": "La pratica ha ricevuto un messaggio atteso",
+    "description": "Orditogram invia l'evento con una POST al tuo indirizzo. Rispondi con un codice 2xx entro 10 secondi: altrimenti Orditogram riprova dopo 1 minuto, 5 minuti, 30 minuti, 2, 6, 12 e 24 ore. Lo stesso evento può arrivare più di una volta: usa `id` per riconoscere i duplicati.",
+    "parameters": [
+     {
+      "name": "X-Orditogram-Firma",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string"
+      },
+      "description": "t=<secondi>,v1=<HMAC-SHA256 esadecimale di \"t.corpo\" con il segreto del webhook>"
+     },
+     {
+      "name": "X-Orditogram-Evento",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "const": "messaggio.ricevuto"
+      }
+     },
+     {
+      "name": "X-Orditogram-Consegna",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string"
+      },
+      "description": "Id della consegna (cambia a ogni evento, resta uguale nei tentativi)"
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/Evento"
+       }
+      }
+     }
+    },
+    "responses": {
+     "2XX": {
+      "description": "Evento ricevuto"
+     }
+    }
+   }
+  },
+  "documento.aggiunto": {
+   "post": {
+    "summary": "È stato caricato un documento o una sua nuova versione",
+    "description": "Orditogram invia l'evento con una POST al tuo indirizzo. Rispondi con un codice 2xx entro 10 secondi: altrimenti Orditogram riprova dopo 1 minuto, 5 minuti, 30 minuti, 2, 6, 12 e 24 ore. Lo stesso evento può arrivare più di una volta: usa `id` per riconoscere i duplicati.",
+    "parameters": [
+     {
+      "name": "X-Orditogram-Firma",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string"
+      },
+      "description": "t=<secondi>,v1=<HMAC-SHA256 esadecimale di \"t.corpo\" con il segreto del webhook>"
+     },
+     {
+      "name": "X-Orditogram-Evento",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "const": "documento.aggiunto"
+      }
+     },
+     {
+      "name": "X-Orditogram-Consegna",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string"
+      },
+      "description": "Id della consegna (cambia a ogni evento, resta uguale nei tentativi)"
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/Evento"
+       }
+      }
+     }
+    },
+    "responses": {
+     "2XX": {
+      "description": "Evento ricevuto"
+     }
+    }
+   }
+  },
+  "scadenza.scattata": {
+   "post": {
+    "summary": "È scattato un termine, un sollecito o la fine di un'attesa",
+    "description": "Orditogram invia l'evento con una POST al tuo indirizzo. Rispondi con un codice 2xx entro 10 secondi: altrimenti Orditogram riprova dopo 1 minuto, 5 minuti, 30 minuti, 2, 6, 12 e 24 ore. Lo stesso evento può arrivare più di una volta: usa `id` per riconoscere i duplicati.",
+    "parameters": [
+     {
+      "name": "X-Orditogram-Firma",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string"
+      },
+      "description": "t=<secondi>,v1=<HMAC-SHA256 esadecimale di \"t.corpo\" con il segreto del webhook>"
+     },
+     {
+      "name": "X-Orditogram-Evento",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "const": "scadenza.scattata"
+      }
+     },
+     {
+      "name": "X-Orditogram-Consegna",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string"
+      },
+      "description": "Id della consegna (cambia a ogni evento, resta uguale nei tentativi)"
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/Evento"
+       }
+      }
+     }
+    },
+    "responses": {
+     "2XX": {
+      "description": "Evento ricevuto"
+     }
+    }
+   }
+  },
+  "pratica.errore": {
+   "post": {
+    "summary": "Un passo automatico non è riuscito (es. un servizio esterno o un'email)",
+    "description": "Orditogram invia l'evento con una POST al tuo indirizzo. Rispondi con un codice 2xx entro 10 secondi: altrimenti Orditogram riprova dopo 1 minuto, 5 minuti, 30 minuti, 2, 6, 12 e 24 ore. Lo stesso evento può arrivare più di una volta: usa `id` per riconoscere i duplicati.",
+    "parameters": [
+     {
+      "name": "X-Orditogram-Firma",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string"
+      },
+      "description": "t=<secondi>,v1=<HMAC-SHA256 esadecimale di \"t.corpo\" con il segreto del webhook>"
+     },
+     {
+      "name": "X-Orditogram-Evento",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "const": "pratica.errore"
+      }
+     },
+     {
+      "name": "X-Orditogram-Consegna",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string"
+      },
+      "description": "Id della consegna (cambia a ogni evento, resta uguale nei tentativi)"
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/Evento"
+       }
+      }
+     }
+    },
+    "responses": {
+     "2XX": {
+      "description": "Evento ricevuto"
+     }
+    }
+   }
+  }
+ },
+ "components": {
+  "securitySchemes": {
+   "chiaveApi": {
+    "type": "apiKey",
+    "in": "header",
+    "name": "X-API-Key"
+   },
+   "bearer": {
+    "type": "http",
+    "scheme": "bearer",
+    "description": "La stessa chiave, come token Bearer"
+   }
+  },
+  "schemas": {
+   "Errore": {
+    "type": "object",
+    "properties": {
+     "errore": {
+      "type": "object",
+      "properties": {
+       "codice": {
+        "type": "string",
+        "examples": [
+         "dati_non_validi",
+         "non_trovato",
+         "permesso_mancante",
+         "chiave_non_valida",
+         "troppe_richieste",
+         "conflitto"
+        ]
+       },
+       "messaggio": {
+        "type": "string"
+       },
+       "campi": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "campo": {
+           "type": "string"
+          },
+          "messaggio": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      },
+      "required": [
+       "codice",
+       "messaggio"
+      ]
+     }
+    },
+    "required": [
+     "errore"
+    ]
+   },
+   "Campo": {
+    "type": "object",
+    "properties": {
+     "nome": {
+      "type": "string"
+     },
+     "etichetta": {
+      "type": "string"
+     },
+     "tipo": {
+      "type": "string",
+      "enum": [
+       "text",
+       "textarea",
+       "number",
+       "date",
+       "select",
+       "checkbox"
+      ]
+     },
+     "obbligatorio": {
+      "type": "boolean"
+     },
+     "opzioni": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "aiuto": {
+      "type": "string"
+     }
+    }
+   },
+   "Processo": {
+    "type": "object",
+    "properties": {
+     "chiave": {
+      "type": "string"
+     },
+     "nome": {
+      "type": "string"
+     },
+     "descrizione": {
+      "type": "string"
+     },
+     "versione": {
+      "type": "integer"
+     },
+     "campi": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/Campo"
+      }
+     },
+     "allegati": {
+      "type": "string",
+      "enum": [
+       "nessuno",
+       "facoltativi",
+       "obbligatori"
+      ]
+     },
+     "messaggi": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "nome": {
+         "type": "string"
+        },
+        "dati": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        }
+       }
+      }
+     },
+     "avvio": {
+      "type": "string",
+      "description": "Percorso per avviare una pratica di questo processo"
+     }
+    },
+    "required": [
+     "chiave",
+     "nome",
+     "versione",
+     "campi",
+     "allegati"
+    ]
+   },
+   "Attivita": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "string"
+     },
+     "nome": {
+      "type": "string"
+     },
+     "chiave": {
+      "type": "string",
+      "description": "Id dell'attività nel BPMN"
+     },
+     "assegnatario": {
+      "type": "string"
+     },
+     "gruppi": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "dal": {
+      "type": "string",
+      "format": "date-time"
+     }
+    }
+   },
+   "Scadenza": {
+    "type": "object",
+    "properties": {
+     "tipo": {
+      "type": "string",
+      "enum": [
+       "scadenza",
+       "sollecito",
+       "attesa"
+      ]
+     },
+     "nome": {
+      "type": "string"
+     },
+     "attivita": {
+      "type": "string"
+     },
+     "quando": {
+      "type": "string",
+      "format": "date-time"
+     }
+    }
+   },
+   "Pratica": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "string"
+     },
+     "titolo": {
+      "type": "string"
+     },
+     "riferimento": {
+      "type": "string",
+      "description": "Il riferimento indicato all'avvio"
+     },
+     "processo": {
+      "type": "object",
+      "properties": {
+       "chiave": {
+        "type": "string"
+       },
+       "nome": {
+        "type": "string"
+       },
+       "versione": {
+        "type": "integer"
+       }
+      }
+     },
+     "stato": {
+      "type": "string",
+      "enum": [
+       "in_corso",
+       "conclusa"
+      ]
+     },
+     "avviata": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "conclusa": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "avviataDa": {
+      "type": "string"
+     },
+     "attivitaCorrenti": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/Attivita"
+      }
+     },
+     "scadenze": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/Scadenza"
+      }
+     },
+     "messaggiAttesi": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "nome": {
+         "type": "string"
+        },
+        "elemento": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "dati": {
+      "type": "object",
+      "description": "Tutti i dati della pratica: avvio, attività, servizi esterni, messaggi",
+      "additionalProperties": true
+     }
+    },
+    "required": [
+     "id",
+     "titolo",
+     "processo",
+     "stato",
+     "avviata"
+    ]
+   },
+   "PraticaCreata": {
+    "allOf": [
+     {
+      "$ref": "#/components/schemas/Pratica"
+     },
+     {
+      "type": "object",
+      "properties": {
+       "creata": {
+        "type": "boolean",
+        "description": "false se esisteva già una pratica con lo stesso riferimento"
+       }
+      }
+     }
+    ]
+   },
+   "PaginaPratiche": {
+    "type": "object",
+    "properties": {
+     "righe": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/Pratica"
+      }
+     },
+     "totale": {
+      "type": "integer"
+     },
+     "pagina": {
+      "type": "integer"
+     },
+     "dimensione": {
+      "type": "integer"
+     }
+    }
+   },
+   "EventoStorico": {
+    "type": "object",
+    "properties": {
+     "tipo": {
+      "type": "string"
+     },
+     "titolo": {
+      "type": "string"
+     },
+     "utente": {
+      "type": "string"
+     },
+     "utenteNome": {
+      "type": "string"
+     },
+     "quando": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "dettagli": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "label": {
+         "type": "string"
+        },
+        "value": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    }
+   },
+   "VersioneDocumento": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer"
+     },
+     "numero": {
+      "type": "integer"
+     },
+     "filename": {
+      "type": "string"
+     },
+     "dimensione": {
+      "type": "integer"
+     },
+     "sha256": {
+      "type": "string"
+     },
+     "caricatoDa": {
+      "type": "string"
+     },
+     "caricatoIl": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "firmaTipo": {
+      "type": "string"
+     },
+     "firmaEsito": {
+      "type": "string"
+     }
+    }
+   },
+   "Documento": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer"
+     },
+     "nome": {
+      "type": "string"
+     },
+     "versioneCorrente": {
+      "type": "integer"
+     },
+     "versioni": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/VersioneDocumento"
+      }
+     }
+    }
+   },
+   "Identita": {
+    "type": "object",
+    "properties": {
+     "sistema": {
+      "type": "string"
+     },
+     "permessi": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "processi": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "description": "Vuoto = tutti"
+     }
+    }
+   },
+   "Evento": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "string",
+      "description": "Univoco: serve a riconoscere gli invii ripetuti"
+     },
+     "tipo": {
+      "type": "string",
+      "enum": [
+       "pratica.avviata",
+       "pratica.conclusa",
+       "pratica.annullata",
+       "attivita.creata",
+       "attivita.assegnata",
+       "attivita.completata",
+       "messaggio.ricevuto",
+       "documento.aggiunto",
+       "scadenza.scattata",
+       "pratica.errore"
+      ]
+     },
+     "quando": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "pratica": {
+      "type": "object",
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "titolo": {
+        "type": "string"
+       },
+       "processo": {
+        "type": "string"
+       },
+       "processoNome": {
+        "type": "string"
+       },
+       "riferimento": {
+        "type": "string"
+       }
+      }
+     },
+     "attivita": {
+      "type": "object",
+      "description": "Solo per gli eventi attivita.*",
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "nome": {
+        "type": "string"
+       },
+       "chiave": {
+        "type": "string"
+       },
+       "assegnatario": {
+        "type": "string"
+       },
+       "gruppi": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "dettagli": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "etichetta": {
+         "type": "string"
+        },
+        "valore": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    },
+    "required": [
+     "id",
+     "tipo",
+     "quando"
+    ]
+   },
+   "Dati_accessoAtti": {
+    "type": "object",
+    "title": "Dati di avvio: Accesso agli atti",
+    "additionalProperties": false,
+    "properties": {
+     "oggetto": {
+      "type": "string",
+      "title": "Oggetto"
+     },
+     "emailRichiedente": {
+      "type": "string",
+      "title": "Email",
+      "description": "Email o PEC"
+     },
+     "tipoAccesso": {
+      "type": "string",
+      "enum": [
+       "Visione",
+       "Copia"
+      ],
+      "title": "Modalità"
+     },
+     "importo": {
+      "type": "number",
+      "title": "Importo"
+     },
+     "privacy": {
+      "type": "boolean",
+      "title": "Privacy",
+      "const": true
+     }
+    },
+    "description": "Dal form \"Nuova richiesta\"",
+    "required": [
+     "oggetto",
+     "emailRichiedente",
+     "tipoAccesso",
+     "privacy"
+    ]
+   },
+   "Avvio_accessoAtti": {
+    "type": "object",
+    "title": "Avvio di Accesso agli atti",
+    "additionalProperties": false,
+    "properties": {
+     "riferimento": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "Il tuo identificativo (es. numero della domanda sul portale). Se esiste già una pratica di questo processo con lo stesso riferimento, Orditogram restituisce quella invece di crearne un'altra."
+     },
+     "dati": {
+      "$ref": "#/components/schemas/Dati_accessoAtti"
+     }
+    },
+    "required": [
+     "dati"
+    ]
+   },
+   "AvvioGenerico_accessoAtti": {
+    "allOf": [
+     {
+      "$ref": "#/components/schemas/Avvio_accessoAtti"
+     },
+     {
+      "type": "object",
+      "properties": {
+       "processo": {
+        "const": "accessoAtti"
+       }
+      },
+      "required": [
+       "processo"
+      ]
+     }
+    ]
+   },
+   "DatiMessaggio_rinunciaRichiedente": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+     "motivoRinuncia": {
+      "type": [
+       "string",
+       "number",
+       "boolean"
+      ]
+     }
+    }
+   }
+  }
+ }
+}

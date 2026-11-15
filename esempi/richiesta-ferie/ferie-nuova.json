@@ -1,0 +1,10 @@
+{
+  "title": "Nuova richiesta ferie",
+  "fields": [
+    { "name": "oggetto", "label": "Oggetto", "type": "text", "required": true, "default": "Ferie" },
+    { "name": "dal", "label": "Dal (gg/mm/aaaa)", "type": "text", "required": true },
+    { "name": "al", "label": "Al (gg/mm/aaaa)", "type": "text", "required": true },
+    { "name": "motivo", "label": "Note per il responsabile", "type": "textarea" }
+  ],
+  "submitLabel": "Invia richiesta"
+}

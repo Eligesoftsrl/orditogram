@@ -1,0 +1,12 @@
+{
+  "title": "Revisione della pratica",
+  "description": "Correggi quanto segnalato dall'analista. Puoi caricare nuove versioni dei documenti: le precedenti restano consultabili.",
+  "fields": [
+    { "name": "oggetto", "label": "Oggetto", "type": "text", "readonly": true },
+    { "name": "protocollo", "label": "Protocollo", "type": "text" },
+    { "name": "noteAnalista", "label": "Rilievi dell'analista", "type": "textarea", "readonly": true },
+    { "name": "noteRevisione", "label": "Cosa hai corretto", "type": "textarea", "required": true, "precompila": false }
+  ],
+  "documenti": "modifica",
+  "submitLabel": "Rimanda agli analisti"
+}

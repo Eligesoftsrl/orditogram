@@ -1,0 +1,7 @@
+{
+  "title": "Come ti chiami?",
+  "fields": [
+    { "name": "nome", "label": "Nome", "type": "text", "required": true }
+  ],
+  "submitLabel": "Invia"
+}
