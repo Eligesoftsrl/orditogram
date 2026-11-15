@@ -1,0 +1,158 @@
+# Analisi del codice con strumenti gratuiti (coprono le regole OWASP Top 10 e CWE Top 25 che Kiuwan
+# applica nelle gare PA): SonarQube Community, Semgrep, SpotBugs con FindSecBugs, OSV-Scanner sulle
+# librerie (Java e npm), npm audit. I rapporti restano tra gli artefatti di ogni esecuzione.
+#
+# Soglie bloccanti: vedi strumenti/analisi/riepilogo.py. ANALISI_BLOCCANTE è "false" finché non
+# abbiamo sistemato i problemi della prima analisi; poi diventa "true" e le soglie fermano la CI.
+name: Analisi del codice
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  ANALISI_BLOCCANTE: "false"
+
+jobs:
+  sonarqube:
+    runs-on: ubuntu-latest
+    services:
+      sonarqube:
+        image: sonarqube:26.10.0.133078-community
+        env:
+          SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+        ports:
+          - 9000:9000
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - name: Compila e prova il backend con la copertura
+        working-directory: backend
+        run: mvn -B -Panalisi verify dependency:copy-dependencies -DincludeScope=compile
+      - name: Avvia SonarQube e crea un token
+        id: sonar
+        run: |
+          for i in $(seq 1 60); do
+            stato=$(curl -s http://localhost:9000/api/system/status | jq -r .status || true)
+            [ "$stato" = "UP" ] && break; sleep 5
+          done
+          echo "SonarQube: $stato"
+          password="Analisi-${{ github.run_id }}-Orditogram!"
+          curl -sf -u admin:admin -X POST "http://localhost:9000/api/users/change_password" \
+            --data-urlencode login=admin --data-urlencode previousPassword=admin --data-urlencode "password=$password"
+          token=$(curl -sf -u "admin:$password" -X POST "http://localhost:9000/api/user_tokens/generate" \
+            --data-urlencode name=ci --data-urlencode type=GLOBAL_ANALYSIS_TOKEN | jq -r .token)
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+      - name: Analisi SonarQube
+        id: analisi
+        continue-on-error: true
+        run: |
+          docker run --rm --network host -v "$PWD:/usr/src" \
+            sonarsource/sonar-scanner-cli:12.3.1.4302_8.3.1 \
+            -Dsonar.host.url=http://localhost:9000 -Dsonar.token=${{ steps.sonar.outputs.token }}
+      - name: Risultati SonarQube
+        if: always()
+        run: |
+          t=${{ steps.sonar.outputs.token }}
+          api() { curl -s -u "$t:" "http://localhost:9000/api/$1"; }
+          jq -n \
+            --argjson qualityGate "$(api 'qualitygates/project_status?projectKey=orditogram')" \
+            --argjson issues "$(api 'issues/search?componentKeys=orditogram&resolved=false&ps=500&s=SEVERITY&facets=impactSoftwareQualities,impactSeverities,types,rules')" \
+            --argjson hotspots "$(api 'hotspots/search?projectKey=orditogram&ps=500')" \
+            --argjson misure "$(api 'measures/component?component=orditogram&metricKeys=coverage,bugs,vulnerabilities,code_smells,security_hotspots,duplicated_lines_density,ncloc,security_rating,reliability_rating,sqale_rating')" \
+            '{qualityGate: $qualityGate, issues: $issues, hotspots: $hotspots, misure: $misure}' > sonarqube.json
+          jq -r '(.misure.component.measures // [])[] | "\(.metric): \(.value)"' sonarqube.json
+          jq -r '(.hotspots.hotspots // [])[] | "HOTSPOT \(.vulnerabilityProbability) \(.securityCategory) \(.component | split(":")[1]):\(.line) \(.message)"' sonarqube.json
+          python3 strumenti/analisi/riepilogo.py sonar sonarqube.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rapporto-sonarqube
+          path: sonarqube.json
+
+  semgrep:
+    runs-on: ubuntu-latest
+    container: semgrep/semgrep:1.185.0
+    steps:
+      - uses: actions/checkout@v4
+      - name: Semgrep (OWASP Top 10, CWE Top 25, Java, React)
+        run: |
+          semgrep scan --config p/owasp-top-ten --config p/cwe-top-25 --config p/java \
+            --config p/react --config p/javascript --config p/secrets \
+            --json-output=semgrep.json --sarif-output=semgrep.sarif || true
+      - name: Risultati
+        run: python3 strumenti/analisi/riepilogo.py semgrep semgrep.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rapporto-semgrep
+          path: semgrep.*
+
+  spotbugs-e-librerie:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: SpotBugs con FindSecBugs e distinta delle librerie (SBOM)
+        working-directory: backend
+        run: mvn -B -Panalisi -DskipTests verify
+      - name: Risultati SpotBugs
+        if: always()
+        run: python3 strumenti/analisi/riepilogo.py spotbugs backend/target/spotbugsXml.xml
+      - name: Librerie con vulnerabilità note (OSV-Scanner su backend e frontend)
+        if: always()
+        run: |
+          go install github.com/google/osv-scanner/v2/cmd/osv-scanner@v2.7.0
+          sbom=$(find backend/target -name '*.cdx.json' | head -1)
+          echo "Distinta delle librerie del backend: $sbom"
+          ~/go/bin/osv-scanner scan source -L "$sbom" -L frontend/package-lock.json \
+            --format json --output-file osv.json || true
+          python3 strumenti/analisi/riepilogo.py osv osv.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rapporto-spotbugs-librerie
+          path: |
+            backend/target/spotbugsXml.xml
+            backend/target/classes/META-INF/sbom/*.cdx.json
+            osv.json
+
+  npm-audit:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: npm audit (librerie usate in produzione)
+        run: |
+          npm audit --omit=dev --json > npm-audit.json || true
+          python3 ../strumenti/analisi/riepilogo.py npm npm-audit.json
+      - name: npm audit (anche strumenti di sviluppo, solo informativo)
+        run: |
+          npm audit --json > npm-audit-tutto.json || true
+          ANALISI_BLOCCANTE=false python3 ../strumenti/analisi/riepilogo.py npm npm-audit-tutto.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rapporto-npm-audit
+          path: frontend/npm-audit*.json

@@ -20,6 +20,9 @@ Form avanzati, prima parte.
   suoi dati e riprende quando finisce, con i dati raccolti. Nell'editor: *Processo richiamato*. La scheda della
   pratica mostra le pratiche collegate. Controlli alla pubblicazione: processo richiamato pubblicato, niente
   richiami di sé stesso o a vicenda.
+- **Analisi del codice in CI**: SonarQube Community, Semgrep, SpotBugs con FindSecBugs, OSV-Scanner e npm audit a
+  ogni modifica, con riepilogo e rapporti conservati; distinta delle librerie (SBOM) e copertura dei test con
+  `mvn -Panalisi verify`.
 
 ## 0.11.0 (novembre 2026)
 
