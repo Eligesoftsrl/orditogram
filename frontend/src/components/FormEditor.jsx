@@ -7,6 +7,10 @@ import { api } from '../api.js'
 import { cx, quando } from '../lib/format.js'
 import DynamicForm from './DynamicForm.jsx'
 import { SEZIONE, condizione, descriviCondizione, eSezione, valoriPossibili } from '../lib/formCondizioni.js'
+import { FORMATI, descriviRegole } from '../lib/formRegole.js'
+
+const NESSUNA_REGOLA = { min: undefined, max: undefined, minLunghezza: undefined, maxLunghezza: undefined,
+  formato: undefined, espressione: undefined, messaggioFormato: undefined }
 import { Badge, Button, Caricamento, Errore, Pannello, Vuoto, useToast } from './ui.jsx'
 
 const TIPI = [
@@ -283,6 +287,7 @@ function CampoEditor({ f, i, n, catalogo, campi, onChange, onSu, onGiu, onTogli,
           <span className="block truncate text-xs text-grafite">
             {Tipo.label}{f.name ? `, ${f.name}` : ''}{f.required ? ', obbligatorio' : ''}{f.readonly ? ', sola lettura' : ''}
             {cond ? `, ${descriviCondizione(cond, campi)}` : ''}
+            {descriviRegole(f) ? `, ${descriviRegole(f)}` : ''}
           </span>
         </button>
         <div className="flex items-center">
@@ -307,7 +312,7 @@ function CampoEditor({ f, i, n, catalogo, campi, onChange, onSu, onGiu, onTogli,
           </div>
           <div>
             <label className="etichetta">Tipo</label>
-            <select className="campo" value={f.type || 'text'} onChange={e => onChange({ type: e.target.value, ...(e.target.value === 'select' && !f.options ? { options: ['Opzione 1', 'Opzione 2'] } : {}) })}>
+            <select className="campo" value={f.type || 'text'} onChange={e => onChange({ ...NESSUNA_REGOLA, type: e.target.value, ...(e.target.value === 'select' && !f.options ? { options: ['Opzione 1', 'Opzione 2'] } : {}) })}>
               {TIPI.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
             </select>
           </div>
@@ -330,10 +335,55 @@ function CampoEditor({ f, i, n, catalogo, campi, onChange, onSu, onGiu, onTogli,
             {!f.readonly && f.type === 'text' && <Spunta checked={!!f.titolo} onChange={v => onChange({ titolo: v })}>Usa come titolo della pratica</Spunta>}
           </div>
 
+          {!f.readonly && <RegoleEditor f={f} onChange={onChange} />}
+
           <div className="sm:col-span-2">
             <CondizioneEditor f={f} campi={campi} onChange={visibileSe => onChange({ visibileSe })} />
           </div>
         </div>
+      )}
+    </div>
+  )
+}
+
+/** Regole di validazione secondo il tipo: limiti per numeri e date, lunghezza e formato per i testi. */
+function RegoleEditor({ f, onChange }) {
+  const tipo = f.type || 'text'
+  const v = (k) => f[k] ?? ''
+  const imposta = (k) => (e) => onChange({ [k]: e.target.value.trim() === '' ? undefined : e.target.value })
+  if (tipo === 'number') return (
+    <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
+      <div><label className="etichetta">Valore minimo</label><input className="campo" inputMode="decimal" value={v('min')} onChange={imposta('min')} placeholder="Nessuno" /></div>
+      <div><label className="etichetta">Valore massimo</label><input className="campo" inputMode="decimal" value={v('max')} onChange={imposta('max')} placeholder="Nessuno" /></div>
+    </div>
+  )
+  if (tipo === 'date') return (
+    <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
+      <div><label className="etichetta">Non prima del</label><input className="campo" value={v('min')} onChange={imposta('min')} placeholder="oggi, oppure 2026-01-31" /></div>
+      <div><label className="etichetta">Non dopo il</label><input className="campo" value={v('max')} onChange={imposta('max')} placeholder="oggi, oppure 2026-12-31" /></div>
+    </div>
+  )
+  if (tipo !== 'text' && tipo !== 'textarea') return null
+  return (
+    <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
+      <div><label className="etichetta">Caratteri minimi</label><input className="campo" inputMode="numeric" value={v('minLunghezza')} onChange={imposta('minLunghezza')} placeholder="Nessuno" /></div>
+      <div><label className="etichetta">Caratteri massimi</label><input className="campo" inputMode="numeric" value={v('maxLunghezza')} onChange={imposta('maxLunghezza')} placeholder="Nessuno" /></div>
+      {tipo === 'text' && (
+        <div className="sm:col-span-2">
+          <label className="etichetta">Formato</label>
+          <select className="campo" value={v('formato')} onChange={e => onChange({ formato: e.target.value || undefined,
+            ...(e.target.value !== 'espressione' ? { espressione: undefined, messaggioFormato: undefined } : {}) })}>
+            <option value="">Testo libero</option>
+            {FORMATI.map(x => <option key={x.id} value={x.id}>{x.label}</option>)}
+          </select>
+          {['codiceFiscale', 'partitaIva', 'iban'].includes(f.formato) && <p className="mt-1 text-[13px] text-grafite">Si controlla anche il carattere di controllo.</p>}
+        </div>
+      )}
+      {tipo === 'text' && f.formato === 'espressione' && (
+        <>
+          <div><label className="etichetta">Espressione regolare</label><input className="campo font-mono text-sm" value={v('espressione')} onChange={imposta('espressione')} placeholder="[0-9]{4}/[0-9]+" /></div>
+          <div><label className="etichetta">Messaggio se non va bene</label><input className="campo" value={v('messaggioFormato')} onChange={imposta('messaggioFormato')} placeholder="Es. scrivi anno/numero, come 2026/123" /></div>
+        </>
       )}
     </div>
   )

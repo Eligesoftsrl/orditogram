@@ -62,6 +62,21 @@ class OpenApiGeneratoreTest {
     }
 
     @Test
+    void regoleDeiCampiNelloSchema() {
+        Map<String, Object> importo = OpenApiGeneratore.schemaCampo(new ValoriForm.Campo("importo", "Importo", "number", true,
+            List.of(), null, null, Map.of("min", "10", "max", "1000")));
+        assertEquals(new java.math.BigDecimal("10"), importo.get("minimum"));
+        assertEquals(new java.math.BigDecimal("1000"), importo.get("maximum"));
+        Map<String, Object> pec = OpenApiGeneratore.schemaCampo(new ValoriForm.Campo("pec", "PEC", "text", true,
+            List.of(), null, null, Map.of("formato", "email", "maxLunghezza", "200")));
+        assertEquals("email", pec.get("format"));
+        assertEquals(200, pec.get("maxLength"));
+        Map<String, Object> cf = OpenApiGeneratore.schemaCampo(new ValoriForm.Campo("cf", "CF", "text", true,
+            List.of(), null, null, Map.of("formato", "codiceFiscale")));
+        assertTrue(cf.get("description").toString().startsWith("Codice fiscale italiano"));
+    }
+
+    @Test
     void messaggiEWebhookDocumentati() {
         Map<String, Object> doc = OpenApiGeneratore.genera(List.of(accessoAtti()), "http://localhost:8080", "sviluppo", "Comune di Prova");
         Map<String, Object> paths = (Map<String, Object>) doc.get("paths");

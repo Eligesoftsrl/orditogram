@@ -26,11 +26,18 @@ public final class ValoriForm {
 
     /** Un campo modificabile del form, come lo vede chi lo compila (o chi chiama l'API). */
     public record Campo(String nome, String etichetta, String tipo, boolean obbligatorio, List<String> opzioni,
-                        String aiuto, Condizione visibileSe) {
+                        String aiuto, Condizione visibileSe, Map<String, String> regole) {
         public Campo(String nome, String etichetta, String tipo, boolean obbligatorio, List<String> opzioni, String aiuto) {
-            this(nome, etichetta, tipo, obbligatorio, opzioni, aiuto, null);
+            this(nome, etichetta, tipo, obbligatorio, opzioni, aiuto, null, Map.of());
+        }
+        public Campo(String nome, String etichetta, String tipo, boolean obbligatorio, List<String> opzioni,
+                     String aiuto, Condizione visibileSe) {
+            this(nome, etichetta, tipo, obbligatorio, opzioni, aiuto, visibileSe, Map.of());
         }
     }
+
+    /** Proprietà del campo che sono regole di validazione (vedi RegoleCampo). */
+    static final List<String> REGOLE = List.of("min", "max", "minLunghezza", "maxLunghezza", "formato", "espressione", "messaggioFormato");
 
     /** Il campo si mostra solo se il campo indicato ha uno di questi valori. */
     public record Condizione(String campo, List<String> valori) {
@@ -63,9 +70,15 @@ public final class ValoriForm {
             if ("select".equals(tipo)) f.path("options").forEach(o -> opzioni.add(o.asText()));
             String aiuto = f.hasNonNull("help") ? f.get("help").asText() : f.hasNonNull("aiuto") ? f.get("aiuto").asText() : null;
             out.add(new Campo(nome, f.path("label").asText(nome), tipo, f.path("required").asBoolean(false),
-                List.copyOf(opzioni), aiuto, condizione(f)));
+                List.copyOf(opzioni), aiuto, condizione(f), regole(f)));
         }
         return out;
+    }
+
+    static Map<String, String> regole(JsonNode f) {
+        Map<String, String> out = new LinkedHashMap<>();
+        for (String r : REGOLE) if (f.hasNonNull(r) && !f.get(r).asText().isBlank()) out.put(r, f.get(r).asText().trim());
+        return Collections.unmodifiableMap(out);
     }
 
     static boolean sezione(JsonNode f) {
@@ -157,6 +170,32 @@ public final class ValoriForm {
     }
 
     /**
+     * Valori che non rispettano le regole dei campi (min/max, lunghezza, formato): nome del campo e motivo.
+     * Si controllano solo i campi modificabili, visibili e compilati.
+     */
+    public static List<Errore> erroriRegole(JsonNode form, Map<String, Object> vars, Map<String, Object> contesto, LocalDate oggi) {
+        List<Errore> out = new ArrayList<>();
+        if (form == null || !form.has("fields")) return out;
+        Set<String> nascosti = nascosti(form, unisci(contesto, vars));
+        for (JsonNode f : form.get("fields")) {
+            if (f.path("readonly").asBoolean(false) || sezione(f)) continue;
+            String nome = f.path("name").asText("");
+            if (nome.isBlank() || nascosti.contains(nome) || !vars.containsKey(nome)) continue;
+            String msg = RegoleCampo.controlla(f, f.path("type").asText("text"), vars.get(nome), oggi);
+            if (msg != null) out.add(new Errore(nome, msg));
+        }
+        return out;
+    }
+
+    /** "Importo: deve essere almeno 10; Email: deve essere un indirizzo email valido" */
+    public static String descriviErrori(JsonNode form, List<Errore> errori) {
+        Map<String, String> etichette = new HashMap<>();
+        if (form != null && form.has("fields"))
+            form.get("fields").forEach(f -> etichette.put(f.path("name").asText(), f.path("label").asText(f.path("name").asText())));
+        return String.join("; ", errori.stream().map(e -> etichette.getOrDefault(e.campo(), e.campo()) + ": " + e.messaggio()).toList());
+    }
+
+    /**
      * Controllo rigoroso per l'API: campi sconosciuti o in sola lettura, tipi, scelte ammesse, obbligatori.
      * Restituisce i valori normalizzati (sì/no come booleani, numeri come numeri, testo senza spazi ai lati)
      * oppure gli errori trovati, tutti insieme, così chi integra li corregge in una volta.
@@ -199,6 +238,9 @@ public final class ValoriForm {
         // i campi nascosti dalle condizioni non si salvano e non sono obbligatori
         Set<String> nascosti = nascosti(form, valori);
         valori.keySet().removeAll(nascosti);
+        // regole dei campi (min/max, lunghezza, formato)
+        for (Errore e : erroriRegole(form, valori, Map.of(), LocalDate.now()))
+            if (errori.stream().noneMatch(x -> x.campo().equals(e.campo()))) errori.add(e);
         for (Campo c : perNome.values()) {
             if (!c.obbligatorio() || nascosti.contains(c.nome())
                 || errori.stream().anyMatch(x -> x.campo().equals(c.nome()))) continue;

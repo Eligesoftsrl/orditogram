@@ -228,6 +228,7 @@ public class BpmController {
         Map<String, Object> vars = ValoriForm.ammessi(form, body, pratica);
         List<String> mancanti = ValoriForm.obbligatoriMancanti(form, vars, pratica);
         if (!mancanti.isEmpty()) throw bad("Compila i campi obbligatori: " + String.join(", ", mancanti));
+        controllaRegole(form, vars, pratica);
 
         if (task.getAssignee() == null) {
             taskRuntime.claim(TaskPayloadBuilder.claim().withTaskId(id).build());
@@ -267,6 +268,13 @@ public class BpmController {
     private void controllaObbligatori(JsonNode form, Map<String, Object> vars) {
         List<String> mancanti = ValoriForm.obbligatoriMancanti(form, vars);
         if (!mancanti.isEmpty()) throw bad("Compila i campi obbligatori: " + String.join(", ", mancanti));
+        controllaRegole(form, vars, Map.of());
+    }
+
+    /** Regole dei campi (min/max, lunghezza, formato), uguali a quelle dell'interfaccia e dell'API. */
+    private void controllaRegole(JsonNode form, Map<String, Object> vars, Map<String, Object> pratica) {
+        List<ValoriForm.Errore> errori = ValoriForm.erroriRegole(form, vars, pratica, LocalDate.now());
+        if (!errori.isEmpty()) throw bad("Controlla i campi: " + ValoriForm.descriviErrori(form, errori));
     }
 
     private String titoloPratica(JsonNode form, Map<String, Object> vars, ProcessDefinition def) {

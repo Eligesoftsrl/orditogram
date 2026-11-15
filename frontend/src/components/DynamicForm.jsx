@@ -3,6 +3,7 @@ import { FileUp, Paperclip, X } from 'lucide-react'
 import { cx, dimensione, giorno } from '../lib/format.js'
 import { Button, Errore } from './ui.jsx'
 import { campiNascosti, eSezione, raggruppa, senzaNascosti } from '../lib/formCondizioni.js'
+import { erroriForm } from '../lib/formRegole.js'
 
 /**
  * Form generato dalla definizione JSON (formKey del BPMN).
@@ -14,6 +15,8 @@ import { campiNascosti, eSezione, raggruppa, senzaNascosti } from '../lib/formCo
  *                       required, readonly, default, options, placeholder, help,
  *                       precompila: false (non riproporre il valore precedente, utile nei cicli),
  *                       visibileSe: { campo, valori } (il campo compare solo se l'altro ha uno di quei valori)
+ * Regole:               min, max, minLunghezza, maxLunghezza, formato (vedi lib/formRegole.js), controllate
+ *                       all'invio con il messaggio accanto al campo; il server le controlla di nuovo.
  * Sezioni:              { type: "sezione", label, help } divide i campi da compilare in gruppi con un titolo.
  *
  * I campi in sola lettura diventano un riepilogo in alto; quelli da compilare restano campi.
@@ -35,12 +38,23 @@ export default function DynamicForm({ form, initialValues = {}, onSubmit, disabl
   })
   const [files, setFiles] = useState([])
   const [errore, setErrore] = useState('')
-  const set = (name, value) => setValues(prev => ({ ...prev, [name]: value }))
+  const [erroriCampi, setErroriCampi] = useState({})
+  const set = (name, value) => {
+    setValues(prev => ({ ...prev, [name]: value }))
+    setErroriCampi(prev => { if (!prev[name]) return prev; const { [name]: _, ...resto } = prev; return resto })
+  }
 
   const submit = (e) => {
     e.preventDefault()
     if (conAllegati && form.documentiObbligatori && files.length === 0) {
       setErrore('Allega almeno un documento')
+      return
+    }
+    const sbagliati = erroriForm(campi, values, campiNascosti(campi, { ...initialValues, ...values }))
+    setErroriCampi(sbagliati)
+    if (Object.keys(sbagliati).length > 0) {
+      setErrore(Object.keys(sbagliati).length === 1 ? 'Un campo va corretto' : `${Object.keys(sbagliati).length} campi vanno corretti`)
+      document.getElementById(`campo-${Object.keys(sbagliati)[0]}`)?.focus()
       return
     }
     setErrore('')
@@ -57,7 +71,7 @@ export default function DynamicForm({ form, initialValues = {}, onSubmit, disabl
   })
 
   return (
-    <form onSubmit={submit} className="space-y-6">
+    <form onSubmit={submit} noValidate className="space-y-6">
       {((mostraTitolo && form.title) || form.description) && (
         <div>
           {mostraTitolo && form.title && <h3 className="text-lg font-semibold">{form.title}</h3>}
@@ -88,7 +102,7 @@ export default function DynamicForm({ form, initialValues = {}, onSubmit, disabl
           )}
           <div className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
             {g.campi.map(f => (
-              <Campo key={f.name} f={f} value={values[f.name]} onChange={v => set(f.name, v)} disabled={disabled} />
+              <Campo key={f.name} f={f} value={values[f.name]} onChange={v => set(f.name, v)} disabled={disabled} errore={erroriCampi[f.name]} />
             ))}
           </div>
         </section>
@@ -115,9 +129,16 @@ function mostraValore(f, v) {
   return String(v)
 }
 
-function Campo({ f, value, onChange, disabled }) {
+function Campo({ f, value, onChange, disabled, errore }) {
   const id = `campo-${f.name}`
   const largo = f.type === 'textarea'
+  const idErrore = `${id}-errore`
+  if (errore) errore = errore[0].toUpperCase() + errore.slice(1)
+  const messaggio = errore && <p id={idErrore} role="alert" className="mt-1 text-[13px] font-medium text-mattone-600">{errore}</p>
+  const accessibilita = { 'aria-invalid': errore ? true : undefined, 'aria-describedby': errore ? idErrore : undefined }
+  const limiti = f.type === 'number' || f.type === 'date'
+    ? { min: f.min === 'oggi' ? new Date().toLocaleDateString('sv-SE') : f.min, max: f.max === 'oggi' ? new Date().toLocaleDateString('sv-SE') : f.max }
+    : { maxLength: f.maxLunghezza || undefined }
   const etichetta = (
     <label htmlFor={id} className="etichetta">
       {f.label || f.name}{f.required && <span className="text-mattone-600"> *</span>}
@@ -128,11 +149,12 @@ function Campo({ f, value, onChange, disabled }) {
   if (f.type === 'checkbox') {
     return (
       <label htmlFor={id} className="flex cursor-pointer items-start gap-3 rounded-campo border border-linea bg-white px-3.5 py-3 sm:col-span-2 has-[:checked]:border-verde-500 has-[:checked]:bg-verde-50">
-        <input id={id} type="checkbox" checked={!!value} disabled={disabled} required={f.required}
+        <input id={id} type="checkbox" checked={!!value} disabled={disabled} required={f.required} {...accessibilita}
                onChange={e => onChange(e.target.checked)} className="mt-0.5 size-4 accent-verde-600" />
         <span>
           <span className="text-[15px] font-medium text-pino-900">{f.label || f.name}</span>
           {f.help && <span className="block text-[13px] text-grafite">{f.help}</span>}
+          {errore && <span id={idErrore} role="alert" className="block text-[13px] font-medium text-mattone-600">{errore}</span>}
         </span>
       </label>
     )
@@ -154,6 +176,7 @@ function Campo({ f, value, onChange, disabled }) {
             </label>
           ))}
         </div>
+        {messaggio}
         {aiuto}
       </fieldset>
     )
@@ -163,8 +186,8 @@ function Campo({ f, value, onChange, disabled }) {
     <div className={cx(largo && 'sm:col-span-2')}>
       {etichetta}
       {f.type === 'textarea' ? (
-        <textarea id={id} rows={4} className="campo resize-y" value={value ?? ''} required={f.required} disabled={disabled}
-                  placeholder={f.placeholder} onChange={e => onChange(e.target.value)} />
+        <textarea id={id} rows={4} className={cx('campo resize-y', errore && 'border-mattone-600!')} value={value ?? ''} required={f.required} disabled={disabled}
+                  placeholder={f.placeholder} onChange={e => onChange(e.target.value)} {...limiti} {...accessibilita} />
       ) : f.type === 'select' ? (
         <select id={id} className="campo" value={value ?? ''} required={f.required} disabled={disabled}
                 onChange={e => onChange(e.target.value)}>
@@ -172,10 +195,14 @@ function Campo({ f, value, onChange, disabled }) {
           {(f.options || []).map(o => <option key={o} value={o}>{o}</option>)}
         </select>
       ) : (
-        <input id={id} className="campo" type={f.type === 'number' ? 'number' : f.type === 'date' ? 'date' : 'text'}
+        <input id={id} className={cx('campo', errore && 'border-mattone-600!')}
+               type={f.type === 'number' ? 'number' : f.type === 'date' ? 'date' : f.formato === 'email' ? 'email' : 'text'}
+               inputMode={['cap', 'partitaIva'].includes(f.formato) ? 'numeric' : f.formato === 'telefono' ? 'tel' : undefined}
+               step={f.type === 'number' ? 'any' : undefined}
                value={value ?? ''} required={f.required} disabled={disabled} placeholder={f.placeholder}
-               onChange={e => onChange(e.target.value)} />
+               onChange={e => onChange(e.target.value)} {...limiti} {...accessibilita} />
       )}
+      {messaggio}
       {aiuto}
     </div>
   )
