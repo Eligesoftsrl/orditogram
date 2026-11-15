@@ -58,6 +58,18 @@ Il test di integrazione esegue il processo "Accesso agli atti" da capo a fondo c
 strada di errore, termine di 30 giorni, rinuncia via messaggio, ricerca, registro. Lo stesso gira a ogni modifica su
 GitHub Actions (`.github/workflows/ci.yml`), che con un tag `v1.2.3` pubblica anche le immagini Docker.
 
+### Analisi del codice
+
+A ogni modifica il workflow *Analisi del codice* (`.github/workflows/analisi.yml`) passa il codice a strumenti
+gratuiti che coprono OWASP Top 10 e CWE Top 25: **SonarQube Community** (avviato dentro la CI, con la copertura dei
+test), **Semgrep**, **SpotBugs con FindSecBugs**, **OSV-Scanner** sulle librerie Java e npm (dalla distinta SBOM
+CycloneDX) e **npm audit**. Ogni esecuzione mostra un riepilogo e conserva i rapporti tra gli artefatti, da allegare
+alle gare. Le soglie bloccanti sono in `strumenti/analisi/riepilogo.py`; in locale:
+
+```
+cd backend && mvn -Panalisi verify   # copertura (target/site/jacoco), SpotBugs, SBOM (target/bom.json)
+```
+
 ## Backup e ripristino
 
 `strumenti/backup.sh` salva database e documenti in una cartella datata (con Docker Compose o, con `MODO=locale`,
