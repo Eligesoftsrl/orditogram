@@ -9,6 +9,7 @@ import com.eligesoft.orditogram.messaggio.MessaggiService;
 import com.eligesoft.orditogram.storico.PraticaEvento;
 import com.eligesoft.orditogram.storico.ScadenzeService;
 import com.eligesoft.orditogram.storico.StoricoService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,7 +35,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -177,7 +177,7 @@ public class ApiV1Controller {
         RichiestaAvvio req;
         try {
             req = mapper.readValue(richiesta, RichiestaAvvio.class);
-        } catch (IOException e) {
+        } catch (JsonProcessingException e) {
             throw ErroriApi.richiesta("La parte \"richiesta\" non è un JSON valido: " + e.getOriginalMessage());
         }
         return avvia(chiave, req.riferimento(), req.dati(), files != null ? files : List.of());
