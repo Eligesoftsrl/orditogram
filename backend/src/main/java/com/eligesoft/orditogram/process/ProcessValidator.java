@@ -5,6 +5,8 @@ import com.eligesoft.orditogram.form.FormService;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.activiti.bpmn.model.*;
 import org.activiti.bpmn.model.Process;
+import org.activiti.engine.RepositoryService;
+import org.activiti.engine.repository.ProcessDefinition;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +28,7 @@ public class ProcessValidator {
     private static final Set<Class<?>> SUPPORTATI = Set.of(
         StartEvent.class, EndEvent.class, UserTask.class, ServiceTask.class,
         ExclusiveGateway.class, ParallelGateway.class, SequenceFlow.class,
-        SubProcess.class, BoundaryEvent.class, IntermediateCatchEvent.class);
+        SubProcess.class, BoundaryEvent.class, IntermediateCatchEvent.class, CallActivity.class);
 
     private static final Pattern ESPRESSIONE = Pattern.compile("\\$\\{(.*?)}", Pattern.DOTALL);
     private static final Pattern IDENTIFICATORE = Pattern.compile("[a-zA-Z_][\\w]*");
@@ -43,10 +45,12 @@ public class ProcessValidator {
 
     private final FormService forms;
     private final ApplicationContext ctx;
+    private final RepositoryService repositoryService;
 
-    public ProcessValidator(FormService forms, ApplicationContext ctx) {
+    public ProcessValidator(FormService forms, ApplicationContext ctx, RepositoryService repositoryService) {
         this.forms = forms;
         this.ctx = ctx;
+        this.repositoryService = repositoryService;
     }
 
     /** formAggiuntivi: form non ancora salvati (es. caricati insieme al BPMN), per nome. */
@@ -80,7 +84,8 @@ public class ProcessValidator {
                 EventDefinition def = unica(b);
                 if (!(def instanceof TimerEventDefinition) && !(def instanceof ErrorEventDefinition) && !(def instanceof MessageEventDefinition))
                     errori.add(new Problema(nome(el) + ": sul bordo delle attività sono supportati scadenze, solleciti, errori e messaggi", el.getId()));
-                if (def instanceof ErrorEventDefinition && !(b.getAttachedToRef() instanceof ServiceTask) && !(b.getAttachedToRef() instanceof SubProcess))
+                if (def instanceof ErrorEventDefinition && !(b.getAttachedToRef() instanceof ServiceTask)
+                        && !(b.getAttachedToRef() instanceof SubProcess) && !(b.getAttachedToRef() instanceof CallActivity))
                     avvisi.add(new Problema(nome(el) + ": gli errori arrivano solo dalle attività automatiche o dai sottoprocessi", el.getId()));
             }
             // messaggio: deve avere un nome, che è anche l'indirizzo dell'API (/api/messaggi/{nome})
@@ -156,6 +161,7 @@ public class ProcessValidator {
         definizioni.values().forEach(def -> dati.addAll(forms.fieldTypes(def).keySet()));
         dati.addAll(datiProdotti(p));
         dati.addAll(datiDaiMessaggi(p));
+        dati.addAll(datiDaiProcessiRichiamati(p).keySet());
         // date usate dai timer
         for (FlowElement el : tutti) {
             if (el instanceof Event ev && unica(ev) instanceof TimerEventDefinition t)
@@ -201,6 +207,36 @@ public class ProcessValidator {
                 avvisi.add(new Problema(nome(t) + ": se non riesce la pratica si ferma. Aggiungi \"Se non riesce\" per indicare la strada da seguire", t.getId()));
         }
 
+        // --- processi richiamati (call activity): devono essere già pubblicati
+        for (CallActivity c : p.findFlowElementsOfType(CallActivity.class, true)) {
+            String chiamato = c.getCalledElement();
+            if (!notBlank(chiamato)) {
+                errori.add(new Problema(nome(c) + ": scegli il processo da richiamare", c.getId()));
+                continue;
+            }
+            chiamato = chiamato.trim();
+            if (chiamato.startsWith("${")) {
+                errori.add(new Problema(nome(c) + ": indica il processo da richiamare per nome, non con un'espressione", c.getId()));
+                continue;
+            }
+            if (chiamato.equals(p.getId())) {
+                errori.add(new Problema(nome(c) + ": un processo non può richiamare sé stesso", c.getId()));
+                continue;
+            }
+            ProcessDefinition def = ultimaVersione(chiamato);
+            if (def == null) {
+                errori.add(new Problema(nome(c) + ": il processo \"" + chiamato + "\" non è pubblicato: pubblicalo prima di questo", c.getId()));
+                continue;
+            }
+            Process figlio = repositoryService.getBpmnModel(def.getId()).getMainProcess();
+            if (figlio.findFlowElementsOfType(CallActivity.class, true).stream()
+                    .anyMatch(x -> p.getId().equals(Optional.ofNullable(x.getCalledElement()).map(String::trim).orElse(""))))
+                errori.add(new Problema(nome(c) + ": il processo \"" + chiamato + "\" richiama a sua volta questo processo: le pratiche non finirebbero mai", c.getId()));
+            if (!haGestioneErrore(p, c))
+                avvisi.add(new Problema(nome(c) + ": se il processo richiamato si ferma per un errore, si ferma anche questa pratica. "
+                    + "Puoi aggiungere \"Se non riesce\" per indicare la strada da seguire", c.getId()));
+        }
+
         // --- decisioni
         for (ExclusiveGateway g : p.findFlowElementsOfType(ExclusiveGateway.class, true)) {
             List<SequenceFlow> uscite = g.getOutgoingFlows();
@@ -240,6 +276,31 @@ public class ProcessValidator {
             out.addAll(c.datiProdotti(valori));
         }
         return out;
+    }
+
+    /**
+     * Dati che i processi richiamati (call activity) restituiscono alla pratica: i campi dei loro form, con il tipo.
+     * Il processo richiamato riceve tutti i dati della pratica e alla fine li restituisce tutti.
+     */
+    public Map<String, String> datiDaiProcessiRichiamati(Process p) {
+        Map<String, String> out = new LinkedHashMap<>();
+        for (CallActivity c : p.findFlowElementsOfType(CallActivity.class, true)) {
+            if (!notBlank(c.getCalledElement()) || c.getCalledElement().trim().equals(p.getId())) continue;
+            ProcessDefinition def = ultimaVersione(c.getCalledElement().trim());
+            if (def == null) continue;
+            Process figlio = repositoryService.getBpmnModel(def.getId()).getMainProcess();
+            List<String> chiavi = new ArrayList<>();
+            figlio.findFlowElementsOfType(StartEvent.class, false).forEach(s -> { if (notBlank(s.getFormKey())) chiavi.add(s.getFormKey()); });
+            figlio.findFlowElementsOfType(UserTask.class, true).forEach(t -> { if (notBlank(t.getFormKey())) chiavi.add(t.getFormKey()); });
+            for (String fk : chiavi) forms.fieldTypes(forms.load(fk)).forEach(out::putIfAbsent);
+            datiProdotti(figlio).forEach(d -> out.putIfAbsent(d, "string"));
+        }
+        return out;
+    }
+
+    private ProcessDefinition ultimaVersione(String chiave) {
+        if (!chiave.matches("[A-Za-z_][\\w.-]*")) return null;
+        return repositoryService.createProcessDefinitionQuery().processDefinitionKey(chiave).latestVersion().singleResult();
     }
 
     /** Nomi delle credenziali configurate sul server (app.credenziali). */
@@ -347,6 +408,7 @@ public class ProcessValidator {
             : el instanceof ServiceTask ? "L'attività automatica"
             : el instanceof Gateway ? "La decisione"
             : el instanceof SubProcess ? "Il sottoprocesso"
+            : el instanceof CallActivity ? "Il processo richiamato"
             : el instanceof BoundaryEvent b ? (b.getEventDefinitions().stream().anyMatch(d -> d instanceof ErrorEventDefinition)
                 ? "La gestione errore"
                 : b.getEventDefinitions().stream().anyMatch(d -> d instanceof MessageEventDefinition) ? "Il messaggio sul bordo"

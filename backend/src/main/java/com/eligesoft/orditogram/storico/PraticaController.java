@@ -150,6 +150,12 @@ public class PraticaController {
         Map<String, Object> m = riepilogo(h, new HashMap<>());
         m.put("dati", dati(h));
         m.put("eventi", storico.eventi(pi));
+        // pratiche collegate dai processi richiamati (call activity)
+        m.put("praticaMadre", h.getSuperProcessInstanceId() == null ? null
+            : collegata(historyService.createHistoricProcessInstanceQuery()
+                .processInstanceId(h.getSuperProcessInstanceId()).singleResult()));
+        m.put("praticheFiglie", historyService.createHistoricProcessInstanceQuery().superProcessInstanceId(pi)
+            .orderByProcessInstanceStartTime().asc().list().stream().map(this::collegata).toList());
         // l'attività che l'utente può lavorare su questa pratica, se c'è
         var mie = taskRuntime.tasks(Pageable.of(0, 10),
             TaskPayloadBuilder.tasks().withProcessInstanceId(pi).build()).getContent();
@@ -176,6 +182,29 @@ public class PraticaController {
 
     // ------------------------------------------------------------ costruzione risposta
 
+    /** Una pratica collegata (madre o figlia), in breve. */
+    private Map<String, Object> collegata(HistoricProcessInstance x) {
+        if (x == null) return null;
+        Map<String, Object> c = new LinkedHashMap<>();
+        c.put("id", x.getId());
+        c.put("titolo", titolo(x));
+        c.put("processo", nomeProcesso(x, new HashMap<>()));
+        c.put("stato", x.getEndTime() != null ? "conclusa" : "in corso");
+        c.put("inizio", x.getStartTime());
+        return c;
+    }
+
+    /** Titolo della pratica; una pratica avviata da un processo richiamato prende quello della madre. */
+    private String titolo(HistoricProcessInstance h) {
+        if (h.getName() != null) return h.getName();
+        if (h.getSuperProcessInstanceId() != null) {
+            HistoricProcessInstance madre = historyService.createHistoricProcessInstanceQuery()
+                .processInstanceId(h.getSuperProcessInstanceId()).singleResult();
+            if (madre != null && madre.getName() != null) return madre.getName();
+        }
+        return h.getProcessDefinitionKey();
+    }
+
     /** Nome leggibile del processo (con cache per richiesta). */
     private String nomeProcesso(HistoricProcessInstance h, Map<String, String> cache) {
         return cache.computeIfAbsent(h.getProcessDefinitionId(), id -> {
@@ -191,7 +220,7 @@ public class PraticaController {
 
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("id", h.getId());
-        m.put("titolo", h.getName() != null ? h.getName() : h.getProcessDefinitionKey());
+        m.put("titolo", titolo(h));
         m.put("processo", nomeProcesso(h, nomi));
         m.put("processoKey", h.getProcessDefinitionKey());
         m.put("stato", conclusa ? "conclusa" : "in corso");

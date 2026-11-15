@@ -5,7 +5,9 @@ import com.eligesoft.orditogram.user.CurrentUserService;
 import org.activiti.api.runtime.shared.query.Pageable;
 import org.activiti.api.task.model.builders.TaskPayloadBuilder;
 import org.activiti.api.task.runtime.TaskRuntime;
+import org.activiti.engine.HistoryService;
 import org.activiti.engine.TaskService;
+import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.task.Task;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -16,7 +18,8 @@ import java.util.Optional;
 /**
  * Chi può vedere una pratica e chi può modificarne i documenti.
  *  - vedere:    admin, chi ha partecipato (ha un evento nello storico),
- *               chi ha un task della pratica in carico o disponibile per i suoi gruppi
+ *               chi ha un task della pratica in carico o disponibile per i suoi gruppi,
+ *               chi può vedere la pratica madre (per le pratiche avviate da un processo richiamato)
  *  - modificare i documenti: chi ha in carico un task della pratica il cui form ha "documenti": "modifica"
  */
 @Service
@@ -27,9 +30,12 @@ public class PraticaAccessService {
     private final TaskRuntime taskRuntime;
     private final TaskService taskService;
     private final FormService forms;
+    private final HistoryService historyService;
 
     public PraticaAccessService(StoricoService storico, CurrentUserService currentUser,
-                                TaskRuntime taskRuntime, TaskService taskService, FormService forms) {
+                                TaskRuntime taskRuntime, TaskService taskService, FormService forms,
+                                HistoryService historyService) {
+        this.historyService = historyService;
         this.storico = storico;
         this.currentUser = currentUser;
         this.taskRuntime = taskRuntime;
@@ -41,9 +47,13 @@ public class PraticaAccessService {
         if (currentUser.isAdmin()) return true;
         if (storico.haPartecipato(processInstanceId, currentUser.username())) return true;
         // TaskRuntime restituisce solo i task assegnati all'utente o candidati per i suoi gruppi
-        return taskRuntime.tasks(Pageable.of(0, 1),
+        if (taskRuntime.tasks(Pageable.of(0, 1),
                 TaskPayloadBuilder.tasks().withProcessInstanceId(processInstanceId).build())
-            .getTotalItems() > 0;
+            .getTotalItems() > 0) return true;
+        // pratica avviata da un processo richiamato: la vede chi vede la pratica madre
+        HistoricProcessInstance h = historyService.createHistoricProcessInstanceQuery()
+            .processInstanceId(processInstanceId).singleResult();
+        return h != null && h.getSuperProcessInstanceId() != null && canView(h.getSuperProcessInstanceId());
     }
 
     public void checkView(String processInstanceId) {

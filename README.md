@@ -209,7 +209,16 @@ Tutto quello che segue si imposta dall'editor e dal costruttore dei form; le tab
 | Sollecito | come la scadenza ma `cancelActivity="false"`, anche ripetuto (`timeCycle` R3/P7D): l'attività resta aperta |
 | Attesa | intermediateCatchEvent con `timerEventDefinition` nel flusso |
 | Sottoprocesso | subProcess con un inizio e almeno una fine; scadenze ed errori sul suo bordo valgono per tutti i passi interni |
-| Strada di errore | boundaryEvent con `errorEventDefinition` su un'attività automatica o un sottoprocesso |
+| Strada di errore | boundaryEvent con `errorEventDefinition` su un'attività automatica, un sottoprocesso o un processo richiamato |
+| Processo richiamato | callActivity con `calledElement="chiaveDelProcesso"`: apre una pratica di un altro processo pubblicato e aspetta che finisca |
+
+**Processi richiamati.** Un processo può richiamarne un altro già pubblicato (nell'editor: *Processo richiamato*,
+poi la scelta del processo). Quando la pratica arriva lì si apre una pratica figlia del processo scelto, con tutti i
+dati della madre e lo stesso titolo; la madre aspetta. Quando la figlia finisce, i dati raccolti dalla figlia (es.
+un esito) tornano alla madre e si usano nelle decisioni e nei form successivi. Si usa sempre l'ultima versione
+pubblicata del processo richiamato. Nella scheda della pratica il riquadro *Pratiche collegate* porta dall'una
+all'altra; chi può vedere la madre vede anche le figlie. La pubblicazione è rifiutata se il processo richiamato non
+è pubblicato, se un processo richiama sé stesso o se due processi si richiamano a vicenda.
 
 ```xml
 <serviceTask id="notifica" name="Notifica al dirigente" implementation="notificaConnector">

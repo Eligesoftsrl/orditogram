@@ -98,5 +98,61 @@ laura, paolo, chiara, giulia: password `password`.
   4) documenti da modello (lettere, provvedimenti); 5) tabelle decisionali DMN; 6) multi-ente / white label;
   7) versioni dei form e ruolo "analista del cliente"; 8) cruscotti; 9) libreria di modelli di processo;
   10) documentazione automatica del processo; 11) assistente IA per analisti.
-- **Da fare (richiesta di Filippo)**: Call Activity, cioè un processo pubblicato richiamato da un altro
-  (oggi il validatore la rifiuta; il sottoprocesso incorporato invece è già gestito).
+- **0.12** (in preparazione): form con sezioni e campi condizionali; processi richiamati (call activity).
+
+## Obiettivo: piattaforma enterprise
+
+Clienti tipo: grandi gruppi, pubbliche amministrazioni, system integrator (es. Engineering, TIM). Il percorso che
+deve restare breve e semplice: l'analista disegna o importa i BPMN, crea i form nello Studio, pubblica, e il cliente
+ha un software pronto, configurabile da un'area di amministrazione senza sviluppo. Ogni scelta va giudicata su
+tre assi: **flessibilità** (BPMN anche molto complessi), **semplicità** (pochi passi per l'analista e per chi
+installa), **sicurezza e affidabilità** (requisiti da gara pubblica e da grande azienda).
+
+### Già presente
+OIDC (Keycloak, Entra ID), gruppi dal token, registro delle azioni di amministrazione e degli accessi negati,
+segreti cifrati, API con chiavi (solo impronta salvata, limiti, scadenza, revoca), webhook firmati con ripetizioni,
+backup e ripristino, Docker, CI.
+
+### Roadmap sicurezza e affidabilità (da rivedere con Filippo, non ancora iniziata)
+In ordine di priorità proposto:
+1. **Ruoli e permessi granulari**: oltre ad "amministratore", ruoli come analista, gestore utenti, auditor,
+   operatore; permessi per processo (chi avvia, chi vede, chi esporta), assegnabili da gruppi IdP.
+2. **Audit log completo e non modificabile**: ogni lettura e modifica di pratiche e documenti, con catena di hash
+   o firma periodica, esportabile; ricerca per utente, pratica, periodo. Base per GDPR e controlli.
+3. **Versionamento e migrazione dei processi**: le pratiche in corso restano sulla loro versione; strumento guidato
+   per migrarle alla nuova (mappatura delle attività), con anteprima e registro. Versioni dei form legate alla
+   versione del processo.
+4. **Pacchetto applicazione**: esportare e importare in un colpo processi, form, gruppi, connettori, calendari,
+   modelli di documento, tra ambienti (sviluppo → collaudo → produzione) con confronto delle differenze.
+5. **SSO SAML 2.0** (SPID/CIE per i portali dei cittadini, ADFS delle aziende), direttamente o tramite Keycloak
+   come broker; MFA delegata all'IdP; logout centralizzato.
+6. **Multi-tenant**: più enti o società sulla stessa installazione con dati separati (schema o colonna tenant),
+   personalizzazione grafica per ente, amministratori per ente.
+7. **Alta disponibilità e scalabilità**: più istanze del backend dietro bilanciatore (sessioni nel DB, executor
+   asincrono di Activiti in cluster, lock dei job), PostgreSQL in replica, controlli di salute, prove di carico
+   con numeri dichiarati (pratiche al giorno, utenti contemporanei).
+8. **Osservabilità**: metriche (Micrometer/Prometheus), tracce, log strutturati JSON con id della richiesta,
+   cruscotto di salute dei processi (pratiche bloccate, errori dei connettori, job falliti) con riprova.
+9. **Conformità AgID e GDPR**: conservazione e cancellazione dei dati per processo, registro dei trattamenti,
+   esportazione dei dati di una persona, minimizzazione nei log; accessibilità WCAG 2.1 AA e dichiarazione di
+   accessibilità; linee guida AgID su sicurezza e interoperabilità (ModI per le API), predisposizione per
+   protocollo informatico e conservazione a norma.
+10. **Sicurezza del software**: OWASP ASVS livello 2 come riferimento, analisi Kiuwan (statica e dipendenze) in CI,
+    SBOM per ogni versione, immagini firmate, test di penetrazione prima delle gare, guida all'installazione sicura.
+
+### Fase qualità e sicurezza (richiesta di Filippo, dopo la prima versione completa)
+Obiettivo: "a prova di bomba" prima di proporlo ai clienti.
+- **Test estesi**: copertura misurata (JaCoCo, Vitest coverage) con soglie in CI; test end-to-end dell'interfaccia
+  con Playwright sui percorsi principali (Studio → pubblicazione → scrivania → pratica); test di carico.
+- **Security by design**: threat modeling per ogni funzione nuova (STRIDE sui flussi di dati: Studio, motore,
+  API, connettori, documenti), requisiti di sicurezza scritti prima dello sviluppo, revisione sicura del codice
+  su ogni PR, impostazioni sicure per default, registro delle decisioni di sicurezza.
+- **Kiuwan** (analisi del codice richiesta nelle gare PA): analisi statica (SAST) e delle dipendenze (SCA) di
+  backend e frontend in CI, con soglie bloccanti e report allegabili alle gare. SonarQube eventualmente in più,
+  per la qualità del codice durante lo sviluppo.
+- **Attacchi simulati**: OWASP ZAP automatico in CI contro l'applicazione avviata (frontend, `/api`, `/api/v1`);
+  verifica di autenticazione, autorizzazione tra utenti e gruppi, IDOR sulle pratiche, upload di documenti,
+  injection nelle espressioni dei BPMN e nei form, CSRF, intestazioni di sicurezza; poi penetration test manuale.
+- **Frontend conforme AgID**: linee guida di design per i servizi digitali della PA (Designers Italia),
+  componenti Bootstrap Italia o equivalenti coerenti con l'UI kit, accessibilità WCAG 2.1 AA verificata
+  (axe in CI e prova con lettore di schermo), dichiarazione di accessibilità.

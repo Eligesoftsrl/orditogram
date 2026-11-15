@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, CalendarDays, Hourglass, Inbox, UserRound } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CalendarDays, Hourglass, Inbox, UserRound, Workflow } from 'lucide-react'
 import { api } from '../api.js'
 import { giorno, quando } from '../lib/format.js'
 import IterRail from '../components/IterRail.jsx'
@@ -128,11 +128,39 @@ export default function PraticaPage() {
                 </dl>
               )}
           </Pannello>
+
+          <Collegate madre={p.praticaMadre} figlie={p.praticheFiglie || []} />
         </div>
 
         <Approfondimenti pratica={p} onDocumenti={carica} />
       </div>
     </div>
+  )
+}
+
+/** Pratiche aperte dai processi richiamati (figlie) o che hanno aperto questa (madre). */
+function Collegate({ madre, figlie }) {
+  if (!madre && figlie.length === 0) return null
+  const voce = (c, ruolo) => (
+    <li key={c.id}>
+      <Link to={`/pratiche/${c.id}`} className="flex items-center gap-3 rounded-campo border border-linea bg-white px-3 py-2.5 hover:border-pino-200">
+        <Workflow className="size-4 shrink-0 text-pino-700" />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[15px] font-medium text-pino-900">{c.processo}</span>
+          <span className="block text-[13px] text-grafite">{ruolo}, dal {quando(c.inizio)}</span>
+        </span>
+        {c.stato === 'conclusa' ? <Badge tono="pino">Conclusa</Badge> : <Badge tono="zafferano">In corso</Badge>}
+        <ArrowRight className="size-4 text-nebbia" />
+      </Link>
+    </li>
+  )
+  return (
+    <Pannello titolo="Pratiche collegate">
+      <ul className="space-y-2">
+        {madre && voce(madre, 'Pratica che ha aperto questa')}
+        {figlie.map(f => voce(f, 'Aperta da questa pratica'))}
+      </ul>
+    </Pannello>
   )
 }
 

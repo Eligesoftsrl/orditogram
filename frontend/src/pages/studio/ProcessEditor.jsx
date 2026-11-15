@@ -61,10 +61,11 @@ export default function ProcessEditor() {
   }, [])
 
   useEffect(() => {
-    Promise.all([api.gruppi(), api.connettori(), api.forms(), api.credenziali().catch(() => [])])
-      .then(([gruppi, connettori, forms, credenziali]) => {
+    Promise.all([api.gruppi(), api.connettori(), api.forms(), api.credenziali().catch(() => []), api.adminProcesses().catch(() => [])])
+      .then(([gruppi, connettori, forms, credenziali, processi]) => {
         connettoriRef.current = connettori
-        setDati(d => ({ ...d, gruppi, connettori, credenziali, forms: forms.map(f => f.formKey), formsInfo: forms }))
+        setDati(d => ({ ...d, gruppi, connettori, credenziali, forms: forms.map(f => f.formKey), formsInfo: forms,
+          processi: processi.map(p => ({ key: p.key, name: p.name, version: p.version })) }))
         aggiornaCampi()
       })
       .catch(e => setErrore(e.message))
