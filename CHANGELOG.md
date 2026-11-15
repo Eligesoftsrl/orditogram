@@ -12,6 +12,10 @@ Form avanzati, prima parte.
   valori (`visibileSe`). I campi nascosti non sono obbligatori e i loro valori non si salvano, sia
   dall'interfaccia sia dall'API pubblica; l'OpenAPI generata lo documenta.
 - Lo Studio controlla le condizioni al salvataggio del form (campo esistente, almeno un valore).
+- **Regole di validazione dei campi**: minimo e massimo per numeri e date (anche "oggi"), lunghezza dei testi,
+  formati (email, codice fiscale, partita IVA, IBAN con carattere di controllo, CAP, telefono, espressione
+  personalizzata). Messaggi accanto al campo; stessi controlli sul server e nell'API pubblica, documentati
+  nell'OpenAPI. I numeri con decimali ora si inseriscono senza blocchi del browser.
 - **Processi richiamati** (call activity): un processo apre una pratica di un altro processo pubblicato, le passa i
   suoi dati e riprende quando finisce, con i dati raccolti. Nell'editor: *Processo richiamato*. La scheda della
   pratica mostra le pratiche collegate. Controlli alla pubblicazione: processo richiamato pubblicato, niente

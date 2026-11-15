@@ -247,9 +247,20 @@ all'altra; chi può vedere la madre vede anche le figlie. La pubblicazione è ri
 | `titolo: true` | il valore diventa il titolo della pratica |
 | stesso `name` in più form | è lo stesso dato della pratica |
 | `visibileSe: { campo, valori }` | il campo compare solo se l'altro campo ha uno dei valori indicati |
+| `min`, `max` | numero: valori ammessi; data: `AAAA-MM-GG` oppure `oggi` |
+| `minLunghezza`, `maxLunghezza` | testo: numero di caratteri |
+| `formato` | testo: `email`, `codiceFiscale`, `partitaIva`, `iban`, `cap`, `telefono`, `espressione` (con `espressione` e `messaggioFormato`) |
 
 Il backend accetta solo i campi modificabili dichiarati nel form e controlla gli obbligatori:
 un utente non può impostare dati che il form non prevede.
+
+**Regole di validazione.** Nel costruttore, sotto ogni campo: valore minimo e massimo (numeri e date, anche
+"oggi"), caratteri minimi e massimi, formato. Codice fiscale (anche di un ente), partita IVA e IBAN si controllano
+con il carattere di controllo. Chi compila vede il messaggio accanto al campo; il server ripete gli stessi controlli
+all'avvio, al completamento delle attività e nell'API pubblica, e la documentazione OpenAPI li riporta
+(`minimum`, `maxLength`, `format`, `pattern`). Un'espressione personalizzata si prova con un limite di passi:
+una scritta male non può bloccare il server. Lo Studio rifiuta regole incoerenti (minimo oltre il massimo,
+espressione non valida, formato su un campo che non è di testo).
 
 **Sezioni.** Un elemento `{ "type": "sezione", "label": "Dati del richiedente", "help": "…" }` apre una sezione:
 i campi che seguono, fino alla sezione successiva, compaiono sotto quel titolo. Non è un dato della pratica.

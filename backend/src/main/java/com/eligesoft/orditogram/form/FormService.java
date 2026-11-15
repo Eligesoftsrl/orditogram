@@ -135,6 +135,8 @@ public class FormService {
                 throw bad("Campo \"" + name + "\": tipo \"" + type + "\" non supportato");
             if ("select".equals(type) && !f.path("options").isArray())
                 throw bad("Campo \"" + name + "\": un select deve avere \"options\"");
+            List<String> regole = RegoleCampo.problemi(f, type);
+            if (!regole.isEmpty()) throw bad("Campo \"" + name + "\": " + regole.get(0));
         }
         // condizioni: devono guardare un altro campo dello stesso form e indicare almeno un valore
         for (JsonNode f : fields) {

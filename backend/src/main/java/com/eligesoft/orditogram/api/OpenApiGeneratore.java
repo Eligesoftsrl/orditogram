@@ -252,12 +252,54 @@ public final class OpenApiGeneratore {
         s.put("title", c.etichetta());
         List<String> descrizione = new ArrayList<>();
         if (c.aiuto() != null && !c.aiuto().isBlank()) descrizione.add(c.aiuto());
+        regole(c, s, descrizione);
         if (c.visibileSe() != null)
             descrizione.add("Si usa solo se " + c.visibileSe().campo() + " vale " + String.join(" o ", c.visibileSe().valori())
                 + (c.obbligatorio() ? ", e in quel caso è obbligatorio" : "") + "; altrimenti il valore viene ignorato.");
         if (!descrizione.isEmpty()) s.put("description", String.join(" ", descrizione));
         if ("checkbox".equals(c.tipo()) && c.obbligatorio()) s.put("const", true);
         return s;
+    }
+
+    /** Regole del campo (min/max, lunghezza, formato) nello schema, dove JSON Schema le sa esprimere. */
+    static void regole(ValoriForm.Campo c, Map<String, Object> s, List<String> descrizione) {
+        Map<String, String> r = c.regole() != null ? c.regole() : Map.of();
+        try {
+            regoleSecondoTipo(c, r, s, descrizione);
+        } catch (NumberFormatException e) {
+            // regole scritte male in un form non salvato dallo Studio: lo schema resta senza limiti
+        }
+    }
+
+    private static void regoleSecondoTipo(ValoriForm.Campo c, Map<String, String> r, Map<String, Object> s, List<String> descrizione) {
+        switch (c.tipo()) {
+            case "number" -> {
+                if (r.containsKey("min")) s.put("minimum", new java.math.BigDecimal(r.get("min")));
+                if (r.containsKey("max")) s.put("maximum", new java.math.BigDecimal(r.get("max")));
+            }
+            case "date" -> {
+                if (r.containsKey("min")) descrizione.add("Non prima del " + ("oggi".equalsIgnoreCase(r.get("min")) ? "giorno della richiesta" : r.get("min")) + ".");
+                if (r.containsKey("max")) descrizione.add("Non dopo il " + ("oggi".equalsIgnoreCase(r.get("max")) ? "giorno della richiesta" : r.get("max")) + ".");
+            }
+            case "text", "textarea" -> {
+                if (r.containsKey("minLunghezza")) s.put("minLength", Integer.valueOf(r.get("minLunghezza")));
+                if (r.containsKey("maxLunghezza")) s.put("maxLength", Integer.valueOf(r.get("maxLunghezza")));
+                switch (r.getOrDefault("formato", "")) {
+                    case "email" -> s.put("format", "email");
+                    case "cap" -> s.put("pattern", "^[0-9]{5}$");
+                    case "partitaIva" -> { s.put("pattern", "^[0-9]{11}$"); descrizione.add("Partita IVA italiana, con cifra di controllo."); }
+                    case "codiceFiscale" -> descrizione.add("Codice fiscale italiano (16 caratteri, o 11 cifre per un ente), con carattere di controllo.");
+                    case "iban" -> descrizione.add("IBAN, con cifre di controllo.");
+                    case "telefono" -> descrizione.add("Numero di telefono, eventualmente con prefisso internazionale (+39).");
+                    case "espressione" -> {
+                        if (r.containsKey("espressione")) s.put("pattern", r.get("espressione"));
+                        if (r.containsKey("messaggioFormato")) descrizione.add(r.get("messaggioFormato"));
+                    }
+                    default -> { }
+                }
+            }
+            default -> { }
+        }
     }
 
     static Map<String, Object> esempioDati(ProcessoPubblicato p) {

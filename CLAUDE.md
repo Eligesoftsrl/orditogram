@@ -48,6 +48,8 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
   Tipi: text, textarea, number, date, select, checkbox. L'interfaccia invia i numeri come testo.
   `{type:"sezione",label,help}` apre una sezione (non è un dato). `visibileSe:{campo,valori}` nasconde il campo:
   regole uguali in `ValoriForm.nascosti` (backend) e `lib/formCondizioni.js` (frontend), tienile allineate.
+  Regole dei campi (`min`, `max`, `minLunghezza`, `maxLunghezza`, `formato`): `form/RegoleCampo.java` e
+  `lib/formRegole.js`, anche queste allineate; le espressioni dell'analista girano con un limite di passi (ReDoS).
 - Estensioni BPMN proprie: namespace `http://orditogram.it/bpmn`, prefisso `orditogram:`
   (es. `<orditogram:datiMessaggio>motivoRinuncia</orditogram:datiMessaggio>`); estensioni Activiti per il resto.
 - **Sicurezza**: due catene. `/api/v1/**` (ordine 1): solo chiavi API, stateless. Tutto il resto (ordine 2):
@@ -137,7 +139,7 @@ In ordine di priorità proposto:
    esportazione dei dati di una persona, minimizzazione nei log; accessibilità WCAG 2.1 AA e dichiarazione di
    accessibilità; linee guida AgID su sicurezza e interoperabilità (ModI per le API), predisposizione per
    protocollo informatico e conservazione a norma.
-10. **Sicurezza del software**: OWASP ASVS livello 2 come riferimento, analisi Kiuwan (statica e dipendenze) in CI,
+10. **Sicurezza del software**: OWASP ASVS livello 2 come riferimento, analisi statica e delle dipendenze in CI (SonarQube, Semgrep, SpotBugs, Dependency-Check; Kiuwan prima delle gare),
     SBOM per ogni versione, immagini firmate, test di penetrazione prima delle gare, guida all'installazione sicura.
 
 ### Fase qualità e sicurezza (richiesta di Filippo, dopo la prima versione completa)
@@ -147,9 +149,12 @@ Obiettivo: "a prova di bomba" prima di proporlo ai clienti.
 - **Security by design**: threat modeling per ogni funzione nuova (STRIDE sui flussi di dati: Studio, motore,
   API, connettori, documenti), requisiti di sicurezza scritti prima dello sviluppo, revisione sicura del codice
   su ogni PR, impostazioni sicure per default, registro delle decisioni di sicurezza.
-- **Kiuwan** (analisi del codice richiesta nelle gare PA): analisi statica (SAST) e delle dipendenze (SCA) di
-  backend e frontend in CI, con soglie bloccanti e report allegabili alle gare. SonarQube eventualmente in più,
-  per la qualità del codice durante lo sviluppo.
+- **Analisi del codice gratuita, obbligatoria in CI** (copre le regole che Kiuwan applica nelle gare PA:
+  OWASP Top 10, CWE Top 25), con soglie bloccanti:
+  SonarQube Community (in Docker, quality gate), Semgrep (regole OWASP e Java/React), SpotBugs con FindSecBugs
+  (backend), OWASP Dependency-Check o equivalente (librerie con vulnerabilità note), `npm audit` (frontend).
+  Report conservati per ogni versione, da allegare alle gare.
+- **Kiuwan** come verifica finale prima delle gare, quando ci sarà la licenza (è a pagamento).
 - **Attacchi simulati**: OWASP ZAP automatico in CI contro l'applicazione avviata (frontend, `/api`, `/api/v1`);
   verifica di autenticazione, autorizzazione tra utenti e gruppi, IDOR sulle pratiche, upload di documenti,
   injection nelle espressioni dei BPMN e nei form, CSRF, intestazioni di sicurezza; poi penetration test manuale.
