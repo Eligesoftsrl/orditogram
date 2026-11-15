@@ -253,7 +253,7 @@ all'altra; chi può vedere la madre vede anche le figlie. La pubblicazione è ri
 
 | Proprietà di un campo | Effetto |
 |---|---|
-| `type` | text, textarea, number, date, select, checkbox |
+| `type` | text, textarea, number, date, select, checkbox, tabella |
 | `required` / `readonly` | obbligatorio / mostrato nel riepilogo in sola lettura |
 | `precompila: false` | non ripropone il valore precedente (utile nei cicli verifica ↔ revisione) |
 | `titolo: true` | il valore diventa il titolo della pratica |
@@ -262,6 +262,7 @@ all'altra; chi può vedere la madre vede anche le figlie. La pubblicazione è ri
 | `min`, `max` | numero: valori ammessi; data: `AAAA-MM-GG` oppure `oggi` |
 | `minLunghezza`, `maxLunghezza` | testo: numero di caratteri |
 | `formato` | testo: `email`, `codiceFiscale`, `partitaIva`, `iban`, `cap`, `telefono`, `espressione` (con `espressione` e `messaggioFormato`) |
+| `colonne`, `minRighe`, `maxRighe` | tabella: le colonne (campi senza testo lungo) e quante righe servono |
 
 Il backend accetta solo i campi modificabili dichiarati nel form e controlla gli obbligatori:
 un utente non può impostare dati che il form non prevede.
@@ -290,6 +291,24 @@ Per un sì/no i valori sono `"true"` o `"false"`. La condizione può guardare an
 salvato, né dall'interfaccia né dall'API pubblica; chi dipende da un campo nascosto è nascosto anche lui.
 Nella documentazione OpenAPI un campo condizionale non è mai tra gli obbligatori e la sua descrizione
 spiega quando si usa. Lo Studio rifiuta condizioni su campi che non esistono nel form.
+
+**Tabelle di righe.** Un campo `tabella` raccoglie più righe con le stesse colonne, come le voci di una spesa o i
+componenti di una famiglia. Nel costruttore: tipo *Tabella*, poi le colonne (testo, numero, data, scelta, sì/no)
+con obbligo e regole come i campi normali, e se serve il numero minimo e massimo di righe.
+
+```json
+{ "name": "voci", "label": "Voci di spesa", "type": "tabella", "required": true, "maxRighe": 20,
+  "colonne": [
+    { "name": "descrizione", "label": "Descrizione", "type": "text", "required": true },
+    { "name": "importo", "label": "Importo", "type": "number", "required": true, "min": 0.01 } ] }
+```
+
+Chi compila aggiunge e toglie righe; le righe lasciate in bianco non si salvano. Il dato della pratica è un
+elenco di oggetti (`[{ "descrizione": "Treno", "importo": "45.50" }]`), che le attività successive ricevono e
+possono mostrare in sola lettura; la scheda della pratica lo mostra come tabella. Gli errori indicano riga e
+colonna ("riga 2, Importo: deve essere almeno 0,01"). Nell'API pubblica una tabella è un array di oggetti, con le
+colonne, gli obbligatori e i limiti di righe nell'OpenAPI; una colonna non prevista è un errore. Al massimo 20
+colonne e 500 righe. Una tabella non può fare da titolo della pratica né da condizione di un altro campo.
 
 ## Documenti e firme
 

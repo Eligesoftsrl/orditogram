@@ -16,6 +16,11 @@ Form avanzati, prima parte.
   formati (email, codice fiscale, partita IVA, IBAN con carattere di controllo, CAP, telefono, espressione
   personalizzata). Messaggi accanto al campo; stessi controlli sul server e nell'API pubblica, documentati
   nell'OpenAPI. I numeri con decimali ora si inseriscono senza blocchi del browser.
+- **Tabelle di righe** (`"type": "tabella"`): più righe con le stesse colonne (testo, numero, data, scelta,
+  sì/no), ciascuna con obbligo e regole, più il numero minimo e massimo di righe. Chi compila aggiunge e toglie
+  righe; le righe vuote non si salvano. Le attività successive e la scheda della pratica le mostrano come
+  tabella; l'API pubblica le accetta come array di oggetti, documentato nell'OpenAPI, con errori che indicano
+  riga e colonna. Lo Studio controlla colonne, tipi e limiti al salvataggio.
 - **Processi richiamati** (call activity): un processo apre una pratica di un altro processo pubblicato, le passa i
   suoi dati e riprende quando finisce, con i dati raccolti. Nell'editor: *Processo richiamato*. La scheda della
   pratica mostra le pratiche collegate. Controlli alla pubblicazione: processo richiamato pubblicato, niente

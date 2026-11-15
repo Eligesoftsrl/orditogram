@@ -24,7 +24,7 @@ import java.util.*;
 public class FormService {
 
     private static final String CLASSPATH_PATTERN = "classpath*:forms/*.json";
-    public static final Set<String> TIPI_CAMPO = Set.of("text", "number", "date", "textarea", "select", "checkbox");
+    public static final Set<String> TIPI_CAMPO = Set.of("text", "number", "date", "textarea", "select", "checkbox", ValoriForm.TABELLA);
     public static final Set<String> TIPI_DOCUMENTI = Set.of("carica", "lettura", "modifica");
 
     private final FormDefinitionRepository repo;
@@ -98,7 +98,8 @@ public class FormService {
         for (JsonNode f : form.get("fields")) {
             String name = f.path("name").asText(null);
             if (name == null || name.isBlank()) continue;
-            out.put(name, "checkbox".equals(f.path("type").asText()) ? "boolean" : "string");
+            String tipo = f.path("type").asText();
+            out.put(name, "checkbox".equals(tipo) ? "boolean" : ValoriForm.TABELLA.equals(tipo) ? "json" : "string");
         }
         return out;
     }
@@ -137,6 +138,7 @@ public class FormService {
                 throw bad("Campo \"" + name + "\": un select deve avere \"options\"");
             List<String> regole = RegoleCampo.problemi(f, type);
             if (!regole.isEmpty()) throw bad("Campo \"" + name + "\": " + regole.get(0));
+            if (ValoriForm.TABELLA.equals(type)) validaTabella(name, f);
         }
         // condizioni: devono guardare un altro campo dello stesso form e indicare almeno un valore
         for (JsonNode f : fields) {
@@ -151,10 +153,41 @@ public class FormService {
                 throw bad("Campo \"" + name + "\": la condizione non può dipendere dal campo stesso");
             if (!names.contains(c.campo()))
                 throw bad("Campo \"" + name + "\": la condizione dipende da \"" + c.campo() + "\", che non è nel form");
+            for (JsonNode o : fields)
+                if (c.campo().equals(o.path("name").asText()) && ValoriForm.TABELLA.equals(o.path("type").asText()))
+                    throw bad("Campo \"" + name + "\": la condizione non può dipendere da una tabella");
             if (c.valori().isEmpty() || c.valori().stream().anyMatch(String::isBlank))
                 throw bad("Campo \"" + name + "\": la condizione deve indicare almeno un valore");
         }
         return node;
+    }
+
+    /** Una tabella deve avere colonne con nome e tipo validi, regole sensate e un numero di righe coerente. */
+    private void validaTabella(String name, JsonNode f) {
+        String campo = "Campo \"" + name + "\": ";
+        JsonNode colonne = f.get("colonne");
+        if (colonne == null || !colonne.isArray() || colonne.isEmpty()) throw bad(campo + "una tabella deve avere almeno una colonna");
+        if (colonne.size() > 20) throw bad(campo + "una tabella può avere al massimo 20 colonne");
+        if (f.path("titolo").asBoolean(false)) throw bad(campo + "una tabella non può fare da titolo della pratica");
+        Set<String> nomi = new HashSet<>();
+        for (JsonNode c : colonne) {
+            String nome = c.path("name").asText("");
+            if (!nome.matches("[a-zA-Z][\\w-]*"))
+                throw bad(campo + "ogni colonna ha un nome che inizia con una lettera e contiene solo lettere, numeri, - e _");
+            if (!nomi.add(nome)) throw bad(campo + "la colonna \"" + nome + "\" è duplicata");
+            String tipo = c.path("type").asText("text");
+            if (!ValoriForm.TIPI_COLONNA.contains(tipo))
+                throw bad(campo + "colonna \"" + nome + "\": tipo \"" + tipo + "\" non ammesso in una tabella");
+            if ("select".equals(tipo) && (!c.path("options").isArray() || c.get("options").isEmpty()))
+                throw bad(campo + "colonna \"" + nome + "\": una scelta deve avere le opzioni");
+            List<String> regole = RegoleCampo.problemi(c, tipo);
+            if (!regole.isEmpty()) throw bad(campo + "colonna \"" + nome + "\": " + regole.get(0));
+        }
+        Integer min = RegoleCampo.intero(f.get("minRighe")), max = RegoleCampo.intero(f.get("maxRighe"));
+        if (f.has("minRighe") && (min == null || min < 0)) throw bad(campo + "le righe minime devono essere un numero intero");
+        if (f.has("maxRighe") && (max == null || max < 1 || max > ValoriForm.MAX_RIGHE))
+            throw bad(campo + "le righe massime devono essere un numero da 1 a " + ValoriForm.MAX_RIGHE);
+        if (min != null && max != null && min > max) throw bad(campo + "le righe minime sono più delle massime");
     }
 
     private void validateKey(String formKey) {

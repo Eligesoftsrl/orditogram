@@ -5,6 +5,9 @@
  *   minLunghezza, maxLunghezza     testo: numero di caratteri
  *   formato                        email, codiceFiscale, partitaIva, cap, telefono, iban, espressione
  *   espressione, messaggioFormato  con formato "espressione"
+ *   minRighe, maxRighe             tabella: numero di righe (le colonne hanno le regole dei campi)
+ *
+ * Tabelle: righePiene ed erroriTabella seguono ValoriForm.righe ed erroriTabella del backend.
  */
 
 export const FORMATI = [
@@ -117,12 +120,63 @@ function formato(f, s) {
   }
 }
 
+export const MAX_RIGHE = 500
+const vuoto = (v) => v === undefined || v === null || v === false || String(v).trim() === ''
+
+/** Le righe con almeno una cella compilata, solo con le colonne previste; le caselle non spuntate valgono false. */
+export function righePiene(f, righe) {
+  if (!Array.isArray(righe)) return []
+  const colonne = (f.colonne || []).filter(c => c.name)
+  const out = []
+  for (const r of righe) {
+    if (!r || typeof r !== 'object') continue
+    const pulita = {}
+    for (const c of colonne) if (!vuoto(r[c.name])) pulita[c.name] = typeof r[c.name] === 'string' ? r[c.name].trim() : r[c.name]
+    if (Object.keys(pulita).length === 0) continue
+    for (const c of colonne) if (c.type === 'checkbox' && !(c.name in pulita)) pulita[c.name] = false
+    out.push(pulita)
+  }
+  return out
+}
+
+const quanteRighe = (n) => `${n} ${n === 1 ? 'riga' : 'righe'}`
+
+/** Problemi delle righe già pulite: numero di righe, colonne obbligatorie, regole. Al massimo tre, uniti da "; ". */
+export function erroriTabella(f, righe, oggi = oggiIso()) {
+  const out = []
+  const min = numero(f.minRighe), max = numero(f.maxRighe)
+  const limite = max !== null ? Math.min(max, MAX_RIGHE) : MAX_RIGHE
+  if (min !== null && righe.length < min) out.push(`servono almeno ${quanteRighe(min)}`)
+  if (righe.length > limite) out.push(`al massimo ${quanteRighe(limite)}`)
+  for (let i = 0; i < righe.length && out.length < 3; i++) {
+    for (const c of (f.colonne || [])) {
+      const v = righe[i][c.name]
+      let msg
+      if (c.required && c.type === 'checkbox') msg = v === true ? null : 'va spuntato'
+      else if (c.required && vuoto(v)) msg = 'è obbligatorio'
+      else msg = controlla(c, v, oggi)
+      if (msg) {
+        out.push(`riga ${i + 1}, ${c.label || c.name}: ${msg}`)
+        if (out.length >= 3) break
+      }
+    }
+  }
+  return out.length ? out.join('; ') : null
+}
+
 /** Errori di tutti i campi da compilare e visibili, obbligatori compresi: { nome: messaggio }. */
 export function erroriForm(fields = [], valori = {}, nascosti = new Set(), oggi = oggiIso()) {
   const out = {}
   for (const f of fields) {
     if (!f.name || f.readonly || f.type === 'sezione' || nascosti.has(f.name)) continue
     const v = valori[f.name]
+    if (f.type === 'tabella') {
+      const righe = righePiene(f, v)
+      if (f.required && righe.length === 0) { out[f.name] = 'aggiungi almeno una riga'; continue }
+      const m = erroriTabella(f, righe, oggi)
+      if (m) out[f.name] = m
+      continue
+    }
     if (f.required && f.type === 'checkbox' && v !== true) { out[f.name] = 'va spuntato per proseguire'; continue }
     if (f.required && (v === undefined || v === null || String(v).trim() === '')) { out[f.name] = 'è obbligatorio'; continue }
     const m = controlla(f, v, oggi)
@@ -138,6 +192,8 @@ export function descriviRegole(f) {
   if (f.max !== undefined && f.max !== '') parti.push(`fino a ${f.max}`)
   if (f.minLunghezza) parti.push(`almeno ${f.minLunghezza} caratteri`)
   if (f.maxLunghezza) parti.push(`al massimo ${f.maxLunghezza} caratteri`)
+  if (f.minRighe) parti.push(`almeno ${quanteRighe(Number(f.minRighe))}`)
+  if (f.maxRighe) parti.push(`al massimo ${quanteRighe(Number(f.maxRighe))}`)
   if (f.formato) parti.push(FORMATI.find(x => x.id === f.formato)?.label.toLowerCase() || f.formato)
   return parti.join(', ')
 }
