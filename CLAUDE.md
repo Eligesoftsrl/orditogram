@@ -137,15 +137,19 @@ In ordine di priorità proposto:
    esportazione dei dati di una persona, minimizzazione nei log; accessibilità WCAG 2.1 AA e dichiarazione di
    accessibilità; linee guida AgID su sicurezza e interoperabilità (ModI per le API), predisposizione per
    protocollo informatico e conservazione a norma.
-10. **Sicurezza del software**: OWASP ASVS livello 2 come riferimento, analisi statica e delle dipendenze in CI,
+10. **Sicurezza del software**: OWASP ASVS livello 2 come riferimento, analisi Kiuwan (statica e dipendenze) in CI,
     SBOM per ogni versione, immagini firmate, test di penetrazione prima delle gare, guida all'installazione sicura.
 
 ### Fase qualità e sicurezza (richiesta di Filippo, dopo la prima versione completa)
 Obiettivo: "a prova di bomba" prima di proporlo ai clienti.
 - **Test estesi**: copertura misurata (JaCoCo, Vitest coverage) con soglie in CI; test end-to-end dell'interfaccia
   con Playwright sui percorsi principali (Studio → pubblicazione → scrivania → pratica); test di carico.
-- **SonarQube** (o SonarCloud) in CI: quality gate su bug, vulnerabilità, code smell, duplicazioni e copertura;
-  nessun merge con il gate rosso.
+- **Security by design**: threat modeling per ogni funzione nuova (STRIDE sui flussi di dati: Studio, motore,
+  API, connettori, documenti), requisiti di sicurezza scritti prima dello sviluppo, revisione sicura del codice
+  su ogni PR, impostazioni sicure per default, registro delle decisioni di sicurezza.
+- **Kiuwan** (analisi del codice richiesta nelle gare PA): analisi statica (SAST) e delle dipendenze (SCA) di
+  backend e frontend in CI, con soglie bloccanti e report allegabili alle gare. SonarQube eventualmente in più,
+  per la qualità del codice durante lo sviluppo.
 - **Attacchi simulati**: OWASP ZAP automatico in CI contro l'applicazione avviata (frontend, `/api`, `/api/v1`);
   verifica di autenticazione, autorizzazione tra utenti e gruppi, IDOR sulle pratiche, upload di documenti,
   injection nelle espressioni dei BPMN e nei form, CSRF, intestazioni di sicurezza; poi penetration test manuale.
