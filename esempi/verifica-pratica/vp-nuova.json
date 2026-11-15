@@ -1,0 +1,13 @@
+{
+  "title": "Nuova pratica da verificare",
+  "description": "Descrivi la pratica e allega i documenti firmati (PDF PAdES o buste .p7m CAdES).",
+  "fields": [
+    { "name": "oggetto", "label": "Oggetto", "type": "text", "required": true, "titolo": true },
+    { "name": "protocollo", "label": "Numero di protocollo", "type": "text" },
+    { "name": "scadenza", "label": "Da verificare entro", "type": "date" },
+    { "name": "descrizione", "label": "Descrizione", "type": "textarea" }
+  ],
+  "documenti": "carica",
+  "documentiObbligatori": true,
+  "submitLabel": "Invia agli analisti"
+}

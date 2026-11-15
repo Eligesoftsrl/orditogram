@@ -1,0 +1,111 @@
+{
+  "name": "Activiti",
+  "uri": "http://activiti.org/bpmn",
+  "prefix": "activiti",
+  "xml": {
+    "tagAlias": "lowerCase"
+  },
+  "associations": [],
+  "types": [
+    {
+      "name": "ProcessStarter",
+      "isAbstract": true,
+      "extends": [
+        "bpmn:Process"
+      ],
+      "properties": [
+        {
+          "name": "candidateStarterGroups",
+          "isAttr": true,
+          "type": "String"
+        },
+        {
+          "name": "candidateStarterUsers",
+          "isAttr": true,
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "name": "Assignable",
+      "isAbstract": true,
+      "extends": [
+        "bpmn:UserTask"
+      ],
+      "properties": [
+        {
+          "name": "assignee",
+          "isAttr": true,
+          "type": "String"
+        },
+        {
+          "name": "candidateUsers",
+          "isAttr": true,
+          "type": "String"
+        },
+        {
+          "name": "candidateGroups",
+          "isAttr": true,
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "name": "FormSupported",
+      "isAbstract": true,
+      "extends": [
+        "bpmn:StartEvent",
+        "bpmn:UserTask"
+      ],
+      "properties": [
+        {
+          "name": "formKey",
+          "isAttr": true,
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "name": "Field",
+      "superClass": [
+        "Element"
+      ],
+      "meta": {
+        "allowedIn": [
+          "bpmn:ServiceTask"
+        ]
+      },
+      "properties": [
+        {
+          "name": "name",
+          "isAttr": true,
+          "type": "String"
+        },
+        {
+          "name": "stringValue",
+          "isAttr": true,
+          "type": "String"
+        },
+        {
+          "name": "expression",
+          "isAttr": true,
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "name": "TimerCalendar",
+      "isAbstract": true,
+      "extends": [
+        "bpmn:TimerEventDefinition"
+      ],
+      "properties": [
+        {
+          "name": "businessCalendarName",
+          "isAttr": true,
+          "type": "String"
+        }
+      ]
+    }
+  ]
+}

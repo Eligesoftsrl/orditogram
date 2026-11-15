@@ -1,0 +1,20 @@
+{
+  "title": "Esame della richiesta",
+  "description": "Verifica la legittimazione del richiedente e i documenti. Se mancano informazioni chiedi un'integrazione; se ci sono controinteressati vengono avvisati e hanno 10 giorni per opporsi.",
+  "fields": [
+    { "name": "oggetto", "label": "Oggetto", "type": "text", "readonly": true },
+    { "name": "numeroProtocollo", "label": "Protocollo", "type": "text", "readonly": true },
+    { "name": "dataProtocollo", "label": "Del", "type": "date", "readonly": true },
+    { "name": "richiedente", "label": "Richiedente", "type": "text", "readonly": true },
+    { "name": "documentiRichiesti", "label": "Documenti richiesti", "type": "textarea", "readonly": true },
+    { "name": "motivazione", "label": "Interesse dichiarato", "type": "textarea", "readonly": true },
+    { "name": "tipoAccesso", "label": "Modalità", "type": "text", "readonly": true },
+    { "name": "noteIntegrazioni", "label": "Integrazioni ricevute", "type": "textarea", "readonly": true },
+    { "name": "esito", "label": "Esito dell'esame", "type": "select", "required": true, "precompila": false,
+      "options": ["Accoglibile", "Serve integrazione", "Ci sono controinteressati", "Da respingere"] },
+    { "name": "noteIstruttoria", "label": "Note (se serve un'integrazione, scrivi cosa chiedere al cittadino)", "type": "textarea" },
+    { "name": "emailControinteressati", "label": "Email dei controinteressati (separate da virgola)", "type": "text" }
+  ],
+  "documenti": "lettura",
+  "submitLabel": "Conferma esame"
+}

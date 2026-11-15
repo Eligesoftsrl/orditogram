@@ -1,0 +1,16 @@
+{
+  "title": "Nuova richiesta di accesso agli atti",
+  "description": "Registra l'istanza del cittadino (art. 22 e seguenti della legge 241/1990). Allega l'istanza firmata e il documento d'identità.",
+  "fields": [
+    { "name": "oggetto", "label": "Oggetto della richiesta", "type": "text", "required": true, "titolo": true },
+    { "name": "richiedente", "label": "Richiedente (nome e cognome)", "type": "text", "required": true },
+    { "name": "codiceFiscale", "label": "Codice fiscale", "type": "text" },
+    { "name": "emailRichiedente", "label": "Email o PEC del richiedente", "type": "text", "required": true },
+    { "name": "documentiRichiesti", "label": "Documenti richiesti", "type": "textarea", "required": true },
+    { "name": "motivazione", "label": "Interesse diretto, concreto e attuale", "type": "textarea", "required": true },
+    { "name": "tipoAccesso", "label": "Modalità di accesso", "type": "select", "options": ["Visione", "Estrazione di copia", "Visione ed estrazione di copia"], "required": true }
+  ],
+  "documenti": "carica",
+  "documentiObbligatori": true,
+  "submitLabel": "Registra la richiesta"
+}

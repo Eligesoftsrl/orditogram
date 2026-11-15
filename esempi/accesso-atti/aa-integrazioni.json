@@ -1,0 +1,12 @@
+{
+  "title": "Integrazioni del richiedente",
+  "description": "Registra quanto inviato dal cittadino e allega i documenti ricevuti: la richiesta torna in esame e il termine di 30 giorni riparte.",
+  "fields": [
+    { "name": "oggetto", "label": "Oggetto", "type": "text", "readonly": true },
+    { "name": "numeroProtocollo", "label": "Protocollo", "type": "text", "readonly": true },
+    { "name": "noteIstruttoria", "label": "Integrazioni richieste", "type": "textarea", "readonly": true },
+    { "name": "noteIntegrazioni", "label": "Cosa ha inviato il richiedente", "type": "textarea", "required": true, "precompila": false }
+  ],
+  "documenti": "carica",
+  "submitLabel": "Torna in esame"
+}

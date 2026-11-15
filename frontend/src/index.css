@@ -1,0 +1,136 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------- token
+   Pino: identità e testo · Verde: azioni · Zafferano: "tocca a te" / step corrente
+   Carta: sfondo · Linea: bordi · Mattone: errori                                   */
+@theme {
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque Variable", "Bricolage Grotesque", "IBM Plex Sans", ui-sans-serif, sans-serif;
+
+  --color-pino-950: #0A201F;
+  --color-pino-900: #0F2E2C;
+  --color-pino-800: #163F3C;
+  --color-pino-700: #1E524E;
+  --color-pino-600: #2D6A64;
+  --color-pino-300: #8FB5AE;
+  --color-pino-200: #BCD3CE;
+
+  --color-verde-50: #E8F5F1;
+  --color-verde-100: #CFEAE2;
+  --color-verde-400: #5FB8A3;
+  --color-verde-500: #1F9A80;
+  --color-verde-600: #0E7C66;
+  --color-verde-700: #0A6352;
+
+  --color-zafferano-50: #FEF6E7;
+  --color-zafferano-100: #FCE9C6;
+  --color-zafferano-400: #F2A93B;
+  --color-zafferano-500: #E0921C;
+  --color-zafferano-800: #7A4A06;
+
+  --color-mattone-50: #FCEDEA;
+  --color-mattone-100: #F7D5CE;
+  --color-mattone-600: #C2412D;
+  --color-mattone-700: #9E3322;
+
+  --color-carta: #F4F6F5;
+  --color-linea: #DCE3E0;
+  --color-inchiostro: #0F2E2C;
+  --color-grafite: #576865;
+  --color-nebbia: #8A9A97;
+
+  --radius-pannello: 14px;
+  --radius-campo: 9px;
+
+  --shadow-pannello: 0 1px 0 rgb(15 46 44 / 0.04), 0 1px 2px rgb(15 46 44 / 0.06);
+  --shadow-sollevato: 0 12px 32px -12px rgb(15 46 44 / 0.28), 0 2px 6px rgb(15 46 44 / 0.08);
+
+  --animate-treno: treno 7s cubic-bezier(.65,0,.35,1) infinite;
+  --animate-respiro: respiro 2.4s ease-in-out infinite;
+  --animate-entra: entra .18s ease-out;
+}
+
+@keyframes treno {
+  0%, 6%    { left: 0%; }
+  20%, 26%  { left: 33.333%; }
+  40%, 46%  { left: 66.666%; }
+  60%, 66%  { left: 33.333%; }   /* il ritorno: la pratica torna indietro */
+  80%, 100% { left: 100%; }
+}
+@keyframes respiro {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(242 169 59 / 0.55); }
+  50%      { box-shadow: 0 0 0 6px rgb(242 169 59 / 0); }
+}
+@keyframes entra {
+  from { opacity: 0; transform: translateY(4px) scale(.99); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; }
+}
+
+/* ---------------------------------------------------------------- base */
+@layer base {
+  html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  body { @apply bg-carta text-inchiostro font-sans; font-feature-settings: "tnum" 0; }
+  h1, h2, h3 { @apply font-display tracking-tight; }
+  ::selection { background: var(--color-zafferano-100); }
+  :focus-visible { outline: 2px solid var(--color-verde-500); outline-offset: 2px; border-radius: 6px; }
+}
+
+@layer components {
+  .campo {
+    @apply w-full rounded-campo border border-linea bg-white px-3 py-2 text-[15px] text-inchiostro
+           placeholder:text-nebbia transition-colors
+           hover:border-pino-200 focus:border-verde-500 focus:outline-none focus:ring-3 focus:ring-verde-100
+           disabled:bg-carta disabled:text-grafite;
+  }
+  .etichetta { @apply mb-1.5 block text-sm font-medium text-pino-800; }
+  .numeri { font-variant-numeric: tabular-nums; }
+}
+
+/* ---------------------------------------------------------------- bpmn-js */
+.bpmn-host .djs-container { font-family: var(--font-sans); }
+.bpmn-host .bjs-powered-by { opacity: .35; transform: scale(.8); }
+.bpmn-corrente:not(.djs-connection) .djs-visual > :nth-child(1) {
+  stroke: var(--color-zafferano-500) !important; stroke-width: 3px !important; fill: var(--color-zafferano-50) !important;
+}
+.bpmn-fatto:not(.djs-connection) .djs-visual > :nth-child(1) {
+  stroke: var(--color-verde-600) !important; fill: var(--color-verde-50) !important;
+}
+
+/* ---------------------------------------------------------------- editor dei processi */
+.orditogram-editor .djs-palette {
+  top: 16px; left: 16px; border: 1px solid var(--color-linea); border-radius: 12px;
+  background: #fff; box-shadow: var(--shadow-sollevato); padding: 4px;
+}
+.orditogram-editor .djs-palette .entry { color: var(--color-pino-800); border-radius: 8px; }
+.orditogram-editor .djs-palette .entry:hover { background: var(--color-verde-50); color: var(--color-verde-700); }
+.orditogram-editor .djs-palette .separator { border-color: var(--color-linea); }
+.orditogram-editor .djs-context-pad .entry { background: #fff; border-radius: 6px; box-shadow: 0 1px 2px rgb(15 46 44 / .12); color: var(--color-pino-800); }
+.orditogram-editor .djs-context-pad .entry:hover { background: var(--color-verde-50); color: var(--color-verde-700); }
+.orditogram-editor .djs-popup { border-radius: 12px; border-color: var(--color-linea); box-shadow: var(--shadow-sollevato); font-family: var(--font-sans); }
+.orditogram-editor .djs-direct-editing-parent { font-family: var(--font-sans) !important; }
+.orditogram-editor .bjs-powered-by { bottom: 16px; left: 16px; right: auto; opacity: .35; }
+.orditogram-editor .djs-element.selected .djs-outline { stroke: var(--color-verde-500) !important; stroke-width: 2px !important; }
+.orditogram-errore:not(.djs-connection) .djs-visual > :nth-child(1) { stroke: var(--color-mattone-600) !important; stroke-width: 2.5px !important; fill: var(--color-mattone-50) !important; }
+.orditogram-errore.djs-connection .djs-visual > path { stroke: var(--color-mattone-600) !important; }
+.orditogram-avviso:not(.djs-connection) .djs-visual > :nth-child(1) { stroke: var(--color-zafferano-500) !important; stroke-dasharray: 5 3; }
+
+/* ---------------------------------------------------------------- simulazione con i gettoni */
+/* i comandi sono nella barra e nel pannello di Orditogram: si nascondono quelli inglesi dell'estensione */
+.orditogram-editor .bts-toggle-mode,
+.orditogram-editor .bts-palette,
+.orditogram-editor .bts-log,
+.orditogram-editor .bts-notifications,
+.orditogram-editor .bts-set-animation-speed { display: none !important; }
+.orditogram-editor .bts-scopes { top: 64px; left: 16px; }
+.orditogram-editor .bts-context-pad {
+  background: var(--color-verde-600, #0E7C66);
+  color: #fff;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgb(15 46 44 / 0.25);
+}
+.orditogram-editor .bts-context-pad:hover { background: var(--color-pino-900, #0F2E2C); }
+.orditogram-editor .bts-token-count { font-family: inherit; }

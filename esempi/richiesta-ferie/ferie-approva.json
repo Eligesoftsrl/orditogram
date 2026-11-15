@@ -1,0 +1,12 @@
+{
+  "title": "Approva richiesta ferie",
+  "fields": [
+    { "name": "avviataDa", "label": "Richiedente", "type": "text", "readonly": true },
+    { "name": "dal", "label": "Dal", "type": "text", "readonly": true },
+    { "name": "al", "label": "Al", "type": "text", "readonly": true },
+    { "name": "motivo", "label": "Note del richiedente", "type": "textarea", "readonly": true },
+    { "name": "esito", "label": "Decisione", "type": "select", "options": ["Approvata", "Respinta"], "required": true },
+    { "name": "notaResponsabile", "label": "Nota del responsabile", "type": "textarea" }
+  ],
+  "submitLabel": "Conferma decisione"
+}

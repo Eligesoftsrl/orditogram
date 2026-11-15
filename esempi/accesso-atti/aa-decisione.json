@@ -1,0 +1,17 @@
+{
+  "title": "Decisione sulla richiesta",
+  "description": "Decidi se accogliere la richiesta e motiva la decisione. Allega il provvedimento firmato: verrà inviato al cittadino insieme ai documenti della pratica.",
+  "fields": [
+    { "name": "oggetto", "label": "Oggetto", "type": "text", "readonly": true },
+    { "name": "numeroProtocollo", "label": "Protocollo", "type": "text", "readonly": true },
+    { "name": "richiedente", "label": "Richiedente", "type": "text", "readonly": true },
+    { "name": "documentiRichiesti", "label": "Documenti richiesti", "type": "textarea", "readonly": true },
+    { "name": "esito", "label": "Esito dell'esame", "type": "text", "readonly": true },
+    { "name": "noteIstruttoria", "label": "Note dell'istruttoria", "type": "textarea", "readonly": true },
+    { "name": "decisione", "label": "Decisione", "type": "select", "required": true, "precompila": false,
+      "options": ["Accolta", "Accolta in parte", "Respinta"] },
+    { "name": "motivazioneDecisione", "label": "Motivazione", "type": "textarea", "required": true, "precompila": false }
+  ],
+  "documenti": "modifica",
+  "submitLabel": "Firma la decisione"
+}

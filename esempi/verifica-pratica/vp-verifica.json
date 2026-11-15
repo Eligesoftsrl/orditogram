@@ -1,0 +1,17 @@
+{
+  "title": "Verifica della pratica",
+  "description": "Controlla dati e allegati. Se qualcosa non va, scegli \"Da revisionare\" e scrivi cosa correggere.",
+  "fields": [
+    { "name": "oggetto", "label": "Oggetto", "type": "text", "readonly": true },
+    { "name": "protocollo", "label": "Protocollo", "type": "text", "readonly": true },
+    { "name": "scadenza", "label": "Da verificare entro", "type": "date", "readonly": true },
+    { "name": "avviataDa", "label": "Caricata da", "type": "text", "readonly": true },
+    { "name": "descrizione", "label": "Descrizione", "type": "textarea", "readonly": true },
+    { "name": "noteRevisione", "label": "Correzioni del revisore", "type": "textarea", "readonly": true },
+    { "name": "esito", "label": "Esito della verifica", "type": "select",
+      "options": ["Accettata", "Da revisionare"], "required": true, "precompila": false },
+    { "name": "noteAnalista", "label": "Rilievi per il revisore", "type": "textarea", "precompila": false }
+  ],
+  "documenti": "lettura",
+  "submitLabel": "Conferma esito"
+}

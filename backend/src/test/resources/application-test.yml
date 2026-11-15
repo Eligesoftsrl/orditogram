@@ -1,0 +1,27 @@
+# Test: database in memoria, timer eseguiti a mano dai test, servizi e utenti di prova attivi.
+spring:
+  datasource:
+    url: jdbc:h2:mem:orditogram;DB_CLOSE_DELAY=-1   # modalità normale di H2: lo script di Activiti per H2 usa il tipo IDENTITY
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  activiti:
+    async-executor-activate: false
+
+app:
+  documenti:
+    dir: target/test-documenti
+  demo:
+    utenti: true
+    servizi: true
+  messaggi:
+    chiavi:
+      test: chiave-test
+  webhook:
+    invio-automatico: false           # i test consegnano gli avvisi a mano (InvioWebhook.eseguiCiclo)
+  api:
+    richieste-al-minuto: 0
+  sicurezza:
+    chiave-cifratura: chiave-dei-test

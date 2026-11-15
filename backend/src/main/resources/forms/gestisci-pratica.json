@@ -1,0 +1,13 @@
+{
+  "title": "Gestisci pratica",
+  "fields": [
+    { "name": "oggetto", "label": "Oggetto", "type": "text", "readonly": true },
+    { "name": "descrizione", "label": "Descrizione", "type": "textarea", "readonly": true },
+    { "name": "priorita", "label": "Priorità", "type": "text", "readonly": true },
+    { "name": "avviataDa", "label": "Aperta da", "type": "text", "readonly": true },
+    { "name": "esito", "label": "Esito", "type": "select",
+      "options": ["Accolta", "Respinta"], "required": true },
+    { "name": "note", "label": "Note di chiusura", "type": "textarea" }
+  ],
+  "submitLabel": "Termina pratica"
+}

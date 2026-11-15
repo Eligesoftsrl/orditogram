@@ -1,0 +1,17 @@
+{
+  "name": "Orditogram",
+  "uri": "http://orditogram.it/bpmn",
+  "prefix": "orditogram",
+  "xml": { "tagAlias": "lowerCase" },
+  "associations": [],
+  "types": [
+    {
+      "name": "DatiMessaggio",
+      "superClass": ["Element"],
+      "meta": { "allowedIn": ["bpmn:IntermediateCatchEvent", "bpmn:BoundaryEvent"] },
+      "properties": [
+        { "name": "body", "isBody": true, "type": "String" }
+      ]
+    }
+  ]
+}

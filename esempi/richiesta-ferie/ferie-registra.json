@@ -1,0 +1,11 @@
+{
+  "title": "Registra ferie approvate",
+  "fields": [
+    { "name": "avviataDa", "label": "Richiedente", "type": "text", "readonly": true },
+    { "name": "dal", "label": "Dal", "type": "text", "readonly": true },
+    { "name": "al", "label": "Al", "type": "text", "readonly": true },
+    { "name": "notaResponsabile", "label": "Nota del responsabile", "type": "textarea", "readonly": true },
+    { "name": "registrata", "label": "Ferie inserite nel gestionale presenze", "type": "checkbox" }
+  ],
+  "submitLabel": "Ferie registrate"
+}
