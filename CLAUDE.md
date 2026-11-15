@@ -91,7 +91,7 @@ laura, paolo, chiara, giulia: password `password`.
 - **0.9** fondamenta: ricerca paginata, registro, Docker, test, CI, backup.
 - **0.10** integrazioni: API pubblica `/api/v1`, chiavi, OpenAPI generata, webhook firmati.
 - **0.11** nuovo nome Orditogram, Maven Wrapper, questo file.
-- Da verificare alla prima build sul Mac: `ApiPubblicaIntegrationTest` (scritto senza poterlo eseguire).
+- Codice su GitHub (`Eligesoftsrl/orditogram`), CI verde: 46 test del backend, compreso `ApiPubblicaIntegrationTest`.
 - **Prossime fasi**: 3) form avanzati (sezioni, campi condizionali, tabelle di righe, validazioni);
   4) documenti da modello (lettere, provvedimenti); 5) tabelle decisionali DMN; 6) multi-ente / white label;
   7) versioni dei form e ruolo "analista del cliente"; 8) cruscotti; 9) libreria di modelli di processo;
