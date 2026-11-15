@@ -92,6 +92,7 @@ public class WebhookService {
 
     /** Eventi dallo storico delle pratiche. */
     @EventListener
+    @Transactional
     public void daStorico(EventoStorico e) {
         String tipo = switch (e.tipo()) {
             case MESSAGGIO -> TipiEvento.MESSAGGIO_RICEVUTO;

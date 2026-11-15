@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import { Plus, Search, UserPlus, Users, X } from 'lucide-react'
 import { api } from '../../api.js'
 import { useAuth } from '../../lib/auth.jsx'
@@ -10,6 +10,7 @@ const VUOTO = { id: null, username: '', firstName: '', lastName: '', email: '', 
 
 /** Studio: utenti e gruppi. I gruppi sono quelli usati nei BPMN (candidateGroups, candidateStarterGroups). */
 export default function Utenti() {
+  const uid = useId()
   const { me } = useAuth()
   const toast = useToast()
   const [lista, setLista] = useState(null)
@@ -19,9 +20,9 @@ export default function Utenti() {
   const [attesa, setAttesa] = useState(false)
 
   const carica = () => api.users().then(setLista).catch(e => setErrore(e.message))
-  useEffect(() => { carica() }, [])
+  useEffect(() => { void carica() }, [])
 
-  const gruppi = useMemo(() => [...new Set((lista || []).flatMap(u => u.groups))].sort(), [lista])
+  const gruppi = useMemo(() => [...new Set((lista || []).flatMap(u => u.groups))].sort((a, b) => a.localeCompare(b, 'it')), [lista])
   const filtrati = (lista || []).filter(u =>
     !cerca || `${u.firstName} ${u.lastName} ${u.username} ${u.groups.join(' ')}`.toLowerCase().includes(cerca.toLowerCase()))
 
@@ -31,13 +32,13 @@ export default function Utenti() {
     try {
       if (edit.id) await api.updateUser(edit.id, edit); else await api.createUser(edit)
       toast.ok(`Utente ${edit.username} salvato`)
-      setEdit(null); carica()
+      setEdit(null); void carica()
     } catch (err) { setErrore(err.message) } finally { setAttesa(false) }
   }
 
   const elimina = async () => {
     if (!confirm(`Eliminare l'utente ${edit.username}?`)) return
-    try { await api.deleteUser(edit.id); toast.ok(`Utente ${edit.username} eliminato`); setEdit(null); carica() }
+    try { await api.deleteUser(edit.id); toast.ok(`Utente ${edit.username} eliminato`); setEdit(null); void carica() }
     catch (err) { setErrore(err.message) }
   }
 
@@ -107,13 +108,13 @@ export default function Utenti() {
                       className="lg:sticky lg:top-20">
               <form onSubmit={salva} className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div><label className="etichetta">Nome</label><input className="campo" value={edit.firstName || ''} onChange={e => set('firstName', e.target.value)} /></div>
-                  <div><label className="etichetta">Cognome</label><input className="campo" value={edit.lastName || ''} onChange={e => set('lastName', e.target.value)} /></div>
-                  <div><label className="etichetta">Nome utente *</label><input className="campo" required readOnly={!!edit.id} value={edit.username} onChange={e => set('username', e.target.value.trim())} /></div>
-                  <div><label className="etichetta">Email</label><input className="campo" type="email" value={edit.email || ''} onChange={e => set('email', e.target.value)} placeholder="per le notifiche via email" /></div>
+                  <div><label className="etichetta" htmlFor={`${uid}-1`}>Nome</label><input id={`${uid}-1`} className="campo" value={edit.firstName || ''} onChange={e => set('firstName', e.target.value)} /></div>
+                  <div><label className="etichetta" htmlFor={`${uid}-2`}>Cognome</label><input id={`${uid}-2`} className="campo" value={edit.lastName || ''} onChange={e => set('lastName', e.target.value)} /></div>
+                  <div><label className="etichetta" htmlFor={`${uid}-3`}>Nome utente *</label><input id={`${uid}-3`} className="campo" required readOnly={!!edit.id} value={edit.username} onChange={e => set('username', e.target.value.trim())} /></div>
+                  <div><label className="etichetta" htmlFor={`${uid}-4`}>Email</label><input id={`${uid}-4`} className="campo" type="email" value={edit.email || ''} onChange={e => set('email', e.target.value)} placeholder="per le notifiche via email" /></div>
                   <div className="sm:col-span-2">
-                    <label className="etichetta">{edit.id ? 'Nuova password' : 'Password *'}</label>
-                    <input className="campo" type="password" required={!edit.id} value={edit.password} onChange={e => set('password', e.target.value)}
+                    <label className="etichetta" htmlFor={`${uid}-5`}>{edit.id ? 'Nuova password' : 'Password *'}</label>
+                    <input id={`${uid}-5`} className="campo" type="password" required={!edit.id} value={edit.password} onChange={e => set('password', e.target.value)}
                            placeholder={edit.id ? 'Lascia vuoto per non cambiarla' : ''} autoComplete="new-password" />
                   </div>
                 </div>
@@ -145,7 +146,7 @@ function Gruppi({ valori, noti, onChange }) {
   const suggeriti = noti.filter(g => !valori.includes(g))
   return (
     <div>
-      <label className="etichetta">Gruppi</label>
+      <p className="etichetta">Gruppi</p>
       <div className="flex flex-wrap gap-2">
         {valori.length === 0 && <span className="text-sm text-grafite">Nessun gruppo</span>}
         {valori.map(g => (

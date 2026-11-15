@@ -70,6 +70,16 @@ alle gare. Le soglie bloccanti sono in `strumenti/analisi/riepilogo.py`; in loca
 cd backend && mvn -Panalisi verify   # copertura (target/site/jacoco), SpotBugs, SBOM (target/classes/META-INF/sbom)
 ```
 
+Un falso positivo si segna con il motivo, così resta tracciato per le gare: `// NOSONAR: motivo` o `// nosemgrep`
+nel codice, oppure una voce commentata in `strumenti/analisi/spotbugs-esclusioni.xml`. Le azioni di GitHub sono
+fissate per impronta (SHA), con la versione nel commento.
+
+**Protezione CSRF.** Il token CSRF di Spring è spento di proposito: l'API `/api/v1` usa solo la chiave
+nell'intestazione, e nel resto dell'applicazione ogni richiesta che modifica dati e arriva da un browser (sessione
+del provider, cookie, `Origin` o `Sec-Fetch-Site`) deve avere l'intestazione `X-Requested-With`, che un altro sito
+non può aggiungere. Le integrazioni server-to-server con nome utente e password non ne hanno bisogno. I messaggi di
+log stanno su una riga sola (gli a capo diventano spazi), così nessuno può inserire righe false nei log.
+
 ## Backup e ripristino
 
 `strumenti/backup.sh` salva database e documenti in una cartella datata (con Docker Compose o, con `MODO=locale`,

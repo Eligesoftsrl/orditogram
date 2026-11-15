@@ -34,14 +34,17 @@ public class ApiExceptionHandler {
      * Errori sollevati dentro il motore (es. un connettore che non riesce): Activiti li avvolge in una
      * ActivitiException; si restituisce il messaggio originale, comprensibile per l'utente.
      */
+    /** La prima IllegalStateException o IllegalArgumentException nella catena delle cause, se c'è. */
+    public static RuntimeException causaApplicativa(Throwable e) {
+        for (Throwable c = e; c != null; c = c.getCause() == c ? null : c.getCause())
+            if (c instanceof IllegalStateException || c instanceof IllegalArgumentException) return (RuntimeException) c;
+        return null;
+    }
+
     @ExceptionHandler(org.activiti.engine.ActivitiException.class)
     public ResponseEntity<Map<String, String>> motore(org.activiti.engine.ActivitiException e) {
-        Throwable c = e;
-        while (c != null) {
-            if (c instanceof IllegalStateException || c instanceof IllegalArgumentException)
-                return conflict((RuntimeException) c);
-            c = c.getCause() == c ? null : c.getCause();
-        }
+        RuntimeException causa = causaApplicativa(e);
+        if (causa != null) return conflict(causa);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(Map.of("message", "Errore nell'esecuzione del processo: " + e.getMessage()));
     }

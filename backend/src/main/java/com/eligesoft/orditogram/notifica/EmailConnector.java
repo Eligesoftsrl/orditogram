@@ -22,7 +22,6 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * Invia un'email, anche a persone esterne (es. il cittadino che ha presentato l'istanza).
@@ -42,7 +41,6 @@ public class EmailConnector implements Connector, ConnettoreOrditogram {
 
     static final String ALLEGATI_NESSUNO = "Nessuno";
     static final String ALLEGATI_DOCUMENTI = "Tutti i documenti della pratica";
-    private static final Pattern EMAIL = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
     private static final Logger log = LoggerFactory.getLogger(EmailConnector.class);
 
     @Override public String id() { return "emailConnector"; }
@@ -136,8 +134,9 @@ public class EmailConnector implements Connector, ConnettoreOrditogram {
                 try {
                     storico.registraSubito(pi, PraticaEvento.Tipo.ERRORE, "Email non inviata: " + attivita,
                         List.of(Map.of("label", "Motivo", "value", String.valueOf(e.getMessage()))));
-                } catch (Exception ignored) {
+                } catch (Exception ex) {
                     // lo storico non deve mai bloccare il motore
+                    log.warn("Errore dell'email non registrato nello storico della pratica {}: {}", pi, ex.getMessage());
                 }
             }
         };
@@ -193,7 +192,7 @@ public class EmailConnector implements Connector, ConnettoreOrditogram {
     private static void aggiungiEmail(String e, Set<String> out, List<String> mancanti, String origine) {
         e = e.trim();
         if (e.isEmpty()) return;
-        if (EMAIL.matcher(e).matches()) out.add(e);
+        if (com.eligesoft.orditogram.form.RegoleCampo.emailValida(e)) out.add(e);
         else mancanti.add(origine + " (\"" + e + "\" non è un indirizzo valido)");
     }
 }

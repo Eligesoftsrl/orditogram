@@ -22,7 +22,7 @@ export default function ChiaviApi({ panoramica }) {
   const toast = useToast()
 
   const carica = () => api.chiaviApi().then(setLista).catch(e => setErrore(e.message))
-  useEffect(() => { carica() }, [])
+  useEffect(() => { void carica() }, [])
 
   const esegui = async (fn, ok) => {
     try { const r = await fn(); if (ok) toast.ok(ok); await carica(); return r } catch (e) { toast.errore(e.message) }
@@ -34,7 +34,7 @@ export default function ChiaviApi({ panoramica }) {
   }
   const revoca = (c) => {
     if (!confirm(`Revocare definitivamente la chiave "${c.nome}"? Non si potrà riattivare.`)) return
-    esegui(() => api.revocaChiaveApi(c.id), 'Chiave revocata')
+    void esegui(() => api.revocaChiaveApi(c.id), 'Chiave revocata')
   }
   const sospendi = (c) => esegui(() => api.modificaChiaveApi(c.id, {
     descrizione: c.descrizione, permessi: c.permessi, processi: c.processi, scadenza: c.scadenza, attiva: !c.attiva
@@ -91,7 +91,7 @@ export default function ChiaviApi({ panoramica }) {
 
       {modifica && (
         <DialogoChiave chiave={modifica.nuova ? null : modifica} panoramica={panoramica} onClose={() => setModifica(null)}
-                       onSalvata={(r) => { setModifica(null); carica(); if (r?.valore) setValore({ ...r, nuova: true }) }} />
+                       onSalvata={(r) => { setModifica(null); void carica(); if (r?.valore) setValore({ ...r, nuova: true }) }} />
       )}
       {valore && <DialogoValore {...valore} panoramica={panoramica} onClose={() => setValore(null)} />}
     </div>

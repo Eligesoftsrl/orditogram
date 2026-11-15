@@ -763,7 +763,7 @@ function NumeroDifferito({ value, onCommit, label, vuoto }) {
   const [v, setV] = useState(String(value ?? ''))
   useEffect(() => { setV(String(value ?? '')) }, [value])
   const commit = () => {
-    const n = parseInt(v, 10)
+    const n = Number.parseInt(v, 10)
     if (vuoto && v.trim() === '') { if (value !== '') onCommit(null); return }
     if (!Number.isFinite(n) || n < 1) { setV(String(value ?? '')); return }
     if (n !== value) onCommit(n)
@@ -827,7 +827,7 @@ Content-Type: application/json
         <p className="text-[13px] text-pino-800">Un operatore lo registra dalla scheda della pratica, oppure un sistema esterno (portale, PEC, pagamenti) lo invia così:</p>
         <div className="relative">
           <pre className="overflow-x-auto rounded-campo bg-pino-900 p-3 pt-10 font-mono text-[12px] leading-relaxed text-white">{esempio}</pre>
-          <button type="button" onClick={() => { navigator.clipboard?.writeText(esempio); setCopiato(true); setTimeout(() => setCopiato(false), 1500) }}
+          <button type="button" onClick={() => { void navigator.clipboard?.writeText(esempio).catch(() => {}); setCopiato(true); setTimeout(() => setCopiato(false), 1500) }}
                   className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-md bg-white/10 px-2 py-1 text-[12px] text-white hover:bg-white/20">
             <Copy className="size-3.5" /> {copiato ? 'Copiato' : 'Copia'}
           </button>

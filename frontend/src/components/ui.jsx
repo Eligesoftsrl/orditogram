@@ -128,7 +128,8 @@ export function Dialogo({ aperto, onClose, titolo, sottotitolo, larghezza = 'max
   }, [aperto, onClose])
   if (!aperto) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-pino-950/45 p-4 backdrop-blur-[2px] sm:p-8"
+    // lo sfondo chiude con il mouse; da tastiera si chiude con Esc (sopra)
+    <div role="presentation" className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-pino-950/45 p-4 backdrop-blur-[2px] sm:p-8"
          onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={titolo}
            className={cx('w-full animate-entra rounded-pannello bg-white shadow-sollevato outline-none', larghezza)}>
@@ -151,11 +152,12 @@ export function Dialogo({ aperto, onClose, titolo, sottotitolo, larghezza = 'max
 
 const ToastContext = createContext(null)
 
+let ultimoAvviso = 0
 export function ToastProvider({ children }) {
   const [lista, setLista] = useState([])
   const togli = useCallback((id) => setLista(l => l.filter(t => t.id !== id)), [])
   const mostra = useCallback((testo, tipo = 'ok') => {
-    const id = Math.random().toString(36).slice(2)
+    const id = ++ultimoAvviso
     setLista(l => [...l, { id, testo, tipo }])
     setTimeout(() => togli(id), tipo === 'errore' ? 7000 : 4000)
   }, [togli])

@@ -26,7 +26,7 @@ export function componi({ campo, operatore, valore, tipo }) {
   if (operatore === 'vuoto') return `\${empty ${campo}}`
   if (operatore === 'vero') return `\${${campo} == true}`
   if (operatore === 'falso') return `\${${campo} == false}`
-  if (tipo === 'number' && valore !== '' && !isNaN(Number(valore))) return `\${${campo} ${operatore} ${Number(valore)}}`
+  if (tipo === 'number' && valore !== '' && !Number.isNaN(Number(valore))) return `\${${campo} ${operatore} ${Number(valore)}}`
   return `\${${campo} ${operatore} '${escape(valore ?? '')}'}`
 }
 

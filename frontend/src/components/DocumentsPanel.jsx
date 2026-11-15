@@ -121,7 +121,7 @@ function Documento({ d, modificabile, onCaricato }) {
                 <span className="numeri inline-flex h-6 min-w-8 items-center justify-center rounded-md bg-carta px-1.5 text-[13px] font-semibold text-pino-800">v{v.numero}</span>
                 <span className="text-[15px] text-pino-900">{v.filename}</span>
                 <FirmaBadge esito={v.firmaEsito} />
-                <span className="ml-auto"><AzioniVersione v={v} toast={toast} compatte /></span>
+                <span className="ml-auto"><AzioniVersione v={v} toast={toast} /></span>
               </div>
               <p className="mt-1 text-[13px] text-grafite">
                 {v.caricatoDa}, {quando(v.caricatoIl)}{v.fase && <> in {v.fase}</>}
@@ -136,11 +136,11 @@ function Documento({ d, modificabile, onCaricato }) {
   )
 }
 
-function AzioniVersione({ v, toast, compatte }) {
+function AzioniVersione({ v, toast }) {
   const pdf = v.filename.toLowerCase().endsWith('.pdf')
   const cades = v.firmaTipo === 'CADES' && v.firma?.contenutoNome
   const esegui = (url, apri) => scarica(url, { apri }).catch(e => toast.errore(e.message))
-  const m = compatte ? 'sm' : 'sm'
+  const m = 'sm'
   return (
     <div className="flex flex-wrap gap-1.5">
       {pdf && <Button misura={m} variante="fantasma" icona={Eye} onClick={() => esegui(api.urlFile(v.id), true)}>Apri</Button>}

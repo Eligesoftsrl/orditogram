@@ -141,7 +141,7 @@ public class AdminProcessController {
      * Dopo la pubblicazione l'eventuale bozza del processo viene eliminata.
      */
     @PostMapping(value = "/deploy", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> deploy(@RequestParam("bpmn") MultipartFile bpmnFile,
                                       @RequestParam(value = "forms", required = false) List<MultipartFile> formFiles,
                                       @RequestParam(value = "extensions", required = false) MultipartFile extFile)

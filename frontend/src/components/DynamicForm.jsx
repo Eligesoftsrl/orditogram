@@ -239,6 +239,8 @@ function Allegati({ files, setFiles, obbligatori, disabled }) {
         onDragLeave={() => setSopra(false)}
         onDrop={e => { e.preventDefault(); setSopra(false); aggiungi(e.dataTransfer.files) }}
         onClick={() => !disabled && input.current?.click()}
+        role="button" tabIndex={disabled ? -1 : 0} aria-disabled={disabled || undefined}
+        onKeyDown={e => { if (!disabled && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); input.current?.click() } }}
         className={cx('flex cursor-pointer flex-col items-center rounded-pannello border-2 border-dashed px-6 py-7 text-center transition-colors',
           sopra ? 'border-verde-500 bg-verde-50' : 'border-linea bg-carta/60 hover:border-pino-200')}>
         <FileUp className="size-6 text-pino-600" />

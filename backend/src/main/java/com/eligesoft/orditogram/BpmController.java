@@ -106,7 +106,7 @@ public class BpmController {
 
     /** Avvio con allegati (multipart: "data" = JSON dei valori, "files" = documenti). */
     @PostMapping(value = "/processes/{key}/start", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> startWithFiles(@PathVariable String key,
                                               @RequestParam("data") String data,
                                               @RequestParam(value = "files", required = false) List<MultipartFile> files)
@@ -130,7 +130,7 @@ public class BpmController {
         String modoDocumenti = form != null ? form.path("documenti").asText("") : "";
         if (!allegati.isEmpty() && !"carica".equals(modoDocumenti))
             throw bad("Questo processo non prevede allegati all'avvio");
-        if ("carica".equals(modoDocumenti) && form.path("documentiObbligatori").asBoolean(false) && allegati.isEmpty())
+        if (form != null && "carica".equals(modoDocumenti) && form.path("documentiObbligatori").asBoolean(false) && allegati.isEmpty())
             throw bad("Allega almeno un documento");
 
         vars.put("avviataDa", currentUser.current().getFullName());

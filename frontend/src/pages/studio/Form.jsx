@@ -20,7 +20,7 @@ export default function FormStudio() {
   const [chiusi, setChiusi] = useState(() => new Set())
 
   const carica = () => api.forms().then(setLista).catch(e => setErrore(e.message))
-  useEffect(() => { carica() }, [])
+  useEffect(() => { void carica() }, [])
 
   const gruppi = useMemo(() => raggruppa(lista || [], cerca), [lista, cerca])
   const apri = (k) => setScelta({ chiave: k, nuovo: false, n: Date.now() })
@@ -108,8 +108,8 @@ export default function FormStudio() {
             {!scelta
               ? <Pannello><Vuoto icona={ListChecks} titolo="Scegli un form o creane uno nuovo">Aggiungi i campi, scegli quali sono obbligatori o in sola lettura e guarda subito il risultato.</Vuoto></Pannello>
               : <FormEditor key={scelta.n} chiave={scelta.chiave} nuovo={scelta.nuovo}
-                            onSalvato={(k) => { carica(); setScelta(s => s.nuovo ? { chiave: k, nuovo: false, n: Date.now() } : s) }}
-                            onEliminato={() => { carica(); setScelta(null) }} />}
+                            onSalvato={(k) => { void carica(); setScelta(s => s.nuovo ? { chiave: k, nuovo: false, n: Date.now() } : s) }}
+                            onEliminato={() => { void carica(); setScelta(null) }} />}
           </div>
         </div>
       )}
