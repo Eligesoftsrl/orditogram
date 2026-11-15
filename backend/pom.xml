@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.5.7</version>
+    <version>3.5.16</version>
     <relativePath/>
   </parent>
 
@@ -22,10 +22,52 @@
       Il passaggio a Spring Boot 4 andrà fatto insieme ad Activiti 9 (oggi ancora in alpha).
     -->
     <activiti.version>8.8.1</activiti.version>
+    <!-- correzioni di sicurezza più recenti di quelle comprese in Spring Boot (vedi analisi del codice) -->
+    <tomcat.version>10.1.62</tomcat.version>
+    <postgresql.version>42.7.14</postgresql.version>
   </properties>
 
   <dependencyManagement>
     <dependencies>
+      <!--
+        Activiti fissa le versioni di Spring, Jackson e Micrometer di quando è uscita: queste importazioni, che
+        vengono prima, riportano le librerie alle versioni corrette di Spring Boot (vince la prima importata).
+      -->
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-framework-bom</artifactId>
+        <version>${spring-framework.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.security</groupId>
+        <artifactId>spring-security-bom</artifactId>
+        <version>${spring-security.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.data</groupId>
+        <artifactId>spring-data-bom</artifactId>
+        <version>${spring-data-bom.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson</groupId>
+        <artifactId>jackson-bom</artifactId>
+        <version>${jackson-bom.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.micrometer</groupId>
+        <artifactId>micrometer-bom</artifactId>
+        <version>${micrometer.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
       <dependency>
         <groupId>org.activiti</groupId>
         <artifactId>activiti-dependencies</artifactId>
@@ -83,7 +125,7 @@
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcpkix-jdk18on</artifactId>
-      <version>1.84</version>
+      <version>1.87</version>
     </dependency>
 
     <!-- Test: motore e applicazione veri, database in memoria (H2) -->

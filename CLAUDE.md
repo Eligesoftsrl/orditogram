@@ -17,7 +17,7 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
 
 ## Architettura
 
-- **backend/**: Java 21, Spring Boot 3.5.7, **Activiti 8.8.1** (non Flowable: tieni allineate le versioni di
+- **backend/**: Java 21, Spring Boot 3.5.16, **Activiti 8.8.1** (non Flowable: tieni allineate le versioni di
   Spring Boot e Activiti), Spring Security 6.5, JPA/Hibernate 6, PostgreSQL (H2 in memoria nei test).
   Pacchetto radice `com.eligesoft.orditogram`.
 - **frontend/**: React 18, Vite, Tailwind 4, bpmn-js 17 (+ token simulation), lucide-react, Vitest.
