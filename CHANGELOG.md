@@ -39,7 +39,15 @@ Form avanzati, prima parte.
   in silenzio; azioni di GitHub fissate per impronta. Interfaccia: etichette collegate ai campi nello Studio
   (Form, Utenti), area degli allegati usabile da tastiera, errori di caricamento sempre gestiti.
 
-**Aggiornamento**: chi chiama l'API interna (`/api`, non `/api/v1`) da un browser o da uno script che manda
+- **Librerie alle versioni più nuove**: React 19, Vite 8, Vitest 5, bpmn-js 18 con la simulazione 1.1, Node 24,
+  nginx 1.30; nel backend Jackson 2.21.8, Commons Lang 3.22, Log4j 2.26 e la posta di Spring Boot al posto di
+  quella vecchia portata da Activiti. Activiti resta alla 8.8.1, l'ultima stabile per Java 21 e Spring Boot 3.5.
+- **nginx con indirizzo fisso**: `ORDITOGRAM_INDIRIZZO` (nel file `.env`) è il nome con cui gli utenti aprono
+  Orditogram; il backend riceve sempre quello, mai l'intestazione `Host` scelta da chi chiama.
+- **Analisi del codice bloccante**: le soglie fermano la CI. Le due vulnerabilità di Spring MVC ancora aperte
+  (XsltView, Server Sent Events) non toccano Orditogram: sono motivate in `strumenti/analisi/osv-scanner.toml`.
+
+**Aggiornamento**: impostare `ORDITOGRAM_INDIRIZZO` nel file `.env` (es. `orditogram.ente.it`). Chi chiama l'API interna (`/api`, non `/api/v1`) da un browser o da uno script che manda
 cookie o `Origin` deve aggiungere l'intestazione `X-Requested-With: XMLHttpRequest`, come già fa l'interfaccia.
 
 ## 0.11.0 (novembre 2026)

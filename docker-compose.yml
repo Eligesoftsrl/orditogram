@@ -50,6 +50,9 @@ services:
     build: ./frontend
     image: orditogram-frontend:${ORDITOGRAM_VERSIONE:-latest}
     restart: unless-stopped
+    environment:
+      # indirizzo con cui gli utenti aprono Orditogram (nome host e porta): va cambiato in produzione
+      ORDITOGRAM_INDIRIZZO: ${ORDITOGRAM_INDIRIZZO:-localhost:8081}
     depends_on:
       - backend
     ports:

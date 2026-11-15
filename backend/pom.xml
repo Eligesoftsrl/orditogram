@@ -19,12 +19,17 @@
     <java.version>21</java.version>
     <!--
       Activiti 8.8.x è costruita su Spring Boot 3.5.x: tieni le due versioni allineate.
-      Il passaggio a Spring Boot 4 andrà fatto insieme ad Activiti 9 (oggi ancora in alpha).
+      Activiti 8.8.1 (luglio 2026) è l'ultima versione stabile per Java 21; la 9.0.0 cambia solo Java (25) e resta
+      su Spring Boot 3.5. Spring Boot 4 arriverà con Activiti 9.1, oggi ancora in alpha.
     -->
     <activiti.version>8.8.1</activiti.version>
     <!-- correzioni di sicurezza più recenti di quelle comprese in Spring Boot (vedi analisi del codice) -->
     <tomcat.version>10.1.62</tomcat.version>
     <postgresql.version>42.7.14</postgresql.version>
+    <!-- ultime versioni compatibili con Spring Boot 3.5 (correzioni di sicurezza) -->
+    <jackson-bom.version>2.21.8</jackson-bom.version>
+    <commons-lang3.version>3.22.0</commons-lang3.version>
+    <log4j2.version>2.26.1</log4j2.version>
   </properties>
 
   <dependencyManagement>
@@ -82,6 +87,16 @@
     <dependency>
       <groupId>org.activiti</groupId>
       <artifactId>activiti-spring-boot-starter</artifactId>
+      <exclusions>
+        <!--
+          Activiti porta la vecchia implementazione della posta (com.sun.mail 2.0.1, vulnerabile a SMTP injection):
+          la sostituisce quella aggiornata di Spring Boot (Eclipse Angus), stessa API jakarta.mail.
+        -->
+        <exclusion>
+          <groupId>com.sun.mail</groupId>
+          <artifactId>jakarta.mail</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>

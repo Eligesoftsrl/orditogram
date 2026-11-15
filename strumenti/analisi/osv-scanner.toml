@@ -1,0 +1,15 @@
+# Avvisi di OSV-Scanner verificati e non applicabili a Orditogram, ciascuno con il motivo e una data
+# entro cui ricontrollarlo. Ogni voce nuova va motivata qui: il file si allega ai rapporti per le gare.
+
+# Spring Framework 6.2.19 è l'ultima versione della linea 6.2, l'unica compatibile con Activiti 8.8.1
+# (Spring Boot 3.5). La correzione è solo in Spring Framework 7, che arriverà con Activiti 9.1 e Spring Boot 4.
+
+[[IgnoredVulns]]
+id = "GHSA-pc63-qcmh-9cmg"
+ignoreUntil = 2027-03-31
+reason = "XsltView di Spring MVC: Orditogram non usa viste XSLT (nessuna XsltView né XsltViewResolver nel codice)."
+
+[[IgnoredVulns]]
+id = "GHSA-j9f9-w8pj-32f8"
+ignoreUntil = 2027-03-31
+reason = "Server Sent Events con frammenti di vista in Spring MVC: Orditogram non usa SseEmitter né il rendering di frammenti."

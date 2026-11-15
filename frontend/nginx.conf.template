@@ -1,4 +1,7 @@
-# Orditogram: l'applicazione React e, sullo stesso indirizzo, il backend (nessun CORS da configurare)
+# Orditogram: l'applicazione React e, sullo stesso indirizzo, il backend (nessun CORS da configurare).
+# Modello: all'avvio nginx sostituisce ${ORDITOGRAM_INDIRIZZO} con l'indirizzo pubblico (es. orditogram.ente.it
+# oppure localhost:8081). Il backend riceve sempre quel nome, mai l'intestazione Host scelta da chi chiama:
+# così nessuno può far costruire al backend link o redirect di accesso verso un altro sito.
 server {
     listen 80;
     server_name _;
@@ -14,8 +17,8 @@ server {
 
     location ~ ^/(api|oauth2|login/oauth2|actuator)(/|$) {
         proxy_pass http://backend:8080;
-        proxy_set_header Host $http_host;
-        proxy_set_header X-Forwarded-Host $http_host;
+        proxy_set_header Host ${ORDITOGRAM_INDIRIZZO};
+        proxy_set_header X-Forwarded-Host ${ORDITOGRAM_INDIRIZZO};
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_read_timeout 300s;
