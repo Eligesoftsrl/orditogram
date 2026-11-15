@@ -64,16 +64,21 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Versione
         id: v
-        run: echo "tag=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        # sui tag "v1.2.3" la versione, altrimenti "prova" (immagini costruite ma non pubblicate);
+        # il nome del registry vuole il proprietario in minuscolo
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then echo "tag=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else echo "tag=prova" >> "$GITHUB_OUTPUT"; fi
+          echo "proprietario=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
       - name: Immagine backend
         uses: docker/build-push-action@v6
         with:
           context: backend
           push: ${{ startsWith(github.ref, 'refs/tags/v') }}
-          tags: ghcr.io/${{ github.repository_owner }}/orditogram-backend:${{ steps.v.outputs.tag }}
+          tags: ghcr.io/${{ steps.v.outputs.proprietario }}/orditogram-backend:${{ steps.v.outputs.tag }}
       - name: Immagine frontend
         uses: docker/build-push-action@v6
         with:
           context: frontend
           push: ${{ startsWith(github.ref, 'refs/tags/v') }}
-          tags: ghcr.io/${{ github.repository_owner }}/orditogram-frontend:${{ steps.v.outputs.tag }}
+          tags: ghcr.io/${{ steps.v.outputs.proprietario }}/orditogram-frontend:${{ steps.v.outputs.tag }}
