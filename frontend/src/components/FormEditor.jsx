@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  TextAlignStart, Braces, CalendarDays, ChevronDown, ChevronUp, CircleCheck, Copy, Hash, ListChecks,
+  TextAlignStart, Braces, CalendarDays, ChevronDown, ChevronUp, CircleCheck, Copy, Eye, Hash, Heading, ListChecks,
   Plus, Save, SquareCheck, Trash, Type, X
 } from 'lucide-react'
 import { api } from '../api.js'
 import { cx, quando } from '../lib/format.js'
 import DynamicForm from './DynamicForm.jsx'
+import { SEZIONE, condizione, descriviCondizione, eSezione, valoriPossibili } from '../lib/formCondizioni.js'
 import { Badge, Button, Caricamento, Errore, Pannello, Vuoto, useToast } from './ui.jsx'
 
 const TIPI = [
@@ -93,8 +94,10 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
   })
   const aggiungi = (tipo) => setForm(f => ({
     ...f,
-    fields: [...f.fields, { _id: Math.random(), _aperto: true, _nomeAuto: true, type: tipo, label: '', name: '',
-      ...(tipo === 'select' ? { options: ['Opzione 1', 'Opzione 2'] } : {}) }]
+    fields: [...f.fields, tipo === SEZIONE
+      ? { _id: Math.random(), _aperto: true, type: SEZIONE, label: '' }
+      : { _id: Math.random(), _aperto: true, _nomeAuto: true, type: tipo, label: '', name: '',
+          ...(tipo === 'select' ? { options: ['Opzione 1', 'Opzione 2'] } : {}) }]
   }))
 
   const salva = async () => {
@@ -131,7 +134,7 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
   const anteprima = useMemo(() => {
     if (!form) return null
     const esempi = {}
-    form.fields.filter(f => f.readonly).forEach(f => {
+    form.fields.filter(f => f.readonly && !eSezione(f)).forEach(f => {
       esempi[f.name] = f.type === 'checkbox' ? true : f.type === 'date' ? '2026-10-15' : (f.label ? `Esempio di ${f.label.toLowerCase()}` : 'Esempio')
     })
     return { def: pulisci(form), esempi }
@@ -200,10 +203,10 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
                       </div>
                     </Pannello>
 
-                    <Pannello titolo={`Campi (${form.fields.length})`} corpoClassName="space-y-2 p-3">
+                    <Pannello titolo={`Campi (${form.fields.filter(f => !eSezione(f)).length})`} corpoClassName="space-y-2 p-3">
                       {form.fields.length === 0 && <p className="px-2 py-3 text-sm text-grafite">Nessun campo. Aggiungine uno qui sotto.</p>}
                       {form.fields.map((f, i) => (
-                        <CampoEditor key={f._id} f={f} i={i} n={form.fields.length} catalogo={catalogo}
+                        <CampoEditor key={f._id} f={f} i={i} n={form.fields.length} catalogo={catalogo} campi={form.fields}
                                      onChange={p => aggiornaCampo(i, p)} onSu={() => sposta(i, -1)} onGiu={() => sposta(i, 1)}
                                      onTogli={() => togli(i)} onDuplica={() => duplica(i)} />
                       ))}
@@ -211,6 +214,7 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
                         <p className="mb-2 text-sm font-medium text-pino-800">Aggiungi un campo</p>
                         <div className="flex flex-wrap gap-2">
                           {TIPI.map(t => <Button key={t.id} misura="sm" icona={t.icona} onClick={() => aggiungi(t.id)}>{t.label}</Button>)}
+                          <Button misura="sm" variante="fantasma" icona={Heading} onClick={() => aggiungi(SEZIONE)}>Sezione</Button>
                         </div>
                       </div>
                     </Pannello>
@@ -236,6 +240,11 @@ function pulisci(form) {
     if (form[k] !== undefined && form[k] !== '' && form[k] !== false) out[k] = form[k]
   })
   out.fields = form.fields.map(f => {
+    if (eSezione(f)) {
+      const sez = { type: SEZIONE, label: f.label || '' }
+      if (f.help) sez.help = f.help
+      return sez
+    }
     const c = {}
     Object.entries(f).forEach(([k, v]) => {
       if (k.startsWith('_') || v === '' || v === undefined || v === false) return
@@ -249,9 +258,11 @@ function pulisci(form) {
   return out
 }
 
-function CampoEditor({ f, i, n, catalogo, onChange, onSu, onGiu, onTogli, onDuplica }) {
+function CampoEditor({ f, i, n, catalogo, campi, onChange, onSu, onGiu, onTogli, onDuplica }) {
   const [aperto, setAperto] = useState(!!f._aperto)
-  const Tipo = TIPI.find(t => t.id === (f.type || 'text'))
+  if (eSezione(f)) return <SezioneEditor {...{ f, i, n, onChange, onSu, onGiu, onTogli, aperto, setAperto }} />
+  const Tipo = TIPI.find(t => t.id === (f.type || 'text')) || TIPI[0]
+  const cond = condizione(f)
   const listId = `catalogo-${f._id}`
 
   const cambiaEtichetta = (label) => onChange(f._nomeAuto || !f.name ? { label, name: nomeDaEtichetta(label), _nomeAuto: true } : { label })
@@ -271,6 +282,7 @@ function CampoEditor({ f, i, n, catalogo, onChange, onSu, onGiu, onTogli, onDupl
           <span className="block truncate text-[15px] font-medium text-pino-900">{f.label || <span className="text-nebbia">Senza etichetta</span>}</span>
           <span className="block truncate text-xs text-grafite">
             {Tipo.label}{f.name ? `, ${f.name}` : ''}{f.required ? ', obbligatorio' : ''}{f.readonly ? ', sola lettura' : ''}
+            {cond ? `, ${descriviCondizione(cond, campi)}` : ''}
           </span>
         </button>
         <div className="flex items-center">
@@ -317,8 +329,94 @@ function CampoEditor({ f, i, n, catalogo, onChange, onSu, onGiu, onTogli, onDupl
             {!f.readonly && <Spunta checked={f.precompila === false} onChange={v => onChange({ precompila: v ? false : undefined })}>Non riproporre il valore precedente</Spunta>}
             {!f.readonly && f.type === 'text' && <Spunta checked={!!f.titolo} onChange={v => onChange({ titolo: v })}>Usa come titolo della pratica</Spunta>}
           </div>
+
+          <div className="sm:col-span-2">
+            <CondizioneEditor f={f} campi={campi} onChange={visibileSe => onChange({ visibileSe })} />
+          </div>
         </div>
       )}
+    </div>
+  )
+}
+
+/** Titolo e istruzioni di una sezione del form. */
+function SezioneEditor({ f, i, n, onChange, onSu, onGiu, onTogli, aperto, setAperto }) {
+  return (
+    <div className={cx('rounded-campo border border-dashed bg-carta/60', aperto ? 'border-pino-200' : 'border-linea')}>
+      <div className="flex items-center gap-2 px-3 py-2">
+        <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-white text-pino-700"><Heading className="size-4" /></span>
+        <button onClick={() => setAperto(!aperto)} className="min-w-0 flex-1 text-left">
+          <span className="block truncate font-display text-[15px] font-semibold text-pino-900">{f.label || <span className="text-nebbia">Sezione senza titolo</span>}</span>
+          <span className="block truncate text-xs text-grafite">Sezione: i campi seguenti, fino alla prossima sezione</span>
+        </button>
+        <div className="flex items-center">
+          <IconBtn label="Sposta su" disabled={i === 0} onClick={onSu}><ChevronUp className="size-4" /></IconBtn>
+          <IconBtn label="Sposta giù" disabled={i === n - 1} onClick={onGiu}><ChevronDown className="size-4" /></IconBtn>
+          <IconBtn label="Elimina" onClick={onTogli} pericolo><Trash className="size-4" /></IconBtn>
+        </div>
+      </div>
+      {aperto && (
+        <div className="grid gap-3 border-t border-linea px-3 py-3 sm:grid-cols-2">
+          <div>
+            <label className="etichetta">Titolo della sezione</label>
+            <input className="campo" autoFocus={!f.label} value={f.label || ''} onChange={e => onChange({ label: e.target.value })} placeholder="Es. Dati del richiedente" />
+          </div>
+          <div>
+            <label className="etichetta">Istruzioni</label>
+            <input className="campo" value={f.help || ''} onChange={e => onChange({ help: e.target.value })} placeholder="Facoltative" />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** "Mostra solo se": il campo compare quando un campo a scelta o sì/no ha uno dei valori indicati. */
+function CondizioneEditor({ f, campi, onChange }) {
+  const sorgenti = campi.filter(x => !eSezione(x) && x.name && x.name !== f.name && valoriPossibili(x).length > 0)
+  const cond = condizione(f)
+  const sorgente = cond && campi.find(x => x.name === cond.campo)
+  const possibili = valoriPossibili(sorgente)
+
+  if (!cond) {
+    if (sorgenti.length === 0) return null
+    return (
+      <button type="button" onClick={() => {
+        const s = sorgenti[0]
+        onChange({ campo: s.name, valori: [valoriPossibili(s)[0].valore] })
+      }} className="inline-flex items-center gap-1.5 text-sm font-medium text-verde-700 hover:underline">
+        <Eye className="size-4" /> Mostra solo se un'altra risposta ha un certo valore
+      </button>
+    )
+  }
+
+  const scegliValore = (v, si) => {
+    const valori = si ? [...cond.valori, v] : cond.valori.filter(x => x !== v)
+    onChange({ campo: cond.campo, valori })
+  }
+
+  return (
+    <div className="space-y-2 rounded-campo bg-carta px-3 py-3">
+      <div className="flex flex-wrap items-center gap-2 text-[15px]">
+        <Eye className="size-4 text-pino-700" />
+        <span>Mostra solo se</span>
+        <select className="campo h-9 w-auto" value={cond.campo} onChange={e => {
+          const s = campi.find(x => x.name === e.target.value)
+          onChange({ campo: e.target.value, valori: [valoriPossibili(s)[0]?.valore].filter(Boolean) })
+        }}>
+          {!sorgenti.some(s => s.name === cond.campo) && <option value={cond.campo}>{cond.campo} (non trovato)</option>}
+          {sorgenti.map(s => <option key={s.name} value={s.name}>{s.label || s.name}</option>)}
+        </select>
+        <span>è</span>
+        <button type="button" onClick={() => onChange(undefined)} className="ml-auto text-sm text-grafite hover:text-mattone-600">Togli condizione</button>
+      </div>
+      <div className="flex flex-wrap gap-x-5 gap-y-2">
+        {possibili.map(p => (
+          <Spunta key={p.valore} checked={cond.valori.includes(p.valore)} onChange={si => scegliValore(p.valore, si)}>{p.etichetta}</Spunta>
+        ))}
+      </div>
+      {cond.valori.length === 0 && <p className="text-[13px] text-mattone-600">Scegli almeno un valore.</p>}
+      {f.required && <p className="text-[13px] text-grafite">Il campo è obbligatorio solo quando è visibile.</p>}
     </div>
   )
 }

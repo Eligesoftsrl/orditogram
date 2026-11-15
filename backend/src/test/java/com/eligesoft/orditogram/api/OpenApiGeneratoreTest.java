@@ -47,6 +47,21 @@ class OpenApiGeneratoreTest {
     }
 
     @Test
+    void campoCondizionaleNonObbligatorioNelloSchema() {
+        ValoriForm.Campo copie = new ValoriForm.Campo("numeroCopie", "Numero di copie", "number", true, List.of(), null,
+            new ValoriForm.Condizione("tipoAccesso", List.of("Copia")));
+        Map<String, Object> s = OpenApiGeneratore.schemaCampo(copie);
+        assertEquals("Si usa solo se tipoAccesso vale Copia, e in quel caso è obbligatorio; altrimenti il valore viene ignorato.",
+            s.get("description"));
+        ProcessoPubblicato p = accessoAtti();
+        List<ValoriForm.Campo> campi = new java.util.ArrayList<>(p.campi());
+        campi.add(copie);
+        ProcessoPubblicato conCopie = new ProcessoPubblicato(p.chiave(), p.nome(), p.descrizione(), p.versione(), p.definizioneId(),
+            p.titoloForm(), campi, p.allegati(), p.messaggi());
+        assertEquals(List.of("oggetto", "emailRichiedente", "tipoAccesso", "privacy"), OpenApiGeneratore.schemaDati(conCopie).get("required"));
+    }
+
+    @Test
     void messaggiEWebhookDocumentati() {
         Map<String, Object> doc = OpenApiGeneratore.genera(List.of(accessoAtti()), "http://localhost:8080", "sviluppo", "Comune di Prova");
         Map<String, Object> paths = (Map<String, Object>) doc.get("paths");

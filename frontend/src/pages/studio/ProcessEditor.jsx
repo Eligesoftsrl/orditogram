@@ -80,7 +80,7 @@ export default function ProcessEditor() {
     for (const k of chiavi) {
       if (!(k in cacheForm.current)) cacheForm.current[k] = await api.form(k).catch(() => null)
       ;(cacheForm.current[k]?.fields || []).forEach(f => {
-        if (visti.has(f.name)) return
+        if (!f.name || visti.has(f.name)) return
         visti.add(f.name)
         campi.push({ name: f.name, label: f.label || f.name, type: f.type || 'text', options: f.options, origine: k })
       })

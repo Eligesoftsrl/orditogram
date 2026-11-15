@@ -3,6 +3,16 @@
 Le versioni seguono il formato MAGGIORE.MINORE.CORREZIONE: cambia la MINORE per funzioni nuove compatibili,
 la MAGGIORE quando un aggiornamento richiede interventi (indicati qui sotto).
 
+## 0.12.0 (in preparazione)
+
+Form avanzati, prima parte.
+
+- **Sezioni**: i form si dividono in parti con titolo e istruzioni (`{ "type": "sezione", "label" }`).
+- **Campi condizionali**: *Mostra solo se* fa comparire un campo solo quando un campo a scelta o sì/no ha certi
+  valori (`visibileSe`). I campi nascosti non sono obbligatori e i loro valori non si salvano, sia
+  dall'interfaccia sia dall'API pubblica; l'OpenAPI generata lo documenta.
+- Lo Studio controlla le condizioni al salvataggio del form (campo esistente, almeno un valore).
+
 ## 0.11.0 (novembre 2026)
 
 Il prodotto si chiama **Orditogram**.
