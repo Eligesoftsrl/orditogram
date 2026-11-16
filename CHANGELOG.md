@@ -47,8 +47,18 @@ Form avanzati, prima parte.
 - **Analisi del codice bloccante**: le soglie fermano la CI. Le due vulnerabilità di Spring MVC ancora aperte
   (XsltView, Server Sent Events) non toccano Orditogram: sono motivate in `strumenti/analisi/osv-scanner.toml`.
 
+- **Migrazioni del database con Flyway**: le tabelle di Orditogram si creano e si aggiornano con script versionati
+  (`db/migration`), gli stessi in produzione e nei test; Hibernate controlla soltanto che lo schema corrisponda
+  (`ddl-auto: validate`). Il vincolo sui tipi di evento dello storico si toglie con una migrazione, al posto della
+  classe `SchemaCompatibilita`.
+
 **Aggiornamento**: impostare `ORDITOGRAM_INDIRIZZO` nel file `.env` (es. `orditogram.ente.it`). Chi chiama l'API interna (`/api`, non `/api/v1`) da un browser o da uno script che manda
 cookie o `Origin` deve aggiungere l'intestazione `X-Requested-With: XMLHttpRequest`, come già fa l'interfaccia.
+
+Database: chi arriva da una versione precedente alla 0.12 avvii una volta la 0.12 prima di aggiornare, così le
+tabelle sono complete; da qui in poi gli aggiornamenti dello schema li applica Flyway da solo all'avvio. Prima di
+aggiornare conviene comunque un backup (`strumenti/backup.sh`).
+
 
 ## 0.11.0 (novembre 2026)
 

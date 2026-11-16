@@ -41,7 +41,7 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
 | `registro` | registro delle azioni di amministrazione e accessi negati |
 | `api` | **API pubblica `/api/v1`** con chiavi, OpenAPI generata dai processi, Studio → Integrazioni |
 | `webhook` | avvisi firmati verso sistemi esterni: coda nel DB, invio con ripetizioni |
-| `config` | cifratura dei segreti, pianificazione, compatibilità dello schema |
+| `config` | cifratura dei segreti, pianificazione |
 
 ### Concetti chiave
 - **Pratica** = istanza di processo Activiti. Titolo da un campo del form marcato `titolo`.
@@ -81,7 +81,9 @@ laura, paolo, chiara, giulia: password `password`.
 - Ogni nuova funzione: test (JUnit 5 nel backend, Vitest nel frontend), voce nel `CHANGELOG.md`, sezione nel `README.md`.
 - Le azioni di amministrazione vanno nel registro (`RegistroService.registra`).
 - Errori dell'API pubblica sempre `{"errore": {"codice", "messaggio", "campi"}}`, codici stabili.
-- Gli stati salvati nel DB come testo, non enum Hibernate (i vincoli CHECK non si aggiornano: vedi `SchemaCompatibilita`).
+- Gli stati salvati nel DB come testo, non enum Hibernate (i vincoli CHECK non si aggiornano: vedi la migrazione V2).
+- Schema del DB solo con migrazioni Flyway (`backend/src/main/resources/db/migration`, `V<n>__descrizione.sql`), SQL
+  valido su PostgreSQL e H2; `ddl-auto: validate`. Mai modificare una migrazione già rilasciata.
 - Versioni MAGGIORE.MINORE.CORREZIONE in `backend/pom.xml` e `frontend/package.json`, allineate.
 
 ## Insidie già incontrate

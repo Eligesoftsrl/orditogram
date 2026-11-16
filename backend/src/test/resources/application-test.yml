@@ -6,7 +6,7 @@ spring:
     password: ""
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate              # come in produzione: tabelle create dalle migrazioni Flyway
   activiti:
     async-executor-activate: false
 

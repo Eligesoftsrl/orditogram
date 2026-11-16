@@ -126,6 +126,16 @@
       <artifactId>postgresql</artifactId>
       <scope>runtime</scope>
     </dependency>
+    <!-- Migrazioni dello schema delle tabelle di Orditogram (src/main/resources/db/migration) -->
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-database-postgresql</artifactId>
+      <scope>runtime</scope>
+    </dependency>
     <!-- Notifiche via email (attive solo se configuri spring.mail.host) -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
