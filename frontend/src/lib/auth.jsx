@@ -44,7 +44,16 @@ export function AuthProvider({ children }) {
     }
   }
 
-  return <AuthContext.Provider value={{ me, modo, pronto, login, logout }}>{children}</AuthContext.Provider>
+  /** Cambia la propria password (login locale) e continua con la nuova, senza rifare l'accesso. */
+  const cambiaPassword = async (attuale, nuova) => {
+    await api.cambiaPassword(attuale, nuova)
+    setCredentials(me.username, nuova)
+    setMe(await api.me())
+  }
+
+  const ricarica = async () => setMe(await api.me())
+
+  return <AuthContext.Provider value={{ me, modo, pronto, login, logout, cambiaPassword, ricarica }}>{children}</AuthContext.Provider>
 }
 
 export const useAuth = () => useContext(AuthContext)

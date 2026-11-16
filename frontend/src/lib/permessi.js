@@ -35,7 +35,7 @@ export const sezioniStudio = (me) => SEZIONI_STUDIO.filter(s => puo(me, ...s.per
 
 /** Come presentare l'utente sotto il nome: amministratore, i suoi ruoli o i suoi gruppi. */
 export function descriviUtente(me) {
-  if (me?.esterno) return 'Utente esterno'
+  if (me?.esterno) return me.referenteDi?.length ? `Referente, ${me.referenteDi.map(o => o.nome).join(', ')}` : 'Utente esterno'
   if (me?.admin) return 'Amministratore'
   const ruoli = (me?.ruoli || []).map(r => r.nome)
   if (ruoli.length) return ruoli.join(', ')

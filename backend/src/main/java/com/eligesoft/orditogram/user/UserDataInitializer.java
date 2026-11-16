@@ -16,7 +16,7 @@ import java.util.Set;
  * All'avvio:
  *  - se non esiste nessun utente crea l'amministratore (admin / admin)
  *  - con app.demo.utenti=true crea anche gli utenti di esempio mancanti (password: "password"), compresi due utenti
- *    esterni: marco (cittadino) ed elena (Studio legale Bianchi, organizzazione esterna)
+ *    esterni: marco (cittadino) ed elena (referente dello Studio legale Bianchi, organizzazione esterna)
  */
 @Component
 public class UserDataInitializer implements CommandLineRunner {
@@ -24,18 +24,21 @@ public class UserDataInitializer implements CommandLineRunner {
     private final AppUserRepository repo;
     private final RuoloRepository ruoli;
     private final OrganizzazioneRepository organizzazioni;
+    private final com.eligesoft.orditogram.accesso.OrganizzazioneReferenteRepository referenti;
     private final PasswordEncoder encoder;
     private final boolean demo;
     private final Set<String> creati = new HashSet<>();
     private final String passwordAdmin;
 
     public UserDataInitializer(AppUserRepository repo, RuoloRepository ruoli, OrganizzazioneRepository organizzazioni,
+                               com.eligesoft.orditogram.accesso.OrganizzazioneReferenteRepository referenti,
                                PasswordEncoder encoder,
                                @Value("${app.demo.utenti:false}") boolean demo,
                                @Value("${app.admin.password-iniziale:admin}") String passwordAdmin) {
         this.repo = repo;
         this.ruoli = ruoli;
         this.organizzazioni = organizzazioni;
+        this.referenti = referenti;
         this.encoder = encoder;
         this.demo = demo;
         this.passwordAdmin = passwordAdmin;
@@ -70,6 +73,11 @@ public class UserDataInitializer implements CommandLineRunner {
             o.setTipo(Organizzazione.ESTERNA);
             return organizzazioni.save(o);
         }));
+        // elena è la referente dello studio: gestisce da sola i colleghi (portale → La mia organizzazione)
+        repo.findByUsername("elena").filter(AppUser::isEsterno).ifPresent(elena ->
+            organizzazioni.findByCodice("studio-bianchi")
+                .filter(o -> elena.getOrganizzazioni().contains(o.getId()) && referenti.countByOrganizzazioneId(o.getId()) == 0)
+                .ifPresent(o -> referenti.save(new com.eligesoft.orditogram.accesso.OrganizzazioneReferente(o.getId(), elena.getId(), null))));
     }
 
     private void esterno(String username, Organizzazione org) {

@@ -20,6 +20,8 @@ import java.util.List;
  * le API del portale elencate qui. Tutto il resto (amministrazione, diagrammi, anagrafiche, messaggi, pratiche
  * collegate) risponde 403, anche se un domani si aggiunge un'API e ci si dimentica di proteggerla.
  * Il tipo dell'utente si legge dal database a ogni richiesta, come i permessi.
+ * Chi ha una password temporanea (interno o esterno) può solo cambiarla: lo si controlla qui per le richieste
+ * del portale; le sezioni di amministrazione chiedono permessi che un utente così non ha (vedi ReferentiService).
  */
 @Component
 public class AccessoEsterni {
@@ -49,7 +51,17 @@ public class AccessoEsterni {
         P.matcher(HttpMethod.POST, "/api/pratiche/*/documenti"),
         P.matcher(HttpMethod.POST, "/api/documenti/*/versioni"),
         P.matcher(HttpMethod.GET, "/api/documenti/versioni/*/file"),
-        P.matcher(HttpMethod.GET, "/api/documenti/versioni/*/contenuto"));
+        P.matcher(HttpMethod.GET, "/api/documenti/versioni/*/contenuto"),
+        // cambio della propria password e, per i referenti, la propria organizzazione (controlli nel servizio)
+        P.matcher(HttpMethod.POST, "/api/me/password"),
+        P.matcher("/api/organizzazione/**"));
+
+    /** Con una password temporanea (data da altri) si può solo vedere chi si è e cambiarla. */
+    static final List<RequestMatcher> CON_PASSWORD_TEMPORANEA = List.of(
+        P.matcher(HttpMethod.GET, "/api/me"),
+        P.matcher(HttpMethod.GET, "/api/info"),
+        P.matcher("/api/auth/**"),
+        P.matcher(HttpMethod.POST, "/api/me/password"));
 
     private final AppUserRepository utenti;
 
@@ -63,8 +75,11 @@ public class AccessoEsterni {
             Authentication a = autenticazione.get();
             if (a == null || !a.isAuthenticated() || a instanceof AnonymousAuthenticationToken)
                 return new AuthorizationDecision(false);
-            boolean esterno = utenti.findByUsername(a.getName()).map(AppUser::isEsterno).orElse(false);
-            return new AuthorizationDecision(!esterno || consentita(contesto.getRequest()));
+            AppUser u = utenti.findByUsername(a.getName()).orElse(null);
+            if (u == null) return new AuthorizationDecision(true);  // es. sistemi senza utente nel database
+            HttpServletRequest req = contesto.getRequest();
+            if (u.isPasswordTemporanea()) return new AuthorizationDecision(CON_PASSWORD_TEMPORANEA.stream().anyMatch(m -> m.matches(req)));
+            return new AuthorizationDecision(!u.isEsterno() || consentita(req));
         };
     }
 

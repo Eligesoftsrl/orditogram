@@ -26,11 +26,15 @@ import Strutture from './pages/studio/Strutture.jsx'
 import Organizzazioni from './pages/studio/Organizzazioni.jsx'
 import { PERMESSI, puo } from './lib/permessi.js'
 import ProcessEditor from './pages/studio/ProcessEditor.jsx'
+import CambioPassword from './pages/CambioPassword.jsx'
+import MiaOrganizzazione from './pages/MiaOrganizzazione.jsx'
 
 function App() {
   const { me, pronto } = useAuth()
   if (!pronto) return <Caricamento testo="Apertura di Orditogram…" />
   if (!me) return <Login />
+  // password temporanea (data dal referente): prima di tutto va cambiata
+  if (me.passwordDaCambiare) return <CambioPassword obbligatorio />
   return (
     <Routes>
       <Route element={<Shell />}>
@@ -38,6 +42,8 @@ function App() {
         <Route path="pratiche" element={<Pratiche />} />
         <Route path="pratiche/:id" element={<PraticaPage />} />
         <Route path="attivita/:id" element={<TaskPage />} />
+        <Route path="password" element={<CambioPassword />} />
+        {me.referenteDi?.length > 0 && <Route path="organizzazione" element={<MiaOrganizzazione />} />}
         {puo(me, PERMESSI.processi) && <>
           <Route path="studio/processi" element={<Processi />} />
           <Route path="studio/editor/:chiave" element={<ProcessEditor />} />
