@@ -69,11 +69,13 @@ class MigrazioniDatabaseTest {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS "
             + "WHERE LOWER(TABLE_NAME) = 'app_user' AND LOWER(COLUMN_NAME) = 'admin'", Integer.class)).isZero();
         assertThat(jdbc.queryForList("SELECT permesso FROM ruolo_permesso rp JOIN ruolo r ON r.id = rp.ruolo_id "
-            + "WHERE r.codice = 'analista' ORDER BY permesso", String.class)).containsExactly("integrazioni.gestisci", "studio.form", "studio.processi", "studio.pubblica");
+            + "WHERE r.codice = 'analista' ORDER BY permesso", String.class)).containsExactly("anagrafiche.definisci", "integrazioni.gestisci", "studio.form", "studio.processi", "studio.pubblica");
         // V5: utenti esistenti interni, il gestore utenti gestisce anche le organizzazioni esterne
         assertThat(jdbc.queryForList("SELECT DISTINCT tipo FROM app_user", String.class)).containsExactly("INTERNO");
         assertThat(jdbc.queryForList("SELECT permesso FROM ruolo_permesso rp JOIN ruolo r ON r.id = rp.ruolo_id "
             + "WHERE r.codice = 'gestore-utenti' ORDER BY permesso", String.class)).containsExactly("organizzazioni.gestisci", "utenti.gestisci");
+        // V7: anagrafiche vuote, pronte all'uso
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM anagrafica_scheda", Integer.class)).isZero();
         // V2 ha tolto il vincolo che rifiutava i tipi di evento nuovi
         jdbc.update("INSERT INTO pratica_evento (process_instance_id, quando, tipo) VALUES ('1', CURRENT_TIMESTAMP, 'EMAIL')");
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM pratica_evento", Integer.class)).isEqualTo(1);

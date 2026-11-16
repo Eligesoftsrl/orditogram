@@ -5,6 +5,7 @@ export const PERMESSI = {
   processi: 'studio.processi',
   pubblica: 'studio.pubblica',
   form: 'studio.form',
+  anagrafiche: 'anagrafiche.definisci',
   integrazioni: 'integrazioni.gestisci',
   utenti: 'utenti.gestisci',
   organizzazioni: 'organizzazioni.gestisci',

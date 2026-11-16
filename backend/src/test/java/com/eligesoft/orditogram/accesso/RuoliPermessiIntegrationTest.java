@@ -92,7 +92,7 @@ class RuoliPermessiIntegrationTest {
         assertThat(stato("mario", HttpMethod.GET, "/api/admin/forms", null)).isEqualTo(HttpStatus.FORBIDDEN);
 
         Map<String, Object> paolo = come("paolo").exchange("/api/me", HttpMethod.GET, new HttpEntity<>(xhr()), MAPPA).getBody();
-        assertThat((List<String>) paolo.get("permessi")).containsExactlyInAnyOrder("studio.processi", "studio.form", "studio.pubblica", "integrazioni.gestisci");
+        assertThat((List<String>) paolo.get("permessi")).containsExactlyInAnyOrder("studio.processi", "studio.form", "studio.pubblica", "integrazioni.gestisci", "anagrafiche.definisci");
         assertThat(paolo.get("admin")).isEqualTo(false);
         Map<String, Object> admin = come("admin").exchange("/api/me", HttpMethod.GET, new HttpEntity<>(xhr()), MAPPA).getBody();
         assertThat(admin.get("admin")).isEqualTo(true);

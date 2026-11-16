@@ -13,6 +13,8 @@ public enum Permesso {
     STUDIO_PUBBLICA("studio.pubblica", "Pubblicazione",
         "Mettere in produzione i processi (senza, si preparano solo le bozze)"),
     STUDIO_FORM("studio.form", "Form", "Creare e modificare i form"),
+    ANAGRAFICHE_DEFINISCI("anagrafiche.definisci", "Anagrafiche",
+        "Definire i tipi di anagrafica (campi, chiavi, relazioni) e chi può vederne o modificarne le schede"),
     INTEGRAZIONI("integrazioni.gestisci", "Integrazioni", "Chiavi API e webhook per i sistemi esterni"),
     UTENTI("utenti.gestisci", "Utenti e ruoli", "Creare utenti, assegnare gruppi e ruoli"),
     ORGANIZZAZIONI("organizzazioni.gestisci", "Organizzazioni",

@@ -39,6 +39,7 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
 | `calendario` | giorni lavorativi e festività (calendari Activiti "lavorativi" e "proroga") |
 | `auth`, `user` | utenti locali, OIDC (Keycloak, Entra ID), utente corrente |
 | `accesso` | ruoli e permessi applicativi (`Permesso`, `Ruolo`, `PermessiService`), regole anti-escalation, permessi per processo (`PermessoProcesso`: AVVIA, VEDE con ambito, ESPORTA), strutture (`Organizzazione` in albero), organizzazioni esterne, utenti esterni (`AccessoEsterni`: solo API del portale), parti della pratica (`PartiService`, `AscoltatoreParti`) |
+| `anagrafica` | anagrafiche configurabili: tipi definiti dall'analista (`DefinizioneAnagrafica`, formato dei form + chiave, cercabile, relazioni), schede con indice, versioni e cessazione, permessi per tipo (`AccessoAnagrafiche`, unico punto di controllo) |
 | `registro` | registro delle azioni di amministrazione e accessi negati |
 | `api` | **API pubblica `/api/v1`** con chiavi, OpenAPI generata dai processi, Studio → Integrazioni |
 | `webhook` | avvisi firmati verso sistemi esterni: coda nel DB, invio con ripetizioni |
@@ -68,6 +69,10 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
   (`gruppiEffettivi()`), solo le richieste elencate in `accesso/AccessoEsterni` (una API nuova del portale va
   aggiunta lì). Parti: `pratica_parte` + variabile `parte_<ruolo>` = `org:<id>`/`utente:<username>`, risolta da
   `AscoltatoreParti` sulle attività `candidateGroups="parte:<ruolo>"`. L'avvio passa da `RuntimeService` dopo `canStart` (regole AVVIA o BPMN).
+- **Anagrafiche**: `anagrafica_tipo` (definizione JSON), `anagrafica_scheda` (dati JSON, stato ATTIVA/CESSATA,
+  `@Version`), `anagrafica_indice` (valori normalizzati di chiavi, ricercabili e relazioni; UNIQUE su chiave),
+  `anagrafica_versione`, `permesso_anagrafica`. Ogni accesso alle schede passa da `SchedeService` →
+  `AccessoAnagrafiche`; tipo o scheda non visibile = 404. Validazione con `ValoriForm.convalida`, tipo campo `anagrafica`.
 - **Storico → eventi**: `StoricoService.registra` pubblica `EventoStorico`; i webhook lo ascoltano nella stessa transazione.
 
 ## Come si lavora

@@ -75,7 +75,14 @@ public final class ValoriForm {
      */
     public static final String ORGANIZZAZIONE = "organizzazione";
 
-    public static final Set<String> TIPI = Set.of("text", "textarea", "number", "date", "select", "checkbox", TABELLA, ORGANIZZAZIONE);
+    /**
+     * Campo che sceglie una scheda di un'anagrafica (anagrafica/DefinizioneAnagrafica): "tipoAnagrafica" è il codice
+     * del tipo, il valore è l'id della scheda come testo. Chi lo usa controlla che la scheda esista e sia visibile.
+     */
+    public static final String ANAGRAFICA = "anagrafica";
+
+    public static final Set<String> TIPI = Set.of("text", "textarea", "number", "date", "select", "checkbox", TABELLA,
+        ORGANIZZAZIONE, ANAGRAFICA);
 
     /** Campi che si possono compilare (esclusi quelli in sola lettura), nell'ordine del form. */
     public static List<Campo> campi(JsonNode form) {
@@ -423,6 +430,11 @@ public final class ValoriForm {
             case ORGANIZZAZIONE -> {
                 String s = v instanceof Number ? v.toString() : v instanceof String x ? x.trim() : "";
                 if (!s.matches("\\d{1,18}")) throw new IllegalArgumentException("deve essere l'id di un'organizzazione (un numero)");
+                return s;
+            }
+            case ANAGRAFICA -> {
+                String s = v instanceof Number ? v.toString() : v instanceof String x ? x.trim() : "";
+                if (!s.matches("[1-9]\\d{0,17}")) throw new IllegalArgumentException("deve essere l'id di una scheda (un numero)");
                 return s;
             }
             case "select" -> {

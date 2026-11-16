@@ -191,6 +191,48 @@ Esempio completo: `esempi/reclamo-controparte` (il cittadino `marco` presenta un
 la controparte, `elena` dello Studio legale Bianchi risponde). Con `app.demo.utenti` gli utenti di prova esterni
 e l'organizzazione ci sono già.
 
+## Anagrafiche configurabili (Studio → Anagrafiche)
+
+Le anagrafiche sono gli archivi di dati stabili che le pratiche usano: fondi, società, fornitori, immobili, soggetti
+vigilati. L'analista ne definisce i **tipi** e il personale autorizzato ne gestisce le **schede**. Per ora c'è il
+backend (API); interfaccia, collegamento alle pratiche e API pubblica arrivano nelle prossime versioni.
+
+**Definizione** (`/api/admin/anagrafiche`, permesso `anagrafiche.definisci`, dato anche all'Analista): codice
+stabile (`fondi`), nome e campi nello **stesso formato dei form** (sezioni, tabelle, campi condizionali, regole e
+formati), con in più:
+- `"chiave": true`: il valore identifica la scheda (es. partita IVA); due schede dello stesso tipo non possono
+  averlo uguale, senza contare maiuscole e spazi;
+- `"cercabile": true`: il valore si trova con la ricerca, oltre al titolo;
+- `"type": "anagrafica", "tipoAnagrafica": "societa"`: relazione con una scheda di un'altra anagrafica (o della stessa);
+- `"titolo": true` dà il nome alla scheda; `"ruoliVisibili"` riserva un campo a chi ha certi ruoli.
+
+Quando cambiano i campi chiave o ricercabili, l'indice si ricostruisce subito; se un nuovo campo chiave ha valori
+ripetuti, la modifica è rifiutata. Ogni modifica della definizione aumenta la versione del tipo e va nel registro.
+Un tipo si elimina solo se non ha schede e nessun altro lo collega: altrimenti si disattiva.
+
+**Chi vede e modifica le schede** (`/api/admin/anagrafiche/{codice}/permessi`): regole *vede*, *modifica* (comprende
+vede) ed *esporta*, per gruppi (anche del provider di accesso) o ruoli. Senza regole solo l'amministratore vede le
+schede, e il permesso di definire i tipi non dà accesso ai dati. Gli utenti esterni non accedono alle anagrafiche.
+Un tipo o una scheda che l'utente non può vedere risponde "non trovata", come se non esistesse.
+
+**Schede** (`/api/anagrafiche`):
+```
+GET  /api/anagrafiche                                  tipi che posso usare, con le mie azioni
+GET  /api/anagrafiche/fondi/schede?testo=&stato=&pagina=&dimensione=   ricerca nel titolo e nei campi ricercabili
+GET  /api/anagrafiche/fondi/schede?campo=codice&valore=F1              valore esatto di un campo chiave o relazione
+POST /api/anagrafiche/fondi/schede            { "dati": { ... } }
+GET  /api/anagrafiche/fondi/schede/{id}       dati, schede collegate e schede che la citano
+PUT  /api/anagrafiche/fondi/schede/{id}       { "versione": 3, "dati": { ... }, "nota": "..." }
+POST /api/anagrafiche/fondi/schede/{id}/cessa      { "versione": 4, "nota": "motivo" }   (e /riattiva)
+GET  /api/anagrafiche/fondi/schede/{id}/versioni
+```
+I dati passano dalle stesse regole dei form; gli errori arrivano tutti insieme, campo per campo
+(`{ "message", "campi": [ { "campo", "messaggio" } ] }`). La `versione` è quella letta: se nel frattempo qualcuno ha
+modificato la scheda, la risposta è 409 e si ricarica. Una relazione punta solo a schede attive di un tipo che chi
+scrive può vedere. I campi riservati non si vedono (neanche nelle versioni) e non si cambiano: chi non li vede
+modifica il resto e i loro valori restano. Le schede non si cancellano: si **cessano** (con una nota) e si possono
+riattivare.
+
 ## Backup e ripristino
 
 `strumenti/backup.sh` salva database e documenti in una cartella datata (con Docker Compose o, con `MODO=locale`,
