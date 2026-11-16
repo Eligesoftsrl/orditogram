@@ -1,0 +1,14 @@
+{
+  "title": "Istruttoria",
+  "description": "Indica l'organizzazione a cui chiedere una risposta: i suoi utenti vedranno il reclamo e potranno rispondere.",
+  "submitLabel": "Chiedi la risposta",
+  "documenti": "modifica",
+  "fields": [
+    { "name": "oggetto", "label": "Oggetto", "type": "text", "readonly": true },
+    { "name": "descrizione", "label": "Descrizione del problema", "type": "textarea", "readonly": true },
+    { "name": "controparte", "label": "Organizzazione interessata", "type": "organizzazione", "parte": "controparte", "required": true },
+    { "name": "valutazione", "label": "Valutazione interna", "type": "textarea", "ruoliVisibili": ["auditor"],
+      "help": "Nella scheda della pratica la vedono solo gli auditor (e chi la compila)." },
+    { "name": "domanda", "label": "Cosa chiedere alla controparte", "type": "textarea", "required": true, "visibileAlleParti": true }
+  ]
+}

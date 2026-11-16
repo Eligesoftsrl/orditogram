@@ -47,10 +47,18 @@ public class DocumentoService {
 
     // ------------------------------------------------------------ scrittura
 
-    /** Nuovo documento (versione 1). */
+    /** Nuovo documento (versione 1); visibile alle parti se lo carica un utente esterno. */
     @Transactional
     public DocumentoVersione aggiungi(String processInstanceId, MultipartFile file, String nota, String fase) {
+        return aggiungi(processInstanceId, file, nota, fase, currentUser.esterno());
+    }
+
+    /** Nuovo documento (versione 1). perLeParti: lo vedono anche gli utenti esterni che vedono la pratica. */
+    @Transactional
+    public DocumentoVersione aggiungi(String processInstanceId, MultipartFile file, String nota, String fase,
+                                      boolean perLeParti) {
         Documento d = new Documento();
+        d.setVisibilita(perLeParti || currentUser.esterno() ? Documento.PARTI : Documento.INTERNA);
         d.setProcessInstanceId(processInstanceId);
         d.setNome(nomeFile(file));
         d.setCreatoDa(currentUser.username());
@@ -116,15 +124,40 @@ public class DocumentoService {
 
     // ------------------------------------------------------------ lettura
 
+    /** Rende un documento visibile alle parti, o di nuovo solo interno, e lo annota nello storico. */
+    @Transactional
+    public void cambiaVisibilita(Long documentoId, boolean perLeParti) {
+        Documento d = documento(documentoId);
+        String nuova = perLeParti ? Documento.PARTI : Documento.INTERNA;
+        if (nuova.equals(d.getVisibilita())) return;
+        d.setVisibilita(nuova);
+        documenti.save(d);
+        storico.registra(d.getProcessInstanceId(), PraticaEvento.Tipo.DOCUMENTO,
+            (perLeParti ? "Documento visibile alle parti: " : "Documento solo interno: ") + d.getNome(), null);
+    }
+
     @Transactional(readOnly = true)
     public List<Map<String, Object>> elenco(String processInstanceId) {
+        return elenco(processInstanceId, false);
+    }
+
+    /** I documenti della pratica; soloParti: solo quelli visibili agli utenti esterni. */
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> elenco(String processInstanceId, boolean soloParti) {
         List<Map<String, Object>> out = new ArrayList<>();
         for (Documento d : documenti.findByProcessInstanceIdOrderByIdAsc(processInstanceId)) {
+            if (soloParti && !d.visibileAlleParti()) continue;
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("id", d.getId());
             m.put("nome", d.getNome());
+            m.put("visibilita", d.getVisibilita());
             m.put("versioneCorrente", d.getVersioneCorrente());
-            m.put("versioni", d.getVersioni().stream().map(this::toMap).toList());
+            m.put("versioni", d.getVersioni().stream().map(v -> {
+                Map<String, Object> x = toMap(v);
+                // per gli utenti esterni chi del personale ha caricato la versione resta "Ufficio", come nello storico
+                if (soloParti && !Objects.equals(currentUser.username(), v.getCaricatoDa())) x.put("caricatoDa", "Ufficio");
+                return x;
+            }).toList());
             out.add(m);
         }
         return out;

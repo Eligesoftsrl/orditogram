@@ -33,7 +33,8 @@ public class MeController {
             "groups", new TreeSet<>(u.getGroups()),
             "ruoli", permessi.ruoliDi(u).stream().map(r -> Map.of("codice", r.getCodice(), "nome", r.getNome())).toList(),
             "permessi", suoi.stream().map(Permesso::codice).collect(Collectors.toCollection(TreeSet::new)),
-            "admin", suoi.containsAll(EnumSet.allOf(Permesso.class))
+            "admin", suoi.containsAll(EnumSet.allOf(Permesso.class)),
+            "esterno", u.isEsterno()
         );
     }
 }

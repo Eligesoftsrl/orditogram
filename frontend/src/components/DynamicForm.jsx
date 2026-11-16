@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
+import { api } from '../api.js'
 import { FileUp, Paperclip, X } from 'lucide-react'
 import { cx, dimensione, giorno } from '../lib/format.js'
 import { Button, Errore } from './ui.jsx'
@@ -21,11 +22,14 @@ import { CampoTabella, TabellaLettura, righeIniziali } from './CampoTabella.jsx'
  * Sezioni:              { type: "sezione", label, help } divide i campi da compilare in gruppi con un titolo.
  * Tabelle:              { type: "tabella", colonne: [campi senza textarea], minRighe, maxRighe } raccoglie più righe
  *                       (vedi CampoTabella.jsx); le righe vuote non si inviano.
+ * Organizzazioni:       { type: "organizzazione", parte: "controparte" } sceglie un'organizzazione esterna
+ *                       dall'anagrafica (il valore è il suo id); con "parte" diventa una parte della pratica.
+ *                       "organizzazioni" (id -> nome) serve a mostrare quelle già scelte.
  *
  * I campi in sola lettura diventano un riepilogo in alto; quelli da compilare restano campi.
  * I campi nascosti dalle condizioni non si mostrano, non sono obbligatori e non vengono inviati.
  */
-export default function DynamicForm({ form, initialValues = {}, onSubmit, disabled, busy, avvio, mostraTitolo = true }) {
+export default function DynamicForm({ form, initialValues = {}, organizzazioni = {}, onSubmit, disabled, busy, avvio, mostraTitolo = true }) {
   const campi = form.fields || []
   const lettura = campi.filter(f => f.readonly && !eSezione(f))
   const modificabili = campi.filter(f => !f.readonly && !eSezione(f))
@@ -98,7 +102,7 @@ export default function DynamicForm({ form, initialValues = {}, onSubmit, disabl
                 <dd><TabellaLettura colonne={f.colonne} righe={initialValues[f.name]} /></dd>
               ) : (
                 <dd className="mt-0.5 whitespace-pre-line break-words text-[15px] text-pino-900">
-                  {mostraValore(f, initialValues[f.name])}
+                  {f.type === 'organizzazione' ? (organizzazioni[initialValues[f.name]] || 'Organizzazione non più attiva') : mostraValore(f, initialValues[f.name])}
                 </dd>
               )}
             </div>
@@ -116,7 +120,8 @@ export default function DynamicForm({ form, initialValues = {}, onSubmit, disabl
           )}
           <div className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
             {g.campi.map((f, i) => (
-              <Campo key={f.name || `senza-nome-${i}`} f={f} value={values[f.name]} onChange={v => set(f.name, v)} disabled={disabled} errore={erroriCampi[f.name]} />
+              <Campo key={f.name || `senza-nome-${i}`} f={f} value={values[f.name]} onChange={v => set(f.name, v)} disabled={disabled} errore={erroriCampi[f.name]}
+                     nomeIniziale={organizzazioni[values[f.name]]} />
             ))}
           </div>
         </section>
@@ -143,8 +148,9 @@ function mostraValore(f, v) {
   return String(v)
 }
 
-function Campo({ f, value, onChange, disabled, errore }) {
+function Campo({ f, value, onChange, disabled, errore, nomeIniziale }) {
   if (f.type === 'tabella') return <CampoTabella f={f} value={value} onChange={onChange} disabled={disabled} errore={errore} />
+  if (f.type === 'organizzazione') return <CampoOrganizzazione f={f} value={value} onChange={onChange} disabled={disabled} errore={errore} nomeIniziale={nomeIniziale} />
   const id = `campo-${f.name}`
   const largo = f.type === 'textarea'
   const idErrore = `${id}-errore`
@@ -220,6 +226,56 @@ function Campo({ f, value, onChange, disabled, errore }) {
       {messaggio}
       {aiuto}
     </div>
+  )
+}
+
+/**
+ * Scelta di un'organizzazione esterna dall'anagrafica: si cerca per nome o codice fiscale e si sceglie dall'elenco.
+ * Il valore inviato è l'id; il server controlla che l'organizzazione esista e sia attiva.
+ */
+function CampoOrganizzazione({ f, value, onChange, disabled, errore, nomeIniziale }) {
+  const uid = useId()
+  const id = `campo-${f.name}`
+  const [cerca, setCerca] = useState('')
+  const [risultati, setRisultati] = useState([])
+  const [problema, setProblema] = useState('')
+  const [scelta, setScelta] = useState(value ? { id: value, nome: nomeIniziale || `Organizzazione ${value}` } : null)
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      api.cercaOrganizzazioni(cerca).then(r => { setRisultati(r); setProblema('') }).catch(e => setProblema(e.message))
+    }, 250)
+    return () => clearTimeout(t)
+  }, [cerca])
+
+  const opzioni = scelta && !risultati.some(o => String(o.id) === String(scelta.id)) ? [scelta, ...risultati] : risultati
+  return (
+    <fieldset className="sm:col-span-2">
+      <legend className="etichetta">{f.label || f.name}{f.required && <span className="text-mattone-600"> *</span>}</legend>
+      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+        <label className="block">
+          <span className="sr-only">Cerca {f.label || f.name}</span>
+          <input type="search" className="campo" placeholder="Cerca per nome o codice fiscale" value={cerca} disabled={disabled}
+                 onChange={e => setCerca(e.target.value)} aria-controls={id} />
+        </label>
+        <label className="block">
+          <span className="sr-only">Scegli {f.label || f.name}</span>
+          <select id={id} className={cx('campo', errore && 'border-mattone-600!')} value={value ?? ''} disabled={disabled}
+                  aria-invalid={errore ? true : undefined} aria-describedby={errore ? `${uid}-e` : undefined}
+                  onChange={e => {
+                    const o = opzioni.find(x => String(x.id) === e.target.value)
+                    setScelta(o || null)
+                    onChange(o ? String(o.id) : '')
+                  }}>
+            <option value="">{opzioni.length ? 'Scegli…' : 'Nessuna organizzazione trovata'}</option>
+            {opzioni.map(o => <option key={o.id} value={String(o.id)}>{o.nome}{o.codiceFiscale ? ` (${o.codiceFiscale})` : ''}</option>)}
+          </select>
+        </label>
+      </div>
+      {errore && <p id={`${uid}-e`} role="alert" className="mt-1 text-[13px] font-medium text-mattone-600">{errore[0].toUpperCase() + errore.slice(1)}</p>}
+      {problema && <p className="mt-1 text-[13px] text-mattone-600">{problema}</p>}
+      {f.help && <p className="mt-1 text-[13px] text-grafite">{f.help}</p>}
+    </fieldset>
   )
 }
 

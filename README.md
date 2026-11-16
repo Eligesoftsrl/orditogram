@@ -109,7 +109,8 @@ Chi può fare che cosa nello Studio e nell'amministrazione si decide con i **ruo
 | Pubblicazione (`studio.pubblica`) | mettere in produzione un processo (senza, si preparano solo le bozze) |
 | Form (`studio.form`) | Studio → Form |
 | Integrazioni (`integrazioni.gestisci`) | Studio → Integrazioni: chiavi API e webhook |
-| Utenti e ruoli (`utenti.gestisci`) | Studio → Utenti e Ruoli |
+| Utenti e ruoli (`utenti.gestisci`) | Studio → Utenti, Ruoli e Strutture |
+| Organizzazioni (`organizzazioni.gestisci`) | Studio → Organizzazioni: anagrafica delle organizzazioni esterne, anche da CSV |
 | Registro (`registro.leggi`) | Studio → Registro |
 | Tutte le pratiche (`pratiche.vedi-tutte`) | vedere ogni pratica, anche senza parteciparvi (non lavorarla) |
 
@@ -149,6 +150,46 @@ dipartimento le vede tutte.
 
 L'elenco delle pratiche e l'apertura di una pratica usano la stessa regola, calcolata nel database
 (`storico/VisibilitaPratiche`).
+
+## Utenti esterni, organizzazioni e parti
+
+Oltre al personale, Orditogram ha gli **utenti esterni**: cittadini, clienti, professionisti, referenti di enti e
+aziende. Si creano in Studio → Utenti scegliendo *Esterno* (oppure arrivano da Keycloak/Entra ID con il gruppo
+indicato in `app.oidc.gruppo-esterni`). Un utente esterno:
+- non ha mai ruoli né permessi dello Studio;
+- è nel gruppo automatico `esterni` (per dire che può avviare un processo dal portale:
+  `candidateStarterGroups="esterni"` o una regola *Chi può avviarlo*) e in `org:<id>` per ogni sua organizzazione;
+- usa solo le API del portale (scrivania, sue attività, sue pratiche, documenti, notifiche): tutto il resto
+  risponde 403, anche le API aggiunte in futuro (`accesso/AccessoEsterni`);
+- vede solo le pratiche in cui è **parte** (lui o la sua organizzazione) o in cui ha un'attività da lavorare.
+
+**Organizzazioni** (Studio → Organizzazioni): l'anagrafica delle organizzazioni esterne, con importazione da CSV
+(`codice;nome;codiceFiscale`, un codice già presente aggiorna la riga). I loro utenti si aggiungono dalla pagina Utenti.
+
+**Parti della pratica**: chi la pratica riguarda dall'esterno, ognuno con un ruolo.
+- Chi avvia una pratica da utente esterno ne è il **richiedente**.
+- Un campo **Organizzazione** di un form (`"type": "organizzazione"`) con *È la parte della pratica*
+  (`"parte": "controparte"`) rende l'organizzazione scelta una parte. Il personale la cerca nell'anagrafica.
+- Nel BPMN un'attività con `candidateGroups="parte:controparte"` va agli utenti di quella parte (o alla persona,
+  per `parte:richiedente`). La pubblicazione controlla che la parte sia indicata da un form.
+
+**Che cosa vede un utente esterno** di una pratica:
+- i dati dei campi marcati *Visibile anche alle parti esterne* (`"visibileAlleParti": true`) e quelli dei form che ha
+  compilato lui; mai le variabili tecniche;
+- nello storico, le sue azioni e, di quelle dell'ufficio, solo avvio, attività completate e parti, a nome
+  dell'"Ufficio" e senza valori;
+- i documenti **visibili alle parti**: quelli caricati da un esterno, quelli dei form con *I documenti caricati qui li
+  vedono anche le parti* (`"documentiVisibilita": "parti"`) e quelli che il personale rende visibili con
+  *Mostra alle parti*; gli altri per lui non esistono;
+- non vede il diagramma del processo, la struttura competente, le pratiche collegate, i gruppi e i nomi del personale.
+
+**Campi riservati per ruolo**: tra il personale, un campo con *Solo chi ha questi ruoli* (`"ruoliVisibili": ["auditor"]`)
+nella scheda della pratica e nello storico lo vede solo chi ha uno di quei ruoli (e l'amministratore); chi lavora
+un'attività vede sempre i campi del suo form.
+
+Esempio completo: `esempi/reclamo-controparte` (il cittadino `marco` presenta un reclamo, l'operatore `mario` sceglie
+la controparte, `elena` dello Studio legale Bianchi risponde). Con `app.demo.utenti` gli utenti di prova esterni
+e l'organizzazione ci sono già.
 
 ## Backup e ripristino
 
@@ -330,10 +371,14 @@ all'altra; chi può vedere la madre vede anche le figlie. La pubblicazione è ri
 | `documenti: "lettura"` | l'attività mostra i documenti della pratica |
 | `documenti: "modifica"` | chi ha in carico l'attività può aggiungere documenti e nuove versioni |
 | `documentiObbligatori: true` | almeno un allegato all'avvio |
+| `documentiVisibilita: "parti"` | i documenti caricati con questo form li vedono anche le parti esterne |
 
 | Proprietà di un campo | Effetto |
 |---|---|
-| `type` | text, textarea, number, date, select, checkbox, tabella |
+| `type` | text, textarea, number, date, select, checkbox, tabella, organizzazione (un'organizzazione esterna dall'anagrafica) |
+| `parte: "controparte"` | campo Organizzazione: l'organizzazione scelta diventa quella parte della pratica |
+| `visibileAlleParti: true` | il dato lo vedono anche gli utenti esterni che vedono la pratica |
+| `ruoliVisibili: ["auditor"]` | tra il personale, nella scheda della pratica lo vede solo chi ha uno di quei ruoli |
 | `required` / `readonly` | obbligatorio / mostrato nel riepilogo in sola lettura |
 | `precompila: false` | non ripropone il valore precedente (utile nei cicli verifica ↔ revisione) |
 | `titolo: true` | il valore diventa il titolo della pratica |
@@ -488,8 +533,8 @@ a chiamare l'API dal browser (CORS), intervallo e timeout degli invii, giorni di
 Basta configurare il provider in `application.yml` (esempi commentati in `spring.security.oauth2.client`): nella pagina
 di accesso compare "Accedi con …". Al primo accesso l'utente viene creato in Orditogram (o collegato a quello con lo stesso nome,
 mai a un utente locale con ruoli) e a ogni accesso nome, email e gruppi vengono aggiornati dal token (`app.oidc`).
-Il gruppo indicato in `gruppo-admin` dà o toglie il ruolo Amministratore; gli altri ruoli si legano ai gruppi in
-Studio → Ruoli:
+Il gruppo indicato in `gruppo-admin` dà o toglie il ruolo Amministratore; quello in `gruppo-esterni` rende l'utente
+esterno (senza ruoli, solo il portale); gli altri ruoli si legano ai gruppi in Studio → Ruoli:
 - Keycloak: aggiungi al client il mapper "Group Membership" (claim `groups`), oppure usa `claim-gruppi: realm_access.roles`;
 - Entra ID: i gruppi arrivano come ID: traducili con `mappa-gruppi`; con molti gruppi conviene usare gli "app roles"
   (`claim-gruppi: roles`).

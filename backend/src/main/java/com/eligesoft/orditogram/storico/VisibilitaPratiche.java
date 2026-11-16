@@ -3,6 +3,7 @@ package com.eligesoft.orditogram.storico;
 import com.eligesoft.orditogram.accesso.PermessiProcessoService;
 import com.eligesoft.orditogram.accesso.Permesso;
 import com.eligesoft.orditogram.accesso.PermessiService;
+import com.eligesoft.orditogram.user.AppUser;
 import com.eligesoft.orditogram.user.AppUserRepository;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -16,7 +17,10 @@ import java.util.*;
  * definizione del processo "D"). Una sola regola per l'elenco e per il dettaglio, valutata nel database:
  *  1. permesso "pratiche.vedi-tutte": tutte;
  *  2. regole "vede" del processo, entro il loro ambito (tutte, propria struttura, struttura e sottostrutture);
- *  3. chi vi ha lavorato (storico) o ha un'attività in carico o disponibile per sé o per i suoi gruppi.
+ *  3. chi vi ha lavorato (storico) o ha un'attività in carico o disponibile per sé o per i suoi gruppi
+ *     (compresi i gruppi automatici "org:<id>" delle organizzazioni);
+ *  4. le parti della pratica: la persona o chi appartiene all'organizzazione della parte.
+ * Gli utenti esterni non hanno permessi né regole "vede": per loro valgono solo 3 e 4.
  */
 @Service
 public class VisibilitaPratiche {
@@ -41,8 +45,9 @@ public class VisibilitaPratiche {
     public String condizione(String username, MapSqlParameterSource p) {
         if (username == null) return "1 = 0";
         if (permessi.ha(username, Permesso.PRATICHE_TUTTE)) return "1 = 1";
-        Set<String> gruppi = utenti.findByUsername(username).map(u -> u.isEnabled() ? u.getGroups() : Set.<String>of())
-            .orElse(Set.of());
+        AppUser u = utenti.findByUsername(username).filter(AppUser::isEnabled).orElse(null);
+        if (u == null) return "1 = 0";
+        Set<String> gruppi = u.gruppiEffettivi();
 
         p.addValue("vis_utente", username);
         List<String> o = new ArrayList<>();
@@ -55,6 +60,12 @@ public class VisibilitaPratiche {
         }
         o.add("RES.PROC_INST_ID_ IN (SELECT t.PROC_INST_ID_ FROM ACT_RU_TASK t JOIN ACT_RU_IDENTITYLINK i ON i.TASK_ID_ = t.ID_"
             + " WHERE t.ASSIGNEE_ IS NULL AND i.TYPE_ = 'candidate' AND (" + candidati + "))");
+        String parti = "pp.utente = :vis_utente";
+        if (!u.getOrganizzazioni().isEmpty()) {
+            p.addValue("vis_org", u.getOrganizzazioni());
+            parti += " OR pp.organizzazione_id IN (:vis_org)";
+        }
+        o.add("RES.PROC_INST_ID_ IN (SELECT pp.process_instance_id FROM pratica_parte pp WHERE " + parti + ")");
 
         PermessiProcessoService.Visibilita v = permessiProcesso.visibilita(username);
         if (!v.processiTutte().isEmpty()) {

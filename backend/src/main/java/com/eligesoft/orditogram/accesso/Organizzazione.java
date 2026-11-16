@@ -11,6 +11,8 @@ import jakarta.persistence.*;
 public class Organizzazione {
 
     public static final String STRUTTURA = "STRUTTURA";
+    /** Organizzazione esterna: ente, azienda, studio professionale, istituto. I suoi utenti sono esterni. */
+    public static final String ESTERNA = "ESTERNA";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,7 +28,7 @@ public class Organizzazione {
     @Column(length = 20)
     private String codiceFiscale;
 
-    /** STRUTTURA (dell'ente); altri tipi arriveranno con le organizzazioni esterne. Testo, non enum. */
+    /** STRUTTURA (dell'ente) o ESTERNA. Testo, non enum. */
     @Column(nullable = false, length = 20)
     private String tipo = STRUTTURA;
 
@@ -48,5 +50,6 @@ public class Organizzazione {
     public Long getPadreId() { return padreId; }
     public void setPadreId(Long padreId) { this.padreId = padreId; }
     public boolean isAttiva() { return attiva; }
+    public boolean isEsterna() { return ESTERNA.equals(tipo); }
     public void setAttiva(boolean attiva) { this.attiva = attiva; }
 }

@@ -1,4 +1,4 @@
-import { Bell, CircleCheck, FileText, Hand, Inbox, Mail, Play, Timer, TriangleAlert, Undo2, Webhook } from 'lucide-react'
+import { Bell, CircleCheck, FileText, Hand, Inbox, Mail, Play, Timer, TriangleAlert, Undo2, UserPlus, Webhook } from 'lucide-react'
 import { cx, quando } from '../lib/format.js'
 import { Vuoto } from './ui.jsx'
 
@@ -14,7 +14,9 @@ const stile = {
   EMAIL:           { icona: Mail,          colore: 'bg-pino-200/50 text-pino-800',       prefisso: 'Email:' },
   CHIAMATA_API:    { icona: Webhook,       colore: 'bg-verde-50 text-verde-700',         prefisso: 'Servizio esterno:' },
   ERRORE:          { icona: TriangleAlert, colore: 'bg-mattone-50 text-mattone-700',     prefisso: 'Non riuscita:' },
-  MESSAGGIO:       { icona: Inbox,         colore: 'bg-verde-50 text-verde-700',         prefisso: '' }
+  MESSAGGIO:       { icona: Inbox,         colore: 'bg-verde-50 text-verde-700',         prefisso: '' },
+  // parti della pratica (richiedente, controparte...): il titolo dice già cosa è successo
+  PARTE:           { icona: UserPlus,      colore: 'bg-pino-200/50 text-pino-800',       verbo: '' }
 }
 
 /** Storico della pratica: chi ha fatto cosa, quando e con quali valori. */

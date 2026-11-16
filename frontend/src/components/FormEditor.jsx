@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useState } from 'react'
 import {
-  TextAlignStart, Braces, CalendarDays, ChevronDown, ChevronUp, CircleCheck, Copy, Eye, Hash, Heading, ListChecks,
+  TextAlignStart, Braces, Briefcase, CalendarDays, ChevronDown, ChevronUp, CircleCheck, Copy, Eye, Hash, Heading, ListChecks,
   Plus, Save, SquareCheck, Table2, Trash, Type, X
 } from 'lucide-react'
 import { api } from '../api.js'
@@ -10,7 +10,8 @@ import { SEZIONE, condizione, descriviCondizione, eSezione, valoriPossibili } fr
 import { FORMATI, descriviRegole } from '../lib/formRegole.js'
 
 const NESSUNA_REGOLA = { min: undefined, max: undefined, minLunghezza: undefined, maxLunghezza: undefined,
-  formato: undefined, espressione: undefined, messaggioFormato: undefined, colonne: undefined, minRighe: undefined, maxRighe: undefined }
+  formato: undefined, espressione: undefined, messaggioFormato: undefined, colonne: undefined, minRighe: undefined, maxRighe: undefined,
+  parte: undefined }
 /** Identificativi interni dell'editor (chiavi di React): basta un contatore, non serve casualità. */
 let ultimoId = 0
 const nuovoId = () => ++ultimoId
@@ -30,7 +31,8 @@ const TIPI = [
   { id: 'date', label: 'Data', icona: CalendarDays },
   { id: 'select', label: 'Scelta', icona: ListChecks },
   { id: 'checkbox', label: 'Sì / no', icona: SquareCheck },
-  { id: 'tabella', label: 'Tabella', icona: Table2 }
+  { id: 'tabella', label: 'Tabella', icona: Table2 },
+  { id: 'organizzazione', label: 'Organizzazione', icona: Briefcase }
 ]
 
 const DOCUMENTI = [
@@ -216,6 +218,13 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
                             Almeno un documento obbligatorio
                           </label>
                         )}
+                        {(form.documenti === 'carica' || form.documenti === 'modifica') && (
+                          <label className="flex items-center gap-2 text-[15px] sm:col-span-2">
+                            <input type="checkbox" className="size-4 accent-verde-600" checked={form.documentiVisibilita === 'parti'}
+                                   onChange={e => aggiorna({ documentiVisibilita: e.target.checked ? 'parti' : undefined })} />
+                            I documenti caricati qui li vedono anche le parti esterne della pratica
+                          </label>
+                        )}
                       </div>
                     </Pannello>
 
@@ -275,7 +284,7 @@ function senzaVuoti(f) {
 /** Il form da salvare: senza le proprietà interne dell'editor e senza valori vuoti. */
 function pulisci(form) {
   const out = {}
-  ;['title', 'description', 'documenti', 'documentiObbligatori', 'submitLabel'].forEach(k => {
+  ;['title', 'description', 'documenti', 'documentiObbligatori', 'documentiVisibilita', 'submitLabel'].forEach(k => {
     if (form[k] !== undefined && form[k] !== '' && form[k] !== false) out[k] = form[k]
   })
   out.fields = form.fields.map(f => {
@@ -289,6 +298,8 @@ function pulisci(form) {
     else { delete c.colonne; delete c.minRighe; delete c.maxRighe }
     if (f.precompila === false) c.precompila = false
     if (!c.type) c.type = 'text'
+    if (c.type !== 'organizzazione') delete c.parte
+    if (Array.isArray(c.ruoliVisibili) && c.ruoliVisibili.length === 0) delete c.ruoliVisibili
     return c
   })
   return out
@@ -356,6 +367,18 @@ function CampoEditor({ f, i, n, catalogo, campi, onChange, onSu, onGiu, onTogli,
             <input id={`${uid}-8`} className="campo" value={f.help || ''} onChange={e => onChange({ help: e.target.value })} placeholder="Facoltativo" />
           </div>
 
+          {f.type === 'organizzazione' && !f.readonly && (
+            <div className="sm:col-span-2">
+              <label className="etichetta" htmlFor={`${uid}-9`}>È la parte della pratica</label>
+              <input id={`${uid}-9`} className="campo font-mono text-sm" value={f.parte || ''} placeholder="Es. controparte"
+                     onChange={e => onChange({ parte: e.target.value.replace(/[^a-zA-Z0-9_]/g, '') || undefined })} />
+              <p className="mt-1 text-xs text-grafite">
+                L'organizzazione scelta diventa questa parte: i suoi utenti esterni vedono la pratica e lavorano le attività
+                del BPMN assegnate al gruppo <span className="font-mono">parte:{f.parte || 'controparte'}</span>.
+              </p>
+            </div>
+          )}
+
           {f.type === 'select' && (
             <div className="sm:col-span-2">
               <p className="etichetta">Opzioni</p>
@@ -372,7 +395,21 @@ function CampoEditor({ f, i, n, catalogo, campi, onChange, onSu, onGiu, onTogli,
 
           {f.type === 'tabella' && <ColonneEditor f={f} onChange={onChange} />}
 
-          {!f.readonly && f.type !== 'tabella' && <RegoleEditor f={f} onChange={onChange} />}
+          {!f.readonly && !['tabella', 'organizzazione'].includes(f.type) && <RegoleEditor f={f} onChange={onChange} />}
+
+          <fieldset className="space-y-2 rounded-campo bg-carta px-3 py-2.5 sm:col-span-2">
+            <legend className="sr-only">Chi vede questo dato</legend>
+            <p className="text-[13px] font-medium text-pino-900">Chi vede questo dato nella pratica</p>
+            <Spunta checked={!!f.visibileAlleParti} onChange={v => onChange({ visibileAlleParti: v || undefined })}>
+              Anche le parti esterne (cittadini, organizzazioni)
+            </Spunta>
+            <div>
+              <label className="text-[13px] text-grafite" htmlFor={`${uid}-10`}>Tra il personale, solo chi ha questi ruoli (codici separati da virgola; vuoto = tutti)</label>
+              <input id={`${uid}-10`} className="campo mt-1 font-mono text-sm" placeholder="Es. auditor, responsabile"
+                     value={(f.ruoliVisibili || []).join(', ')}
+                     onChange={e => onChange({ ruoliVisibili: e.target.value.split(',').map(x => x.trim().toLowerCase()).filter(Boolean) })} />
+            </div>
+          </fieldset>
 
           <div className="sm:col-span-2">
             <CondizioneEditor f={f} campi={campi} onChange={visibileSe => onChange({ visibileSe })} />

@@ -90,4 +90,16 @@ class ValoriFormTest {
         assertEquals(Map.of("a", "x", "b", 2), e.valori());
         assertEquals("c", e.errori().get(0).campo());
     }
+
+    @Test
+    void campoOrganizzazioneAccettaSoloUnId() throws Exception {
+        JsonNode f = M.readTree("""
+            { "fields": [ { "name": "controparte", "label": "Controparte", "type": "organizzazione", "parte": "controparte" } ] }""");
+        ValoriForm.Esito ok = ValoriForm.convalida(f, Map.of("controparte", 12));
+        assertTrue(ok.valido());
+        assertEquals("12", ok.valori().get("controparte"));
+        ValoriForm.Esito ko = ValoriForm.convalida(f, Map.of("controparte", "Studio Rossi"));
+        assertFalse(ko.valido());
+        assertEquals("controparte", ko.errori().get(0).campo());
+    }
 }

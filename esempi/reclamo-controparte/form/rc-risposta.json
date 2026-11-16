@@ -1,0 +1,12 @@
+{
+  "title": "Risposta al reclamo",
+  "submitLabel": "Invia la risposta",
+  "documenti": "modifica",
+  "documentiVisibilita": "parti",
+  "fields": [
+    { "name": "oggetto", "label": "Oggetto", "type": "text", "readonly": true },
+    { "name": "descrizione", "label": "Descrizione del problema", "type": "textarea", "readonly": true },
+    { "name": "domanda", "label": "Richiesta dell'ufficio", "type": "textarea", "readonly": true },
+    { "name": "risposta", "label": "La vostra risposta", "type": "textarea", "required": true, "visibileAlleParti": true }
+  ]
+}

@@ -38,7 +38,12 @@ public class CurrentUserService {
     }
 
     public java.util.Set<String> groups() {
-        return repo.findByUsername(username()).map(AppUser::getGroups).orElse(java.util.Set.of());
+        return repo.findByUsername(username()).map(AppUser::gruppiEffettivi).orElse(java.util.Set.of());
+    }
+
+    /** L'utente corrente è esterno (cittadino, cliente, referente di un'organizzazione). */
+    public boolean esterno() {
+        return repo.findByUsername(username()).map(AppUser::isEsterno).orElse(false);
     }
 
     /** "mario" -> "Mario Rossi"; se l'utente non esiste restituisce lo username. */

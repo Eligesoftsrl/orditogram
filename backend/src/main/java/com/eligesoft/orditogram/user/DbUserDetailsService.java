@@ -35,7 +35,7 @@ public class DbUserDetailsService implements UserDetailsService {
 
         List<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority("ROLE_ACTIVITI_USER"));
-        u.getGroups().forEach(g -> authorities.add(new SimpleGrantedAuthority("GROUP_" + g)));
+        u.gruppiEffettivi().forEach(g -> authorities.add(new SimpleGrantedAuthority("GROUP_" + g)));
 
         return User.withUsername(u.getUsername())
             .password(u.getPassword())

@@ -1,5 +1,8 @@
 package com.eligesoft.orditogram.process;
 
+import com.eligesoft.orditogram.accesso.PartiService;
+import com.eligesoft.orditogram.accesso.PraticaParte;
+
 import com.eligesoft.orditogram.connettore.ConnettoreOrditogram;
 import com.eligesoft.orditogram.form.FormService;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -145,7 +148,8 @@ public class ProcessValidator {
         for (UserTask t : p.findFlowElementsOfType(UserTask.class, true)) {
             if (t.getFormKey() != null && !t.getFormKey().isBlank()) formKeys.add(t.getFormKey());
             else avvisi.add(new Problema(nome(t) + " non ha un form: l'utente vedrà solo il pulsante Completa", t.getId()));
-            gruppi.addAll(t.getCandidateGroups());
+            // "parte:controparte" non è un gruppo: è la parte della pratica (controllata sotto)
+            t.getCandidateGroups().stream().filter(g -> !g.startsWith(PartiService.PREFISSO_GRUPPO)).forEach(gruppi::add);
             if (t.getCandidateGroups().isEmpty() && t.getCandidateUsers().isEmpty() && (t.getAssignee() == null || t.getAssignee().isBlank()))
                 errori.add(new Problema(nome(t) + ": scegli il gruppo che deve lavorare questa attività", t.getId()));
         }
@@ -155,6 +159,17 @@ public class ProcessValidator {
             if (def == null) errori.add(new Problema("Il form \"" + fk + "\" non esiste: crealo o scegline un altro", elementoConForm(p, fk)));
             else definizioni.put(fk, def);
         }
+
+        // attività assegnate a una parte: la parte deve essere il richiedente o indicata da un campo Organizzazione
+        Set<String> parti = new TreeSet<>(Set.of(PraticaParte.RICHIEDENTE));
+        definizioni.values().forEach(def -> def.path("fields").forEach(f -> {
+            if (f.hasNonNull("parte")) parti.add(f.get("parte").asText());
+        }));
+        for (UserTask t : p.findFlowElementsOfType(UserTask.class, true))
+            for (String g : t.getCandidateGroups())
+                if (g.startsWith(PartiService.PREFISSO_GRUPPO) && !parti.contains(g.substring(PartiService.PREFISSO_GRUPPO.length())))
+                    errori.add(new Problema(nome(t) + ": è assegnata alla parte \"" + g.substring(PartiService.PREFISSO_GRUPPO.length())
+                        + "\", ma nessun form la indica. Aggiungi un campo Organizzazione che sia questa parte, oppure usa \"richiedente\"", t.getId()));
 
         // dati disponibili nella pratica: campi dei form + dati di sistema
         Set<String> dati = new HashSet<>(DATI_DI_SISTEMA);

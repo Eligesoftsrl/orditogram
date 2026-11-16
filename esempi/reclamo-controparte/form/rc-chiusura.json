@@ -1,0 +1,11 @@
+{
+  "title": "Chiusura del reclamo",
+  "submitLabel": "Chiudi il reclamo",
+  "documenti": "modifica",
+  "fields": [
+    { "name": "oggetto", "label": "Oggetto", "type": "text", "readonly": true },
+    { "name": "risposta", "label": "Risposta della controparte", "type": "textarea", "readonly": true },
+    { "name": "esito", "label": "Esito", "type": "select", "options": ["Accolto", "Accolto in parte", "Respinto"], "required": true, "visibileAlleParti": true },
+    { "name": "comunicazione", "label": "Comunicazione alle parti", "type": "textarea", "required": true, "visibileAlleParti": true }
+  ]
+}

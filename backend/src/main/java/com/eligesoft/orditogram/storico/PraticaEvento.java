@@ -15,7 +15,7 @@ import java.time.OffsetDateTime;
 })
 public class PraticaEvento {
 
-    public enum Tipo { AVVIO, PRESA_IN_CARICO, RILASCIO, COMPLETAMENTO, DOCUMENTO, NOTIFICA, SCADENZA, EMAIL, CHIAMATA_API, ERRORE, MESSAGGIO }
+    public enum Tipo { AVVIO, PRESA_IN_CARICO, RILASCIO, COMPLETAMENTO, DOCUMENTO, NOTIFICA, SCADENZA, EMAIL, CHIAMATA_API, ERRORE, MESSAGGIO, PARTE }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

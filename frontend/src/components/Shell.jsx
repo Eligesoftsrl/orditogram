@@ -1,7 +1,7 @@
 import { api } from '../api.js'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Building2, FolderOpen, Inbox, ListChecks, LogOut, Menu, Plug, Plus, ScrollText, ShieldCheck, Users, Workflow, X } from 'lucide-react'
+import { Building2, Briefcase, FolderOpen, Inbox, ListChecks, LogOut, Menu, Plug, Plus, ScrollText, ShieldCheck, Users, Workflow, X } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
 import { cx } from '../lib/format.js'
 import { descriviUtente, sezioniStudio } from '../lib/permessi.js'
@@ -27,7 +27,7 @@ export default function Shell() {
     { to: '/', label: 'Scrivania', icona: Inbox, end: true },
     { to: '/pratiche', label: 'Pratiche', icona: FolderOpen }
   ]
-  const icone = { processi: Workflow, form: ListChecks, utenti: Users, ruoli: ShieldCheck, strutture: Building2, integrazioni: Plug, registro: ScrollText }
+  const icone = { processi: Workflow, form: ListChecks, utenti: Users, ruoli: ShieldCheck, strutture: Building2, organizzazioni: Briefcase, integrazioni: Plug, registro: ScrollText }
   const studio = sezioniStudio(me).map(s => ({ ...s, icona: icone[s.chiave] }))
 
   const Voce = ({ v }) => (

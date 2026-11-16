@@ -52,6 +52,14 @@ public class PraticaController {
     private final com.eligesoft.orditogram.accesso.OrganizzazioneRepository organizzazioni;
     private final com.eligesoft.orditogram.accesso.PermessiProcessoService permessiProcesso;
     private final com.eligesoft.orditogram.registro.RegistroService registro;
+    private final com.eligesoft.orditogram.accesso.PartiService parti;
+    private final CampiVisibili campiVisibili;
+
+    /** Chi guarda la pratica: gli utenti esterni ne vedono una versione ridotta (vedi CampiVisibili). */
+    private record Vista(com.eligesoft.orditogram.user.AppUser utente) {
+        boolean esterno() { return utente.isEsterno(); }
+        boolean io(Object username) { return utente.getUsername().equals(username); }
+    }
 
     public PraticaController(HistoryService historyService, RuntimeService runtimeService,
                              RepositoryService repositoryService, TaskService taskService,
@@ -61,7 +69,10 @@ public class PraticaController {
                              com.eligesoft.orditogram.accesso.PermessiProcessoService permessiProcesso,
                              com.eligesoft.orditogram.registro.RegistroService registro,
                              com.eligesoft.orditogram.accesso.PraticaStrutturaRepository praticaStruttura,
-                             com.eligesoft.orditogram.accesso.OrganizzazioneRepository organizzazioni) {
+                             com.eligesoft.orditogram.accesso.OrganizzazioneRepository organizzazioni,
+                             com.eligesoft.orditogram.accesso.PartiService parti, CampiVisibili campiVisibili) {
+        this.parti = parti;
+        this.campiVisibili = campiVisibili;
         this.praticaStruttura = praticaStruttura;
         this.organizzazioni = organizzazioni;
         this.visibilita = visibilita;
@@ -128,8 +139,9 @@ public class PraticaController {
             historyService.createHistoricProcessInstanceQuery().processInstanceIds(new HashSet<>(trovate.id()))
                 .includeProcessVariables().list().forEach(h -> perId.put(h.getId(), h));
         Map<String, String> nomi = new HashMap<>();
+        Vista vista = new Vista(currentUser.current());
         List<Map<String, Object>> righe = trovate.id().stream().map(perId::get).filter(Objects::nonNull)
-            .map(h -> riepilogo(h, nomi))
+            .map(h -> riepilogo(h, nomi, vista, eventiPer(h.getId(), vista, Set.of())))
             .toList();
         return pagina(righe, trovate.totale(), pag, dim);
     }
@@ -137,6 +149,8 @@ public class PraticaController {
     /** Tipologie di pratica (ultima versione di ogni processo), per il filtro dell'elenco. */
     @GetMapping("/tipologie")
     public List<Map<String, String>> tipologie() {
+        // l'elenco dei processi dell'ente non riguarda gli utenti esterni
+        if (currentUser.esterno()) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Operazione non consentita");
         return repositoryService.createProcessDefinitionQuery().latestVersion().list().stream()
             .map(d -> Map.of("chiave", d.getKey(), "nome", d.getName() != null ? d.getName() : d.getKey()))
             .sorted(Comparator.comparing(m -> m.get("nome")))
@@ -159,9 +173,24 @@ public class PraticaController {
             .processInstanceId(pi).includeProcessVariables().singleResult();
         if (h == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Pratica non trovata");
 
-        Map<String, Object> m = riepilogo(h, new HashMap<>());
-        m.put("dati", dati(h));
-        m.put("eventi", storico.eventi(pi));
+        Vista vista = new Vista(currentUser.current());
+        java.util.function.Predicate<String> visibile = campiVisibili.per(vista.utente(), h.getProcessDefinitionId(), pi);
+        List<Map<String, Object>> eventi = eventiPer(pi, vista,
+            campiVisibili.etichetteNascoste(h.getProcessDefinitionId(), visibile));
+        Map<String, Object> m = riepilogo(h, new HashMap<>(), vista, eventi);
+        m.put("dati", dati(h, visibile));
+        m.put("eventi", eventi);
+        m.put("parti", parti.elenco(pi));
+        if (vista.esterno()) {
+            // un utente esterno non vede l'organizzazione interna né le pratiche collegate
+            m.put("struttura", null);
+            m.put("praticaMadre", null);
+            m.put("praticheFiglie", List.of());
+            var mie = taskRuntime.tasks(Pageable.of(0, 10),
+                TaskPayloadBuilder.tasks().withProcessInstanceId(pi).build()).getContent();
+            m.put("taskId", mie.isEmpty() ? null : mie.get(0).getId());
+            return m;
+        }
         m.put("struttura", praticaStruttura.findById(pi).flatMap(ps -> organizzazioni.findById(ps.getOrganizzazioneId()))
             .map(o -> Map.of("id", o.getId(), "nome", o.getNome())).orElse(null));
         // pratiche collegate dai processi richiamati (call activity)
@@ -227,10 +256,41 @@ public class PraticaController {
         });
     }
 
-    private Map<String, Object> riepilogo(HistoricProcessInstance h, Map<String, String> nomi) {
+    /**
+     * Lo storico come lo vede l'utente. Senza i valori dei campi che non vede; per un utente esterno, delle azioni
+     * altrui restano solo avvio, attività completate e parti, a nome dell'"Ufficio" e senza dettagli.
+     */
+    private List<Map<String, Object>> eventiPer(String pi, Vista vista, Set<String> etichetteNascoste) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> e : storico.eventi(pi)) {
+            if (vista.esterno() && !vista.io(e.get("utente"))) {
+                if (!Set.of("AVVIO", "COMPLETAMENTO", "PARTE").contains(e.get("tipo"))) continue;
+                e.put("utente", null);
+                e.put("utenteNome", "Ufficio");
+                e.put("dettagli", List.of());
+            } else if (!etichetteNascoste.isEmpty() && e.get("dettagli") instanceof List<?> d) {
+                e.put("dettagli", d.stream()
+                    .filter(x -> !(x instanceof Map<?, ?> r && etichetteNascoste.contains(r.get("label")))).toList());
+            }
+            out.add(e);
+        }
+        return out;
+    }
+
+    private Map<String, Object> riepilogo(HistoricProcessInstance h, Map<String, String> nomi, Vista vista,
+                                          List<Map<String, Object>> eventi) {
         Map<String, Object> vars = h.getProcessVariables() != null ? h.getProcessVariables() : Map.of();
         boolean conclusa = h.getEndTime() != null;
         List<Map<String, Object>> correnti = conclusa ? List.of() : stepCorrenti(h.getId());
+        if (vista.esterno()) {
+            // dove si trova la pratica sì, chi la sta lavorando e con quali gruppi no
+            correnti = correnti.stream().map(c -> {
+                Map<String, Object> x = new LinkedHashMap<>(c);
+                x.put("assegnatario", null);
+                x.put("gruppi", List.of());
+                return x;
+            }).toList();
+        }
 
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("id", h.getId());
@@ -238,18 +298,18 @@ public class PraticaController {
         m.put("processo", nomeProcesso(h, nomi));
         m.put("processoKey", h.getProcessDefinitionKey());
         m.put("stato", conclusa ? "conclusa" : "in corso");
-        m.put("avviataDa", vars.get("avviataDa"));
+        m.put("avviataDa", !vista.esterno() || vista.io(vars.get("avviataDaUtente")) ? vars.get("avviataDa") : null);
         m.put("inizio", h.getStartTime());
         m.put("fine", h.getEndTime());
         m.put("stepCorrenti", correnti);
-        m.put("percorso", percorso(h.getId(), correnti, conclusa, h.getEndTime()));
-        // scadenze, solleciti e attese ancora programmati; la prima è la più vicina
-        List<Map<String, Object>> sc = conclusa ? List.of()
+        m.put("percorso", percorso(eventi, correnti, conclusa, h.getEndTime()));
+        // scadenze, solleciti e attese ancora programmati; la prima è la più vicina (scadenze interne: non agli esterni)
+        List<Map<String, Object>> sc = conclusa || vista.esterno() ? List.of()
             : scadenze.perPratica(h.getId()).stream().map(ScadenzeService::comeMappa).toList();
         m.put("scadenze", sc);
         m.put("prossimaScadenza", sc.stream().filter(x -> !"attesa".equals(x.get("tipo"))).findFirst().orElse(null));
         // messaggi che la pratica aspetta da sistemi esterni o da un operatore
-        m.put("messaggiAttesi", conclusa ? List.of() : messaggi.attesi(h.getId(), h.getProcessDefinitionId()).stream()
+        m.put("messaggiAttesi", conclusa || vista.esterno() ? List.of() : messaggi.attesi(h.getId(), h.getProcessDefinitionId()).stream()
             .map(x -> Map.of("nome", x.nome(), "elemento", x.elemento(), "tipo", x.tipo(),
                 "attivita", x.attivita() == null ? "" : x.attivita()))
             .toList());
@@ -260,10 +320,10 @@ public class PraticaController {
      * Il "binario" della pratica: le fermate realmente percorse, compresi i ritorni.
      * Avvio → attività completate (in ordine) → attività correnti oppure "Conclusa".
      */
-    private List<Map<String, Object>> percorso(String pi, List<Map<String, Object>> correnti,
+    private List<Map<String, Object>> percorso(List<Map<String, Object>> eventi, List<Map<String, Object>> correnti,
                                                boolean conclusa, Date fine) {
         List<Map<String, Object>> out = new ArrayList<>();
-        for (Map<String, Object> e : storico.eventi(pi)) {
+        for (Map<String, Object> e : eventi) {
             String tipo = (String) e.get("tipo");
             if (!"AVVIO".equals(tipo) && !"COMPLETAMENTO".equals(tipo)) continue;
             out.add(fermata("AVVIO".equals(tipo) ? "Avvio" : (String) e.get("titolo"), "fatto",
@@ -306,7 +366,7 @@ public class PraticaController {
      * Dati della pratica con le etichette prese dai form del processo
      * (avvio e attività). Le variabili senza etichetta mostrano il nome tecnico.
      */
-    private List<Map<String, Object>> dati(HistoricProcessInstance h) {
+    private List<Map<String, Object>> dati(HistoricProcessInstance h, java.util.function.Predicate<String> visibile) {
         Map<String, String> etichette = new LinkedHashMap<>();
         Map<String, String> tipi = new HashMap<>();
         Map<String, List<Map<String, String>>> colonne = new HashMap<>();
@@ -336,7 +396,8 @@ public class PraticaController {
         List<String> ordine = new ArrayList<>(etichette.keySet());
         vars.keySet().stream().sorted().filter(k -> !etichette.containsKey(k)).forEach(ordine::add);
         for (String k : ordine) {
-            if (NASCOSTE.contains(k) || !vars.containsKey(k)) continue;
+            if (NASCOSTE.contains(k) || k.startsWith("sys_") || k.startsWith(com.eligesoft.orditogram.accesso.PartiService.PREFISSO_VARIABILE)
+                || !vars.containsKey(k) || !visibile.test(k)) continue;
             Object v = vars.get(k);
             if (v == null || v.toString().isBlank()) continue;
             if (v instanceof List<?> righe && colonne.containsKey(k)) {
@@ -347,10 +408,21 @@ public class PraticaController {
                     "righe", righe, "colonne", colonne.get(k)));
                 continue;
             }
-            String testo = "checkbox".equals(tipi.get(k)) ? (Boolean.TRUE.equals(v) ? "Sì" : "No") : v.toString();
+            String testo = "checkbox".equals(tipi.get(k)) ? (Boolean.TRUE.equals(v) ? "Sì" : "No")
+                : com.eligesoft.orditogram.form.ValoriForm.ORGANIZZAZIONE.equals(tipi.get(k)) ? nomeOrganizzazione(v.toString())
+                : v.toString();
             out.add(Map.of("nome", k, "label", etichette.getOrDefault(k, k), "value", testo,
                 "tipo", tipi.getOrDefault(k, "text")));
         }
         return out;
+    }
+
+    /** Il nome dell'organizzazione scelta in un campo Organizzazione (anche se nel frattempo è stata disattivata). */
+    private String nomeOrganizzazione(String id) {
+        try {
+            return organizzazioni.findById(Long.valueOf(id.trim())).map(o -> o.getNome()).orElse(id);
+        } catch (NumberFormatException e) {
+            return id;
+        }
     }
 }

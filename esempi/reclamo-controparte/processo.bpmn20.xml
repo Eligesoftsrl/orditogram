@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Reclamo con controparte: processo dimostrativo di Orditogram per utenti esterni e parti della pratica.
+  Un cittadino (utente esterno) presenta il reclamo dal portale, l'ufficio indica la controparte scegliendo
+  un'organizzazione esterna, gli utenti di quell'organizzazione rispondono, l'ufficio chiude.
+-->
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:activiti="http://activiti.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+             id="Definitions_reclamoControparte" targetNamespace="http://orditogram.it/processi">
+  <process id="reclamoControparte" name="Reclamo con controparte" isExecutable="true" activiti:candidateStarterGroups="esterni,operatori">
+    <documentation>Reclamo di un cittadino verso un'organizzazione esterna: istruttoria dell'ufficio, risposta della controparte, chiusura.</documentation>
+    <startEvent id="inizio" name="Reclamo presentato" activiti:formKey="rc-reclamo"/>
+    <sequenceFlow id="f1" sourceRef="inizio" targetRef="istruttoria"/>
+    <userTask id="istruttoria" name="Istruttoria" activiti:candidateGroups="operatori" activiti:formKey="rc-istruttoria"/>
+    <sequenceFlow id="f2" sourceRef="istruttoria" targetRef="risposta"/>
+    <userTask id="risposta" name="Risposta della controparte" activiti:candidateGroups="parte:controparte" activiti:formKey="rc-risposta"/>
+    <sequenceFlow id="f3" sourceRef="risposta" targetRef="chiusura"/>
+    <userTask id="chiusura" name="Chiusura del reclamo" activiti:candidateGroups="operatori" activiti:formKey="rc-chiusura"/>
+    <sequenceFlow id="f4" sourceRef="chiusura" targetRef="fine"/>
+    <endEvent id="fine" name="Reclamo chiuso"/>
+  </process>
+  <bpmndi:BPMNDiagram id="Diagramma_reclamoControparte">
+    <bpmndi:BPMNPlane id="Piano_reclamoControparte" bpmnElement="reclamoControparte">
+      <bpmndi:BPMNShape id="inizio_di" bpmnElement="inizio"><dc:Bounds x="112" y="182" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="istruttoria_di" bpmnElement="istruttoria"><dc:Bounds x="200" y="160" width="120" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="risposta_di" bpmnElement="risposta"><dc:Bounds x="380" y="160" width="120" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="chiusura_di" bpmnElement="chiusura"><dc:Bounds x="560" y="160" width="120" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="fine_di" bpmnElement="fine"><dc:Bounds x="742" y="182" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="f1_di" bpmnElement="f1"><di:waypoint x="148" y="200"/><di:waypoint x="200" y="200"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f2_di" bpmnElement="f2"><di:waypoint x="320" y="200"/><di:waypoint x="380" y="200"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f3_di" bpmnElement="f3"><di:waypoint x="500" y="200"/><di:waypoint x="560" y="200"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f4_di" bpmnElement="f4"><di:waypoint x="680" y="200"/><di:waypoint x="742" y="200"/></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

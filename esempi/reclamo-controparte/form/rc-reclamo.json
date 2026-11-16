@@ -1,0 +1,12 @@
+{
+  "title": "Presenta un reclamo",
+  "description": "Descrivi il problema: l'ufficio lo esamina e, se serve, chiede una risposta all'organizzazione interessata.",
+  "submitLabel": "Invia il reclamo",
+  "documenti": "carica",
+  "documentiVisibilita": "parti",
+  "fields": [
+    { "name": "oggetto", "label": "Oggetto", "type": "text", "required": true, "titolo": true, "visibileAlleParti": true, "maxLunghezza": 200 },
+    { "name": "descrizione", "label": "Descrizione del problema", "type": "textarea", "required": true, "visibileAlleParti": true },
+    { "name": "recapito", "label": "Telefono per essere ricontattato", "type": "text", "formato": "telefono" }
+  ]
+}

@@ -11,6 +11,9 @@ import java.util.List;
 @Table(name = "documento", indexes = @Index(name = "ix_documento_pratica", columnList = "processInstanceId"))
 public class Documento {
 
+    public static final String INTERNA = "INTERNA";
+    public static final String PARTI = "PARTI";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -26,6 +29,10 @@ public class Documento {
     private OffsetDateTime creatoIl;
 
     private int versioneCorrente;
+
+    /** INTERNA (solo il personale) o PARTI (anche gli utenti esterni che vedono la pratica). Testo, non enum. */
+    @Column(nullable = false, length = 20)
+    private String visibilita = INTERNA;
 
     @OneToMany(mappedBy = "documento", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("numero DESC")
@@ -43,4 +50,7 @@ public class Documento {
     public int getVersioneCorrente() { return versioneCorrente; }
     public void setVersioneCorrente(int versioneCorrente) { this.versioneCorrente = versioneCorrente; }
     public List<DocumentoVersione> getVersioni() { return versioni; }
+    public String getVisibilita() { return visibilita; }
+    public void setVisibilita(String visibilita) { this.visibilita = visibilita; }
+    public boolean visibileAlleParti() { return PARTI.equals(visibilita); }
 }
