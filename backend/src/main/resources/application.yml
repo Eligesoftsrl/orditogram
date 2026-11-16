@@ -97,6 +97,9 @@ app:
 
   login:
     locale: true                      # false: la pagina di accesso mostra solo i provider OIDC
+  organizzazioni:
+    max-utenti: 200                   # persone al massimo in un'organizzazione esterna aggiunte dal suo referente
+    max-aggiunte-ora: 20              # persone che un referente può aggiungere in un'ora (contro gli abusi)
   oidc:
     claim-utente: preferred_username  # Keycloak e Entra ID: il nome utente / l'email
     claim-gruppi: groups              # Keycloak: aggiungi il mapper "Group Membership"; oppure realm_access.roles

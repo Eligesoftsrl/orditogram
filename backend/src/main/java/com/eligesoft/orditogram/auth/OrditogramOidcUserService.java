@@ -81,6 +81,7 @@ public class OrditogramOidcUserService extends OidcUserService {
                 log.info("Primo accesso OIDC: collegato l'utente esistente {}", nome);
             }
         }
+        if (u == null) u = inAttesa(utenteOidc.getEmail(), utenteOidc.getEmailVerified()).orElse(null);
         if (u == null) {
             if (!proprieta.isCreaUtenti())
                 throw new OAuth2AuthenticationException(new OAuth2Error("utente_non_abilitato"),
@@ -110,8 +111,10 @@ public class OrditogramOidcUserService extends OidcUserService {
         }
         if (proprieta.getGruppoEsterni() != null) {
             // utente esterno dal token: nessun ruolo, qualunque cosa dica il resto del token
-            u.setTipo(esternoDaToken ? AppUser.ESTERNO : AppUser.INTERNO);
-            if (esternoDaToken) u.getRuoli().clear();
+            // chi è stato aggiunto dal referente di un'organizzazione resta esterno, qualunque cosa dica il token
+            boolean esterno = esternoDaToken || u.getCreatoDa() != null;
+            u.setTipo(esterno ? AppUser.ESTERNO : AppUser.INTERNO);
+            if (esterno) u.getRuoli().clear();
         }
         u = utenti.save(u);
 
@@ -121,9 +124,21 @@ public class OrditogramOidcUserService extends OidcUserService {
 
         // il "nome" dell'utente autenticato è lo username di Orditogram (anche se il claim non c'era)
         Map<String, Object> conNome = new LinkedHashMap<>(claims);
-        conNome.put("iter_username", nome);
+        conNome.put("iter_username", u.getUsername());
         return new DefaultOidcUser(autorizzazioni, utenteOidc.getIdToken(),
             new org.springframework.security.oauth2.core.oidc.OidcUserInfo(conNome), "iter_username");
+    }
+
+    /**
+     * Persona aggiunta dal referente della sua organizzazione, che entra per la prima volta: si collega solo con
+     * un'email che il provider dichiara verificata, e solo se l'indirizzo indica un'unica persona esterna in attesa.
+     */
+    Optional<AppUser> inAttesa(String email, Boolean verificata) {
+        if (email == null || email.isBlank() || !Boolean.TRUE.equals(verificata)) return Optional.empty();
+        List<AppUser> trovati = utenti.findByEmailIgnoreCaseAndCreatoDaIsNotNullAndOidcSoggettoIsNull(email.trim());
+        if (trovati.size() != 1 || !trovati.get(0).isEsterno()) return Optional.empty();
+        log.info("Primo accesso OIDC: collegato l'utente {} aggiunto dal referente {}", trovati.get(0).getUsername(), trovati.get(0).getCreatoDa());
+        return Optional.of(trovati.get(0));
     }
 
     private static String radice(String percorso) {

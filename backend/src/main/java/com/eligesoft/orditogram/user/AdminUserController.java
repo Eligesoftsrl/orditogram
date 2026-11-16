@@ -54,11 +54,14 @@ public class AdminUserController {
     private final PermessiService permessi;
     private final ControlliAccesso controlli;
     private final OrganizzazioneRepository organizzazioni;
+    private final com.eligesoft.orditogram.accesso.ReferentiService referenti;
 
     public AdminUserController(AppUserRepository repo, PasswordEncoder encoder, CurrentUserService currentUser,
             com.eligesoft.orditogram.registro.RegistroService registro, RuoloRepository ruoli,
-            PermessiService permessi, ControlliAccesso controlli, OrganizzazioneRepository organizzazioni) {
+            PermessiService permessi, ControlliAccesso controlli, OrganizzazioneRepository organizzazioni,
+            com.eligesoft.orditogram.accesso.ReferentiService referenti) {
         this.organizzazioni = organizzazioni;
+        this.referenti = referenti;
         this.registro = registro;
         this.repo = repo;
         this.encoder = encoder;
@@ -109,6 +112,7 @@ public class AdminUserController {
         controlli.verificaPuoGestire(u);
         AppUser salvato = repo.save(u);
         controlli.verificaRestaUnAmministratore();
+        referenti.allinea(salvato);
         String dopo = descrivi(salvato);
         boolean nuovaPassword = !isBlank(dto.password());
         registro.registra("UTENTE_MODIFICATO", salvato.getUsername(),

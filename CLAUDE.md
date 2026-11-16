@@ -38,7 +38,7 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
 | `messaggio` | messaggi in arrivo da sistemi esterni verso le pratiche |
 | `calendario` | giorni lavorativi e festività (calendari Activiti "lavorativi" e "proroga") |
 | `auth`, `user` | utenti locali, OIDC (Keycloak, Entra ID), utente corrente |
-| `accesso` | ruoli e permessi applicativi (`Permesso`, `Ruolo`, `PermessiService`), regole anti-escalation, permessi per processo (`PermessoProcesso`: AVVIA, VEDE con ambito, ESPORTA), strutture (`Organizzazione` in albero), organizzazioni esterne, utenti esterni (`AccessoEsterni`: solo API del portale), parti della pratica (`PartiService`, `AscoltatoreParti`) |
+| `accesso` | ruoli e permessi applicativi (`Permesso`, `Ruolo`, `PermessiService`), regole anti-escalation, permessi per processo (`PermessoProcesso`: AVVIA, VEDE con ambito, ESPORTA), strutture (`Organizzazione` in albero), organizzazioni esterne, utenti esterni (`AccessoEsterni`: solo API del portale), parti della pratica (`PartiService`, `AscoltatoreParti`), referenti delle organizzazioni (`ReferentiService`, portale `/api/organizzazione`) |
 | `registro` | registro delle azioni di amministrazione e accessi negati |
 | `api` | **API pubblica `/api/v1`** con chiavi, OpenAPI generata dai processi, Studio → Integrazioni |
 | `webhook` | avvisi firmati verso sistemi esterni: coda nel DB, invio con ripetizioni |
@@ -68,6 +68,8 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
   (`gruppiEffettivi()`), solo le richieste elencate in `accesso/AccessoEsterni` (una API nuova del portale va
   aggiunta lì). Parti: `pratica_parte` + variabile `parte_<ruolo>` = `org:<id>`/`utente:<username>`, risolta da
   `AscoltatoreParti` sulle attività `candidateGroups="parte:<ruolo>"`. L'avvio passa da `RuntimeService` dopo `canStart` (regole AVVIA o BPMN).
+  Referente (`organizzazione_referente`): utente esterno che gestisce le persone della sua organizzazione; ogni regola
+  in `ReferentiService`. `AppUser.passwordTemporanea`: finché è vera, `AccessoEsterni` lascia solo `/api/me` e il cambio password.
 - **Storico → eventi**: `StoricoService.registra` pubblica `EventoStorico`; i webhook lo ascoltano nella stessa transazione.
 
 ## Come si lavora
@@ -135,7 +137,7 @@ backup e ripristino, Docker, CI.
 
 ### Roadmap sicurezza e affidabilità (da rivedere con Filippo, non ancora iniziata)
 In ordine di priorità proposto:
-1. **Ruoli e permessi granulari** (fatto nella 0.12: ruoli applicativi, permessi per processo, strutture, utenti esterni, organizzazioni e parti, campi per ruolo; da fare: referente dell'organizzazione che gestisce i suoi utenti): oltre ad "amministratore", ruoli come analista, gestore utenti, auditor,
+1. **Ruoli e permessi granulari** (fatto nella 0.12: ruoli applicativi, permessi per processo, strutture, utenti esterni, organizzazioni e parti, campi per ruolo; referente dell'organizzazione che gestisce i suoi utenti): oltre ad "amministratore", ruoli come analista, gestore utenti, auditor,
    operatore; permessi per processo (chi avvia, chi vede, chi esporta), assegnabili da gruppi IdP.
 2. **Audit log completo e non modificabile**: ogni lettura e modifica di pratiche e documenti, con catena di hash
    o firma periodica, esportabile; ricerca per utente, pratica, periodo. Base per GDPR e controlli.

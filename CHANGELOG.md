@@ -83,6 +83,16 @@ Form avanzati, prima parte.
   ridotto a nome dell'"Ufficio" e i documenti visibili alle parti (il personale sceglie quali con *Mostra alle parti*);
   tra il personale, un campo può essere riservato a certi ruoli (`ruoliVisibili`). Processo d'esempio
   `esempi/reclamo-controparte` e utenti di prova esterni (`marco`, `elena`).
+- **Referente dell'organizzazione**: chi ha il permesso organizzazioni sceglie uno o più referenti tra gli utenti
+  esterni di un'organizzazione (Studio → Organizzazioni → *Persone e referenti*). Il referente, dal portale
+  (*La mia organizzazione*), aggiunge colleghi, li disattiva, li riattiva e li toglie; non dà ruoli, non tocca altri
+  referenti, utenti interni o persone di altre organizzazioni, e chi è anche in un'altra organizzazione si può solo
+  togliere dalla sua. Limiti `app.organizzazioni.max-utenti` e `max-aggiunte-ora`; tutto nel registro, con i
+  tentativi rifiutati tra gli accessi negati. Con OIDC la persona aggiunta si collega al primo accesso se il
+  provider dichiara verificata la sua email. Nella demo `elena` è referente dello Studio legale Bianchi.
+- **Cambio password** per gli utenti locali (icona a chiave in basso nel menù). Chi riceve una password temporanea
+  dal referente deve cambiarla al primo accesso e fino ad allora non fa altro; almeno 12 caratteri, senza il nome
+  utente. `/api/me` aggiunge `passwordDaCambiare` e `referenteDi`; si registra anche l'ultimo accesso.
 
 **Aggiornamento**: impostare `ORDITOGRAM_INDIRIZZO` nel file `.env` (es. `orditogram.ente.it`). Chi chiama l'API interna (`/api`, non `/api/v1`) da un browser o da uno script che manda
 cookie o `Origin` deve aggiungere l'intestazione `X-Requested-With: XMLHttpRequest`, come già fa l'interfaccia.

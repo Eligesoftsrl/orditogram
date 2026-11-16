@@ -1,7 +1,7 @@
 import { api } from '../api.js'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Building2, Briefcase, FolderOpen, Inbox, ListChecks, LogOut, Menu, Plug, Plus, ScrollText, ShieldCheck, Users, Workflow, X } from 'lucide-react'
+import { Building2, Briefcase, FolderOpen, Inbox, KeyRound, ListChecks, LogOut, Menu, Plug, Plus, ScrollText, ShieldCheck, Users, Workflow, X } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
 import { cx } from '../lib/format.js'
 import { descriviUtente, sezioniStudio } from '../lib/permessi.js'
@@ -17,7 +17,7 @@ export const useAvvio = () => useContext(AvvioContext)
 export default function Shell() {
   const [versione, setVersione] = useState(null)
   useEffect(() => { api.info().then(setVersione).catch(() => {}) }, [])
-  const { me, logout } = useAuth()
+  const { me, modo, logout } = useAuth()
   const [menu, setMenu] = useState(false)
   const [avvio, setAvvio] = useState({ aperto: false, chiave: null })
   const location = useLocation()
@@ -25,7 +25,9 @@ export default function Shell() {
 
   const nav = [
     { to: '/', label: 'Scrivania', icona: Inbox, end: true },
-    { to: '/pratiche', label: 'Pratiche', icona: FolderOpen }
+    { to: '/pratiche', label: 'Pratiche', icona: FolderOpen },
+    // il referente gestisce le persone della sua organizzazione
+    ...(me.referenteDi?.length ? [{ to: '/organizzazione', label: 'La mia organizzazione', icona: Briefcase }] : [])
   ]
   const icone = { processi: Workflow, form: ListChecks, utenti: Users, ruoli: ShieldCheck, strutture: Building2, organizzazioni: Briefcase, integrazioni: Plug, registro: ScrollText }
   const studio = sezioniStudio(me).map(s => ({ ...s, icona: icone[s.chiave] }))
@@ -69,6 +71,12 @@ export default function Shell() {
           <p className="truncate text-[15px] font-medium text-white">{me.fullName}</p>
           <p className="truncate text-[13px] text-pino-300">{descriviUtente(me)}</p>
         </div>
+        {modo === 'locale' && (
+          <NavLink to="/password" onClick={() => setMenu(false)} className="rounded-md p-2 text-pino-300 hover:bg-white/10 hover:text-white"
+                   aria-label="Cambia password" title="Cambia password">
+            <KeyRound className="size-[18px]" />
+          </NavLink>
+        )}
         <button onClick={logout} className="rounded-md p-2 text-pino-300 hover:bg-white/10 hover:text-white" aria-label="Esci" title="Esci">
           <LogOut className="size-[18px]" />
         </button>

@@ -164,7 +164,28 @@ indicato in `app.oidc.gruppo-esterni`). Un utente esterno:
 - vede solo le pratiche in cui è **parte** (lui o la sua organizzazione) o in cui ha un'attività da lavorare.
 
 **Organizzazioni** (Studio → Organizzazioni): l'anagrafica delle organizzazioni esterne, con importazione da CSV
-(`codice;nome;codiceFiscale`, un codice già presente aggiorna la riga). I loro utenti si aggiungono dalla pagina Utenti.
+(`codice;nome;codiceFiscale`, un codice già presente aggiorna la riga). I loro utenti si aggiungono dalla pagina
+Utenti, oppure li aggiunge il referente dell'organizzazione.
+
+**Referente dell'organizzazione**: in Studio → Organizzazioni → *Persone e referenti* chi ha il permesso
+organizzazioni sceglie uno o più referenti tra gli utenti esterni dell'organizzazione. Il referente resta un utente
+esterno senza ruoli; dal portale, in *La mia organizzazione*:
+- vede le persone dell'organizzazione, il loro stato e l'ultimo accesso;
+- **aggiunge** un collega con nome, cognome ed email (che diventa il nome utente). Con il login locale riceve una
+  password temporanea da comunicare, mostrata una volta sola: al primo accesso il collega deve sceglierne una sua.
+  Con un provider OIDC il collega entra con il suo account e si collega da solo, se il provider dichiara verificata
+  la sua email;
+- **disattiva**, **riattiva** e **toglie** i colleghi. Chi è anche in un'altra organizzazione si può solo togliere;
+  chi resta senza organizzazioni viene anche disattivato.
+
+Il referente non può dare ruoli, nominare altri referenti, agire su sé stesso, sugli altri referenti, sugli utenti
+interni o su persone di altre organizzazioni; un'organizzazione disattivata lo ferma. Ogni azione va nel registro
+(`REFERENTE_NOMINATO`, `UTENTE_ORGANIZZAZIONE_AGGIUNTO`, `…_DISATTIVATO`, `…_RIATTIVATO`, `…_TOLTO`), i tentativi
+rifiutati tra gli accessi negati. Limiti: `app.organizzazioni.max-utenti` (200) persone per organizzazione e
+`app.organizzazioni.max-aggiunte-ora` (20) aggiunte all'ora per referente.
+
+**Cambio password**: gli utenti locali la cambiano dall'icona a chiave in basso nel menù (almeno 12 caratteri, senza
+il nome utente). Con una password temporanea si può solo cambiarla.
 
 **Parti della pratica**: chi la pratica riguarda dall'esterno, ognuno con un ruolo.
 - Chi avvia una pratica da utente esterno ne è il **richiedente**.
@@ -188,7 +209,7 @@ nella scheda della pratica e nello storico lo vede solo chi ha uno di quei ruoli
 un'attività vede sempre i campi del suo form.
 
 Esempio completo: `esempi/reclamo-controparte` (il cittadino `marco` presenta un reclamo, l'operatore `mario` sceglie
-la controparte, `elena` dello Studio legale Bianchi risponde). Con `app.demo.utenti` gli utenti di prova esterni
+la controparte, `elena` dello Studio legale Bianchi risponde; `elena` è anche la referente dello studio). Con `app.demo.utenti` gli utenti di prova esterni
 e l'organizzazione ci sono già.
 
 ## Backup e ripristino
