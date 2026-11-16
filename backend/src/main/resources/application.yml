@@ -34,8 +34,11 @@ spring:
     password: ${DB_PASSWORD:orditogram}
   jpa:
     hibernate:
-      ddl-auto: update                # crea le tabelle applicative (utenti, form, documenti, storico, notifiche)
+      ddl-auto: validate              # le tabelle le crea Flyway (db/migration); Hibernate controlla solo che corrispondano
     open-in-view: false
+  flyway:
+    baseline-on-migrate: true         # database già esistente (Orditogram 0.12 o tabelle di Activiti): parte da zero
+    baseline-version: 0               # e applica comunque V1, che non tocca le tabelle già presenti
   servlet:
     multipart:
       max-file-size: 50MB             # dimensione massima di un singolo documento

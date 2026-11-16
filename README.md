@@ -40,7 +40,8 @@ cd backend && mvn spring-boot:run          # porta 8080
 cd frontend && npm install && npm run dev  # porta 5173
 ```
 
-Apri http://localhost:5173. Le tabelle si creano da sole. Con `app.demo.utenti: true`
+Apri http://localhost:5173. Le tabelle si creano da sole: quelle del motore (`ACT_*`) le gestisce Activiti, quelle
+di Orditogram le migrazioni Flyway (vedi "Aggiornamenti del database"). Con `app.demo.utenti: true`
 vengono creati gli utenti di prova (password `password`, tranne `admin` / `admin`):
 
 | Utente | Nome | Gruppi |
@@ -85,6 +86,18 @@ nell'intestazione, e nel resto dell'applicazione ogni richiesta che modifica dat
 del provider, cookie, `Origin` o `Sec-Fetch-Site`) deve avere l'intestazione `X-Requested-With`, che un altro sito
 non può aggiungere. Le integrazioni server-to-server con nome utente e password non ne hanno bisogno. I messaggi di
 log stanno su una riga sola (gli a capo diventano spazi), così nessuno può inserire righe false nei log.
+
+## Aggiornamenti del database
+
+Le tabelle di Orditogram nascono e cambiano solo con le migrazioni in `backend/src/main/resources/db/migration`
+(`V1__schema_iniziale.sql`, `V2__...`): all'avvio Flyway applica quelle mancanti e annota quelle fatte nella tabella
+`flyway_schema_history`. Hibernate non modifica più lo schema (`ddl-auto: validate`): se un'entità non corrisponde
+alle tabelle, Orditogram non parte e il log dice quale colonna manca, invece di scoprirlo con un errore in esercizio.
+
+- Una modifica a un'entità va sempre con una nuova migrazione `V<n>__descrizione.sql`, scritta in SQL che funzioni
+  sia su PostgreSQL sia su H2 (i test usano le stesse migrazioni). Una migrazione già rilasciata non si modifica.
+- Un database creato da Orditogram 0.12 (o precedente, aggiornato prima alla 0.12) si aggiorna da solo: la prima
+  migrazione trova le tabelle già presenti e non le tocca.
 
 ## Backup e ripristino
 
