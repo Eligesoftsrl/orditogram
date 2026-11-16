@@ -685,6 +685,27 @@ Togli il commento a `spring.mail` in `application.yml` e indica l'email degli ut
 L'email parte solo dopo che l'attività è stata salvata davvero. Senza server email il connettore "Invia email"
 non blocca la pratica: annota nello storico che l'email non è stata inviata.
 
+## Costruire una soluzione con Claude (skill `orditogram-soluzione`)
+
+Nel repository c'è una skill di Claude (`.claude/skills/orditogram-soluzione/`) che porta dalle specifiche di un
+cliente a una soluzione pronta da collaudare. Basta chiedere a Claude, nel repository, per esempio: *"Costruisci la
+soluzione Orditogram per queste specifiche"* allegando documenti o BPMN degli analisti. Claude:
+
+1. scrive `analisi.md`: attori e gruppi, passi, dati, termini, comunicazioni, integrazioni, cosa Orditogram non sa
+   fare (richieste di sviluppo), lacune della specifica con le scelte fatte e le domande per il cliente;
+2. genera `processo.bpmn20.xml`, `form/*.json`, `anagrafiche/*.json`, `permessi.json`, `permessi-anagrafiche.json`;
+3. li controlla con `script/verifica.py` (stesse regole e messaggi della pubblicazione) e li disegna
+   (`script/disposizione.py`, `script/anteprima.mjs` per l'immagine);
+4. li collauda su un Orditogram avviato con `script/collaudo.py`: un utente per gruppo, ogni strada del processo,
+   scadenze fatte scattare subito, strade di errore con varianti, controlli su attività, dati, storico e visibilità;
+   il report dice anche quali passi del diagramma nessuno scenario ha percorso;
+5. scrive la documentazione per il cliente (`script/documenta.py` genera la scheda tecnica dagli artefatti) e la
+   checklist per l'analista, che deve solo verificare;
+6. crea il pacchetto `.orditogram.zip` (`script/pacchetto.py`) e, se richiesto, lo installa (`script/installa.py`).
+
+Un esempio completo, dalle specifiche alla documentazione, è in `.claude/skills/orditogram-soluzione/esempio/`.
+La skill va aggiornata insieme a ogni funzione che cambia i formati (vedi `CLAUDE.md`).
+
 ## Struttura
 
 ```

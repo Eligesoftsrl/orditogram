@@ -115,6 +115,15 @@ laura, paolo, chiara, giulia: password `password`.
   valido su PostgreSQL e H2; `ddl-auto: validate`. Mai modificare una migrazione già rilasciata.
 - Versioni MAGGIORE.MINORE.CORREZIONE in `backend/pom.xml` e `frontend/package.json`, allineate.
 
+## Skill `orditogram-soluzione`
+`.claude/skills/orditogram-soluzione/` insegna a Claude a costruire soluzioni dalle specifiche dei clienti
+(BPMN, form, anagrafiche, permessi, pacchetto, collaudo, documentazione). **Regola**: ogni PR che aggiunge o cambia
+qualcosa che l'analista configura (elementi BPMN ammessi, estensioni `orditogram:`, connettori e loro parametri,
+proprietà dei form, anagrafiche, permessi, struttura del pacchetto, API usate dal collaudo) aggiorna nella stessa PR:
+il riferimento in `riferimenti/`, la regola in `script/verifica.py` (stesso messaggio del backend), il catalogo
+`CONNETTORI` di `verifica.py`, `script/documenta.py` se va documentato, l'esempio in `esempio/` se cambia il formato.
+`SkillEsempioIntegrationTest` pubblica l'esempio a ogni build e pretende zero errori e zero avvisi.
+
 ## Insidie già incontrate
 - **H2 nei test**: niente `MODE=PostgreSQL`, lo script di Activiti per H2 usa il tipo `IDENTITY`.
 - **Pagina `/error`**: le risposte d'errore passano dal dispatch ERROR; è `permitAll`, altrimenti chi non ha

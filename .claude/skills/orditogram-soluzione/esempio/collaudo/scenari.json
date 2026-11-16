@@ -1,0 +1,474 @@
+{
+  "password": "Collaudo-2026!",
+  "utenti": {},
+  "schede": {
+    "associazioni": [
+      {
+        "denominazione": "Banda musicale di Valfiorita",
+        "codiceFiscale": "90011122232",
+        "numeroIscrizione": "A-014",
+        "settore": "Musica",
+        "sede": "Piazza Roma 3, Valfiorita",
+        "pec": "banda.valfiorita@pec.example.it",
+        "legaleRappresentante": "Giorgio Valli"
+      },
+      {
+        "denominazione": "Compagnia teatrale Il Sipario",
+        "codiceFiscale": "90044455567",
+        "numeroIscrizione": "A-027",
+        "settore": "Teatro",
+        "pec": "ilsipario@pec.example.it",
+        "legaleRappresentante": "Marta Sala"
+      }
+    ]
+  },
+  "scenari": [
+    {
+      "nome": "Contributo concesso e liquidato (sotto i 5.000 euro)",
+      "descrizione": "Strada principale: protocollo automatico, verifica ammissibile, decisione senza parere, liquidazione.",
+      "passi": [
+        {
+          "azione": "avvia",
+          "dati": {
+            "associazione": "@scheda:associazioni:0",
+            "pec": "banda.valfiorita@pec.example.it",
+            "titoloEvento": "Concerto d'estate in piazza",
+            "dataEvento": "2027-07-10",
+            "luogo": "Piazza Roma",
+            "descrizione": "Concerto della banda con ospiti, aperto a tutti, con raccolta fondi per la scuola di musica.",
+            "patrocinio": true,
+            "usoLogo": "Sì",
+            "spese": [
+              {
+                "voce": "Service audio",
+                "importo": "1800"
+              },
+              {
+                "voce": "Rimborsi ospiti",
+                "importo": "2200"
+              }
+            ],
+            "importoRichiesto": "3000"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Verifica la domanda",
+          "dati": {
+            "numeroProtocollo": "*",
+            "associazione": "Banda musicale di Valfiorita"
+          },
+          "eventi": [
+            "CHIAMATA_API",
+            "EMAIL"
+          ]
+        },
+        {
+          "azione": "completa",
+          "attivita": "Verifica la domanda",
+          "dati": {
+            "esitoVerifica": "Ammissibile"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Decidi il contributo"
+        },
+        {
+          "azione": "completa",
+          "attivita": "Decidi il contributo",
+          "dati": {
+            "esito": "Concesso",
+            "importoConcesso": "2500",
+            "motivazioneDecisione": "Evento di interesse pubblico, spese coerenti."
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "Liquida il contributo",
+          "dati": {
+            "numeroMandato": "M-2027/0412",
+            "dataPagamento": "2026-11-16"
+          }
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineLiquidato",
+        "passa": [
+          "emailConcesso"
+        ],
+        "visibileA": [
+          "gruppo:ragioneria",
+          "gruppo:dirigenti"
+        ]
+      }
+    },
+    {
+      "nome": "Protocollo non disponibile: si protocolla a mano",
+      "descrizione": "Strada di errore: si pubblica per lo scenario una variante con il servizio di prova che risponde con un errore.",
+      "variante": {
+        "api/demo/protocollo\"": "api/demo/protocollo?simula=errore\""
+      },
+      "passi": [
+        {
+          "azione": "avvia",
+          "dati": {
+            "associazione": "@scheda:associazioni:0",
+            "pec": "banda.valfiorita@pec.example.it",
+            "titoloEvento": "Mostra fotografica",
+            "dataEvento": "2027-05-02",
+            "luogo": "Sala civica",
+            "descrizione": "Mostra di fotografie storiche del paese, con visite guidate per le scuole.",
+            "spese": [
+              {
+                "voce": "Stampe",
+                "importo": "600"
+              }
+            ],
+            "importoRichiesto": "400"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Protocolla a mano",
+          "eventi": [
+            "ERRORE"
+          ]
+        },
+        {
+          "azione": "completa",
+          "attivita": "Protocolla a mano",
+          "dati": {
+            "numeroProtocollo": "2026/009999",
+            "dataProtocollo": "2026-11-16"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Verifica la domanda",
+          "dati": {
+            "numeroProtocollo": "2026/009999"
+          },
+          "passa": [
+            "conferma"
+          ]
+        }
+      ]
+    },
+    {
+      "nome": "Sopra i 5.000 euro: parere contrario e contributo negato",
+      "passi": [
+        {
+          "azione": "avvia",
+          "dati": {
+            "associazione": "@scheda:associazioni:1",
+            "pec": "ilsipario@pec.example.it",
+            "titoloEvento": "Rassegna teatrale d'autunno",
+            "dataEvento": "2027-10-01",
+            "luogo": "Teatro comunale",
+            "descrizione": "Quattro serate di teatro contemporaneo con compagnie ospiti da altre regioni.",
+            "spese": [
+              {
+                "voce": "Cachet compagnie",
+                "importo": "9000"
+              },
+              {
+                "voce": "Allestimento",
+                "importo": "3000"
+              }
+            ],
+            "importoRichiesto": "8000"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "Verifica la domanda",
+          "dati": {
+            "esitoVerifica": "Ammissibile"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Dai il parere sul contributo"
+        },
+        {
+          "azione": "completa",
+          "attivita": "Dai il parere sul contributo",
+          "dati": {
+            "parere": "Contrario",
+            "noteParere": "Budget annuale già impegnato."
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "Decidi il contributo",
+          "dati": {
+            "esito": "Negato",
+            "motivazioneDecisione": "Fondi del capitolo esauriti."
+          }
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineNegato",
+        "passa": [
+          "parere",
+          "emailNegato"
+        ],
+        "dati": {
+          "parere": "Contrario"
+        },
+        "nonVisibileA": [
+          "gruppo:ragioneria"
+        ]
+      }
+    },
+    {
+      "nome": "Domanda non ammissibile",
+      "passi": [
+        {
+          "azione": "avvia",
+          "dati": {
+            "associazione": "@scheda:associazioni:0",
+            "pec": "banda.valfiorita@pec.example.it",
+            "titoloEvento": "Cena sociale",
+            "dataEvento": "2027-03-01",
+            "luogo": "Sede",
+            "descrizione": "Cena tra i soci per il rinnovo delle cariche dell'associazione.",
+            "spese": [
+              {
+                "voce": "Catering",
+                "importo": "900"
+              }
+            ],
+            "importoRichiesto": "500"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "Verifica la domanda",
+          "dati": {
+            "esitoVerifica": "Non ammissibile",
+            "noteVerifica": "Una cena sociale non è un evento culturale aperto al pubblico (regolamento, art. 3)."
+          }
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineNonAmmissibile",
+        "passa": [
+          "emailNonAmmissibile"
+        ]
+      }
+    },
+    {
+      "nome": "Integrazioni ricevute: l'istruttoria riprende",
+      "passi": [
+        {
+          "azione": "avvia",
+          "dati": {
+            "associazione": "@scheda:associazioni:1",
+            "pec": "ilsipario@pec.example.it",
+            "titoloEvento": "Laboratorio di teatro per ragazzi",
+            "dataEvento": "2027-04-15",
+            "luogo": "Biblioteca",
+            "descrizione": "Otto incontri di laboratorio teatrale gratuito per ragazzi dai 10 ai 14 anni.",
+            "spese": [
+              {
+                "voce": "Docente",
+                "importo": "1600"
+              }
+            ],
+            "importoRichiesto": "1200"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "Verifica la domanda",
+          "dati": {
+            "esitoVerifica": "Serve integrazione",
+            "noteVerifica": "Manca il bilancio preventivo firmato."
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Registra le integrazioni",
+          "passa": [
+            "emailIntegrazioni"
+          ]
+        },
+        {
+          "azione": "completa",
+          "attivita": "Registra le integrazioni",
+          "dati": {
+            "noteIntegrazioni": "Bilancio firmato arrivato via PEC il 20/11."
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Verifica la domanda",
+          "dati": {
+            "noteIntegrazioni": "Bilancio firmato arrivato via PEC il 20/11."
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "Verifica la domanda",
+          "dati": {
+            "esitoVerifica": "Ammissibile"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Decidi il contributo"
+        }
+      ]
+    },
+    {
+      "nome": "Nessuna integrazione in 15 giorni: archiviata",
+      "passi": [
+        {
+          "azione": "avvia",
+          "dati": {
+            "associazione": "@scheda:associazioni:0",
+            "pec": "banda.valfiorita@pec.example.it",
+            "titoloEvento": "Festa della musica",
+            "dataEvento": "2027-06-21",
+            "luogo": "Parco",
+            "descrizione": "Musica dal vivo in tutto il parco con le scuole di musica del territorio.",
+            "spese": [
+              {
+                "voce": "Palco",
+                "importo": "1500"
+              }
+            ],
+            "importoRichiesto": "1000"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "Verifica la domanda",
+          "dati": {
+            "esitoVerifica": "Serve integrazione",
+            "noteVerifica": "Manca il programma."
+          }
+        },
+        {
+          "azione": "timer",
+          "elemento": "nessunaIntegrazione"
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineArchiviata"
+      }
+    },
+    {
+      "nome": "Sollecito all'istruttore dopo 10 giorni",
+      "passi": [
+        {
+          "azione": "avvia",
+          "dati": {
+            "associazione": "@scheda:associazioni:0",
+            "pec": "banda.valfiorita@pec.example.it",
+            "titoloEvento": "Concerto di Natale",
+            "dataEvento": "2026-12-20",
+            "luogo": "Chiesa di San Rocco",
+            "descrizione": "Concerto natalizio della banda con il coro parrocchiale, ingresso libero.",
+            "spese": [
+              {
+                "voce": "Sedie",
+                "importo": "300"
+              }
+            ],
+            "importoRichiesto": "250"
+          }
+        },
+        {
+          "azione": "timer",
+          "elemento": "sollecitoVerifica"
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Verifica la domanda",
+          "passa": [
+            "notificaSollecito"
+          ],
+          "eventi": [
+            "NOTIFICA"
+          ]
+        }
+      ]
+    },
+    {
+      "nome": "Termine di 60 giorni scaduto",
+      "passi": [
+        {
+          "azione": "avvia",
+          "dati": {
+            "associazione": "@scheda:associazioni:1",
+            "pec": "ilsipario@pec.example.it",
+            "titoloEvento": "Teatro in cortile",
+            "dataEvento": "2027-08-01",
+            "luogo": "Cortile del municipio",
+            "descrizione": "Spettacolo all'aperto nel cortile del municipio per le famiglie.",
+            "spese": [
+              {
+                "voce": "Luci",
+                "importo": "700"
+              }
+            ],
+            "importoRichiesto": "600"
+          }
+        },
+        {
+          "azione": "timer",
+          "elemento": "termine60"
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineTermine",
+        "passa": [
+          "avvisoTermine"
+        ],
+        "eventi": [
+          "SCADENZA",
+          "NOTIFICA"
+        ]
+      }
+    },
+    {
+      "nome": "Rinuncia dell'associazione durante l'istruttoria",
+      "passi": [
+        {
+          "azione": "avvia",
+          "dati": {
+            "associazione": "@scheda:associazioni:1",
+            "pec": "ilsipario@pec.example.it",
+            "titoloEvento": "Reading di poesia",
+            "dataEvento": "2027-02-14",
+            "luogo": "Biblioteca",
+            "descrizione": "Lettura di poesie d'amore con accompagnamento musicale dal vivo.",
+            "spese": [
+              {
+                "voce": "Musicisti",
+                "importo": "400"
+              }
+            ],
+            "importoRichiesto": "300"
+          }
+        },
+        {
+          "azione": "messaggio",
+          "nome": "rinunciaAssociazione"
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineRinuncia"
+      }
+    }
+  ]
+}

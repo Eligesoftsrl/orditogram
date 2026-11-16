@@ -11,6 +11,14 @@ hanno ruoli e lavorano come prima le loro attività e pratiche. Il campo `admin`
 
 Form avanzati, prima parte.
 
+- **Skill per costruire soluzioni** (`.claude/skills/orditogram-soluzione`): dalle specifiche di un cliente Claude
+  scrive l'analisi (lacune, scelte, domande), genera BPMN, form, anagrafiche, permessi e pacchetto `.orditogram.zip`,
+  li verifica con le stesse regole della pubblicazione (`verifica.py`), li disegna, li collauda su un Orditogram
+  avviato percorrendo ogni strada del processo (`collaudo.py`, con report e copertura del diagramma) e scrive la
+  documentazione per il cliente (funzionale, manuale utente, manuale di esercizio, scheda tecnica generata, piano e
+  report di test) e la checklist di collaudo per l'analista. Esempio completo: contributi per eventi culturali.
+  Il test `SkillEsempioIntegrationTest` pubblica l'esempio a ogni build: se i formati cambiano, la CI lo segnala.
+
 - **Sezioni**: i form si dividono in parti con titolo e istruzioni (`{ "type": "sezione", "label" }`).
 - **Campi condizionali**: *Mostra solo se* fa comparire un campo solo quando un campo a scelta o sì/no ha certi
   valori (`visibileSe`). I campi nascosti non sono obbligatori e i loro valori non si salvano, sia
