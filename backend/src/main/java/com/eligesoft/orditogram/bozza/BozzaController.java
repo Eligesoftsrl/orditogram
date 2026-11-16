@@ -1,5 +1,7 @@
 package com.eligesoft.orditogram.bozza;
 
+import com.eligesoft.orditogram.accesso.PermessoProcesso;
+import com.eligesoft.orditogram.accesso.RegolePermessiProcesso;
 import com.eligesoft.orditogram.form.FormService;
 import com.eligesoft.orditogram.process.BpmnResourceService;
 import com.eligesoft.orditogram.user.CurrentUserService;
@@ -47,10 +49,12 @@ public class BozzaController {
     private final FormService forms;
     private final CurrentUserService currentUser;
     private final ObjectMapper mapper;
+    private final RegolePermessiProcesso permessiProcesso;
 
     public BozzaController(ProcessoBozzaRepository bozze, RepositoryService repositoryService, BpmnResourceService bpmn,
                            FormService forms, CurrentUserService currentUser, ObjectMapper mapper,
-            com.eligesoft.orditogram.registro.RegistroService registro) {
+            com.eligesoft.orditogram.registro.RegistroService registro, RegolePermessiProcesso permessiProcesso) {
+        this.permessiProcesso = permessiProcesso;
         this.registro = registro;
         this.bozze = bozze;
         this.repositoryService = repositoryService;
@@ -144,6 +148,9 @@ public class BozzaController {
                 scrivi(zip, "form/" + fk + ".json", f.toPrettyString());
                 inclusi.add(fk);
             }
+            // chi avvia, vede ed esporta: le regole dello Studio, se ci sono
+            List<RegolePermessiProcesso.Regola> regole = permessiProcesso.elenco(chiave);
+            if (!regole.isEmpty()) scrivi(zip, "permessi.json", mapper.writerWithDefaultPrettyPrinter().writeValueAsString(regole));
             ObjectNode manifest = mapper.createObjectNode();
             manifest.put("formato", 1);
             manifest.put("chiave", chiave);
@@ -171,6 +178,7 @@ public class BozzaController {
     public ResponseEntity<Map<String, Object>> importa(@RequestParam("file") MultipartFile file,
                                                        @RequestParam(defaultValue = "false") boolean sovrascrivi) throws IOException {
         String xml = null;
+        String permessiJson = null;
         Map<String, String> formFiles = new LinkedHashMap<>();
         int n = 0;
         long totale = 0;
@@ -189,6 +197,8 @@ public class BozzaController {
                 if (base.endsWith(".bpmn20.xml") || base.endsWith(".bpmn")) {
                     if (xml != null) throw bad("Il pacchetto contiene più di un processo");
                     xml = testo;
+                } else if ("permessi.json".equals(nome)) {
+                    permessiJson = testo;
                 } else if (nome.startsWith("form/") && base.endsWith(".json")) {
                     formFiles.put(base.substring(0, base.length() - 5), testo);
                 }
@@ -225,14 +235,40 @@ public class BozzaController {
         b.setAggiornatoIl(OffsetDateTime.now());
         bozze.save(b);
 
+        String permessi = importaPermessi(p.getId(), permessiJson);
+
         registro.registra("PACCHETTO_IMPORTATO", p.getId(),
             "Form: " + (validi.isEmpty() ? "nessuno" : String.join(", ", validi.keySet()))
-                + (conflitti.isEmpty() ? "" : "; sovrascritti: " + String.join(", ", conflitti)));
+                + (conflitti.isEmpty() ? "" : "; sovrascritti: " + String.join(", ", conflitti))
+                + (permessi.isEmpty() ? "" : "; permessi: " + permessi));
         return ResponseEntity.ok(Map.of("chiave", p.getId(), "nome", b.getNome(),
-            "formSalvati", validi.keySet(), "sovrascritti", conflitti));
+            "formSalvati", validi.keySet(), "sovrascritti", conflitti, "permessi", permessi));
     }
 
     // ================================================================= supporto
+
+    /**
+     * Regole di accesso del pacchetto: si applicano solo se il processo qui non ne ha ancora (nuovo ambiente),
+     * per non cambiare chi vede le pratiche di un processo già in uso. Le regole su ruoli che qui non esistono
+     * si tralasciano. Restituisce che cosa è successo, in parole.
+     */
+    private String importaPermessi(String chiave, String json) {
+        if (json == null) return "";
+        List<RegolePermessiProcesso.Regola> regole;
+        try {
+            regole = mapper.readValue(json, new com.fasterxml.jackson.core.type.TypeReference<List<RegolePermessiProcesso.Regola>>() {});
+        } catch (IOException e) {
+            throw bad("Il file permessi.json del pacchetto non è valido");
+        }
+        if (!permessiProcesso.elenco(chiave).isEmpty()) return "mantenuti quelli già presenti";
+        Set<String> mancanti = permessiProcesso.ruoliMancanti(regole);
+        List<RegolePermessiProcesso.Regola> applicabili = regole.stream()
+            .filter(r -> !(PermessoProcesso.RUOLO.equalsIgnoreCase(Objects.toString(r.tipoSoggetto(), "")) && mancanti.contains(Objects.toString(r.soggetto(), "").trim())))
+            .toList();
+        permessiProcesso.sostituisci(chiave, applicabili);
+        return applicabili.size() + " regole applicate"
+            + (mancanti.isEmpty() ? "" : ", tralasciate quelle dei ruoli che qui non esistono: " + String.join(", ", mancanti));
+    }
 
     private Map<String, Object> riepilogo(ProcessoBozza b) {
         Map<String, Object> m = new LinkedHashMap<>();

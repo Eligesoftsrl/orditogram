@@ -127,6 +127,29 @@ Chi non ha ruoli lavora le attività dei suoi gruppi e vede le sue pratiche, com
 - resta sempre almeno un amministratore attivo; nessuno disattiva o elimina sé stesso;
 - le sezioni nuove di `/api/admin` sono aperte solo a chi ha tutti i permessi finché non ricevono il loro.
 
+## Chi avvia, vede ed esporta un processo (Studio → Processi → Accesso)
+
+Per ogni processo pubblicato, il pulsante **Accesso** decide, per gruppo o per ruolo:
+- **chi può avviarlo**: se c'è almeno una regola, vale al posto di `candidateStarterGroups` del BPMN;
+- **chi vede tutte le pratiche** (supervisori, responsabili, controllo), con un ambito: tutte, quelle della propria
+  struttura, quelle della propria struttura e delle strutture sotto;
+- **chi può esportarle**: se c'è almeno una regola, solo loro (e l'amministratore) esportano l'elenco delle pratiche
+  di quel processo.
+
+Chi lavora le attività resta deciso dai gruppi del BPMN; chi ha lavorato una pratica continua a vederla. Le regole
+valgono subito per tutte le versioni del processo, vanno nel registro e viaggiano nel pacchetto (`permessi.json`):
+all'importazione si applicano solo se il processo nell'ambiente di arrivo non ne ha, tralasciando i ruoli che lì non
+esistono.
+
+**Strutture** (Studio → Strutture): gli uffici dell'ente in un albero, ad esempio dipartimento → provveditorati →
+istituti. Le persone si mettono nelle strutture dalla pagina Utenti; una pratica prende come struttura competente
+quella di chi la avvia (se ne ha una sola). Esempio: il gruppo `dirigenti` vede le pratiche "della propria struttura
+e di quelle sotto"; un dirigente del provveditorato vede quelle degli istituti della sua regione, uno del
+dipartimento le vede tutte.
+
+L'elenco delle pratiche e l'apertura di una pratica usano la stessa regola, calcolata nel database
+(`storico/VisibilitaPratiche`).
+
 ## Backup e ripristino
 
 `strumenti/backup.sh` salva database e documenti in una cartella datata (con Docker Compose o, con `MODO=locale`,

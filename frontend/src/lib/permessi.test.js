@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { codiceDa, descriviUtente, puo, sezioniStudio } from './permessi.js'
+import { alberoStrutture, codiceDa, descriviRegola, descriviUtente, puo, sezioniStudio } from './permessi.js'
 
 const analista = { permessi: ['studio.processi', 'studio.form'], ruoli: [{ codice: 'analista', nome: 'Analista' }], groups: ['analisti'] }
 const operatore = { permessi: [], ruoli: [], groups: ['operatori'] }
@@ -16,7 +16,7 @@ describe('permessi', () => {
   it('lo Studio mostra solo le sezioni permesse', () => {
     expect(sezioniStudio(analista).map(s => s.chiave)).toEqual(['processi', 'form'])
     expect(sezioniStudio(operatore)).toEqual([])
-    expect(sezioniStudio(admin).map(s => s.chiave)).toEqual(['processi', 'form', 'utenti', 'ruoli', 'integrazioni', 'registro'])
+    expect(sezioniStudio(admin).map(s => s.chiave)).toEqual(['processi', 'form', 'utenti', 'ruoli', 'strutture', 'integrazioni', 'registro'])
   })
 
   it("descrive l'utente con ruoli o gruppi", () => {
@@ -32,5 +32,22 @@ describe('codice del ruolo', () => {
     expect(codiceDa('Responsabili di zona')).toBe('responsabili-di-zona')
     expect(codiceDa('Qualità & Città')).toBe('qualita-citta')
     expect(codiceDa('  -Auditor-  ')).toBe('auditor')
+  })
+})
+
+describe('permessi per processo e strutture', () => {
+  it('descrive le regole', () => {
+    expect(descriviRegola({ azione: 'VEDE', tipoSoggetto: 'GRUPPO', soggetto: 'supervisori', ambito: 'STRUTTURA' }))
+      .toBe('gruppo supervisori, della propria struttura')
+    expect(descriviRegola({ azione: 'AVVIA', tipoSoggetto: 'RUOLO', soggetto: 'analista', ambito: 'TUTTE' }, { analista: 'Analista' }))
+      .toBe('ruolo Analista')
+  })
+
+  it("mette le strutture in ordine d'albero", () => {
+    const albero = alberoStrutture([
+      { id: 3, nome: 'Ufficio B', padreId: 1 }, { id: 1, nome: 'Regione', padreId: null },
+      { id: 2, nome: 'Ufficio A', padreId: 1 }, { id: 4, nome: 'Sportello', padreId: 2 }, { id: 5, nome: 'Altro ente', padreId: null }
+    ])
+    expect(albero.map(s => `${s.livello}:${s.nome}`)).toEqual(['0:Altro ente', '0:Regione', '1:Ufficio A', '2:Sportello', '1:Ufficio B'])
   })
 })

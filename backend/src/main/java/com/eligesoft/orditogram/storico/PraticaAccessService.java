@@ -3,7 +3,6 @@ package com.eligesoft.orditogram.storico;
 import com.eligesoft.orditogram.accesso.Permesso;
 import com.eligesoft.orditogram.form.FormService;
 import com.eligesoft.orditogram.user.CurrentUserService;
-import org.activiti.api.runtime.shared.query.Pageable;
 import org.activiti.api.task.model.builders.TaskPayloadBuilder;
 import org.activiti.api.task.runtime.TaskRuntime;
 import org.activiti.engine.HistoryService;
@@ -18,8 +17,9 @@ import java.util.Optional;
 
 /**
  * Chi può vedere una pratica e chi può modificarne i documenti.
- *  - vedere:    chi ha il permesso "pratiche.vedi-tutte", chi ha partecipato (ha un evento nello storico),
- *               chi ha un task della pratica in carico o disponibile per i suoi gruppi,
+ *  - vedere:    chi ha il permesso "pratiche.vedi-tutte", chi ha un permesso "vede" sul processo (entro l'ambito),
+ *               chi ha partecipato (ha un evento nello storico),
+ *               chi ha un task della pratica in carico o disponibile per i suoi gruppi (vedi VisibilitaPratiche),
  *               chi può vedere la pratica madre (per le pratiche avviate da un processo richiamato)
  *  - modificare i documenti: chi ha in carico un task della pratica il cui form ha "documenti": "modifica"
  */
@@ -32,11 +32,13 @@ public class PraticaAccessService {
     private final TaskService taskService;
     private final FormService forms;
     private final HistoryService historyService;
+    private final VisibilitaPratiche visibilita;
 
     public PraticaAccessService(StoricoService storico, CurrentUserService currentUser,
                                 TaskRuntime taskRuntime, TaskService taskService, FormService forms,
-                                HistoryService historyService) {
+                                HistoryService historyService, VisibilitaPratiche visibilita) {
         this.historyService = historyService;
+        this.visibilita = visibilita;
         this.storico = storico;
         this.currentUser = currentUser;
         this.taskRuntime = taskRuntime;
@@ -46,11 +48,8 @@ public class PraticaAccessService {
 
     public boolean canView(String processInstanceId) {
         if (currentUser.puo(Permesso.PRATICHE_TUTTE)) return true;
-        if (storico.haPartecipato(processInstanceId, currentUser.username())) return true;
-        // TaskRuntime restituisce solo i task assegnati all'utente o candidati per i suoi gruppi
-        if (taskRuntime.tasks(Pageable.of(0, 1),
-                TaskPayloadBuilder.tasks().withProcessInstanceId(processInstanceId).build())
-            .getTotalItems() > 0) return true;
+        // stessa regola dell'elenco: storico, attività, permessi "vede" del processo con il loro ambito
+        if (visibilita.vede(currentUser.username(), processInstanceId)) return true;
         // pratica avviata da un processo richiamato: la vede chi vede la pratica madre
         HistoricProcessInstance h = historyService.createHistoricProcessInstanceQuery()
             .processInstanceId(processInstanceId).singleResult();

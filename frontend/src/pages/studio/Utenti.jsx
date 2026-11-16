@@ -6,8 +6,9 @@ import { cx } from '../../lib/format.js'
 import { Avatar, Badge, Button, Caricamento, Errore, Pannello, Vuoto, useToast } from '../../components/ui.jsx'
 import Esporta from '../../components/Esporta.jsx'
 import Gruppi from '../../components/Gruppi.jsx'
+import { alberoStrutture } from '../../lib/permessi.js'
 
-const VUOTO = { id: null, username: '', firstName: '', lastName: '', email: '', enabled: true, ruoli: [], groups: [], password: '' }
+const VUOTO = { id: null, username: '', firstName: '', lastName: '', email: '', enabled: true, ruoli: [], groups: [], organizzazioni: [], password: '' }
 
 /**
  * Studio: utenti, gruppi e ruoli. I gruppi sono quelli usati nei BPMN (candidateGroups, candidateStarterGroups);
@@ -24,9 +25,14 @@ export default function Utenti() {
   const [attesa, setAttesa] = useState(false)
 
   const [ruoli, setRuoli] = useState([])
+  const [strutture, setStrutture] = useState([])
 
   const carica = () => api.users().then(setLista).catch(e => setErrore(e.message))
-  useEffect(() => { void carica(); api.ruoli().then(setRuoli).catch(() => {}) }, [])
+  useEffect(() => {
+    void carica()
+    api.ruoli().then(setRuoli).catch(() => {})
+    api.strutture().then(setStrutture).catch(() => {})
+  }, [])
   const nomeRuolo = (codice) => ruoli.find(r => r.codice === codice)?.nome || codice
 
   const gruppi = useMemo(() => [...new Set((lista || []).flatMap(u => u.groups))].sort((a, b) => a.localeCompare(b, 'it')), [lista])
@@ -128,6 +134,9 @@ export default function Utenti() {
                 <Gruppi valori={edit.groups} noti={gruppi} onChange={g => set('groups', g)} />
                 <SceltaRuoli ruoli={ruoli} scelti={edit.ruoli || []} daGruppi={edit.id ? (edit.ruoliDaGruppi || []) : []}
                              onChange={r => set('ruoli', r)} />
+                {strutture.length > 0 && (
+                  <SceltaStrutture strutture={strutture} scelte={edit.organizzazioni || []} onChange={v => set('organizzazioni', v)} />
+                )}
                 <div className="space-y-2 rounded-campo bg-carta px-3.5 py-3">
                   <label className="flex items-center gap-2 text-[15px]"><input type="checkbox" className="size-4 accent-verde-600" checked={edit.enabled} onChange={e => set('enabled', e.target.checked)} /> Può accedere</label>
                 </div>
@@ -172,6 +181,25 @@ function SceltaRuoli({ ruoli, scelti, daGruppi, onChange }) {
           })}
         </div>
       )}
+    </fieldset>
+  )
+}
+
+/** Strutture della persona, in ordine d'albero: le pratiche che avvia prendono la sua struttura (se è una sola). */
+function SceltaStrutture({ strutture, scelte, onChange }) {
+  const cambia = (id, si) => onChange(si ? [...scelte, id] : scelte.filter(x => x !== id))
+  return (
+    <fieldset>
+      <legend className="etichetta">Strutture</legend>
+      <div className="max-h-56 space-y-1 overflow-y-auto rounded-campo bg-carta px-3.5 py-3">
+        {alberoStrutture(strutture).map(s => (
+          <label key={s.id} className="flex items-center gap-2 text-[15px]" style={{ paddingLeft: `${s.livello * 18}px` }}>
+            <input type="checkbox" className="size-4 accent-verde-600" checked={scelte.includes(s.id)}
+                   onChange={e => cambia(s.id, e.target.checked)} />
+            <span className={s.attiva ? '' : 'text-grafite'}>{s.nome}{s.attiva ? '' : ' (disattivata)'}</span>
+          </label>
+        ))}
+      </div>
     </fieldset>
   )
 }

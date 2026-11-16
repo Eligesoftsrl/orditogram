@@ -22,6 +22,7 @@ import Utenti from './pages/studio/Utenti.jsx'
 import Registro from './pages/studio/Registro.jsx'
 import Integrazioni from './pages/studio/Integrazioni.jsx'
 import Ruoli from './pages/studio/Ruoli.jsx'
+import Strutture from './pages/studio/Strutture.jsx'
 import { PERMESSI, puo } from './lib/permessi.js'
 import ProcessEditor from './pages/studio/ProcessEditor.jsx'
 
@@ -44,6 +45,7 @@ function App() {
         {puo(me, PERMESSI.utenti) && <>
           <Route path="studio/utenti" element={<Utenti />} />
           <Route path="studio/ruoli" element={<Ruoli />} />
+          <Route path="studio/strutture" element={<Strutture />} />
         </>}
         {puo(me, PERMESSI.registro) && <Route path="studio/registro" element={<Registro />} />}
         {puo(me, PERMESSI.integrazioni) && <Route path="studio/integrazioni" element={<Integrazioni />} />}

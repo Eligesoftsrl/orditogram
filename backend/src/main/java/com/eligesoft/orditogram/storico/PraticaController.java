@@ -1,6 +1,5 @@
 package com.eligesoft.orditogram.storico;
 
-import com.eligesoft.orditogram.accesso.Permesso;
 import com.eligesoft.orditogram.form.FormService;
 import com.eligesoft.orditogram.form.ValoriForm;
 import com.eligesoft.orditogram.process.BpmnResourceService;
@@ -18,7 +17,6 @@ import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
 import org.activiti.engine.history.HistoricActivityInstance;
 import org.activiti.engine.history.HistoricProcessInstance;
-import org.activiti.engine.history.HistoricProcessInstanceQuery;
 import org.activiti.engine.task.IdentityLink;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -49,12 +47,26 @@ public class PraticaController {
     private final BpmnResourceService bpmn;
     private final ScadenzeService scadenze;
     private final com.eligesoft.orditogram.messaggio.MessaggiService messaggi;
+    private final VisibilitaPratiche visibilita;
+    private final com.eligesoft.orditogram.accesso.PraticaStrutturaRepository praticaStruttura;
+    private final com.eligesoft.orditogram.accesso.OrganizzazioneRepository organizzazioni;
+    private final com.eligesoft.orditogram.accesso.PermessiProcessoService permessiProcesso;
+    private final com.eligesoft.orditogram.registro.RegistroService registro;
 
     public PraticaController(HistoryService historyService, RuntimeService runtimeService,
                              RepositoryService repositoryService, TaskService taskService,
                              TaskRuntime taskRuntime, StoricoService storico, PraticaAccessService access,
                              CurrentUserService currentUser, FormService forms, BpmnResourceService bpmn, ScadenzeService scadenze,
-                             com.eligesoft.orditogram.messaggio.MessaggiService messaggi) {
+                             com.eligesoft.orditogram.messaggio.MessaggiService messaggi, VisibilitaPratiche visibilita,
+                             com.eligesoft.orditogram.accesso.PermessiProcessoService permessiProcesso,
+                             com.eligesoft.orditogram.registro.RegistroService registro,
+                             com.eligesoft.orditogram.accesso.PraticaStrutturaRepository praticaStruttura,
+                             com.eligesoft.orditogram.accesso.OrganizzazioneRepository organizzazioni) {
+        this.praticaStruttura = praticaStruttura;
+        this.organizzazioni = organizzazioni;
+        this.visibilita = visibilita;
+        this.permessiProcesso = permessiProcesso;
+        this.registro = registro;
         this.historyService = historyService;
         this.runtimeService = runtimeService;
         this.repositoryService = repositoryService;
@@ -75,6 +87,8 @@ public class PraticaController {
      */
     /** Dimensione massima di una pagina (anche per le esportazioni, che chiedono pagine grandi). */
     private static final int MAX_PAGINA = 1000;
+    /** Dimensione massima di una pagina dell'elenco a video. */
+    private static final int MAX_PAGINA_ELENCO = 100;
 
     /**
      * Pratiche visibili all'utente, cercate e paginate sul database.
@@ -86,42 +100,38 @@ public class PraticaController {
                                       @RequestParam(required = false) String q,
                                       @RequestParam(required = false) String processo,
                                       @RequestParam(defaultValue = "0") int pagina,
-                                      @RequestParam(defaultValue = "25") int dimensione) {
-        int dim = Math.max(1, Math.min(MAX_PAGINA, dimensione));
+                                      @RequestParam(defaultValue = "25") int dimensione,
+                                      @RequestParam(defaultValue = "false") boolean esporta) {
+        // pagine grandi solo per le esportazioni, che seguono le regole "esporta" dei processi
+        int dim = Math.max(1, Math.min(esporta ? MAX_PAGINA : MAX_PAGINA_ELENCO, dimensione));
         int pag = Math.max(0, pagina);
-        HistoricProcessInstanceQuery query = historyService.createHistoricProcessInstanceQuery()
-            .includeProcessVariables()
-            .orderByProcessInstanceStartTime().desc();
-        if ("in-corso".equals(stato)) query.unfinished();
-        if ("concluse".equals(stato)) query.finished();
-        if (processo != null && !processo.isBlank()) query.processDefinitionKey(processo.trim());
+        String utente = currentUser.username();
 
-        if (!currentUser.puo(Permesso.PRATICHE_TUTTE)) {
-            Set<String> mie = new HashSet<>(storico.praticheDi(currentUser.username()));
-            // anche quelle con un'attività disponibile per i miei gruppi
-            taskRuntime.tasks(Pageable.of(0, 500)).getContent()
-                .forEach(t -> mie.add(t.getProcessInstanceId()));
-            if (mie.isEmpty()) return pagina(List.of(), 0, pag, dim);
-            query.processInstanceIds(mie);
-        }
-
-        // ricerca sul database: titolo della pratica OPPURE tipologia il cui nome contiene il testo
+        // ricerca: titolo della pratica OPPURE tipologia il cui nome contiene il testo
         String cerca = q == null ? "" : q.trim().toLowerCase(Locale.ROOT).replace("%", "").replace("_", "");
-        if (!cerca.isEmpty()) {
-            List<String> tipologie = repositoryService.createProcessDefinitionQuery().latestVersion().list().stream()
+        List<String> tipologie = cerca.isEmpty() ? List.of()
+            : repositoryService.createProcessDefinitionQuery().latestVersion().list().stream()
                 .filter(d -> Objects.toString(d.getName(), d.getKey()).toLowerCase(Locale.ROOT).contains(cerca))
                 .map(d -> d.getKey()).distinct().toList();
-            query.or().processInstanceNameLikeIgnoreCase("%" + cerca + "%");
-            if (!tipologie.isEmpty()) query.processDefinitionKeyIn(tipologie);
-            query.endOr();
-        }
+        Set<String> esclusi = esporta ? permessiProcesso.nonEsportabili(utente) : Set.of();
 
-        long totale = query.count();
+        VisibilitaPratiche.Pagina trovate = visibilita.cerca(utente,
+            new VisibilitaPratiche.Ricerca(stato, processo, cerca, tipologie, esclusi), pag, dim);
+        if (esporta && pag == 0)
+            registro.registra("PRATICHE_ESPORTATE", processo == null || processo.isBlank() ? "tutte le tipologie" : processo,
+                trovate.totale() + " pratiche" + (cerca.isEmpty() ? "" : ", ricerca \"" + cerca + "\"")
+                    + (esclusi.isEmpty() ? "" : ", escluse le tipologie " + new TreeSet<>(esclusi) + " (permesso di esportazione)"));
+
+        // dati completi (con le variabili) solo per le pratiche della pagina, nell'ordine trovato
+        Map<String, HistoricProcessInstance> perId = new HashMap<>();
+        if (!trovate.id().isEmpty())
+            historyService.createHistoricProcessInstanceQuery().processInstanceIds(new HashSet<>(trovate.id()))
+                .includeProcessVariables().list().forEach(h -> perId.put(h.getId(), h));
         Map<String, String> nomi = new HashMap<>();
-        List<Map<String, Object>> righe = query.listPage(pag * dim, dim).stream()
+        List<Map<String, Object>> righe = trovate.id().stream().map(perId::get).filter(Objects::nonNull)
             .map(h -> riepilogo(h, nomi))
             .toList();
-        return pagina(righe, totale, pag, dim);
+        return pagina(righe, trovate.totale(), pag, dim);
     }
 
     /** Tipologie di pratica (ultima versione di ogni processo), per il filtro dell'elenco. */
@@ -152,6 +162,8 @@ public class PraticaController {
         Map<String, Object> m = riepilogo(h, new HashMap<>());
         m.put("dati", dati(h));
         m.put("eventi", storico.eventi(pi));
+        m.put("struttura", praticaStruttura.findById(pi).flatMap(ps -> organizzazioni.findById(ps.getOrganizzazioneId()))
+            .map(o -> Map.of("id", o.getId(), "nome", o.getNome())).orElse(null));
         // pratiche collegate dai processi richiamati (call activity)
         m.put("praticaMadre", h.getSuperProcessInstanceId() == null ? null
             : collegata(historyService.createHistoricProcessInstanceQuery()

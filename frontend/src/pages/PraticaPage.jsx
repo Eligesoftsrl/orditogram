@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, CalendarDays, Hourglass, Inbox, UserRound, Workflow } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Building2, CalendarDays, Hourglass, Inbox, UserRound, Workflow } from 'lucide-react'
 import { api } from '../api.js'
 import { giorno, quando } from '../lib/format.js'
 import IterRail from '../components/IterRail.jsx'
@@ -47,6 +47,7 @@ export default function PraticaPage() {
               {conclusa ? <Badge tono="pino">Conclusa</Badge> : <Badge tono="zafferano">In corso</Badge>}
               {!conclusa && p.prossimaScadenza && <BadgeScadenza s={p.prossimaScadenza} />}
               {p.avviataDa && <span className="inline-flex items-center gap-1.5"><UserRound className="size-4" /> {p.avviataDa}</span>}
+              {p.struttura && <span className="inline-flex items-center gap-1.5" title="Struttura competente"><Building2 className="size-4" /> {p.struttura.nome}</span>}
               <span className="inline-flex items-center gap-1.5"><CalendarDays className="size-4" />
                 {conclusa ? `${quando(p.inizio)} – ${quando(p.fine)}` : `dal ${quando(p.inizio)}`}
               </span>

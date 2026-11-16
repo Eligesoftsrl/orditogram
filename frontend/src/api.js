@@ -98,8 +98,8 @@ export const api = {
 
   // pratiche
   /** { righe, totale, pagina, dimensione } */
-  pratiche: (stato = 'tutte', q = '', { processo = '', pagina = 0, dimensione = 25 } = {}) =>
-    call('GET', `/api/pratiche?stato=${encodeURIComponent(stato)}&q=${encodeURIComponent(q)}&processo=${encodeURIComponent(processo)}&pagina=${pagina}&dimensione=${dimensione}`),
+  pratiche: (stato = 'tutte', q = '', { processo = '', pagina = 0, dimensione = 25, esporta = false } = {}) =>
+    call('GET', `/api/pratiche?stato=${encodeURIComponent(stato)}&q=${encodeURIComponent(q)}&processo=${encodeURIComponent(processo)}&pagina=${pagina}&dimensione=${dimensione}${esporta ? '&esporta=true' : ''}`),
   registro: ({ q = '', azione = '', pagina = 0, dimensione = 50 } = {}) =>
     call('GET', `/api/admin/registro?q=${encodeURIComponent(q)}&azione=${encodeURIComponent(azione)}&pagina=${pagina}&dimensione=${dimensione}`),
   tipologie: () => call('GET', '/api/pratiche/tipologie'),
@@ -134,6 +134,12 @@ export const api = {
   creaRuolo: (r) => call('POST', '/api/admin/ruoli', r),
   modificaRuolo: (id, r) => call('PUT', `/api/admin/ruoli/${id}`, r),
   eliminaRuolo: (id) => call('DELETE', `/api/admin/ruoli/${id}`),
+  strutture: () => call('GET', '/api/admin/strutture'),
+  creaStruttura: (s) => call('POST', '/api/admin/strutture', s),
+  modificaStruttura: (id, s) => call('PUT', `/api/admin/strutture/${id}`, s),
+  eliminaStruttura: (id) => call('DELETE', `/api/admin/strutture/${id}`),
+  permessiProcesso: (chiave) => call('GET', `/api/admin/processes/${encodeURIComponent(chiave)}/permessi`),
+  salvaPermessiProcesso: (chiave, regole) => call('PUT', `/api/admin/processes/${encodeURIComponent(chiave)}/permessi`, regole),
   adminProcesses: () => call('GET', '/api/admin/processes'),
   processXml: (id) => call('GET', `/api/admin/processes/${id}/xml`, undefined, 'text'),
   deploy: (formData) => call('POST', '/api/admin/processes/deploy', formData),
