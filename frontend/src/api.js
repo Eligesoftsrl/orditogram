@@ -37,8 +37,13 @@ async function call(method, url, body, as = 'json') {
   }
   if (!res.ok) {
     let msg = `Errore ${res.status}`
-    try { const j = await res.json(); if (j.message) msg = j.message } catch { /* vuoto */ }
-    throw new Error(msg)
+    let campi
+    try { const j = await res.json(); if (j.message) msg = j.message; if (Array.isArray(j.campi)) campi = j.campi } catch { /* vuoto */ }
+    const errore = new Error(msg)
+    // errori dei singoli campi ({campo, messaggio}): l'interfaccia li mostra accanto al campo
+    if (campi) errore.campi = campi
+    errore.stato = res.status
+    throw errore
   }
   if (as === 'blob') return res
   const text = await res.text()
@@ -206,6 +211,30 @@ export const api = {
     const fd = new FormData(); fd.append('file', file)
     return call('POST', `/api/admin/pacchetti?sovrascrivi=${sovrascrivi}`, fd)
   },
+  // anagrafiche: definizione dei tipi (Studio) e schede
+  tipiAnagraficaAdmin: () => call('GET', '/api/admin/anagrafiche'),
+  tipoAnagraficaAdmin: (codice) => call('GET', `/api/admin/anagrafiche/${encodeURIComponent(codice)}`),
+  creaTipoAnagrafica: (t) => call('POST', '/api/admin/anagrafiche', t),
+  modificaTipoAnagrafica: (codice, t) => call('PUT', `/api/admin/anagrafiche/${encodeURIComponent(codice)}`, t),
+  eliminaTipoAnagrafica: (codice) => call('DELETE', `/api/admin/anagrafiche/${encodeURIComponent(codice)}`),
+  permessiAnagrafica: (codice) => call('GET', `/api/admin/anagrafiche/${encodeURIComponent(codice)}/permessi`),
+  salvaPermessiAnagrafica: (codice, regole) => call('PUT', `/api/admin/anagrafiche/${encodeURIComponent(codice)}/permessi`, regole),
+  tipiAnagrafica: () => call('GET', '/api/anagrafiche'),
+  tipoAnagrafica: (tipo) => call('GET', `/api/anagrafiche/${encodeURIComponent(tipo)}`),
+  /** { schede: [{id, titolo, stato, modificataIl}], totale, pagina, dimensione } */
+  cercaSchede: (tipo, { testo = '', campo = '', valore = '', stato = '', pagina = 0, dimensione = 25 } = {}) =>
+    call('GET', `/api/anagrafiche/${encodeURIComponent(tipo)}/schede?testo=${encodeURIComponent(testo)}&campo=${encodeURIComponent(campo)}`
+      + `&valore=${encodeURIComponent(valore)}&stato=${encodeURIComponent(stato)}&pagina=${pagina}&dimensione=${dimensione}`),
+  scheda: (tipo, id) => call('GET', `/api/anagrafiche/${encodeURIComponent(tipo)}/schede/${id}`),
+  creaScheda: (tipo, dati) => call('POST', `/api/anagrafiche/${encodeURIComponent(tipo)}/schede`, { dati }),
+  modificaScheda: (tipo, id, versione, dati, nota) => call('PUT', `/api/anagrafiche/${encodeURIComponent(tipo)}/schede/${id}`, { versione, dati, nota }),
+  cessaScheda: (tipo, id, versione, nota) => call('POST', `/api/anagrafiche/${encodeURIComponent(tipo)}/schede/${id}/cessa`, { versione, nota }),
+  riattivaScheda: (tipo, id, versione, nota) => call('POST', `/api/anagrafiche/${encodeURIComponent(tipo)}/schede/${id}/riattiva`, { versione, nota }),
+  versioniScheda: (tipo, id) => call('GET', `/api/anagrafiche/${encodeURIComponent(tipo)}/schede/${id}/versioni`),
+  praticheScheda: (tipo, id) => call('GET', `/api/anagrafiche/${encodeURIComponent(tipo)}/schede/${id}/pratiche`),
+  esportaSchede: (tipo) => call('GET', `/api/anagrafiche/${encodeURIComponent(tipo)}/esporta`),
+  importaSchede: (tipo, file) => { const fd = new FormData(); fd.append('file', file); return call('POST', `/api/anagrafiche/${encodeURIComponent(tipo)}/importa`, fd) },
+
   forms: () => call('GET', '/api/admin/forms'),
   form: (key) => call('GET', `/api/admin/forms/${key}`),
   saveForm: (key, jsonText) => call('PUT', `/api/admin/forms/${key}`, jsonText),

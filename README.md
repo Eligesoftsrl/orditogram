@@ -216,7 +216,13 @@ e l'organizzazione ci sono già.
 
 Le anagrafiche sono gli archivi di dati stabili che le pratiche usano: fondi, società, fornitori, immobili, soggetti
 vigilati. L'analista ne definisce i **tipi** e il personale autorizzato ne gestisce le **schede**; i form delle
-pratiche le scelgono. Per ora c'è il backend (API); interfaccia e API pubblica arrivano nelle prossime versioni.
+pratiche le scelgono. L'API pubblica `/api/v1` per le anagrafiche arriva nella prossima versione.
+
+**Nell'interfaccia**: lo Studio → *Anagrafiche* elenca i tipi e li modifica con il costruttore dei form (in più le
+spunte *Dà il nome alla scheda*, *Chiave* e *Si trova con la ricerca*, e il campo *Anagrafica* per i collegamenti);
+*Chi può accedere* imposta le regole. La sezione *Anagrafiche* del menu compare a chi vede almeno un tipo: per ogni
+tipo la ricerca, la nuova scheda, l'importazione da CSV e l'esportazione; per ogni scheda dati, versioni (con i
+campi cambiati) e collegamenti (schede indicate, schede che la citano, pratiche che la usano).
 
 **Definizione** (`/api/admin/anagrafiche`, permesso `anagrafiche.definisci`, dato anche all'Analista): codice
 stabile (`fondi`), nome e campi nello **stesso formato dei form** (sezioni, tabelle, campi condizionali, regole e
@@ -269,6 +275,17 @@ può vedere la scheda, anche titolo e stato attuali. Dalla scheda, `GET /api/ana
 elenca le pratiche collegate che l'utente vede. Un'attività successiva può cambiare la scheda scelta: il collegamento
 si aggiorna e lo storico conserva il passaggio. Lo Studio rifiuta un form che sceglie da un'anagrafica che non esiste,
 e un'anagrafica usata da un form non si elimina.
+
+**Importazione da CSV** (`POST /api/anagrafiche/fondi/importa`, regola *modifica*, al massimo 5.000 righe e 10 MB):
+prima riga con le etichette o i nomi dei campi, separatore punto e virgola o virgola; date anche GG/MM/AAAA, caselle
+sì/no, numeri all'italiana. Se c'è una colonna chiave, la riga con una chiave già presente aggiorna quella scheda
+(una cella vuota svuota il campo), altrimenti crea una scheda nuova. Ogni riga si salva da sola: le righe sbagliate
+sono scartate con il motivo e le altre restano. Le colonne delle tabelle, dei campi in sola lettura e quelle col nome
+della scheda collegata (`Fondo (nome)`) si ignorano, così il file esportato si reimporta così com'è.
+
+**Esportazione** (`GET /api/anagrafiche/fondi/esporta`, regola *esporta*, al massimo 20.000 schede): tutte le schede
+con i dati che l'utente vede; l'interfaccia ne fa Excel, CSV o PDF. Nei CSV un testo che inizia con `=`, `+`, `-` o
+`@` ha un apostrofo davanti, così Excel non lo esegue come formula. Importazioni ed esportazioni vanno nel registro.
 
 **Pacchetti**: l'esportazione di un processo include le definizioni delle anagrafiche usate dai suoi form (e di quelle
 che collegano), in `anagrafiche/<codice>.json`, senza schede né permessi. All'importazione si creano quelle che mancano

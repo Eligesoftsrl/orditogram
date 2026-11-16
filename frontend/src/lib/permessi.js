@@ -23,6 +23,7 @@ export function puo(me, ...permessi) {
 export const SEZIONI_STUDIO = [
   { chiave: 'processi', to: '/studio/processi', label: 'Processi', permessi: [PERMESSI.processi] },
   { chiave: 'form', to: '/studio/form', label: 'Form', permessi: [PERMESSI.form] },
+  { chiave: 'anagrafiche', to: '/studio/anagrafiche', label: 'Anagrafiche', permessi: [PERMESSI.anagrafiche] },
   { chiave: 'utenti', to: '/studio/utenti', label: 'Utenti', permessi: [PERMESSI.utenti] },
   { chiave: 'ruoli', to: '/studio/ruoli', label: 'Ruoli', permessi: [PERMESSI.utenti] },
   { chiave: 'strutture', to: '/studio/strutture', label: 'Strutture', permessi: [PERMESSI.utenti] },

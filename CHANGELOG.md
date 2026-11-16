@@ -98,6 +98,18 @@ Form avanzati, prima parte.
   (es. `${fondo_dati.tipologia}` in un gateway); il campo può dare il titolo alla pratica. La pratica mostra le
   schede collegate (dati fotografati e stato attuale), la scheda le pratiche collegate visibili all'utente.
   I pacchetti portano con sé le definizioni delle anagrafiche usate dai form. Migrazione `V9`.
+- **Anagrafiche nell'interfaccia**: Studio → *Anagrafiche* per definire i tipi con lo stesso costruttore dei form
+  (campi chiave, ricercabili, titolo della scheda, collegamenti ad altre anagrafiche) e decidere chi consulta,
+  modifica ed esporta. Nuova sezione *Anagrafiche* per il personale che vede almeno un tipo: ricerca, nuova scheda,
+  modifica con nota, cessazione e riattivazione, versioni con i campi cambiati, schede collegate e che la citano,
+  pratiche che la usano. Nei form il campo *Anagrafica* cerca e sceglie una scheda attiva; la scheda della pratica
+  mostra le anagrafiche scelte. Errori dei campi accanto al campo, etichette e messaggi accessibili.
+- **Importazione ed esportazione delle schede**: CSV (punto e virgola o virgola, intestazioni con etichette o nomi
+  dei dati, date GG/MM/AAAA, sì/no) che aggiorna le schede con la stessa chiave; ogni riga si salva da sola e le
+  righe scartate arrivano con il motivo. Esportazione in Excel, CSV e PDF per chi ha la regola *esporta*; il CSV
+  esportato si reimporta così com'è. Importazioni ed esportazioni vanno nel registro.
+- **Esportazioni protette dalle formule**: nei CSV esportati un testo che inizia con `=`, `+`, `-` o `@` ha un
+  apostrofo davanti, così Excel non lo esegue come formula (CSV injection).
 - **Referente dell'organizzazione**: chi ha il permesso organizzazioni sceglie uno o più referenti tra gli utenti
   esterni di un'organizzazione (Studio → Organizzazioni → *Persone e referenti*). Il referente, dal portale
   (*La mia organizzazione*), aggiunge colleghi, li disattiva, li riattiva e li toglie; non dà ruoli, non tocca altri

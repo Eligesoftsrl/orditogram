@@ -1,7 +1,7 @@
 import { api } from '../api.js'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Building2, Briefcase, FolderOpen, Inbox, KeyRound, ListChecks, LogOut, Menu, Plug, Plus, ScrollText, ShieldCheck, Users, Workflow, X } from 'lucide-react'
+import { BookUser, Building2, Briefcase, Database, FolderOpen, Inbox, KeyRound, ListChecks, LogOut, Menu, Plug, Plus, ScrollText, ShieldCheck, Users, Workflow, X } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
 import { cx } from '../lib/format.js'
 import { descriviUtente, sezioniStudio } from '../lib/permessi.js'
@@ -18,6 +18,12 @@ export default function Shell() {
   const [versione, setVersione] = useState(null)
   useEffect(() => { api.info().then(setVersione).catch(() => {}) }, [])
   const { me, modo, logout } = useAuth()
+  // la sezione Anagrafiche compare a chi vede almeno un tipo (il server decide; gli esterni ricevono 403)
+  const [conAnagrafiche, setConAnagrafiche] = useState(false)
+  useEffect(() => {
+    if (me.esterno) return
+    api.tipiAnagrafica().then(t => setConAnagrafiche(t.length > 0)).catch(() => setConAnagrafiche(false))
+  }, [me])
   const [menu, setMenu] = useState(false)
   const [avvio, setAvvio] = useState({ aperto: false, chiave: null })
   const location = useLocation()
@@ -26,10 +32,11 @@ export default function Shell() {
   const nav = [
     { to: '/', label: 'Scrivania', icona: Inbox, end: true },
     { to: '/pratiche', label: 'Pratiche', icona: FolderOpen },
+    ...(conAnagrafiche ? [{ to: '/anagrafiche', label: 'Anagrafiche', icona: BookUser }] : []),
     // il referente gestisce le persone della sua organizzazione
     ...(me.referenteDi?.length ? [{ to: '/organizzazione', label: 'La mia organizzazione', icona: Briefcase }] : [])
   ]
-  const icone = { processi: Workflow, form: ListChecks, utenti: Users, ruoli: ShieldCheck, strutture: Building2, organizzazioni: Briefcase, integrazioni: Plug, registro: ScrollText }
+  const icone = { processi: Workflow, form: ListChecks, anagrafiche: Database, utenti: Users, ruoli: ShieldCheck, strutture: Building2, organizzazioni: Briefcase, integrazioni: Plug, registro: ScrollText }
   const studio = sezioniStudio(me).map(s => ({ ...s, icona: icone[s.chiave] }))
 
   const Voce = ({ v }) => (

@@ -77,6 +77,10 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
   `AccessoAnagrafiche`; tipo o scheda non visibile = 404. Validazione con `ValoriForm.convalida`, tipo campo `anagrafica`.
   Nei form delle pratiche: `AnagraficheNellePratiche` (controllo per chi compila, `pratica_anagrafica` con fotografia,
   variabili `<campo>_dati`/`<campo>_titolo`, che `CampiVisibili` lega alla visibilità del campo; mai `_dati` agli esterni).
+  CSV: `ImportaEsportaSchede` (una transazione per riga, colonne `<etichetta> (nome)` ignorate per il giro
+  esporta → importa). Interfaccia: `FormEditor` con `anagrafica={...}` per i campi dei tipi, `CampoAnagrafica` in
+  `DynamicForm`, pagine `studio/Anagrafiche.jsx`, `Anagrafiche.jsx`, `SchedeAnagrafica.jsx`, `SchedaAnagrafica.jsx`,
+  regole comuni in `lib/anagrafiche.js`. Il CSV esportato (`Esporta.jsx`) protegge le formule con un apostrofo.
 - **Storico → eventi**: `StoricoService.registra` pubblica `EventoStorico`; i webhook lo ascoltano nella stessa transazione.
 
 ## Come si lavora

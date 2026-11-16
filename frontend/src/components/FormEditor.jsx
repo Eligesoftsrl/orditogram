@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useState } from 'react'
 import {
-  TextAlignStart, Braces, Briefcase, CalendarDays, ChevronDown, ChevronUp, CircleCheck, Copy, Eye, Hash, Heading, ListChecks,
+  TextAlignStart, BookUser, Braces, Briefcase, CalendarDays, ChevronDown, ChevronUp, CircleCheck, Copy, Eye, Hash, Heading, ListChecks,
   Plus, Save, SquareCheck, Table2, Trash, Type, X
 } from 'lucide-react'
 import { api } from '../api.js'
@@ -11,7 +11,7 @@ import { FORMATI, descriviRegole } from '../lib/formRegole.js'
 
 const NESSUNA_REGOLA = { min: undefined, max: undefined, minLunghezza: undefined, maxLunghezza: undefined,
   formato: undefined, espressione: undefined, messaggioFormato: undefined, colonne: undefined, minRighe: undefined, maxRighe: undefined,
-  parte: undefined }
+  parte: undefined, tipoAnagrafica: undefined, chiave: undefined, cercabile: undefined }
 /** Identificativi interni dell'editor (chiavi di React): basta un contatore, non serve casualità. */
 let ultimoId = 0
 const nuovoId = () => ++ultimoId
@@ -32,8 +32,13 @@ const TIPI = [
   { id: 'select', label: 'Scelta', icona: ListChecks },
   { id: 'checkbox', label: 'Sì / no', icona: SquareCheck },
   { id: 'tabella', label: 'Tabella', icona: Table2 },
-  { id: 'organizzazione', label: 'Organizzazione', icona: Briefcase }
+  { id: 'organizzazione', label: 'Organizzazione', icona: Briefcase },
+  { id: 'anagrafica', label: 'Anagrafica', icona: BookUser }
 ]
+/** I tipi di campo: le anagrafiche non hanno il campo Organizzazione (le organizzazioni esterne restano dei form). */
+const tipiPer = (modo) => modo === 'anagrafica' ? TIPI.filter(t => t.id !== 'organizzazione') : TIPI
+/** Tipi che in un'anagrafica possono essere chiave, ricercabili o titolo (come DefinizioneAnagrafica nel backend). */
+const INDICIZZABILI = ['text', 'number', 'date', 'select']
 
 const DOCUMENTI = [
   { id: '', label: 'Nessuno', aiuto: 'Il form non mostra documenti.' },
@@ -57,23 +62,33 @@ function nomeDaEtichetta(s) {
  *  suggerimento: formKey proposto per un form nuovo
  *  onSalvato:    chiamato con il formKey dopo il salvataggio
  *  onEliminato:  chiamato dopo aver eliminato la versione su database
+ *  anagrafica:   { definizione, onSalva(definizione), disabilitato } per i campi di un tipo di anagrafica
+ *                (Studio → Anagrafiche): niente impostazioni del form, campi chiave e ricercabili, salva il chiamante
  */
-export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoIniziale = false, suggerimento = '', onSalvato, onEliminato }) {
+export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoIniziale = false, suggerimento = '', onSalvato, onEliminato, anagrafica }) {
   const uid = useId()
+  const modo = anagrafica ? 'anagrafica' : 'form'
+  const base = anagrafica ? {} : NUOVO
   const [catalogo, setCatalogo] = useState({})
+  const [tipiAnagrafica, setTipiAnagrafica] = useState([])
   const [sorgente, setSorgente] = useState(null)
   const [chiave, setChiave] = useState(nuovoIniziale ? suggerimento : chiaveIniziale)
   const [nuovo, setNuovo] = useState(nuovoIniziale)
-  const [form, setForm] = useState(nuovoIniziale ? { ...NUOVO, fields: [] } : null)
-  const [originale, setOriginale] = useState('')
+  const [form, setForm] = useState(() => anagrafica ? { fields: (anagrafica.definizione?.fields || []).map(conId) }
+    : nuovoIniziale ? { ...NUOVO, fields: [] } : null)
+  const [originale, setOriginale] = useState(() => anagrafica ? JSON.stringify(pulisci({ fields: anagrafica.definizione?.fields || [] })) : '')
   const [vistaJson, setVistaJson] = useState(false)
   const [testoJson, setTestoJson] = useState('')
   const [errore, setErrore] = useState('')
   const [attesa, setAttesa] = useState(false)
   const toast = useToast()
 
+  // i tipi di anagrafica, per i campi che scelgono una scheda
+  useEffect(() => { api.tipiAnagraficaAdmin().then(setTipiAnagrafica).catch(() => setTipiAnagrafica([])) }, [])
+
   // catalogo dei campi già usati negli altri form (per riusare gli stessi dati)
   useEffect(() => {
+    if (anagrafica) return
     api.forms().then(async l => {
       setSorgente(l.find(f => f.formKey === chiaveIniziale)?.source || null)
       const tutti = await Promise.all(l.map(f => api.form(f.formKey).catch(() => null)))
@@ -81,7 +96,7 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
       tutti.forEach(def => def?.fields?.forEach(f => { if (!c[f.name]) c[f.name] = f }))
       setCatalogo(c)
     }).catch(() => {})
-  }, [chiaveIniziale])
+  }, [chiaveIniziale, anagrafica])
 
   const apri = async (k) => {
     setErrore(''); setVistaJson(false)
@@ -121,7 +136,13 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
     setErrore(''); setAttesa(true)
     try {
       const testo = vistaJson ? testoJson : json
-      JSON.parse(testo)
+      const def = JSON.parse(testo)
+      if (anagrafica) {
+        await anagrafica.onSalva(def)
+        setForm({ fields: (def.fields || []).map(conId) }); setOriginale(JSON.stringify(pulisci({ fields: def.fields || [] })))
+        setVistaJson(false)
+        return
+      }
       await api.saveForm(chiave, testo)
       toast.ok(`Form "${chiave}" salvato: è già attivo nei processi che lo usano`)
       setSorgente('database')
@@ -134,7 +155,7 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
     if (!vistaJson) { setTestoJson(json); setVistaJson(true); return }
     try {
       const f = JSON.parse(testoJson)
-      setForm({ ...NUOVO, ...f, fields: (f.fields || []).map(conId) })
+      setForm({ ...base, ...f, fields: (f.fields || []).map(conId) })
       setVistaJson(false); setErrore('')
     } catch (e) { setErrore('JSON non valido: ' + e.message) }
   }
@@ -152,6 +173,7 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
     if (!form) return null
     const esempi = {}
     form.fields.filter(f => f.readonly && !eSezione(f)).forEach(f => {
+      if (f.type === 'anagrafica') { esempi[f.name] = '1'; esempi[`${f.name}_titolo`] = `Esempio di ${(f.label || 'scheda').toLowerCase()}`; return }
       esempi[f.name] = f.type === 'tabella' ? [esempioRiga(f)]
         : f.type === 'checkbox' ? true : f.type === 'date' ? '2026-10-15' : (f.label ? `Esempio di ${f.label.toLowerCase()}` : 'Esempio')
     })
@@ -163,7 +185,12 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3 rounded-pannello border border-linea bg-white px-4 py-3 shadow-pannello">
-        {nuovo ? (
+        {anagrafica ? (
+          <div className="flex flex-1 items-center gap-2">
+            <span className="font-display text-lg font-semibold">Campi della scheda</span>
+            {modificato && <Badge tono="zafferano">modifiche non salvate</Badge>}
+          </div>
+        ) : nuovo ? (
           <label className="flex flex-1 items-center gap-3">
             <span className="text-sm font-medium text-pino-800">Nome del form</span>
             <input className="campo h-9 max-w-xs font-mono text-sm" placeholder="es. richiesta-ferie" value={chiave || ''}
@@ -177,7 +204,7 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
         )}
         <Button misura="sm" variante="fantasma" icona={Braces} onClick={passaAJson}>{vistaJson ? 'Torna al costruttore' : 'JSON'}</Button>
         {!nuovo && sorgente === 'database' && onEliminato && <Button misura="sm" variante="pericolo" onClick={ripristina}>Elimina da database</Button>}
-        <Button misura="sm" variante="primario" icona={Save} disabled={!chiave} attesa={attesa} onClick={salva}>Salva</Button>
+        <Button misura="sm" variante="primario" icona={Save} disabled={anagrafica ? !!anagrafica.disabilitato : !chiave} attesa={attesa} onClick={salva}>Salva</Button>
       </div>
       <Errore>{errore}</Errore>
 
@@ -189,7 +216,7 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
                   </Pannello>
                 ) : (
                   <div className="space-y-4">
-                    <Pannello titolo="Impostazioni">
+                    {!anagrafica && <Pannello titolo="Impostazioni">
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div className="sm:col-span-2">
                           <label className="etichetta" htmlFor={`${uid}-1`}>Titolo</label>
@@ -226,19 +253,20 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
                           </label>
                         )}
                       </div>
-                    </Pannello>
+                    </Pannello>}
 
                     <Pannello titolo={`Campi (${form.fields.filter(f => !eSezione(f)).length})`} corpoClassName="space-y-2 p-3">
                       {form.fields.length === 0 && <p className="px-2 py-3 text-sm text-grafite">Nessun campo. Aggiungine uno qui sotto.</p>}
                       {form.fields.map((f, i) => (
                         <CampoEditor key={f._id} f={f} i={i} n={form.fields.length} catalogo={catalogo} campi={form.fields}
+                                     modo={modo} tipiAnagrafica={tipiAnagrafica}
                                      onChange={p => aggiornaCampo(i, p)} onSu={() => sposta(i, -1)} onGiu={() => sposta(i, 1)}
                                      onTogli={() => togli(i)} onDuplica={() => duplica(i)} />
                       ))}
                       <div className="rounded-campo border-2 border-dashed border-linea p-3">
                         <p className="mb-2 text-sm font-medium text-pino-800">Aggiungi un campo</p>
                         <div className="flex flex-wrap gap-2">
-                          {TIPI.map(t => <Button key={t.id} misura="sm" icona={t.icona} onClick={() => aggiungi(t.id)}>{t.label}</Button>)}
+                          {tipiPer(modo).map(t => <Button key={t.id} misura="sm" icona={t.icona} onClick={() => aggiungi(t.id)}>{t.label}</Button>)}
                           <Button misura="sm" variante="fantasma" icona={Heading} onClick={() => aggiungi(SEZIONE)}>Sezione</Button>
                         </div>
                       </div>
@@ -249,7 +277,7 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
                 <div className="xl:sticky xl:top-20">
                   <Pannello titolo="Anteprima" azioni={<span className="text-[13px] text-grafite">come la vedrà l'utente</span>} className="bg-white">
                     {anteprima && (anteprima.def.fields.length || anteprima.def.description
-                      ? <DynamicForm key={json} form={anteprima.def} initialValues={anteprima.esempi} avvio onSubmit={() => toast.ok('Anteprima: nessun dato inviato')} />
+                      ? <DynamicForm key={json} form={anteprima.def} initialValues={anteprima.esempi} avvio anteprima onSubmit={() => toast.ok('Anteprima: nessun dato inviato')} />
                       : <p className="text-sm text-grafite">L'anteprima compare quando aggiungi il primo campo.</p>)}
                   </Pannello>
                 </div>
@@ -299,13 +327,14 @@ function pulisci(form) {
     if (f.precompila === false) c.precompila = false
     if (!c.type) c.type = 'text'
     if (c.type !== 'organizzazione') delete c.parte
+    if (c.type !== 'anagrafica') delete c.tipoAnagrafica
     if (Array.isArray(c.ruoliVisibili) && c.ruoliVisibili.length === 0) delete c.ruoliVisibili
     return c
   })
   return out
 }
 
-function CampoEditor({ f, i, n, catalogo, campi, onChange, onSu, onGiu, onTogli, onDuplica }) {
+function CampoEditor({ f, i, n, catalogo, campi, modo, tipiAnagrafica, onChange, onSu, onGiu, onTogli, onDuplica }) {
   const uid = useId()
   const [aperto, setAperto] = useState(!!f._aperto)
   if (eSezione(f)) return <SezioneEditor {...{ f, i, n, onChange, onSu, onGiu, onTogli, aperto, setAperto }} />
@@ -332,6 +361,8 @@ function CampoEditor({ f, i, n, catalogo, campi, onChange, onSu, onGiu, onTogli,
           <span className="block truncate text-[15px] font-medium text-pino-900">{f.label || <span className="text-nebbia">Senza etichetta</span>}</span>
           <span className="block truncate text-xs text-grafite">
             {Tipo.label}{f.name ? `, ${f.name}` : ''}{f.required ? ', obbligatorio' : ''}{f.readonly ? ', sola lettura' : ''}
+            {f.type === 'anagrafica' && f.tipoAnagrafica ? `, ${tipiAnagrafica.find(t => t.codice === f.tipoAnagrafica)?.nome || f.tipoAnagrafica}` : ''}
+            {f.chiave ? ', chiave' : ''}{f.cercabile ? ', ricercabile' : ''}{modo === 'anagrafica' && f.titolo ? ', titolo' : ''}
             {cond ? `, ${descriviCondizione(cond, campi)}` : ''}
             {descriviRegole(f) ? `, ${descriviRegole(f)}` : ''}
           </span>
@@ -358,8 +389,9 @@ function CampoEditor({ f, i, n, catalogo, campi, onChange, onSu, onGiu, onTogli,
           </div>
           <div>
             <label className="etichetta" htmlFor={`${uid}-7`}>Tipo</label>
-            <select id={`${uid}-7`} className="campo" value={f.type || 'text'} onChange={e => onChange({ ...NESSUNA_REGOLA, type: e.target.value, ...perTipo(e.target.value, f) })}>
-              {TIPI.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+            <select id={`${uid}-7`} className="campo" value={f.type || 'text'} onChange={e => onChange({ ...NESSUNA_REGOLA, type: e.target.value, ...perTipo(e.target.value, f),
+              ...((modo === 'anagrafica' ? INDICIZZABILI : ['text', 'anagrafica']).includes(e.target.value) ? {} : { titolo: undefined }) })}>
+              {tipiPer(modo).map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
             </select>
           </div>
           <div>
@@ -386,23 +418,46 @@ function CampoEditor({ f, i, n, catalogo, campi, onChange, onSu, onGiu, onTogli,
             </div>
           )}
 
+          {f.type === 'anagrafica' && (
+            <div className="sm:col-span-2">
+              <label className="etichetta" htmlFor={`${uid}-11`}>Scheda di quale anagrafica</label>
+              <select id={`${uid}-11`} className="campo" value={f.tipoAnagrafica || ''} onChange={e => onChange({ tipoAnagrafica: e.target.value || undefined })}>
+                <option value="">Scegli…</option>
+                {f.tipoAnagrafica && !tipiAnagrafica.some(t => t.codice === f.tipoAnagrafica) && <option value={f.tipoAnagrafica}>{f.tipoAnagrafica}</option>}
+                {tipiAnagrafica.map(t => <option key={t.codice} value={t.codice}>{t.nome}</option>)}
+              </select>
+              <p className="mt-1 text-xs text-grafite">
+                {modo === 'anagrafica'
+                  ? 'Collega la scheda a una scheda di un\'altra anagrafica (o della stessa), scelta tra quelle attive.'
+                  : 'Chi compila sceglie una scheda attiva tra quelle che può vedere; la pratica ne conserva una fotografia.'}
+              </p>
+            </div>
+          )}
+
           <div className="flex flex-wrap gap-x-5 gap-y-2 sm:col-span-2">
             <Spunta checked={!!f.required} onChange={v => onChange({ required: v, ...(v ? { readonly: false } : {}) })}>Obbligatorio</Spunta>
             <Spunta checked={!!f.readonly} onChange={v => onChange({ readonly: v, ...(v ? { required: false } : {}) })}>Sola lettura</Spunta>
-            {!f.readonly && <Spunta checked={f.precompila === false} onChange={v => onChange({ precompila: v ? false : undefined })}>Non riproporre il valore precedente</Spunta>}
-            {!f.readonly && f.type === 'text' && <Spunta checked={!!f.titolo} onChange={v => onChange({ titolo: v })}>Usa come titolo della pratica</Spunta>}
+            {modo === 'form' && !f.readonly && <Spunta checked={f.precompila === false} onChange={v => onChange({ precompila: v ? false : undefined })}>Non riproporre il valore precedente</Spunta>}
+            {modo === 'form' && !f.readonly && ['text', 'anagrafica'].includes(f.type) && <Spunta checked={!!f.titolo} onChange={v => onChange({ titolo: v })}>Usa come titolo della pratica</Spunta>}
+            {modo === 'anagrafica' && INDICIZZABILI.includes(f.type || 'text') && <>
+              <Spunta checked={!!f.titolo} onChange={v => onChange({ titolo: v || undefined })}>Dà il nome alla scheda</Spunta>
+              <Spunta checked={!!f.chiave} onChange={v => onChange({ chiave: v || undefined, ...(v ? { visibileSe: undefined } : {}) })}>Chiave: non si ripete tra le schede</Spunta>
+              <Spunta checked={!!f.cercabile} onChange={v => onChange({ cercabile: v || undefined })}>Si trova con la ricerca</Spunta>
+            </>}
           </div>
 
           {f.type === 'tabella' && <ColonneEditor f={f} onChange={onChange} />}
 
-          {!f.readonly && !['tabella', 'organizzazione'].includes(f.type) && <RegoleEditor f={f} onChange={onChange} />}
+          {!f.readonly && !['tabella', 'organizzazione', 'anagrafica'].includes(f.type) && <RegoleEditor f={f} onChange={onChange} />}
 
           <fieldset className="space-y-2 rounded-campo bg-carta px-3 py-2.5 sm:col-span-2">
             <legend className="sr-only">Chi vede questo dato</legend>
-            <p className="text-[13px] font-medium text-pino-900">Chi vede questo dato nella pratica</p>
-            <Spunta checked={!!f.visibileAlleParti} onChange={v => onChange({ visibileAlleParti: v || undefined })}>
-              Anche le parti esterne (cittadini, organizzazioni)
-            </Spunta>
+            <p className="text-[13px] font-medium text-pino-900">{modo === 'anagrafica' ? 'Chi vede questo dato nella scheda' : 'Chi vede questo dato nella pratica'}</p>
+            {modo === 'form' && f.type !== 'anagrafica' && (
+              <Spunta checked={!!f.visibileAlleParti} onChange={v => onChange({ visibileAlleParti: v || undefined })}>
+                Anche le parti esterne (cittadini, organizzazioni)
+              </Spunta>
+            )}
             <div>
               <label className="text-[13px] text-grafite" htmlFor={`${uid}-10`}>Tra il personale, solo chi ha questi ruoli (codici separati da virgola; vuoto = tutti)</label>
               <input id={`${uid}-10`} className="campo mt-1 font-mono text-sm" placeholder="Es. auditor, responsabile"
@@ -412,7 +467,7 @@ function CampoEditor({ f, i, n, catalogo, campi, onChange, onSu, onGiu, onTogli,
           </fieldset>
 
           <div className="sm:col-span-2">
-            <CondizioneEditor f={f} campi={campi} onChange={visibileSe => onChange({ visibileSe })} />
+            {!f.chiave && <CondizioneEditor f={f} campi={campi} onChange={visibileSe => onChange({ visibileSe })} />}
           </div>
         </div>
       )}

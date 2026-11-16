@@ -25,11 +25,17 @@ import { CampoTabella, TabellaLettura, righeIniziali } from './CampoTabella.jsx'
  * Organizzazioni:       { type: "organizzazione", parte: "controparte" } sceglie un'organizzazione esterna
  *                       dall'anagrafica (il valore è il suo id); con "parte" diventa una parte della pratica.
  *                       "organizzazioni" (id -> nome) serve a mostrare quelle già scelte.
+ * Anagrafiche:          { type: "anagrafica", tipoAnagrafica: "fornitori" } sceglie una scheda attiva di quel tipo
+ *                       (il valore è il suo id); "<campo>_titolo" nei valori iniziali dà il nome di quella già scelta.
+ *
+ * anteprima:            nello Studio, i campi che cercano dati sul server (anagrafiche) non li cercano.
+ * erroriServer:         [{campo, messaggio}] restituiti dal server, mostrati accanto ai campi.
+ * children:             contenuto in più prima del pulsante (es. la nota di una modifica).
  *
  * I campi in sola lettura diventano un riepilogo in alto; quelli da compilare restano campi.
  * I campi nascosti dalle condizioni non si mostrano, non sono obbligatori e non vengono inviati.
  */
-export default function DynamicForm({ form, initialValues = {}, organizzazioni = {}, onSubmit, disabled, busy, avvio, mostraTitolo = true }) {
+export default function DynamicForm({ form, initialValues = {}, organizzazioni = {}, onSubmit, disabled, busy, avvio, mostraTitolo = true, anteprima, erroriServer, children }) {
   const campi = form.fields || []
   const lettura = campi.filter(f => f.readonly && !eSezione(f))
   const modificabili = campi.filter(f => !f.readonly && !eSezione(f))
@@ -50,6 +56,11 @@ export default function DynamicForm({ form, initialValues = {}, organizzazioni =
   const [files, setFiles] = useState([])
   const [errore, setErrore] = useState('')
   const [erroriCampi, setErroriCampi] = useState({})
+  useEffect(() => {
+    if (!erroriServer?.length) return
+    setErroriCampi(Object.fromEntries(erroriServer.map(e => [e.campo, e.messaggio])))
+    document.getElementById(`campo-${erroriServer[0].campo}`)?.focus()
+  }, [erroriServer])
   const set = (name, value) => {
     setValues(prev => ({ ...prev, [name]: value }))
     setErroriCampi(prev => { if (!prev[name]) return prev; const { [name]: _, ...resto } = prev; return resto })
@@ -102,7 +113,9 @@ export default function DynamicForm({ form, initialValues = {}, organizzazioni =
                 <dd><TabellaLettura colonne={f.colonne} righe={initialValues[f.name]} /></dd>
               ) : (
                 <dd className="mt-0.5 whitespace-pre-line break-words text-[15px] text-pino-900">
-                  {f.type === 'organizzazione' ? (organizzazioni[initialValues[f.name]] || 'Organizzazione non più attiva') : mostraValore(f, initialValues[f.name])}
+                  {f.type === 'organizzazione' ? (organizzazioni[initialValues[f.name]] || 'Organizzazione non più attiva')
+                    : f.type === 'anagrafica' ? (initialValues[`${f.name}_titolo`] || `Scheda n. ${initialValues[f.name]}`)
+                    : mostraValore(f, initialValues[f.name])}
                 </dd>
               )}
             </div>
@@ -121,13 +134,15 @@ export default function DynamicForm({ form, initialValues = {}, organizzazioni =
           <div className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
             {g.campi.map((f, i) => (
               <Campo key={f.name || `senza-nome-${i}`} f={f} value={values[f.name]} onChange={v => set(f.name, v)} disabled={disabled} errore={erroriCampi[f.name]}
-                     nomeIniziale={organizzazioni[values[f.name]]} />
+                     nomeIniziale={f.type === 'anagrafica' ? initialValues[`${f.name}_titolo`] : organizzazioni[values[f.name]]} anteprima={anteprima} />
             ))}
           </div>
         </section>
       ))}
 
       {conAllegati && <Allegati files={files} setFiles={setFiles} obbligatori={form.documentiObbligatori} disabled={disabled} />}
+
+      {children}
 
       <Errore>{errore}</Errore>
 
@@ -148,8 +163,9 @@ function mostraValore(f, v) {
   return String(v)
 }
 
-function Campo({ f, value, onChange, disabled, errore, nomeIniziale }) {
+function Campo({ f, value, onChange, disabled, errore, nomeIniziale, anteprima }) {
   if (f.type === 'tabella') return <CampoTabella f={f} value={value} onChange={onChange} disabled={disabled} errore={errore} />
+  if (f.type === 'anagrafica') return <CampoAnagrafica f={f} value={value} onChange={onChange} disabled={disabled} errore={errore} nomeIniziale={nomeIniziale} anteprima={anteprima} />
   if (f.type === 'organizzazione') return <CampoOrganizzazione f={f} value={value} onChange={onChange} disabled={disabled} errore={errore} nomeIniziale={nomeIniziale} />
   const id = `campo-${f.name}`
   const largo = f.type === 'textarea'
@@ -275,6 +291,62 @@ function CampoOrganizzazione({ f, value, onChange, disabled, errore, nomeInizial
       {errore && <p id={`${uid}-e`} role="alert" className="mt-1 text-[13px] font-medium text-mattone-600">{errore[0].toUpperCase() + errore.slice(1)}</p>}
       {problema && <p className="mt-1 text-[13px] text-mattone-600">{problema}</p>}
       {f.help && <p className="mt-1 text-[13px] text-grafite">{f.help}</p>}
+    </fieldset>
+  )
+}
+
+/**
+ * Scelta di una scheda di anagrafica: si cerca per titolo o per i campi ricercabili e si sceglie dall'elenco delle
+ * schede attive che l'utente può vedere. Il valore inviato è l'id; il server controlla di nuovo scheda e permessi.
+ */
+export function CampoAnagrafica({ f, value, onChange, disabled, errore, nomeIniziale, anteprima }) {
+  const uid = useId()
+  const id = `campo-${f.name}`
+  const [cerca, setCerca] = useState('')
+  const [risultati, setRisultati] = useState([])
+  const [altre, setAltre] = useState(0)
+  const [problema, setProblema] = useState('')
+  const [scelta, setScelta] = useState(value ? { id: value, titolo: nomeIniziale || `Scheda n. ${value}` } : null)
+
+  useEffect(() => {
+    if (anteprima || !f.tipoAnagrafica) return
+    const t = setTimeout(() => {
+      api.cercaSchede(f.tipoAnagrafica, { testo: cerca, stato: 'ATTIVA', dimensione: 30 })
+        .then(r => { setRisultati(r.schede); setAltre(Math.max(0, r.totale - r.schede.length)); setProblema('') })
+        .catch(e => setProblema(e.message))
+    }, 250)
+    return () => clearTimeout(t)
+  }, [cerca, f.tipoAnagrafica, anteprima])
+
+  const opzioni = scelta && !risultati.some(o => String(o.id) === String(scelta.id)) ? [scelta, ...risultati] : risultati
+  const descritto = [errore && `${uid}-e`, altre > 0 && `${uid}-altre`, f.help && `${uid}-h`].filter(Boolean).join(' ') || undefined
+  return (
+    <fieldset className="sm:col-span-2">
+      <legend className="etichetta">{f.label || f.name}{f.required && <span className="text-mattone-600"> *</span>}</legend>
+      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+        <label className="block">
+          <span className="sr-only">Cerca {f.label || f.name}</span>
+          <input type="search" className="campo" placeholder="Cerca per nome o codice" value={cerca} disabled={disabled || anteprima}
+                 maxLength={100} onChange={e => setCerca(e.target.value)} aria-controls={id} />
+        </label>
+        <label className="block">
+          <span className="sr-only">Scegli {f.label || f.name}</span>
+          <select id={id} className={cx('campo', errore && 'border-mattone-600!')} value={value ?? ''} disabled={disabled}
+                  aria-invalid={errore ? true : undefined} aria-describedby={descritto}
+                  onChange={e => {
+                    const o = opzioni.find(x => String(x.id) === e.target.value)
+                    setScelta(o || null)
+                    onChange(o ? String(o.id) : '')
+                  }}>
+            <option value="">{anteprima ? 'Le schede si scelgono nella pratica' : opzioni.length ? 'Scegli…' : 'Nessuna scheda trovata'}</option>
+            {opzioni.map(o => <option key={o.id} value={String(o.id)}>{o.titolo}</option>)}
+          </select>
+        </label>
+      </div>
+      {altre > 0 && <p id={`${uid}-altre`} className="mt-1 text-[13px] text-grafite">Altre {altre} schede: restringi la ricerca.</p>}
+      {errore && <p id={`${uid}-e`} role="alert" className="mt-1 text-[13px] font-medium text-mattone-600">{errore[0].toUpperCase() + errore.slice(1)}</p>}
+      {problema && <p role="alert" className="mt-1 text-[13px] text-mattone-600">{problema}</p>}
+      {f.help && <p id={`${uid}-h`} className="mt-1 text-[13px] text-grafite">{f.help}</p>}
     </fieldset>
   )
 }

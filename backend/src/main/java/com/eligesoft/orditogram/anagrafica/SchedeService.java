@@ -192,6 +192,48 @@ public class SchedeService {
         return out;
     }
 
+    /**
+     * Tutte le schede del tipo per l'esportazione (al massimo limite), in ordine di titolo: dati senza i campi
+     * riservati all'utente e, per i campi relazione, il titolo della scheda collegata se l'utente può vederla.
+     * Il permesso "esporta" lo controlla chi chiama.
+     */
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> perEsportazione(String codice, int limite) {
+        AccessoAnagrafiche.Utente u = io();
+        TipoAnagrafica t = tipoPer(u, codice, PermessoAnagrafica.ESPORTA);
+        DefinizioneAnagrafica def = definizione(t);
+        Set<String> riservati = def.riservati(u.ruoli(), u.amministratore());
+        Map<Long, Boolean> tipiVisibili = new HashMap<>();
+        Map<Long, String> titoliCollegati = new HashMap<>();
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (int p = 0; out.size() < limite; p++) {
+            Page<SchedaAnagrafica> pagina = schede.cerca(t, null, null, null, null,
+                PageRequest.of(p, 500, Sort.by("titolo").ascending().and(Sort.by("id"))));
+            for (SchedaAnagrafica s : pagina.getContent()) {
+                if (out.size() >= limite) break;
+                Map<String, Object> dati = leggiMappa(s.getDati());
+                dati.keySet().removeIf(k -> riservati.contains(k) || !def.nomi().contains(k));
+                for (var c : def.indice()) {
+                    if (!c.relazione() || dati.get(c.nome()) == null) continue;
+                    Long id = Long.valueOf(dati.get(c.nome()).toString());
+                    dati.put(c.nome() + "_titolo", titoliCollegati.computeIfAbsent(id, k -> schede.findById(k)
+                        .filter(x -> tipiVisibili.computeIfAbsent(x.getTipo().getId(),
+                            tt -> accesso.puo(u, x.getTipo(), PermessoAnagrafica.VEDE)))
+                        .map(SchedaAnagrafica::getTitolo).orElse("")));
+                }
+                Map<String, Object> riga = new LinkedHashMap<>();
+                riga.put("id", s.getId());
+                riga.put("titolo", s.getTitolo());
+                riga.put("stato", s.getStato());
+                riga.put("modificataIl", s.getModificataIl());
+                riga.put("dati", dati);
+                out.add(riga);
+            }
+            if (!pagina.hasNext()) break;
+        }
+        return out;
+    }
+
     // ------------------------------------------------------------ modifiche
 
     @Transactional

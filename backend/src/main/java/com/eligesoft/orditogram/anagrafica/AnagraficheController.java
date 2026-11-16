@@ -22,9 +22,11 @@ public class AnagraficheController {
     public record Richiesta(Long versione, Map<String, Object> dati, String nota) { }
 
     private final SchedeService schede;
+    private final ImportaEsportaSchede importaEsporta;
 
-    public AnagraficheController(SchedeService schede) {
+    public AnagraficheController(SchedeService schede, ImportaEsportaSchede importaEsporta) {
         this.schede = schede;
+        this.importaEsporta = importaEsporta;
     }
 
     @GetMapping
@@ -83,6 +85,20 @@ public class AnagraficheController {
     @GetMapping("/{tipo}/schede/{id}/pratiche")
     public List<SchedeService.PraticaCollegata> pratiche(@PathVariable String tipo, @PathVariable Long id) {
         return schede.pratiche(tipo, id);
+    }
+
+    /** Tutte le schede del tipo, per scaricarle in CSV, Excel o PDF (regola "esporta"; va nel registro). */
+    @GetMapping("/{tipo}/esporta")
+    public ImportaEsportaSchede.Esportazione esporta(@PathVariable String tipo) {
+        return importaEsporta.esporta(tipo);
+    }
+
+    /** Importazione da CSV (regola "modifica"): crea le schede nuove e aggiorna quelle con la stessa chiave. */
+    @PostMapping(value = "/{tipo}/importa", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ImportaEsportaSchede.EsitoImport importa(@PathVariable String tipo,
+                                                   @RequestParam("file") org.springframework.web.multipart.MultipartFile file)
+            throws java.io.IOException {
+        return importaEsporta.importa(tipo, file.getBytes(), file.getOriginalFilename());
     }
 
     @ExceptionHandler(DatiNonValidi.class)
