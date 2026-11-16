@@ -42,8 +42,36 @@ public class CampiVisibili {
         this.storico = storico;
     }
 
-    /** I nomi dei dati della pratica che l'utente può vedere. */
+    /**
+     * I nomi dei dati della pratica che l'utente può vedere. Le variabili ricavate da un campo anagrafica
+     * (&lt;campo&gt;_titolo e &lt;campo&gt;_dati, vedi anagrafica/AnagraficheNellePratiche) seguono il campo; agli utenti
+     * esterni la fotografia della scheda (_dati) non si mostra mai, al massimo il titolo.
+     */
     public Predicate<String> per(AppUser u, String processDefinitionId, String processInstanceId) {
+        Predicate<String> campi = perCampi(u, processDefinitionId, processInstanceId);
+        if (u == null) return campi;
+        Set<String> anagrafiche = new HashSet<>();
+        Process p = repositoryService.getBpmnModel(processDefinitionId).getMainProcess();
+        List<String> chiavi = new ArrayList<>();
+        p.findFlowElementsOfType(StartEvent.class).forEach(s -> { if (s.getFormKey() != null) chiavi.add(s.getFormKey()); });
+        p.findFlowElementsOfType(UserTask.class, true).forEach(t -> { if (t.getFormKey() != null) chiavi.add(t.getFormKey()); });
+        for (String k : new LinkedHashSet<>(chiavi))
+            for (JsonNode f : campi(forms.load(k)))
+                if (com.eligesoft.orditogram.form.ValoriForm.ANAGRAFICA.equals(f.path("type").asText())) anagrafiche.add(f.path("name").asText());
+        if (anagrafiche.isEmpty()) return campi;
+        String dati = com.eligesoft.orditogram.anagrafica.AnagraficheNellePratiche.SUFFISSO_DATI;
+        String titolo = com.eligesoft.orditogram.anagrafica.AnagraficheNellePratiche.SUFFISSO_TITOLO;
+        boolean esterno = u.isEsterno();
+        return nome -> {
+            for (String a : anagrafiche) {
+                if (nome.equals(a + dati)) return !esterno && campi.test(a);
+                if (nome.equals(a + titolo)) return campi.test(a);
+            }
+            return campi.test(nome);
+        };
+    }
+
+    private Predicate<String> perCampi(AppUser u, String processDefinitionId, String processInstanceId) {
         if (u == null) return nome -> false;
         Process p = repositoryService.getBpmnModel(processDefinitionId).getMainProcess();
         String avvio = p.findFlowElementsOfType(StartEvent.class).stream().map(StartEvent::getFormKey)

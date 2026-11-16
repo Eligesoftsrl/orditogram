@@ -31,6 +31,7 @@ public class SchedeService {
     static final int MAX_DATI = 512 * 1024;
     static final int MAX_PAGINA = 100;
     static final int MAX_CITAZIONI = 100;
+    static final int MAX_PRATICHE = 200;
 
     public record TipoVisibile(String codice, String nome, String descrizione, boolean attivo, int versione,
                                JsonNode definizione, Set<String> azioni) { }
@@ -60,10 +61,18 @@ public class SchedeService {
     private final AppUserRepository utenti;
     private final CurrentUserService utenteCorrente;
     private final ObjectMapper mapper;
+    private final PraticaAnagraficaRepository collegamentiPratiche;
+    private final com.eligesoft.orditogram.storico.VisibilitaPratiche visibilitaPratiche;
+    private final org.activiti.engine.HistoryService historyService;
 
     public SchedeService(TipoAnagraficaRepository tipi, SchedaAnagraficaRepository schede, IndiceAnagraficaRepository indice,
                          VersioneSchedaRepository versioni, AccessoAnagrafiche accesso, AppUserRepository utenti,
-                         CurrentUserService utenteCorrente, ObjectMapper mapper) {
+                         CurrentUserService utenteCorrente, ObjectMapper mapper, PraticaAnagraficaRepository collegamentiPratiche,
+                         com.eligesoft.orditogram.storico.VisibilitaPratiche visibilitaPratiche,
+                         org.activiti.engine.HistoryService historyService) {
+        this.collegamentiPratiche = collegamentiPratiche;
+        this.visibilitaPratiche = visibilitaPratiche;
+        this.historyService = historyService;
         this.tipi = tipi;
         this.schede = schede;
         this.indice = indice;
@@ -156,6 +165,31 @@ public class SchedeService {
             return new Versione(v.getNumero(), v.getOperazione(), v.getStato(), dati, v.getVersioneTipo(), v.getIl(),
                 v.getUtente(), nome, v.getNota());
         }).toList();
+    }
+
+    /** Una pratica collegata alla scheda da un campo anagrafica. */
+    public record PraticaCollegata(String id, String titolo, String processo, boolean conclusa, String campo,
+                                   String titoloFotografato, long versioneScheda, OffsetDateTime collegataIl) { }
+
+    /**
+     * Le pratiche collegate alla scheda, solo quelle che l'utente vede secondo le regole delle pratiche
+     * (storico/VisibilitaPratiche), dalle più recenti; al massimo MAX_PRATICHE controllate.
+     */
+    @Transactional(readOnly = true)
+    public List<PraticaCollegata> pratiche(String codice, Long id) {
+        AccessoAnagrafiche.Utente u = io();
+        TipoAnagrafica t = tipoPer(u, codice, PermessoAnagrafica.VEDE);
+        SchedaAnagrafica s = schedaDi(t, id);
+        List<PraticaCollegata> out = new ArrayList<>();
+        for (PraticaAnagrafica c : collegamentiPratiche.findBySchedaIdOrderByCollegataIlDesc(s.getId()).stream().limit(MAX_PRATICHE).toList()) {
+            if (!visibilitaPratiche.vede(u.username(), c.getProcessInstanceId())) continue;
+            var h = historyService.createHistoricProcessInstanceQuery().processInstanceId(c.getProcessInstanceId()).singleResult();
+            if (h == null) continue;
+            String processo = h.getProcessDefinitionName() != null ? h.getProcessDefinitionName() : h.getProcessDefinitionKey();
+            out.add(new PraticaCollegata(h.getId(), h.getName() != null ? h.getName() : processo, processo, h.getEndTime() != null,
+                c.getCampo(), c.getTitolo(), c.getVersioneScheda(), c.getCollegataIl()));
+        }
+        return out;
     }
 
     // ------------------------------------------------------------ modifiche

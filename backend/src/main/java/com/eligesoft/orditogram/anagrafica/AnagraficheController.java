@@ -79,6 +79,12 @@ public class AnagraficheController {
         return schede.versioni(tipo, id);
     }
 
+    /** Le pratiche collegate alla scheda che l'utente può vedere. */
+    @GetMapping("/{tipo}/schede/{id}/pratiche")
+    public List<SchedeService.PraticaCollegata> pratiche(@PathVariable String tipo, @PathVariable Long id) {
+        return schede.pratiche(tipo, id);
+    }
+
     @ExceptionHandler(DatiNonValidi.class)
     public ResponseEntity<Map<String, Object>> datiNonValidi(DatiNonValidi e) {
         return ResponseEntity.badRequest().body(Map.of("message", e.getMessage(),

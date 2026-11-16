@@ -91,7 +91,13 @@ Form avanzati, prima parte.
   modifica, esporta) a gruppi o ruoli; senza regole solo l'amministratore vede le schede; i campi `ruoliVisibili`
   restano nascosti anche nelle versioni; niente accesso per gli utenti esterni. Nuovo permesso
   `anagrafiche.definisci` (dato anche all'Analista); API `/api/admin/anagrafiche` e `/api/anagrafiche`;
-  migrazione `V7`. Interfaccia, collegamento alle pratiche e API pubblica arrivano nelle prossime parti.
+  migrazione `V7`. Interfaccia e API pubblica arrivano nelle prossime parti.
+- **Anagrafiche nelle pratiche**: campo di form `"type": "anagrafica"` per scegliere una scheda, controllata per chi
+  compila (esistente, del tipo giusto, attiva, visibile). La pratica si collega alla scheda con la **fotografia** dei
+  dati di quel momento (senza campi riservati), disponibile nel processo come `<campo>_dati` e `<campo>_titolo`
+  (es. `${fondo_dati.tipologia}` in un gateway); il campo può dare il titolo alla pratica. La pratica mostra le
+  schede collegate (dati fotografati e stato attuale), la scheda le pratiche collegate visibili all'utente.
+  I pacchetti portano con sé le definizioni delle anagrafiche usate dai form. Migrazione `V9`.
 - **Referente dell'organizzazione**: chi ha il permesso organizzazioni sceglie uno o più referenti tra gli utenti
   esterni di un'organizzazione (Studio → Organizzazioni → *Persone e referenti*). Il referente, dal portale
   (*La mia organizzazione*), aggiunge colleghi, li disattiva, li riattiva e li toglie; non dà ruoli, non tocca altri

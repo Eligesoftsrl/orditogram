@@ -485,8 +485,12 @@ public final class ValoriForm {
     public static String titolo(JsonNode form, Map<String, Object> vars, String nomeProcesso, LocalDate oggi) {
         if (form != null && form.has("fields")) {
             for (JsonNode f : form.get("fields"))
-                if (f.path("titolo").asBoolean(false) && pieno(vars.get(f.path("name").asText())))
+                if (f.path("titolo").asBoolean(false) && pieno(vars.get(f.path("name").asText()))) {
+                    // un campo anagrafica dà il titolo della scheda scelta, non il suo id
+                    Object titoloScheda = vars.get(f.path("name").asText() + "_titolo");
+                    if (ANAGRAFICA.equals(f.path("type").asText()) && pieno(titoloScheda)) return titoloScheda.toString();
                     return vars.get(f.path("name").asText()).toString();
+                }
         }
         if (pieno(vars.get("oggetto"))) return vars.get("oggetto").toString();
         if (form != null && form.has("fields")) {

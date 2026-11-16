@@ -58,6 +58,7 @@ public class BpmController {
     private final PraticaStrutturaRepository praticaStruttura;
     private final com.eligesoft.orditogram.accesso.PartiService parti;
     private final com.eligesoft.orditogram.storico.CampiVisibili campiVisibili;
+    private final com.eligesoft.orditogram.anagrafica.AnagraficheNellePratiche anagrafiche;
 
     public BpmController(TaskRuntime taskRuntime,
                          RepositoryService repositoryService, RuntimeService runtimeService,
@@ -66,7 +67,9 @@ public class BpmController {
                          ObjectMapper mapper, PermessiProcessoService permessiProcesso,
                          PraticaStrutturaRepository praticaStruttura,
                          com.eligesoft.orditogram.accesso.PartiService parti,
-                         com.eligesoft.orditogram.storico.CampiVisibili campiVisibili) {
+                         com.eligesoft.orditogram.storico.CampiVisibili campiVisibili,
+                         com.eligesoft.orditogram.anagrafica.AnagraficheNellePratiche anagrafiche) {
+        this.anagrafiche = anagrafiche;
         this.parti = parti;
         this.campiVisibili = campiVisibili;
         this.permessiProcesso = permessiProcesso;
@@ -145,6 +148,9 @@ public class BpmController {
 
         // parti della pratica: chi avvia, se è un utente esterno, e le organizzazioni indicate nel form
         var io = currentUser.current();
+        // schede di anagrafica scelte nel form: controllate per chi avvia, con la fotografia nelle variabili
+        var schedeScelte = anagrafiche.daForm(form, vars, io);
+        vars.putAll(com.eligesoft.orditogram.anagrafica.AnagraficheNellePratiche.variabili(schedeScelte));
         List<com.eligesoft.orditogram.accesso.PartiService.Parte> partiNuove = new ArrayList<>();
         parti.richiedente(io).ifPresent(partiNuove::add);
         partiNuove.addAll(parti.daForm(form, vars));
@@ -175,6 +181,7 @@ public class BpmController {
         storico.registra(instance.getId(), PraticaEvento.Tipo.AVVIO,
             def.getName() != null ? def.getName() : key, storico.dettagliDaForm(form, vars));
         parti.registra(instance.getId(), partiNuove);
+        anagrafiche.registra(instance.getId(), schedeScelte, currentUser.username());
         boolean perLeParti = io.isEsterno() || "parti".equals(form != null ? form.path("documentiVisibilita").asText() : "");
         for (MultipartFile f : allegati) documenti.aggiungi(instance.getId(), f, null, "Avvio", perLeParti);
 
@@ -279,6 +286,8 @@ public class BpmController {
         // così l'attività successiva assegnata a quella parte la trova già
         var partiNuove = parti.daForm(form, vars);
         vars.putAll(com.eligesoft.orditogram.accesso.PartiService.variabili(partiNuove));
+        var schedeScelte = anagrafiche.daForm(form, vars, currentUser.current(), pratica);
+        vars.putAll(com.eligesoft.orditogram.anagrafica.AnagraficheNellePratiche.variabili(schedeScelte));
 
         if (task.getAssignee() == null) {
             taskRuntime.claim(TaskPayloadBuilder.claim().withTaskId(id).build());
@@ -287,6 +296,7 @@ public class BpmController {
         storico.registra(task.getProcessInstanceId(), PraticaEvento.Tipo.COMPLETAMENTO, task.getName(),
             storico.dettagliDaForm(form, vars));
         parti.registra(task.getProcessInstanceId(), partiNuove);
+        anagrafiche.registra(task.getProcessInstanceId(), schedeScelte, currentUser.username());
 
         vars.put("chiusaDa", currentUser.current().getFullName());
         vars.put("chiusaIl", OffsetDateTime.now().toString());

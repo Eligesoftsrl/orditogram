@@ -220,6 +220,13 @@ public class ApiV1Controller {
         List<Map<String, String>> errori = new ArrayList<>();
         esito.errori().forEach(e -> errori.add(Map.of("campo", e.campo(), "messaggio", e.messaggio())));
 
+        // i campi anagrafica richiedono un utente con la regola "vede" del tipo: dall'API pubblica non si compilano
+        // ancora (arriveranno con /api/v1/anagrafiche e i suoi ambiti)
+        if (form != null) form.path("fields").forEach(f -> {
+            if (ValoriForm.ANAGRAFICA.equals(f.path("type").asText()) && esito.valori().get(f.path("name").asText()) != null)
+                errori.add(Map.of("campo", f.path("name").asText(), "messaggio", "i campi anagrafica non si compilano dall'API pubblica"));
+        });
+
         List<MultipartFile> allegati = files.stream().filter(f -> !f.isEmpty()).toList();
         String modo = ValoriForm.allegatiAvvio(form);
         if (!allegati.isEmpty() && "nessuno".equals(modo))
@@ -473,6 +480,8 @@ public class ApiV1Controller {
         Map<String, Object> out = new TreeMap<>();
         vars.forEach((k, x) -> {
             if (x == null || NASCOSTE.contains(k) || k.startsWith(com.eligesoft.orditogram.accesso.PartiService.PREFISSO_VARIABILE)) return;
+            // fotografie delle schede di anagrafica: dati dell'anagrafica, non della pratica
+            if (k.endsWith(com.eligesoft.orditogram.anagrafica.AnagraficheNellePratiche.SUFFISSO_DATI) && x instanceof Map) return;
             if (x instanceof String || x instanceof Number || x instanceof Boolean || x instanceof Date
                 || x instanceof java.time.temporal.Temporal || x instanceof JsonNode
                 || x instanceof Map || x instanceof Collection) out.put(k, x);
