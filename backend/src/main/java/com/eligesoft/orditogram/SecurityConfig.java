@@ -123,7 +123,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/demo/**").permitAll()      // servizi di prova chiamati dai processi (app.demo.servizi)
                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                 // Studio e amministrazione: ogni sezione con il suo permesso (accesso/Permesso), letto dal database
-                .requestMatchers("/api/admin/users/**", "/api/admin/ruoli/**").access(permessi.uno(Permesso.UTENTI))
+                .requestMatchers("/api/admin/users/**", "/api/admin/ruoli/**", "/api/admin/strutture/**").access(permessi.uno(Permesso.UTENTI))
                 .requestMatchers(HttpMethod.GET, "/api/admin/forms/**").access(permessi.uno(Permesso.STUDIO_FORM, Permesso.STUDIO_PROCESSI))
                 .requestMatchers("/api/admin/forms/**").access(permessi.uno(Permesso.STUDIO_FORM))
                 .requestMatchers(HttpMethod.GET, "/api/admin/gruppi").access(permessi.uno(Permesso.STUDIO_PROCESSI, Permesso.STUDIO_FORM, Permesso.UTENTI))

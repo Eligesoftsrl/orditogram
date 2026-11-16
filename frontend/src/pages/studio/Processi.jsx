@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CircleX, Download, FileCode, FileUp, ListChecks, Package, PackageOpen, Pencil, Plus, TriangleAlert, Upload, Users, Workflow } from 'lucide-react'
+import { CircleX, Download, KeyRound, FileCode, FileUp, ListChecks, Package, PackageOpen, Pencil, Plus, TriangleAlert, Upload, Users, Workflow } from 'lucide-react'
 import { api, scarica } from '../../api.js'
 import { useAuth } from '../../lib/auth.jsx'
-import { PERMESSI, puo } from '../../lib/permessi.js'
+import { descriviRegola, PERMESSI, puo } from '../../lib/permessi.js'
 import { chiaveDaNome } from '../../lib/bpmn/orditogramModeler.js'
 import { cx, dataOraCompleta, quando } from '../../lib/format.js'
 import BpmnViewer from '../../components/BpmnViewer.jsx'
 import { Badge, Button, Caricamento, Dialogo, Errore, Pannello, Vuoto, useToast } from '../../components/ui.jsx'
 import Esporta from '../../components/Esporta.jsx'
+import AccessoProcesso from '../../components/AccessoProcesso.jsx'
 
 /** Studio: i processi in produzione e il caricamento di nuovi BPMN, senza riavviare. */
 export default function Processi() {
@@ -19,6 +20,8 @@ export default function Processi() {
   const [nuovo, setNuovo] = useState(false)
   const [bozze, setBozze] = useState([])
   const [errore, setErrore] = useState('')
+  const [accesso, setAccesso] = useState(false)
+  const [regole, setRegole] = useState([])
   const navigate = useNavigate()
   const toast = useToast()
   const inputPacchetto = useRef(null)
@@ -35,7 +38,8 @@ export default function Processi() {
   useEffect(() => { void load() }, [])
 
   const apri = async (p) => {
-    setScelto(p); setXml('')
+    setScelto(p); setXml(''); setRegole([])
+    api.permessiProcesso(p.key).then(setRegole).catch(() => {})
     try { setXml(await api.processXml(p.id)) } catch (e) { setErrore(e.message) }
   }
 
@@ -133,6 +137,7 @@ export default function Processi() {
           {scelto && (
             <Pannello titolo={<div><h2 className="text-xl font-semibold">{scelto.name}</h2><p className="text-[13px] text-grafite">{scelto.key}, versione {scelto.version} di {scelto.versions}</p></div>}
                       azioni={<>
+                        <Button misura="sm" variante="fantasma" icona={KeyRound} onClick={() => setAccesso(true)}>Accesso</Button>
                         <Button misura="sm" variante="fantasma" icona={Download} disabled={!xml} onClick={scaricaXml}>BPMN</Button>
                         <Button misura="sm" variante="fantasma" icona={Package}
                                 onClick={() => scarica(api.urlPacchetto(scelto.key)).catch(e => toast.errore(e.message))}>Esporta pacchetto</Button>
@@ -143,10 +148,19 @@ export default function Processi() {
               <div className="space-y-5">
                 {xml ? <BpmnViewer xml={xml} altezza={360} /> : <Caricamento />}
                 <dl className="grid gap-4 sm:grid-cols-3">
-                  <Fatto icona={Users} label="Chi può avviarlo">{scelto.starterGroups?.length ? scelto.starterGroups.join(', ') : 'Tutti gli utenti'}</Fatto>
+                  <Fatto icona={Users} label="Chi può avviarlo">
+                    {regole.some(r => r.azione === 'AVVIA') ? regole.filter(r => r.azione === 'AVVIA').map(r => descriviRegola(r)).join(', ')
+                      : scelto.starterGroups?.length ? scelto.starterGroups.join(', ') : 'Tutti gli utenti'}
+                  </Fatto>
                   <Fatto icona={Users} label="Gruppi coinvolti">{scelto.groups.join(', ') || 'Nessuno'}</Fatto>
                   <Fatto icona={ListChecks} label="Form usati">{scelto.formKeys.join(', ') || 'Nessuno'}</Fatto>
                 </dl>
+                {regole.some(r => r.azione !== 'AVVIA') && (
+                  <p className="text-sm text-grafite">
+                    {regole.some(r => r.azione === 'VEDE') && <>Vedono tutte le pratiche: {regole.filter(r => r.azione === 'VEDE').map(r => descriviRegola(r)).join('; ')}. </>}
+                    {regole.some(r => r.azione === 'ESPORTA') && <>Esportano: {regole.filter(r => r.azione === 'ESPORTA').map(r => descriviRegola(r)).join(', ')}.</>}
+                  </p>
+                )}
                 {(scelto.errors.length > 0 || scelto.warnings.length > 0) && (
                   <ul className="space-y-2">
                     {scelto.errors.map(w => <Avviso key={w} grave>{w}</Avviso>)}
@@ -162,6 +176,7 @@ export default function Processi() {
       <NuovoProcesso aperto={nuovo} onClose={() => setNuovo(false)}
                      esistenti={[...(lista || []).map(p => p.key), ...bozze.map(b => b.chiave)]}
                      onCrea={(chiave, nome) => navigate(`/studio/editor/${chiave}?nome=${encodeURIComponent(nome)}`)} />
+      <AccessoProcesso aperto={accesso} onClose={() => setAccesso(false)} processo={scelto} onSalvato={setRegole} />
       <CaricaProcesso aperto={carica} onClose={() => setCarica(false)} onDeploy={(key) => { setCarica(false); void load(key) }} />
     </div>
   )

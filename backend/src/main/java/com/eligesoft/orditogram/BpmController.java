@@ -1,5 +1,8 @@
 package com.eligesoft.orditogram;
 
+import com.eligesoft.orditogram.accesso.PermessiProcessoService;
+import com.eligesoft.orditogram.accesso.PraticaStruttura;
+import com.eligesoft.orditogram.accesso.PraticaStrutturaRepository;
 import com.eligesoft.orditogram.documento.DocumentoService;
 import com.eligesoft.orditogram.form.FormService;
 import com.eligesoft.orditogram.form.ValoriForm;
@@ -11,8 +14,6 @@ import com.eligesoft.orditogram.user.CurrentUserService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.activiti.api.process.model.builders.ProcessPayloadBuilder;
-import org.activiti.api.process.runtime.ProcessRuntime;
 import org.activiti.api.runtime.shared.query.Pageable;
 import org.activiti.api.task.model.Task;
 import org.activiti.api.task.model.builders.TaskPayloadBuilder;
@@ -43,7 +44,6 @@ import java.util.*;
 @RequestMapping("/api")
 public class BpmController {
 
-    private final ProcessRuntime processRuntime;
     private final TaskRuntime taskRuntime;
     private final RepositoryService repositoryService;
     private final RuntimeService runtimeService;
@@ -54,13 +54,17 @@ public class BpmController {
     private final DocumentoService documenti;
     private final ScadenzeService scadenze;
     private final ObjectMapper mapper;
+    private final PermessiProcessoService permessiProcesso;
+    private final PraticaStrutturaRepository praticaStruttura;
 
-    public BpmController(ProcessRuntime processRuntime, TaskRuntime taskRuntime,
+    public BpmController(TaskRuntime taskRuntime,
                          RepositoryService repositoryService, RuntimeService runtimeService,
                          CurrentUserService currentUser, FormService forms, BpmnResourceService bpmn,
                          StoricoService storico, DocumentoService documenti, ScadenzeService scadenze,
-                         ObjectMapper mapper) {
-        this.processRuntime = processRuntime;
+                         ObjectMapper mapper, PermessiProcessoService permessiProcesso,
+                         PraticaStrutturaRepository praticaStruttura) {
+        this.permessiProcesso = permessiProcesso;
+        this.praticaStruttura = praticaStruttura;
         this.taskRuntime = taskRuntime;
         this.repositoryService = repositoryService;
         this.runtimeService = runtimeService;
@@ -137,11 +141,23 @@ public class BpmController {
         // username di chi avvia: serve ai connettori che partono subito (es. email a "chi ha avviato la pratica")
         vars.put("avviataDaUtente", currentUser.username());
 
-        var instance = processRuntime.start(ProcessPayloadBuilder.start()
-            .withProcessDefinitionKey(key)
-            .withName(titoloPratica(form, vars, def))
-            .withVariables(vars)
-            .build());
+        // l'autorizzazione l'ha già data canStart (BPMN o regole "avvia" dello Studio): si avvia dal motore,
+        // con l'utente come iniziatore, così le regole dello Studio possono anche allargare quelle del BPMN
+        ProcessInstance instance;
+        org.activiti.engine.impl.identity.Authentication.setAuthenticatedUserId(currentUser.username());
+        try {
+            instance = runtimeService.createProcessInstanceBuilder()
+                .processDefinitionId(def.getId())
+                .name(titoloPratica(form, vars, def))
+                .variables(vars)
+                .start();
+        } finally {
+            org.activiti.engine.impl.identity.Authentication.setAuthenticatedUserId(null);
+        }
+        // struttura competente: quella di chi avvia, se ne ha una sola
+        Set<Long> struttureMie = currentUser.current().getOrganizzazioni();
+        if (struttureMie.size() == 1)
+            praticaStruttura.save(new PraticaStruttura(instance.getId(), struttureMie.iterator().next()));
 
         storico.registra(instance.getId(), PraticaEvento.Tipo.AVVIO,
             def.getName() != null ? def.getName() : key, storico.dettagliDaForm(form, vars));
@@ -246,12 +262,15 @@ public class BpmController {
     // ================================================================= supporto
 
     /**
-     * Chi può avviare: candidateStarterGroups/Users del BPMN; se non indicati, tutti.
-     * Nessuna eccezione per l'amministratore: Activiti applica la stessa regola in ProcessRuntime.start
-     * e rifiuterebbe comunque l'avvio ("Unable to find process definition...").
+     * Chi può avviare: le regole "avvia" dello Studio, se il processo ne ha; altrimenti candidateStarterGroups/Users
+     * del BPMN e, se non indicati, tutti. Nessuna eccezione per l'amministratore.
      */
     private boolean canStart(String processDefinitionId) {
         Process p = repositoryService.getBpmnModel(processDefinitionId).getMainProcess();
+        return permessiProcesso.puoAvviare(currentUser.username(), p.getId(), () -> canStartBpmn(p));
+    }
+
+    private boolean canStartBpmn(Process p) {
         List<String> groups = p.getCandidateStarterGroups();
         List<String> users = p.getCandidateStarterUsers();
         if (groups.isEmpty() && users.isEmpty()) return true;

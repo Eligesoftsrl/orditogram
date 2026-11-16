@@ -38,7 +38,7 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
 | `messaggio` | messaggi in arrivo da sistemi esterni verso le pratiche |
 | `calendario` | giorni lavorativi e festività (calendari Activiti "lavorativi" e "proroga") |
 | `auth`, `user` | utenti locali, OIDC (Keycloak, Entra ID), utente corrente |
-| `accesso` | ruoli e permessi applicativi (`Permesso`, `Ruolo`, `PermessiService`), regole anti-escalation |
+| `accesso` | ruoli e permessi applicativi (`Permesso`, `Ruolo`, `PermessiService`), regole anti-escalation, permessi per processo (`PermessoProcesso`: AVVIA, VEDE con ambito, ESPORTA), strutture (`Organizzazione` in albero) |
 | `registro` | registro delle azioni di amministrazione e accessi negati |
 | `api` | **API pubblica `/api/v1`** con chiavi, OpenAPI generata dai processi, Studio → Integrazioni |
 | `webhook` | avvisi firmati verso sistemi esterni: coda nel DB, invio con ripetizioni |
@@ -61,6 +61,8 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
   permesso (`accesso/Permesso`, letto dal DB a ogni richiesta, `AutorizzazioniAdmin`); ruoli assegnati a utenti o
   gruppi; l'amministratore ha sempre tutti i permessi. Un permesso nuovo: enum `Permesso` + regola in `SecurityConfig`
   + `lib/permessi.js`. Mai dare/togliere permessi che chi agisce non ha (`ControlliAccesso`).
+- **Chi vede una pratica**: una sola regola SQL in `storico/VisibilitaPratiche` (elenco e dettaglio), più la pratica
+  madre in `PraticaAccessService`. L'avvio passa da `RuntimeService` dopo `canStart` (regole AVVIA o BPMN).
 - **Storico → eventi**: `StoricoService.registra` pubblica `EventoStorico`; i webhook lo ascoltano nella stessa transazione.
 
 ## Come si lavora
@@ -128,7 +130,7 @@ backup e ripristino, Docker, CI.
 
 ### Roadmap sicurezza e affidabilità (da rivedere con Filippo, non ancora iniziata)
 In ordine di priorità proposto:
-1. **Ruoli e permessi granulari** (in corso nella 0.12: ruoli applicativi fatti; poi permessi per processo, strutture, utenti esterni): oltre ad "amministratore", ruoli come analista, gestore utenti, auditor,
+1. **Ruoli e permessi granulari** (in corso nella 0.12: ruoli applicativi, permessi per processo e strutture fatti; poi utenti esterni e parti): oltre ad "amministratore", ruoli come analista, gestore utenti, auditor,
    operatore; permessi per processo (chi avvia, chi vede, chi esporta), assegnabili da gruppi IdP.
 2. **Audit log completo e non modificabile**: ogni lettura e modifica di pratiche e documenti, con catena di hash
    o firma periodica, esportabile; ricerca per utente, pratica, periodo. Base per GDPR e controlli.

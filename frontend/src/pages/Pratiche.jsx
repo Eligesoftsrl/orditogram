@@ -50,7 +50,7 @@ export default function Pratiche() {
   const caricaTutte = async () => {
     const out = []
     for (let p = 0; out.length < MAX_ESPORTAZIONE; p++) {
-      const r = await api.pratiche(stato, q, { processo, pagina: p, dimensione: 1000 })
+      const r = await api.pratiche(stato, q, { processo, pagina: p, dimensione: 1000, esporta: true })
       out.push(...r.righe)
       if (out.length >= r.totale || r.righe.length === 0) break
     }

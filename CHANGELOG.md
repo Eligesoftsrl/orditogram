@@ -62,6 +62,16 @@ Form avanzati, prima parte.
   di accesso (Keycloak, Entra ID). Lo Studio mostra solo le sezioni permesse e il server controlla ogni sezione a
   ogni richiesta, quindi un ruolo tolto vale subito. Nessuno dà, toglie o modifica permessi che non ha, e resta
   sempre almeno un amministratore attivo. Creazioni, modifiche ed eliminazioni dei ruoli vanno nel registro.
+- **Permessi per processo** (Studio → Processi → *Accesso*): per ogni processo, chi può avviarlo (sostituisce i gruppi
+  di avvio del BPMN), chi vede tutte le sue pratiche e chi può esportarle, per gruppo o per ruolo. Valgono subito,
+  senza ripubblicare, e viaggiano nel pacchetto del processo (si applicano dove il processo non ha ancora regole).
+- **Strutture** (Studio → Strutture): gli uffici dell'ente in un albero; le persone si mettono nelle strutture dalla
+  pagina Utenti e una pratica prende la struttura di chi la avvia. "Vede tutte le pratiche" si dà con un ambito:
+  tutte, quelle della propria struttura o anche delle strutture sotto.
+- **Elenco delle pratiche nel database**: la visibilità si calcola con una sola query (storico, attività, regole del
+  processo e strutture), la stessa usata per aprire una pratica; finito il limite delle 500 attività lette in memoria.
+  Le pagine a video sono al massimo di 100 righe; le esportazioni seguono le regole del processo e vanno nel registro.
+- Chi gestisce gli utenti senza essere amministratore non cambia i propri gruppi, ruoli e strutture.
 
 **Aggiornamento**: impostare `ORDITOGRAM_INDIRIZZO` nel file `.env` (es. `orditogram.ente.it`). Chi chiama l'API interna (`/api`, non `/api/v1`) da un browser o da uno script che manda
 cookie o `Origin` deve aggiungere l'intestazione `X-Requested-With: XMLHttpRequest`, come già fa l'interfaccia.

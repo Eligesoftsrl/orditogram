@@ -38,6 +38,12 @@ public class AppUser {
         inverseJoinColumns = @JoinColumn(name = "ruolo_id"))
     private Set<Ruolo> ruoli = new HashSet<>();
 
+    /** Strutture dell'ente a cui appartiene (id di accesso/Organizzazione): ambito dei permessi per processo. */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "app_user_organizzazione", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "organizzazione_id")
+    private Set<Long> organizzazioni = new HashSet<>();
+
     /** Gruppi di lavoro: corrispondono ai candidateGroups dei BPMN (es. "operatori"). */
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "app_user_group", joinColumns = @JoinColumn(name = "user_id"))
@@ -64,6 +70,8 @@ public class AppUser {
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
     public Set<Ruolo> getRuoli() { return ruoli; }
     public void setRuoli(Set<Ruolo> ruoli) { this.ruoli = ruoli; }
+    public Set<Long> getOrganizzazioni() { return organizzazioni; }
+    public void setOrganizzazioni(Set<Long> organizzazioni) { this.organizzazioni = organizzazioni; }
     public String getOidcSoggetto() { return oidcSoggetto; }
     public void setOidcSoggetto(String oidcSoggetto) { this.oidcSoggetto = oidcSoggetto; }
     public Set<String> getGroups() { return groups; }

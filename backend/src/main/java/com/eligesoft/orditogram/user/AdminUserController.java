@@ -1,6 +1,7 @@
 package com.eligesoft.orditogram.user;
 
 import com.eligesoft.orditogram.accesso.ControlliAccesso;
+import com.eligesoft.orditogram.accesso.OrganizzazioneRepository;
 import com.eligesoft.orditogram.accesso.PermessiService;
 import com.eligesoft.orditogram.accesso.Permesso;
 import com.eligesoft.orditogram.accesso.Ruolo;
@@ -31,15 +32,16 @@ public class AdminUserController {
      * direttamente; in uscita anche i ruoli che arrivano dai gruppi, i permessi risultanti e "admin".
      */
     public record UserDto(Long id, String username, String firstName, String lastName, String email,
-                          boolean enabled, Set<String> ruoli, Set<String> groups, String password,
-                          Set<String> ruoliDaGruppi, Set<String> permessi, boolean admin) {
+                          boolean enabled, Set<String> ruoli, Set<String> groups, Set<Long> organizzazioni,
+                          String password, Set<String> ruoliDaGruppi, Set<String> permessi, boolean admin) {
         static UserDto of(AppUser u, PermessiService permessi) {
             Set<String> diretti = u.getRuoli().stream().map(Ruolo::getCodice).collect(Collectors.toCollection(TreeSet::new));
             Set<String> daGruppi = permessi.ruoliDi(u).stream().map(Ruolo::getCodice)
                 .filter(c -> !diretti.contains(c)).collect(Collectors.toCollection(TreeSet::new));
             Set<Permesso> suoi = permessi.permessiDi(u);
             return new UserDto(u.getId(), u.getUsername(), u.getFirstName(), u.getLastName(),
-                u.getEmail(), u.isEnabled(), diretti, new TreeSet<>(u.getGroups()), null, daGruppi,
+                u.getEmail(), u.isEnabled(), diretti, new TreeSet<>(u.getGroups()), new TreeSet<>(u.getOrganizzazioni()),
+                null, daGruppi,
                 suoi.stream().map(Permesso::codice).collect(Collectors.toCollection(TreeSet::new)),
                 suoi.containsAll(EnumSet.allOf(Permesso.class)));
         }
@@ -51,10 +53,12 @@ public class AdminUserController {
     private final RuoloRepository ruoli;
     private final PermessiService permessi;
     private final ControlliAccesso controlli;
+    private final OrganizzazioneRepository organizzazioni;
 
     public AdminUserController(AppUserRepository repo, PasswordEncoder encoder, CurrentUserService currentUser,
             com.eligesoft.orditogram.registro.RegistroService registro, RuoloRepository ruoli,
-            PermessiService permessi, ControlliAccesso controlli) {
+            PermessiService permessi, ControlliAccesso controlli, OrganizzazioneRepository organizzazioni) {
+        this.organizzazioni = organizzazioni;
         this.registro = registro;
         this.repo = repo;
         this.encoder = encoder;
@@ -96,6 +100,9 @@ public class AdminUserController {
         AppUser u = repo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         boolean self = u.getUsername().equals(currentUser.username());
         if (self && !dto.enabled()) throw bad("Non puoi disattivare te stesso");
+        // gruppi, ruoli e strutture allargano ciò che si vede e si lavora: per sé li cambia solo l'amministratore
+        if (self && !currentUser.isAdmin() && cambiaAccessi(u, dto))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "I tuoi gruppi, ruoli e strutture li cambia un amministratore");
         controlli.verificaPuoGestire(u);
         String prima = descrivi(u);
         apply(u, dto);
@@ -124,8 +131,19 @@ public class AdminUserController {
     /** Riepilogo leggibile per il registro (mai la password). */
     private static String descrivi(AppUser u) {
         return "gruppi " + new TreeSet<>(u.getGroups())
+            + (u.getOrganizzazioni().isEmpty() ? "" : ", strutture " + new TreeSet<>(u.getOrganizzazioni()))
             + ", ruoli " + u.getRuoli().stream().map(Ruolo::getCodice).collect(Collectors.toCollection(TreeSet::new))
             + (u.isEnabled() ? "" : ", disattivato");
+    }
+
+    private static boolean cambiaAccessi(AppUser u, UserDto dto) {
+        Set<String> gruppi = dto.groups() == null ? Set.of() : dto.groups().stream().map(String::trim)
+            .filter(g -> !g.isEmpty()).collect(Collectors.toSet());
+        Set<String> ruoliNuovi = dto.ruoli() == null ? Set.of() : dto.ruoli().stream().filter(c -> c != null && !c.isBlank())
+            .map(String::trim).collect(Collectors.toSet());
+        Set<String> ruoliAttuali = u.getRuoli().stream().map(Ruolo::getCodice).collect(Collectors.toSet());
+        Set<Long> strutture = dto.organizzazioni() == null ? Set.of() : dto.organizzazioni();
+        return !gruppi.equals(u.getGroups()) || !ruoliNuovi.equals(ruoliAttuali) || !strutture.equals(u.getOrganizzazioni());
     }
 
     private void apply(AppUser u, UserDto dto) {
@@ -141,6 +159,10 @@ public class AdminUserController {
             throw bad("Ruolo sconosciuto: " + codici.stream().filter(c -> !noti.contains(c)).sorted().collect(Collectors.joining(", ")));
         }
         u.setRuoli(new HashSet<>(trovati));
+        Set<Long> strutture = dto.organizzazioni() == null ? new HashSet<>() : new HashSet<>(dto.organizzazioni());
+        strutture.remove(null);
+        if (organizzazioni.findAllById(strutture).size() != strutture.size()) throw bad("Struttura sconosciuta");
+        u.setOrganizzazioni(strutture);
         Set<String> groups = new HashSet<>();
         if (dto.groups() != null) dto.groups().stream()
             .map(String::trim).filter(g -> !g.isEmpty()).forEach(groups::add);
