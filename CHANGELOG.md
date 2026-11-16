@@ -83,6 +83,15 @@ Form avanzati, prima parte.
   ridotto a nome dell'"Ufficio" e i documenti visibili alle parti (il personale sceglie quali con *Mostra alle parti*);
   tra il personale, un campo può essere riservato a certi ruoli (`ruoliVisibili`). Processo d'esempio
   `esempi/reclamo-controparte` e utenti di prova esterni (`marco`, `elena`).
+- **Anagrafiche configurabili**, prima parte (backend): l'analista definisce tipi di anagrafica (fondi, società,
+  fornitori, immobili...) con lo stesso formato dei form, più campi **chiave** (valore unico, es. partita IVA),
+  **ricercabili** e **relazioni** tra schede (`"type": "anagrafica"`). Le schede si cercano (testo o valore esatto,
+  a pagine), si modificano con il controllo delle modifiche contemporanee, si cessano e riattivano invece di
+  cancellarle, e ogni modifica resta nelle **versioni** (chi, quando, dati, nota). Permessi per tipo (vede,
+  modifica, esporta) a gruppi o ruoli; senza regole solo l'amministratore vede le schede; i campi `ruoliVisibili`
+  restano nascosti anche nelle versioni; niente accesso per gli utenti esterni. Nuovo permesso
+  `anagrafiche.definisci` (dato anche all'Analista); API `/api/admin/anagrafiche` e `/api/anagrafiche`;
+  migrazione `V7`. Interfaccia, collegamento alle pratiche e API pubblica arrivano nelle prossime parti.
 - **Referente dell'organizzazione**: chi ha il permesso organizzazioni sceglie uno o più referenti tra gli utenti
   esterni di un'organizzazione (Studio → Organizzazioni → *Persone e referenti*). Il referente, dal portale
   (*La mia organizzazione*), aggiunge colleghi, li disattiva, li riattiva e li toglie; non dà ruoli, non tocca altri

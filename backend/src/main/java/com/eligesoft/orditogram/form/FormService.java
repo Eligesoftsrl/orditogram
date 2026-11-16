@@ -108,6 +108,14 @@ public class FormService {
     // ---------------------------------------------------------------- validazione
 
     public JsonNode validate(String formKey, String json) {
+        return validate(formKey, json, TIPI_CAMPO);
+    }
+
+    /**
+     * Come sopra, con i tipi di campo ammessi indicati: le anagrafiche (anagrafica/DefinizioneAnagrafica) usano lo
+     * stesso formato dei form e aggiungono il tipo "anagrafica" (relazione con un'altra scheda).
+     */
+    public JsonNode validate(String formKey, String json, Set<String> tipiAmmessi) {
         JsonNode node;
         try {
             node = mapper.readTree(json);
@@ -137,7 +145,7 @@ public class FormService {
                 throw bad("Campo \"" + name + "\": il nome deve iniziare con una lettera e contenere solo lettere, numeri, - e _");
             if (!names.add(name)) throw bad("Nel form \"" + formKey + "\" il campo \"" + name + "\" è duplicato");
             String type = f.path("type").asText("text");
-            if (!TIPI_CAMPO.contains(type))
+            if (!tipiAmmessi.contains(type))
                 throw bad("Campo \"" + name + "\": tipo \"" + type + "\" non supportato");
             if ("select".equals(type) && !f.path("options").isArray())
                 throw bad("Campo \"" + name + "\": un select deve avere \"options\"");
