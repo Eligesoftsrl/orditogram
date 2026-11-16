@@ -56,13 +56,19 @@ public class BpmController {
     private final ObjectMapper mapper;
     private final PermessiProcessoService permessiProcesso;
     private final PraticaStrutturaRepository praticaStruttura;
+    private final com.eligesoft.orditogram.accesso.PartiService parti;
+    private final com.eligesoft.orditogram.storico.CampiVisibili campiVisibili;
 
     public BpmController(TaskRuntime taskRuntime,
                          RepositoryService repositoryService, RuntimeService runtimeService,
                          CurrentUserService currentUser, FormService forms, BpmnResourceService bpmn,
                          StoricoService storico, DocumentoService documenti, ScadenzeService scadenze,
                          ObjectMapper mapper, PermessiProcessoService permessiProcesso,
-                         PraticaStrutturaRepository praticaStruttura) {
+                         PraticaStrutturaRepository praticaStruttura,
+                         com.eligesoft.orditogram.accesso.PartiService parti,
+                         com.eligesoft.orditogram.storico.CampiVisibili campiVisibili) {
+        this.parti = parti;
+        this.campiVisibili = campiVisibili;
         this.permessiProcesso = permessiProcesso;
         this.praticaStruttura = praticaStruttura;
         this.taskRuntime = taskRuntime;
@@ -137,7 +143,14 @@ public class BpmController {
         if (form != null && "carica".equals(modoDocumenti) && form.path("documentiObbligatori").asBoolean(false) && allegati.isEmpty())
             throw bad("Allega almeno un documento");
 
-        vars.put("avviataDa", currentUser.current().getFullName());
+        // parti della pratica: chi avvia, se è un utente esterno, e le organizzazioni indicate nel form
+        var io = currentUser.current();
+        List<com.eligesoft.orditogram.accesso.PartiService.Parte> partiNuove = new ArrayList<>();
+        parti.richiedente(io).ifPresent(partiNuove::add);
+        partiNuove.addAll(parti.daForm(form, vars));
+        vars.putAll(com.eligesoft.orditogram.accesso.PartiService.variabili(partiNuove));
+
+        vars.put("avviataDa", io.getFullName());
         // username di chi avvia: serve ai connettori che partono subito (es. email a "chi ha avviato la pratica")
         vars.put("avviataDaUtente", currentUser.username());
 
@@ -154,14 +167,16 @@ public class BpmController {
         } finally {
             org.activiti.engine.impl.identity.Authentication.setAuthenticatedUserId(null);
         }
-        // struttura competente: quella di chi avvia, se ne ha una sola
-        Set<Long> struttureMie = currentUser.current().getOrganizzazioni();
-        if (struttureMie.size() == 1)
+        // struttura competente: quella di chi avvia, se ne ha una sola (le organizzazioni degli esterni non lo sono)
+        Set<Long> struttureMie = io.getOrganizzazioni();
+        if (!io.isEsterno() && struttureMie.size() == 1)
             praticaStruttura.save(new PraticaStruttura(instance.getId(), struttureMie.iterator().next()));
 
         storico.registra(instance.getId(), PraticaEvento.Tipo.AVVIO,
             def.getName() != null ? def.getName() : key, storico.dettagliDaForm(form, vars));
-        for (MultipartFile f : allegati) documenti.aggiungi(instance.getId(), f, null, "Avvio");
+        parti.registra(instance.getId(), partiNuove);
+        boolean perLeParti = io.isEsterno() || "parti".equals(form != null ? form.path("documentiVisibilita").asText() : "");
+        for (MultipartFile f : allegati) documenti.aggiungi(instance.getId(), f, null, "Avvio", perLeParti);
 
         return Map.of("id", instance.getId(), "name", Objects.toString(instance.getName(), ""));
     }
@@ -186,9 +201,24 @@ public class BpmController {
         taskRuntime.variables(TaskPayloadBuilder.variables().withTaskId(id).build())
             .forEach(v -> variables.put(v.getName(), v.getValue()));
 
+        JsonNode form = forms.load(task.getFormKey());
+        // solo i dati che l'utente può vedere, più quelli del form dell'attività (vedi storico/CampiVisibili)
+        ProcessInstance pi = runtimeService.createProcessInstanceQuery().processInstanceId(task.getProcessInstanceId()).singleResult();
+        if (pi != null) {
+            var visibile = campiVisibili.perAttivita(currentUser.current(), pi.getProcessDefinitionId(), pi.getId(), form);
+            variables.keySet().removeIf(nome -> !visibile.test(nome));
+        }
         Map<String, Object> result = new LinkedHashMap<>(toMap(task));
         result.put("variables", variables);
-        result.put("form", forms.load(task.getFormKey()));
+        result.put("form", form);
+        // i nomi delle organizzazioni scelte nei campi Organizzazione, per mostrarli senza sfogliare l'anagrafica
+        Map<String, String> nomi = new HashMap<>();
+        if (form != null) form.path("fields").forEach(f -> {
+            Object v = variables.get(f.path("name").asText());
+            if (ValoriForm.ORGANIZZAZIONE.equals(f.path("type").asText()) && v != null)
+                parti.esternaAttiva(v.toString()).ifPresent(o -> nomi.put(v.toString(), o.getNome()));
+        });
+        result.put("organizzazioni", nomi);
         return result;
     }
 
@@ -245,6 +275,10 @@ public class BpmController {
         List<String> mancanti = ValoriForm.obbligatoriMancanti(form, vars, pratica);
         if (!mancanti.isEmpty()) throw bad("Compila i campi obbligatori: " + String.join(", ", mancanti));
         controllaRegole(form, vars, pratica);
+        // un campo Organizzazione marcato come parte aggiunge (o cambia) la parte prima che il processo prosegua:
+        // così l'attività successiva assegnata a quella parte la trova già
+        var partiNuove = parti.daForm(form, vars);
+        vars.putAll(com.eligesoft.orditogram.accesso.PartiService.variabili(partiNuove));
 
         if (task.getAssignee() == null) {
             taskRuntime.claim(TaskPayloadBuilder.claim().withTaskId(id).build());
@@ -252,6 +286,7 @@ public class BpmController {
         // lo storico prima del complete: se il processo prosegue con una notifica, l'ordine resta corretto
         storico.registra(task.getProcessInstanceId(), PraticaEvento.Tipo.COMPLETAMENTO, task.getName(),
             storico.dettagliDaForm(form, vars));
+        parti.registra(task.getProcessInstanceId(), partiNuove);
 
         vars.put("chiusaDa", currentUser.current().getFullName());
         vars.put("chiusaIl", OffsetDateTime.now().toString());

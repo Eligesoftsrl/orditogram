@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Info } from 'lucide-react'
 import { api } from '../api.js'
+import { useAuth } from '../lib/auth.jsx'
 import BpmnViewer from './BpmnViewer.jsx'
 import DocumentsPanel from './DocumentsPanel.jsx'
 import Timeline from './Timeline.jsx'
@@ -11,6 +12,7 @@ export default function Approfondimenti({ pratica, suggerimentoDocumenti, onDocu
   const [scheda, setScheda] = useState('documenti')
   const [diagramma, setDiagramma] = useState(null)
   const [errore, setErrore] = useState('')
+  const { me } = useAuth()
 
   useEffect(() => {
     if (scheda !== 'diagramma' || diagramma) return
@@ -20,7 +22,8 @@ export default function Approfondimenti({ pratica, suggerimentoDocumenti, onDocu
   const voci = [
     { id: 'documenti', label: 'Documenti' },
     { id: 'storico', label: 'Storico', conteggio: pratica.eventi?.length },
-    { id: 'diagramma', label: 'Processo' }
+    // il diagramma del processo è dell'ente: gli utenti esterni non lo vedono
+    ...(me?.esterno ? [] : [{ id: 'diagramma', label: 'Processo' }])
   ]
 
   return (

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Building2, CalendarDays, Hourglass, Inbox, UserRound, Workflow } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Briefcase, Building2, CalendarDays, Hourglass, Inbox, UserRound, Workflow } from 'lucide-react'
 import { api } from '../api.js'
 import { giorno, quando } from '../lib/format.js'
 import IterRail from '../components/IterRail.jsx'
@@ -76,7 +76,8 @@ export default function PraticaPage() {
                     <div>
                       <p className="font-medium text-pino-900">{s.nome}</p>
                       <p className="text-sm text-grafite">
-                        {s.assegnatario ? `In carico a ${s.assegnatario}` : `Disponibile per ${s.gruppi.join(', ') || 'il gruppo'}: chiunque del gruppo può lavorarla`}
+                        {s.assegnatario ? `In carico a ${s.assegnatario}`
+                          : s.gruppi.length ? `Disponibile per ${s.gruppi.join(', ')}: chiunque del gruppo può lavorarla` : 'In lavorazione'}
                         {s.dal && `, dal ${quando(s.dal)}`}
                       </p>
                       {scadenze.filter(x => x.attivita && x.attivita === s.chiave).length > 0 && (
@@ -135,12 +136,34 @@ export default function PraticaPage() {
               )}
           </Pannello>
 
+          <Parti parti={p.parti || []} />
+
           <Collegate madre={p.praticaMadre} figlie={p.praticheFiglie || []} />
         </div>
 
         <Approfondimenti pratica={p} onDocumenti={carica} />
       </div>
     </div>
+  )
+}
+
+/** Le parti della pratica: chi la riguarda dall'esterno (richiedente, controparte...), persona o organizzazione. */
+function Parti({ parti }) {
+  if (parti.length === 0) return null
+  return (
+    <Pannello titolo="Parti">
+      <ul className="space-y-2.5">
+        {parti.map(x => (
+          <li key={x.ruolo} className="flex items-start gap-3">
+            {x.utente ? <UserRound className="mt-0.5 size-4 shrink-0 text-pino-700" /> : <Briefcase className="mt-0.5 size-4 shrink-0 text-pino-700" />}
+            <div className="min-w-0">
+              <p className="text-[13px] text-grafite">{x.etichetta}</p>
+              <p className="text-[15px] font-medium text-pino-900">{[x.utente, x.organizzazione].filter(Boolean).join(', ')}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </Pannello>
   )
 }
 

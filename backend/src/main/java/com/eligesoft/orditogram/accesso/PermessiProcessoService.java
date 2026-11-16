@@ -30,7 +30,7 @@ public class PermessiProcessoService {
     @Transactional(readOnly = true)
     public List<PermessoProcesso> regoleDi(AppUser u, String azione) {
         if (!u.isEnabled()) return List.of();
-        Set<String> gruppi = u.getGroups();
+        Set<String> gruppi = u.gruppiEffettivi();
         Set<String> ruoli = permessi.ruoliDi(u).stream().map(Ruolo::getCodice).collect(Collectors.toSet());
         return regole.findByAzione(azione).stream()
             .filter(r -> PermessoProcesso.GRUPPO.equals(r.getTipoSoggetto()) ? gruppi.contains(r.getSoggetto())
@@ -61,7 +61,8 @@ public class PermessiProcessoService {
     @Transactional(readOnly = true)
     public Visibilita visibilita(String username) {
         AppUser u = utenti.findByUsername(username).orElse(null);
-        if (u == null) return new Visibilita(Set.of(), Set.of(), Set.of(), Set.of(), Set.of());
+        // un esterno vede solo le pratiche in cui è parte o ha lavorato, mai per regola "vede"
+        if (u == null || u.isEsterno()) return new Visibilita(Set.of(), Set.of(), Set.of(), Set.of(), Set.of());
         Set<String> tutte = new HashSet<>();
         Set<String> struttura = new HashSet<>();
         Set<String> strutturaESotto = new HashSet<>();

@@ -31,6 +31,8 @@ public class OidcProperties {
     private String claimGruppi = "groups";
     private Map<String, String> mappaGruppi = new LinkedHashMap<>();
     private String gruppoAdmin;
+    /** Gruppo del token che indica un utente esterno (es. i cittadini del portale): diventa ESTERNO, senza ruoli. */
+    private String gruppoEsterni;
     private boolean sincronizzaGruppi = true;
     private boolean creaUtenti = true;
     private boolean collegaUtentiEsistenti = true;
@@ -44,6 +46,8 @@ public class OidcProperties {
     public void setMappaGruppi(Map<String, String> v) { this.mappaGruppi = v; }
     public String getGruppoAdmin() { return gruppoAdmin; }
     public void setGruppoAdmin(String v) { this.gruppoAdmin = v; }
+    public String getGruppoEsterni() { return gruppoEsterni; }
+    public void setGruppoEsterni(String v) { this.gruppoEsterni = v; }
     public boolean isSincronizzaGruppi() { return sincronizzaGruppi; }
     public void setSincronizzaGruppi(boolean v) { this.sincronizzaGruppi = v; }
     public boolean isCreaUtenti() { return creaUtenti; }

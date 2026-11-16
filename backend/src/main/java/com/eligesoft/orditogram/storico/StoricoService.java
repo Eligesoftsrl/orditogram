@@ -23,9 +23,12 @@ public class StoricoService {
     private final CurrentUserService currentUser;
     private final ObjectMapper mapper;
     private final ApplicationEventPublisher eventi;
+    private final com.eligesoft.orditogram.accesso.OrganizzazioneRepository organizzazioni;
 
     public StoricoService(PraticaEventoRepository repo, CurrentUserService currentUser, ObjectMapper mapper,
-                          ApplicationEventPublisher eventi) {
+                          ApplicationEventPublisher eventi,
+                          com.eligesoft.orditogram.accesso.OrganizzazioneRepository organizzazioni) {
+        this.organizzazioni = organizzazioni;
         this.repo = repo;
         this.currentUser = currentUser;
         this.mapper = mapper;
@@ -112,6 +115,9 @@ public class StoricoService {
             Object v = values.get(name);
             String text;
             if ("checkbox".equals(f.path("type").asText())) text = Boolean.TRUE.equals(v) ? "Sì" : "No";
+            else if (com.eligesoft.orditogram.form.ValoriForm.ORGANIZZAZIONE.equals(f.path("type").asText()) && v != null
+                && v.toString().matches("\\d{1,18}"))
+                text = organizzazioni.findById(Long.valueOf(v.toString())).map(o -> o.getNome()).orElse(v.toString());
             else if (v instanceof List<?> righe) text = righe.isEmpty() ? "" : righe.size() + (righe.size() == 1 ? " riga" : " righe");
             else text = v == null ? "" : v.toString().trim();
             if (text.isEmpty()) continue;

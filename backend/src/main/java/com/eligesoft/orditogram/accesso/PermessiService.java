@@ -37,7 +37,8 @@ public class PermessiService {
     @Transactional(readOnly = true)
     public Set<Permesso> permessiDi(AppUser u) {
         Set<Permesso> permessi = EnumSet.noneOf(Permesso.class);
-        if (!u.isEnabled()) return permessi;
+        // gli utenti esterni non hanno mai permessi di amministrazione, qualunque ruolo o gruppo abbiano
+        if (!u.isEnabled() || u.isEsterno()) return permessi;
         for (Ruolo r : ruoliDi(u)) permessi.addAll(permessiDel(r));
         return permessi;
     }
@@ -46,6 +47,7 @@ public class PermessiService {
     @Transactional(readOnly = true)
     public List<Ruolo> ruoliDi(AppUser u) {
         Map<String, Ruolo> tutti = new LinkedHashMap<>();
+        if (u.isEsterno()) return List.of();
         u.getRuoli().forEach(r -> tutti.put(r.getCodice(), r));
         if (!u.getGroups().isEmpty()) ruoli.deiGruppi(u.getGroups()).forEach(r -> tutti.putIfAbsent(r.getCodice(), r));
         return tutti.values().stream().sorted(Comparator.comparing(Ruolo::getNome)).toList();

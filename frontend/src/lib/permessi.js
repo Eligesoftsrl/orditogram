@@ -7,6 +7,7 @@ export const PERMESSI = {
   form: 'studio.form',
   integrazioni: 'integrazioni.gestisci',
   utenti: 'utenti.gestisci',
+  organizzazioni: 'organizzazioni.gestisci',
   registro: 'registro.leggi',
   praticheTutte: 'pratiche.vedi-tutte'
 }
@@ -24,6 +25,7 @@ export const SEZIONI_STUDIO = [
   { chiave: 'utenti', to: '/studio/utenti', label: 'Utenti', permessi: [PERMESSI.utenti] },
   { chiave: 'ruoli', to: '/studio/ruoli', label: 'Ruoli', permessi: [PERMESSI.utenti] },
   { chiave: 'strutture', to: '/studio/strutture', label: 'Strutture', permessi: [PERMESSI.utenti] },
+  { chiave: 'organizzazioni', to: '/studio/organizzazioni', label: 'Organizzazioni', permessi: [PERMESSI.organizzazioni] },
   { chiave: 'integrazioni', to: '/studio/integrazioni', label: 'Integrazioni', permessi: [PERMESSI.integrazioni] },
   { chiave: 'registro', to: '/studio/registro', label: 'Registro', permessi: [PERMESSI.registro] }
 ]
@@ -32,6 +34,7 @@ export const sezioniStudio = (me) => SEZIONI_STUDIO.filter(s => puo(me, ...s.per
 
 /** Come presentare l'utente sotto il nome: amministratore, i suoi ruoli o i suoi gruppi. */
 export function descriviUtente(me) {
+  if (me?.esterno) return 'Utente esterno'
   if (me?.admin) return 'Amministratore'
   const ruoli = (me?.ruoli || []).map(r => r.nome)
   if (ruoli.length) return ruoli.join(', ')

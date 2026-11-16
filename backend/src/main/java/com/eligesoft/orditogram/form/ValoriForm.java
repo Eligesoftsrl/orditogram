@@ -69,7 +69,13 @@ public final class ValoriForm {
     /** Un valore non valido, con il nome del campo e il motivo. */
     public record Errore(String campo, String messaggio) {}
 
-    public static final Set<String> TIPI = Set.of("text", "textarea", "number", "date", "select", "checkbox", TABELLA);
+    /**
+     * Campo che sceglie un'organizzazione esterna dall'anagrafica: il valore è l'id come testo. Con "parte": "ruolo"
+     * l'organizzazione diventa una parte della pratica (vedi accesso/PartiService, che controlla che esista).
+     */
+    public static final String ORGANIZZAZIONE = "organizzazione";
+
+    public static final Set<String> TIPI = Set.of("text", "textarea", "number", "date", "select", "checkbox", TABELLA, ORGANIZZAZIONE);
 
     /** Campi che si possono compilare (esclusi quelli in sola lettura), nell'ordine del form. */
     public static List<Campo> campi(JsonNode form) {
@@ -413,6 +419,11 @@ public final class ValoriForm {
                 } catch (DateTimeParseException ex) {
                     throw new IllegalArgumentException("deve essere una data nel formato AAAA-MM-GG");
                 }
+            }
+            case ORGANIZZAZIONE -> {
+                String s = v instanceof Number ? v.toString() : v instanceof String x ? x.trim() : "";
+                if (!s.matches("\\d{1,18}")) throw new IllegalArgumentException("deve essere l'id di un'organizzazione (un numero)");
+                return s;
             }
             case "select" -> {
                 String s = v instanceof String x ? x.trim() : (v instanceof Number || v instanceof Boolean) ? v.toString() : null;

@@ -15,6 +15,8 @@ public enum Permesso {
     STUDIO_FORM("studio.form", "Form", "Creare e modificare i form"),
     INTEGRAZIONI("integrazioni.gestisci", "Integrazioni", "Chiavi API e webhook per i sistemi esterni"),
     UTENTI("utenti.gestisci", "Utenti e ruoli", "Creare utenti, assegnare gruppi e ruoli"),
+    ORGANIZZAZIONI("organizzazioni.gestisci", "Organizzazioni",
+        "Organizzazioni esterne (enti, aziende, studi) e i loro utenti, anche da file CSV"),
     REGISTRO("registro.leggi", "Registro", "Leggere il registro delle azioni di amministrazione"),
     PRATICHE_TUTTE("pratiche.vedi-tutte", "Tutte le pratiche",
         "Vedere tutte le pratiche, anche quelle a cui non partecipa (senza poterle lavorare)");

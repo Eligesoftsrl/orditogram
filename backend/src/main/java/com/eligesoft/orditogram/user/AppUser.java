@@ -28,6 +28,17 @@ public class AppUser {
 
     private boolean enabled = true;
 
+    public static final String INTERNO = "INTERNO";
+    public static final String ESTERNO = "ESTERNO";
+    /** Gruppo che ogni utente esterno ha in automatico (es. per dire chi può avviare un processo dal portale). */
+    public static final String GRUPPO_ESTERNI = "esterni";
+    /** Prefisso del gruppo automatico di chi appartiene a un'organizzazione o struttura: "org:12". */
+    public static final String PREFISSO_ORG = "org:";
+
+    /** INTERNO (personale dell'ente o dell'azienda) o ESTERNO (cittadino, cliente, referente di un'organizzazione). */
+    @Column(nullable = false, length = 20)
+    private String tipo = INTERNO;
+
     /** Per chi entra con un provider OIDC: emittente e soggetto del token ("issuer|sub"), stabili nel tempo. */
     @Column(unique = true, length = 500)
     private String oidcSoggetto;
@@ -55,7 +66,22 @@ public class AppUser {
         return full.isEmpty() ? username : full;
     }
 
+    public boolean isEsterno() { return ESTERNO.equals(tipo); }
+
+    /**
+     * I gruppi con cui l'utente lavora nel motore: i suoi, "org:<id>" per ogni organizzazione o struttura
+     * e "esterni" per gli utenti esterni. Sono questi i candidateGroups che lo riguardano.
+     */
+    public Set<String> gruppiEffettivi() {
+        Set<String> tutti = new HashSet<>(groups);
+        organizzazioni.forEach(o -> tutti.add(PREFISSO_ORG + o));
+        if (isEsterno()) tutti.add(GRUPPO_ESTERNI);
+        return tutti;
+    }
+
     public Long getId() { return id; }
+    public String getTipo() { return tipo; }
+    public void setTipo(String tipo) { this.tipo = tipo; }
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
     public String getPassword() { return password; }

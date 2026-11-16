@@ -62,6 +62,7 @@ public class OrditogramOidcUserService extends OidcUserService {
 
         Set<String> gruppiToken = GruppiDalToken.leggi(claims, proprieta.getClaimGruppi(), proprieta.getMappaGruppi());
         boolean adminDaToken = proprieta.getGruppoAdmin() != null && gruppiToken.remove(proprieta.getGruppoAdmin());
+        boolean esternoDaToken = proprieta.getGruppoEsterni() != null && gruppiToken.remove(proprieta.getGruppoEsterni());
 
         // l'identità stabile è emittente + soggetto, non il nome utente (che sul provider può cambiare)
         String soggetto = (utenteOidc.getIssuer() != null ? utenteOidc.getIssuer().toString() : "") + "|" + utenteOidc.getSubject();
@@ -107,11 +108,16 @@ public class OrditogramOidcUserService extends OidcUserService {
                 else utente.getRuoli().removeIf(Ruolo::isAmministratore);
             });
         }
+        if (proprieta.getGruppoEsterni() != null) {
+            // utente esterno dal token: nessun ruolo, qualunque cosa dica il resto del token
+            u.setTipo(esternoDaToken ? AppUser.ESTERNO : AppUser.INTERNO);
+            if (esternoDaToken) u.getRuoli().clear();
+        }
         u = utenti.save(u);
 
         List<GrantedAuthority> autorizzazioni = new ArrayList<>();
         autorizzazioni.add(new SimpleGrantedAuthority("ROLE_ACTIVITI_USER"));
-        u.getGroups().forEach(g -> autorizzazioni.add(new SimpleGrantedAuthority("GROUP_" + g)));
+        u.gruppiEffettivi().forEach(g -> autorizzazioni.add(new SimpleGrantedAuthority("GROUP_" + g)));
 
         // il "nome" dell'utente autenticato è lo username di Orditogram (anche se il claim non c'era)
         Map<String, Object> conNome = new LinkedHashMap<>(claims);

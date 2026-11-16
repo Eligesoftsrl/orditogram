@@ -68,11 +68,14 @@ public class ApiV1Controller {
     private final MessaggiService messaggi;
     private final ObjectMapper mapper;
     private final ObjectProvider<BuildProperties> build;
+    private final com.eligesoft.orditogram.accesso.PartiService parti;
 
     public ApiV1Controller(DescrizioneProcessi descrizioni, RuntimeService runtimeService, HistoryService historyService,
                            RepositoryService repositoryService, TaskService taskService, StoricoService storico,
                            DocumentoService documenti, ScadenzeService scadenze, MessaggiService messaggi,
-                           ObjectMapper mapper, ObjectProvider<BuildProperties> build) {
+                           ObjectMapper mapper, ObjectProvider<BuildProperties> build,
+                           com.eligesoft.orditogram.accesso.PartiService parti) {
+        this.parti = parti;
         this.descrizioni = descrizioni;
         this.runtimeService = runtimeService;
         this.historyService = historyService;
@@ -228,6 +231,15 @@ public class ApiV1Controller {
                 + (errori.size() == 1 ? " problema" : " problemi") + ", dettagli in \"campi\"", errori);
 
         Map<String, Object> vars = new HashMap<>(esito.valori());
+        // organizzazioni indicate nei campi Organizzazione: devono esistere; quelle marcate come parte lo diventano
+        List<com.eligesoft.orditogram.accesso.PartiService.Parte> partiNuove;
+        try {
+            partiNuove = parti.daForm(form, vars);
+        } catch (org.springframework.web.server.ResponseStatusException e) {
+            throw new ErroreApi(422, "dati_non_validi", "Dati non validi: 1 problema, dettagli in \"campi\"",
+                List.of(Map.of("campo", "organizzazione", "messaggio", Objects.toString(e.getReason(), "organizzazione non valida"))));
+        }
+        vars.putAll(com.eligesoft.orditogram.accesso.PartiService.variabili(partiNuove));
         vars.put("avviataDa", id.sistema() + " (sistema esterno)");
         String nomeProcesso = def.getName() != null ? def.getName() : def.getKey();
 
@@ -250,6 +262,7 @@ public class ApiV1Controller {
         if (rif != null) dettagli.add(Map.of("label", "Riferimento", "value", rif));
         dettagli.addAll(storico.dettagliDaForm(form, vars));
         storico.registra(pi.getId(), PraticaEvento.Tipo.AVVIO, nomeProcesso, dettagli);
+        parti.registra(pi.getId(), partiNuove);
         for (MultipartFile f : allegati) documenti.aggiungi(pi.getId(), f, null, "Avvio");
 
         Map<String, Object> m = pratica(pi.getId());
@@ -459,7 +472,7 @@ public class ApiV1Controller {
         Map<String, Object> vars = conDati != null && conDati.getProcessVariables() != null ? conDati.getProcessVariables() : Map.of();
         Map<String, Object> out = new TreeMap<>();
         vars.forEach((k, x) -> {
-            if (x == null || NASCOSTE.contains(k)) return;
+            if (x == null || NASCOSTE.contains(k) || k.startsWith(com.eligesoft.orditogram.accesso.PartiService.PREFISSO_VARIABILE)) return;
             if (x instanceof String || x instanceof Number || x instanceof Boolean || x instanceof Date
                 || x instanceof java.time.temporal.Temporal || x instanceof JsonNode
                 || x instanceof Map || x instanceof Collection) out.put(k, x);

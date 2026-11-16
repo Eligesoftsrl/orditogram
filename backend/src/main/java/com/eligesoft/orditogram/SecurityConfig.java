@@ -109,6 +109,7 @@ public class SecurityConfig {
                                            ObjectProvider<OrditogramOidcUserService> oidcUserService,
                                            OidcProperties oidc,
                                            AutorizzazioniAdmin permessi,
+                                           com.eligesoft.orditogram.accesso.AccessoEsterni esterni,
                                            @Value("${app.login.locale:true}") boolean loginLocale) throws Exception {
         // CSRF: il token di Spring non serve perché le richieste che modificano dati da un browser devono avere
         // l'intestazione X-Requested-With, che un altro sito non può aggiungere (vedi FiltroRichiesteSessione).
@@ -124,6 +125,7 @@ public class SecurityConfig {
                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                 // Studio e amministrazione: ogni sezione con il suo permesso (accesso/Permesso), letto dal database
                 .requestMatchers("/api/admin/users/**", "/api/admin/ruoli/**", "/api/admin/strutture/**").access(permessi.uno(Permesso.UTENTI))
+                .requestMatchers("/api/admin/organizzazioni/**").access(permessi.uno(Permesso.ORGANIZZAZIONI))
                 .requestMatchers(HttpMethod.GET, "/api/admin/forms/**").access(permessi.uno(Permesso.STUDIO_FORM, Permesso.STUDIO_PROCESSI))
                 .requestMatchers("/api/admin/forms/**").access(permessi.uno(Permesso.STUDIO_FORM))
                 .requestMatchers(HttpMethod.GET, "/api/admin/gruppi").access(permessi.uno(Permesso.STUDIO_PROCESSI, Permesso.STUDIO_FORM, Permesso.UTENTI))
@@ -136,7 +138,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/admin/registro/**").access(permessi.uno(Permesso.REGISTRO))
                 // tutto il resto (sezioni nuove comprese): solo chi ha ogni permesso
                 .requestMatchers("/api/admin/**").access(permessi.tutti())
-                .anyRequest().authenticated())
+                // tutto il resto: utenti autenticati; gli utenti esterni solo le API del portale (accesso/AccessoEsterni)
+                .anyRequest().access(esterni.autenticati()))
             // le API rispondono 401 (mai il popup del browser né un redirect): ci pensa il frontend
             .exceptionHandling(e -> e.defaultAuthenticationEntryPointFor(
                 new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),

@@ -72,6 +72,17 @@ Form avanzati, prima parte.
   processo e strutture), la stessa usata per aprire una pratica; finito il limite delle 500 attività lette in memoria.
   Le pagine a video sono al massimo di 100 righe; le esportazioni seguono le regole del processo e vanno nel registro.
 - Chi gestisce gli utenti senza essere amministratore non cambia i propri gruppi, ruoli e strutture.
+- **Utenti esterni e parti della pratica**: cittadini, clienti e referenti di organizzazioni entrano come utenti
+  esterni (Studio → Utenti, o il gruppo `app.oidc.gruppo-esterni` del provider): niente ruoli, solo le API del
+  portale (negazione per default per tutto il resto), solo le pratiche in cui sono parte o hanno un'attività.
+  Chi avvia da esterno è il *richiedente*; un campo **Organizzazione** dei form può rendere un'organizzazione esterna
+  una parte (es. la controparte) e le attività `parte:controparte` del BPMN vanno ai suoi utenti.
+- **Organizzazioni** (Studio → Organizzazioni, permesso `organizzazioni.gestisci`, dato anche al Gestore utenti):
+  anagrafica delle organizzazioni esterne con importazione da CSV; tutto nel registro.
+- **Chi vede quali dati**: gli esterni vedono i campi *visibili alle parti* e quelli che hanno compilato, uno storico
+  ridotto a nome dell'"Ufficio" e i documenti visibili alle parti (il personale sceglie quali con *Mostra alle parti*);
+  tra il personale, un campo può essere riservato a certi ruoli (`ruoliVisibili`). Processo d'esempio
+  `esempi/reclamo-controparte` e utenti di prova esterni (`marco`, `elena`).
 
 **Aggiornamento**: impostare `ORDITOGRAM_INDIRIZZO` nel file `.env` (es. `orditogram.ente.it`). Chi chiama l'API interna (`/api`, non `/api/v1`) da un browser o da uno script che manda
 cookie o `Origin` deve aggiungere l'intestazione `X-Requested-With: XMLHttpRequest`, come già fa l'interfaccia.

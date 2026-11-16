@@ -24,7 +24,8 @@ import java.util.*;
 public class FormService {
 
     private static final String CLASSPATH_PATTERN = "classpath*:forms/*.json";
-    public static final Set<String> TIPI_CAMPO = Set.of("text", "number", "date", "textarea", "select", "checkbox", ValoriForm.TABELLA);
+    public static final Set<String> TIPI_CAMPO = Set.of("text", "number", "date", "textarea", "select", "checkbox", ValoriForm.TABELLA,
+        ValoriForm.ORGANIZZAZIONE);
     public static final Set<String> TIPI_DOCUMENTI = Set.of("carica", "lettura", "modifica");
 
     private final FormDefinitionRepository repo;
@@ -119,7 +120,11 @@ public class FormService {
         String documenti = node.path("documenti").asText("");
         if (!documenti.isEmpty() && !TIPI_DOCUMENTI.contains(documenti))
             throw bad("Nel form \"" + formKey + "\" \"documenti\" deve essere: carica, lettura o modifica");
+        String visibilitaDocumenti = node.path("documentiVisibilita").asText("");
+        if (!visibilitaDocumenti.isEmpty() && !Set.of("interna", "parti").contains(visibilitaDocumenti))
+            throw bad("Nel form \"" + formKey + "\" \"documentiVisibilita\" deve essere: interna o parti");
         Set<String> names = new HashSet<>();
+        Set<String> parti = new HashSet<>();
         for (JsonNode f : fields) {
             if (ValoriForm.sezione(f)) {
                 if (f.path("label").asText("").isBlank())
@@ -139,6 +144,7 @@ public class FormService {
             List<String> regole = RegoleCampo.problemi(f, type);
             if (!regole.isEmpty()) throw bad("Campo \"" + name + "\": " + regole.get(0));
             if (ValoriForm.TABELLA.equals(type)) validaTabella(name, f);
+            validaAccesso(name, f, type, parti);
         }
         // condizioni: devono guardare un altro campo dello stesso form e indicare almeno un valore
         for (JsonNode f : fields) {
@@ -160,6 +166,31 @@ public class FormService {
                 throw bad("Campo \"" + name + "\": la condizione deve indicare almeno un valore");
         }
         return node;
+    }
+
+    /**
+     * Chi vede il campo: "visibileAlleParti" (anche gli utenti esterni), "ruoliVisibili" (solo chi ha uno di questi
+     * ruoli, tra il personale) e, per un campo Organizzazione, "parte" (il ruolo della parte che indica).
+     */
+    private void validaAccesso(String name, JsonNode f, String type, Set<String> parti) {
+        String campo = "Campo \"" + name + "\": ";
+        if (f.has("visibileAlleParti") && !f.get("visibileAlleParti").isBoolean())
+            throw bad(campo + "\"visibileAlleParti\" deve essere true o false");
+        if (f.has("ruoliVisibili")) {
+            JsonNode r = f.get("ruoliVisibili");
+            if (!r.isArray()) throw bad(campo + "\"ruoliVisibili\" deve essere un elenco di codici di ruolo");
+            for (JsonNode x : r)
+                if (!x.isTextual() || !x.asText().matches("[a-z0-9][a-z0-9-]{1,59}"))
+                    throw bad(campo + "in \"ruoliVisibili\" ci sono codici di ruolo non validi");
+        }
+        if (f.has("parte")) {
+            if (!ValoriForm.ORGANIZZAZIONE.equals(type))
+                throw bad(campo + "solo un campo Organizzazione può indicare una parte della pratica");
+            String parte = f.path("parte").asText("");
+            if (!com.eligesoft.orditogram.accesso.PartiService.RUOLO.matcher(parte).matches())
+                throw bad(campo + "il ruolo della parte deve iniziare con una lettera e contenere solo lettere, numeri e _");
+            if (!parti.add(parte)) throw bad(campo + "la parte \"" + parte + "\" è già indicata da un altro campo");
+        }
     }
 
     /** Una tabella deve avere colonne con nome e tipo validi, regole sensate e un numero di righe coerente. */

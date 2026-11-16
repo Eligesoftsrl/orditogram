@@ -33,7 +33,7 @@ public class AdminUserController {
      */
     public record UserDto(Long id, String username, String firstName, String lastName, String email,
                           boolean enabled, Set<String> ruoli, Set<String> groups, Set<Long> organizzazioni,
-                          String password, Set<String> ruoliDaGruppi, Set<String> permessi, boolean admin) {
+                          String password, Set<String> ruoliDaGruppi, Set<String> permessi, boolean admin, String tipo) {
         static UserDto of(AppUser u, PermessiService permessi) {
             Set<String> diretti = u.getRuoli().stream().map(Ruolo::getCodice).collect(Collectors.toCollection(TreeSet::new));
             Set<String> daGruppi = permessi.ruoliDi(u).stream().map(Ruolo::getCodice)
@@ -43,7 +43,7 @@ public class AdminUserController {
                 u.getEmail(), u.isEnabled(), diretti, new TreeSet<>(u.getGroups()), new TreeSet<>(u.getOrganizzazioni()),
                 null, daGruppi,
                 suoi.stream().map(Permesso::codice).collect(Collectors.toCollection(TreeSet::new)),
-                suoi.containsAll(EnumSet.allOf(Permesso.class)));
+                suoi.containsAll(EnumSet.allOf(Permesso.class)), u.getTipo());
         }
     }
 
@@ -130,7 +130,7 @@ public class AdminUserController {
 
     /** Riepilogo leggibile per il registro (mai la password). */
     private static String descrivi(AppUser u) {
-        return "gruppi " + new TreeSet<>(u.getGroups())
+        return (u.isEsterno() ? "utente esterno, " : "") + "gruppi " + new TreeSet<>(u.getGroups())
             + (u.getOrganizzazioni().isEmpty() ? "" : ", strutture " + new TreeSet<>(u.getOrganizzazioni()))
             + ", ruoli " + u.getRuoli().stream().map(Ruolo::getCodice).collect(Collectors.toCollection(TreeSet::new))
             + (u.isEnabled() ? "" : ", disattivato");
@@ -143,10 +143,19 @@ public class AdminUserController {
             .map(String::trim).collect(Collectors.toSet());
         Set<String> ruoliAttuali = u.getRuoli().stream().map(Ruolo::getCodice).collect(Collectors.toSet());
         Set<Long> strutture = dto.organizzazioni() == null ? Set.of() : dto.organizzazioni();
-        return !gruppi.equals(u.getGroups()) || !ruoliNuovi.equals(ruoliAttuali) || !strutture.equals(u.getOrganizzazioni());
+        return !gruppi.equals(u.getGroups()) || !ruoliNuovi.equals(ruoliAttuali) || !strutture.equals(u.getOrganizzazioni())
+            || !tipo(dto).equals(u.getTipo());
+    }
+
+    private static String tipo(UserDto dto) {
+        return dto.tipo() == null || dto.tipo().isBlank() ? AppUser.INTERNO : dto.tipo().trim().toUpperCase(java.util.Locale.ROOT);
     }
 
     private void apply(AppUser u, UserDto dto) {
+        String tipo = tipo(dto);
+        if (!AppUser.INTERNO.equals(tipo) && !AppUser.ESTERNO.equals(tipo)) throw bad("Il tipo dell'utente è INTERNO o ESTERNO");
+        boolean esterno = AppUser.ESTERNO.equals(tipo);
+        u.setTipo(tipo);
         u.setFirstName(dto.firstName());
         u.setLastName(dto.lastName());
         u.setEmail(dto.email());
@@ -158,10 +167,17 @@ public class AdminUserController {
             Set<String> noti = trovati.stream().map(Ruolo::getCodice).collect(Collectors.toSet());
             throw bad("Ruolo sconosciuto: " + codici.stream().filter(c -> !noti.contains(c)).sorted().collect(Collectors.joining(", ")));
         }
+        // un utente esterno non ha mai ruoli né permessi di amministrazione
+        if (esterno && !trovati.isEmpty()) throw bad("Un utente esterno non può avere ruoli");
         u.setRuoli(new HashSet<>(trovati));
         Set<Long> strutture = dto.organizzazioni() == null ? new HashSet<>() : new HashSet<>(dto.organizzazioni());
         strutture.remove(null);
-        if (organizzazioni.findAllById(strutture).size() != strutture.size()) throw bad("Struttura sconosciuta");
+        var trovate = organizzazioni.findAllById(strutture);
+        if (trovate.size() != strutture.size()) throw bad("Struttura o organizzazione sconosciuta");
+        // il personale sta nelle strutture dell'ente, gli utenti esterni nelle organizzazioni esterne
+        if (trovate.stream().anyMatch(o -> o.isEsterna() != esterno))
+            throw bad(esterno ? "Un utente esterno può appartenere solo a organizzazioni esterne"
+                : "Un utente interno può appartenere solo a strutture dell'ente");
         u.setOrganizzazioni(strutture);
         Set<String> groups = new HashSet<>();
         if (dto.groups() != null) dto.groups().stream()

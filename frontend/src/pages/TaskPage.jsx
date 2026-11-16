@@ -97,7 +97,7 @@ export default function TaskPage() {
         <Pannello titolo={task.form?.title || task.name}>
           {altrui && <div className="mb-5"><Errore>Questa attività è in carico a {task.assigneeName}: puoi consultarla ma non completarla.</Errore></div>}
           {task.form
-            ? <DynamicForm key={task.id} form={task.form} initialValues={task.variables} disabled={altrui}
+            ? <DynamicForm key={task.id} form={task.form} initialValues={task.variables} organizzazioni={task.organizzazioni || {}} disabled={altrui}
                            busy={attesa} onSubmit={completa} mostraTitolo={false} />
             : !altrui && (
               <div className="flex items-center justify-between gap-4">

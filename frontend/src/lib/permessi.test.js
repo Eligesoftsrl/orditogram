@@ -24,6 +24,7 @@ describe('permessi', () => {
     expect(descriviUtente(analista)).toBe('Analista')
     expect(descriviUtente(operatore)).toBe('operatori')
     expect(descriviUtente({ groups: [] })).toBe('Nessun gruppo')
+    expect(descriviUtente({ esterno: true, groups: ['detenuti'] })).toBe('Utente esterno')
   })
 })
 

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ChevronDown, Download, Eye, FilePlus, FileText, FileUp, Layers, ShieldAlert, ShieldCheck, ShieldX } from 'lucide-react'
+import { ChevronDown, Download, Eye, EyeOff, FilePlus, FileText, FileUp, Layers, ShieldAlert, ShieldCheck, ShieldX, Users } from 'lucide-react'
 import { api, scarica } from '../api.js'
 import { cx, dimensione, quando } from '../lib/format.js'
 import { Badge, Button, Caricamento, Errore, Vuoto, useToast } from './ui.jsx'
@@ -45,14 +45,14 @@ export default function DocumentsPanel({ pi, onChange }) {
         <Vuoto icona={FileText} titolo="Nessun documento">La pratica non ha allegati.</Vuoto>
       )}
       {dati.documenti.map(d => (
-        <Documento key={d.id} d={d} modificabile={dati.modificabile} onCaricato={dopoCaricamento} />
+        <Documento key={d.id} d={d} modificabile={dati.modificabile} condivisibile={dati.condivisibile} onCaricato={dopoCaricamento} />
       ))}
       {dati.modificabile && <NuovoDocumento pi={pi} onCaricato={dopoCaricamento} />}
     </div>
   )
 }
 
-function Documento({ d, modificabile, onCaricato }) {
+function Documento({ d, modificabile, condivisibile, onCaricato }) {
   const [aperto, setAperto] = useState(false)
   const [caricamento, setCaricamento] = useState(false)
   const corrente = d.versioni[0]
@@ -70,6 +70,7 @@ function Documento({ d, modificabile, onCaricato }) {
             <h4 className="truncate font-medium text-pino-900" title={d.nome}>{d.nome}</h4>
             {d.versioneCorrente > 1 && <Badge tono="pino">v{d.versioneCorrente}</Badge>}
             <FirmaBadge esito={corrente.firmaEsito} />
+            {condivisibile && d.visibilita === 'PARTI' && <Badge tono="zafferano" icona={Users}>Visibile alle parti</Badge>}
           </div>
           <p className="mt-1 text-[13px] text-grafite">
             {corrente.filename !== d.nome && <>{corrente.filename}, </>}
@@ -92,6 +93,18 @@ function Documento({ d, modificabile, onCaricato }) {
         {d.versioni.length === 1 && corrente.firmaEsito !== 'NESSUNA' && (
           <Button misura="sm" variante="fantasma" icona={ChevronDown} onClick={() => setAperto(!aperto)} aria-expanded={aperto}>
             {aperto ? 'Nascondi' : 'Firme'}
+          </Button>
+        )}
+        {condivisibile && (
+          <Button misura="sm" variante="fantasma" icona={d.visibilita === 'PARTI' ? EyeOff : Users}
+                  title={d.visibilita === 'PARTI' ? 'Le parti esterne non lo vedranno più' : 'Lo vedranno anche le parti esterne della pratica'}
+                  onClick={async () => {
+                    try {
+                      await api.visibilitaDocumento(d.id, d.visibilita === 'PARTI' ? 'INTERNA' : 'PARTI')
+                      await onCaricato(d.visibilita === 'PARTI' ? `${d.nome} ora è solo interno` : `${d.nome} ora è visibile alle parti`)
+                    } catch (e) { toast.errore(e.message) }
+                  }}>
+            {d.visibilita === 'PARTI' ? 'Rendi interno' : 'Mostra alle parti'}
           </Button>
         )}
         {modificabile && (

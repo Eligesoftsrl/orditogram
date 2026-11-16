@@ -8,7 +8,7 @@ import Esporta from '../../components/Esporta.jsx'
 import Gruppi from '../../components/Gruppi.jsx'
 import { alberoStrutture } from '../../lib/permessi.js'
 
-const VUOTO = { id: null, username: '', firstName: '', lastName: '', email: '', enabled: true, ruoli: [], groups: [], organizzazioni: [], password: '' }
+const VUOTO = { id: null, username: '', firstName: '', lastName: '', email: '', enabled: true, tipo: 'INTERNO', ruoli: [], groups: [], organizzazioni: [], password: '' }
 
 /**
  * Studio: utenti, gruppi e ruoli. I gruppi sono quelli usati nei BPMN (candidateGroups, candidateStarterGroups);
@@ -26,12 +26,14 @@ export default function Utenti() {
 
   const [ruoli, setRuoli] = useState([])
   const [strutture, setStrutture] = useState([])
+  const [esterne, setEsterne] = useState([])
 
   const carica = () => api.users().then(setLista).catch(e => setErrore(e.message))
   useEffect(() => {
     void carica()
     api.ruoli().then(setRuoli).catch(() => {})
     api.strutture().then(setStrutture).catch(() => {})
+    api.organizzazioniAdmin().then(setEsterne).catch(() => {})
   }, [])
   const nomeRuolo = (codice) => ruoli.find(r => r.codice === codice)?.nome || codice
 
@@ -103,6 +105,7 @@ export default function Utenti() {
                           <span className="block truncate text-[13px] text-grafite">{u.username}{u.email ? `, ${u.email}` : ''}</span>
                         </span>
                         <span className="hidden flex-wrap justify-end gap-1 sm:flex">
+                          {u.tipo === 'ESTERNO' && <Badge tono="zafferano">esterno</Badge>}
                           {[...(u.ruoli || []), ...(u.ruoliDaGruppi || [])].map(r => <Badge key={`r-${r}`} tono="pino">{nomeRuolo(r)}</Badge>)}
                           {!u.enabled && <Badge tono="mattone">disattivato</Badge>}
                           {u.groups.map(g => <Badge key={g}>{g}</Badge>)}
@@ -131,12 +134,30 @@ export default function Utenti() {
                            placeholder={edit.id ? 'Lascia vuoto per non cambiarla' : ''} autoComplete="new-password" />
                   </div>
                 </div>
+                <fieldset>
+                  <legend className="etichetta">Tipo di utente</legend>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {[['INTERNO', 'Personale', 'Lavora le pratiche dell\'ente o dell\'azienda'],
+                      ['ESTERNO', 'Esterno', 'Cittadino, cliente o referente di un\'organizzazione: vede solo le sue pratiche']].map(([v, t, d]) => (
+                      <label key={v} className={cx('flex cursor-pointer items-start gap-2 rounded-campo border px-3 py-2.5',
+                        (edit.tipo || 'INTERNO') === v ? 'border-verde-500 bg-verde-50/60' : 'border-linea')}>
+                        <input type="radio" name={`${uid}-tipo`} className="mt-1 accent-verde-600" checked={(edit.tipo || 'INTERNO') === v}
+                               onChange={() => setEdit(p => ({ ...p, tipo: v, ruoli: [], organizzazioni: [] }))} />
+                        <span><span className="font-medium text-pino-900">{t}</span><span className="block text-[13px] text-grafite">{d}</span></span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
                 <Gruppi valori={edit.groups} noti={gruppi} onChange={g => set('groups', g)} />
-                <SceltaRuoli ruoli={ruoli} scelti={edit.ruoli || []} daGruppi={edit.id ? (edit.ruoliDaGruppi || []) : []}
-                             onChange={r => set('ruoli', r)} />
-                {strutture.length > 0 && (
-                  <SceltaStrutture strutture={strutture} scelte={edit.organizzazioni || []} onChange={v => set('organizzazioni', v)} />
-                )}
+                {edit.tipo === 'ESTERNO' ? (
+                  <SceltaOrganizzazioni organizzazioni={esterne} scelte={edit.organizzazioni || []} onChange={v => set('organizzazioni', v)} />
+                ) : (<>
+                  <SceltaRuoli ruoli={ruoli} scelti={edit.ruoli || []} daGruppi={edit.id ? (edit.ruoliDaGruppi || []) : []}
+                               onChange={r => set('ruoli', r)} />
+                  {strutture.length > 0 && (
+                    <SceltaStrutture strutture={strutture} scelte={edit.organizzazioni || []} onChange={v => set('organizzazioni', v)} />
+                  )}
+                </>)}
                 <div className="space-y-2 rounded-campo bg-carta px-3.5 py-3">
                   <label className="flex items-center gap-2 text-[15px]"><input type="checkbox" className="size-4 accent-verde-600" checked={edit.enabled} onChange={e => set('enabled', e.target.checked)} /> Può accedere</label>
                 </div>
@@ -200,6 +221,30 @@ function SceltaStrutture({ strutture, scelte, onChange }) {
           </label>
         ))}
       </div>
+    </fieldset>
+  )
+}
+
+/** Organizzazioni esterne dell'utente esterno: vede le pratiche in cui sono parte e ne lavora le attività. */
+function SceltaOrganizzazioni({ organizzazioni, scelte, onChange }) {
+  const cambia = (id, si) => onChange(si ? [...scelte, id] : scelte.filter(x => x !== id))
+  return (
+    <fieldset>
+      <legend className="etichetta">Organizzazioni</legend>
+      {organizzazioni.length === 0 ? (
+        <p className="text-sm text-grafite">Nessuna organizzazione esterna: creale nella pagina Organizzazioni. Un cittadino può anche non averne.</p>
+      ) : (
+        <div className="max-h-56 space-y-1 overflow-y-auto rounded-campo bg-carta px-3.5 py-3">
+          {organizzazioni.map(o => (
+            <label key={o.id} className="flex items-center gap-2 text-[15px]">
+              <input type="checkbox" className="size-4 accent-verde-600" checked={scelte.includes(o.id)}
+                     onChange={e => cambia(o.id, e.target.checked)} />
+              <span className={o.attiva ? '' : 'text-grafite'}>{o.nome}{o.attiva ? '' : ' (disattivata)'}</span>
+            </label>
+          ))}
+        </div>
+      )}
+      <p className="mt-1.5 text-[13px] text-grafite">Un utente esterno non ha ruoli: entra nel gruppo automatico "esterni".</p>
     </fieldset>
   )
 }

@@ -50,7 +50,9 @@ public class PraticaAccessService {
         if (currentUser.puo(Permesso.PRATICHE_TUTTE)) return true;
         // stessa regola dell'elenco: storico, attività, permessi "vede" del processo con il loro ambito
         if (visibilita.vede(currentUser.username(), processInstanceId)) return true;
-        // pratica avviata da un processo richiamato: la vede chi vede la pratica madre
+        // pratica avviata da un processo richiamato: la vede chi vede la pratica madre (non gli esterni, che vedono
+        // solo le pratiche in cui sono parte o hanno un'attività)
+        if (currentUser.esterno()) return false;
         HistoricProcessInstance h = historyService.createHistoricProcessInstanceQuery()
             .processInstanceId(processInstanceId).singleResult();
         return h != null && h.getSuperProcessInstanceId() != null && canView(h.getSuperProcessInstanceId());
