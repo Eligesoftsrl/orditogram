@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CircleX, Download, FileCode, FileUp, ListChecks, Package, PackageOpen, Pencil, Plus, TriangleAlert, Upload, Users, Workflow } from 'lucide-react'
 import { api, scarica } from '../../api.js'
+import { useAuth } from '../../lib/auth.jsx'
+import { PERMESSI, puo } from '../../lib/permessi.js'
 import { chiaveDaNome } from '../../lib/bpmn/orditogramModeler.js'
 import { cx, dataOraCompleta, quando } from '../../lib/format.js'
 import BpmnViewer from '../../components/BpmnViewer.jsx'
@@ -228,6 +230,7 @@ function CaricaProcesso({ aperto, onClose, onDeploy }) {
   const [attesa, setAttesa] = useState(false)
   const [errore, setErrore] = useState('')
   const toast = useToast()
+  const { me } = useAuth()
 
   useEffect(() => { if (aperto) { setBpmn(null); setForms([]); setExt(null); setErrore('') } }, [aperto])
 
@@ -260,7 +263,8 @@ function CaricaProcesso({ aperto, onClose, onDeploy }) {
         <Errore>{errore}</Errore>
         <div className="flex justify-end gap-2 border-t border-linea pt-4">
           <Button variante="fantasma" onClick={onClose}>Annulla</Button>
-          <Button variante="primario" icona={Upload} disabled={!bpmn} attesa={attesa} onClick={deploy}>Metti in produzione</Button>
+          <Button variante="primario" icona={Upload} disabled={!bpmn || !puo(me, PERMESSI.pubblica)} attesa={attesa} onClick={deploy}
+                  title={puo(me, PERMESSI.pubblica) ? '' : 'Serve il permesso di pubblicazione'}>Metti in produzione</Button>
         </div>
       </div>
     </Dialogo>

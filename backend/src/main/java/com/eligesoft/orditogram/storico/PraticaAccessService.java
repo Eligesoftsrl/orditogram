@@ -1,5 +1,6 @@
 package com.eligesoft.orditogram.storico;
 
+import com.eligesoft.orditogram.accesso.Permesso;
 import com.eligesoft.orditogram.form.FormService;
 import com.eligesoft.orditogram.user.CurrentUserService;
 import org.activiti.api.runtime.shared.query.Pageable;
@@ -17,7 +18,7 @@ import java.util.Optional;
 
 /**
  * Chi può vedere una pratica e chi può modificarne i documenti.
- *  - vedere:    admin, chi ha partecipato (ha un evento nello storico),
+ *  - vedere:    chi ha il permesso "pratiche.vedi-tutte", chi ha partecipato (ha un evento nello storico),
  *               chi ha un task della pratica in carico o disponibile per i suoi gruppi,
  *               chi può vedere la pratica madre (per le pratiche avviate da un processo richiamato)
  *  - modificare i documenti: chi ha in carico un task della pratica il cui form ha "documenti": "modifica"
@@ -44,7 +45,7 @@ public class PraticaAccessService {
     }
 
     public boolean canView(String processInstanceId) {
-        if (currentUser.isAdmin()) return true;
+        if (currentUser.puo(Permesso.PRATICHE_TUTTE)) return true;
         if (storico.haPartecipato(processInstanceId, currentUser.username())) return true;
         // TaskRuntime restituisce solo i task assegnati all'utente o candidati per i suoi gruppi
         if (taskRuntime.tasks(Pageable.of(0, 1),

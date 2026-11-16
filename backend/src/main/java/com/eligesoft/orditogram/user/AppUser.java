@@ -1,5 +1,6 @@
 package com.eligesoft.orditogram.user;
 
+import com.eligesoft.orditogram.accesso.Ruolo;
 import jakarta.persistence.*;
 
 import java.util.HashSet;
@@ -31,8 +32,11 @@ public class AppUser {
     @Column(unique = true, length = 500)
     private String oidcSoggetto;
 
-    /** Può gestire gli utenti. */
-    private boolean admin = false;
+    /** Ruoli assegnati direttamente all'utente; altri arrivano dai gruppi (vedi accesso/PermessiService). */
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "app_user_ruolo", joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "ruolo_id"))
+    private Set<Ruolo> ruoli = new HashSet<>();
 
     /** Gruppi di lavoro: corrispondono ai candidateGroups dei BPMN (es. "operatori"). */
     @ElementCollection(fetch = FetchType.EAGER)
@@ -58,8 +62,8 @@ public class AppUser {
     public void setEmail(String email) { this.email = email; }
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
-    public boolean isAdmin() { return admin; }
-    public void setAdmin(boolean admin) { this.admin = admin; }
+    public Set<Ruolo> getRuoli() { return ruoli; }
+    public void setRuoli(Set<Ruolo> ruoli) { this.ruoli = ruoli; }
     public String getOidcSoggetto() { return oidcSoggetto; }
     public void setOidcSoggetto(String oidcSoggetto) { this.oidcSoggetto = oidcSoggetto; }
     public Set<String> getGroups() { return groups; }

@@ -35,7 +35,7 @@ class MigrazioniDatabaseTest {
         MigrateResult esito = flyway(ds).migrate();
 
         assertThat(esito.success).isTrue();
-        assertThat(esito.migrationsExecuted).isGreaterThanOrEqualTo(2);
+        assertThat(esito.migrationsExecuted).isGreaterThanOrEqualTo(3);
         JdbcTemplate jdbc = new JdbcTemplate(ds);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM app_user", Integer.class)).isZero();
         // ripetere l'avvio non fa nulla
@@ -57,11 +57,19 @@ class MigrazioniDatabaseTest {
         jdbc.execute("CREATE TABLE act_ge_property (name_ VARCHAR(64) PRIMARY KEY, value_ VARCHAR(300))");
         jdbc.execute("ALTER TABLE pratica_evento ADD CONSTRAINT pratica_evento_tipo_check CHECK (tipo IN ('AVVIO'))");
         jdbc.update("INSERT INTO app_user (admin, enabled, password, username) VALUES (true, true, 'x', 'admin')");
+        jdbc.update("INSERT INTO app_user (admin, enabled, password, username) VALUES (false, true, 'x', 'mario')");
 
         MigrateResult esito = flyway(ds).migrate();
 
         assertThat(esito.success).isTrue();
-        assertThat(jdbc.queryForObject("SELECT username FROM app_user", String.class)).isEqualTo("admin");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM app_user", Integer.class)).isEqualTo(2);
+        // V3: chi era amministratore ha il ruolo amministratore, gli altri nessun ruolo; la colonna admin non c'è più
+        assertThat(jdbc.queryForList("SELECT u.username FROM app_user u JOIN app_user_ruolo ur ON ur.user_id = u.id "
+            + "JOIN ruolo r ON r.id = ur.ruolo_id WHERE r.codice = 'amministratore'", String.class)).containsExactly("admin");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS "
+            + "WHERE LOWER(TABLE_NAME) = 'app_user' AND LOWER(COLUMN_NAME) = 'admin'", Integer.class)).isZero();
+        assertThat(jdbc.queryForList("SELECT permesso FROM ruolo_permesso rp JOIN ruolo r ON r.id = rp.ruolo_id "
+            + "WHERE r.codice = 'analista' ORDER BY permesso", String.class)).containsExactly("integrazioni.gestisci", "studio.form", "studio.processi", "studio.pubblica");
         // V2 ha tolto il vincolo che rifiutava i tipi di evento nuovi
         jdbc.update("INSERT INTO pratica_evento (process_instance_id, quando, tipo) VALUES ('1', CURRENT_TIMESTAMP, 'EMAIL')");
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM pratica_evento", Integer.class)).isEqualTo(1);

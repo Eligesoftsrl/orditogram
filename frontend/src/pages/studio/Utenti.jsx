@@ -1,14 +1,18 @@
 import { useEffect, useId, useMemo, useState } from 'react'
-import { Plus, Search, UserPlus, Users, X } from 'lucide-react'
+import { Search, UserPlus, Users, X } from 'lucide-react'
 import { api } from '../../api.js'
 import { useAuth } from '../../lib/auth.jsx'
 import { cx } from '../../lib/format.js'
 import { Avatar, Badge, Button, Caricamento, Errore, Pannello, Vuoto, useToast } from '../../components/ui.jsx'
 import Esporta from '../../components/Esporta.jsx'
+import Gruppi from '../../components/Gruppi.jsx'
 
-const VUOTO = { id: null, username: '', firstName: '', lastName: '', email: '', enabled: true, admin: false, groups: [], password: '' }
+const VUOTO = { id: null, username: '', firstName: '', lastName: '', email: '', enabled: true, ruoli: [], groups: [], password: '' }
 
-/** Studio: utenti e gruppi. I gruppi sono quelli usati nei BPMN (candidateGroups, candidateStarterGroups). */
+/**
+ * Studio: utenti, gruppi e ruoli. I gruppi sono quelli usati nei BPMN (candidateGroups, candidateStarterGroups);
+ * i ruoli danno i permessi dello Studio e dell'amministrazione (vedi Ruoli.jsx).
+ */
 export default function Utenti() {
   const uid = useId()
   const { me } = useAuth()
@@ -19,8 +23,11 @@ export default function Utenti() {
   const [errore, setErrore] = useState('')
   const [attesa, setAttesa] = useState(false)
 
+  const [ruoli, setRuoli] = useState([])
+
   const carica = () => api.users().then(setLista).catch(e => setErrore(e.message))
-  useEffect(() => { void carica() }, [])
+  useEffect(() => { void carica(); api.ruoli().then(setRuoli).catch(() => {}) }, [])
+  const nomeRuolo = (codice) => ruoli.find(r => r.codice === codice)?.nome || codice
 
   const gruppi = useMemo(() => [...new Set((lista || []).flatMap(u => u.groups))].sort((a, b) => a.localeCompare(b, 'it')), [lista])
   const filtrati = (lista || []).filter(u =>
@@ -49,7 +56,7 @@ export default function Utenti() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Utenti</h1>
-          <p className="mt-1 max-w-2xl text-grafite">Chi accede e a quali gruppi appartiene. I gruppi decidono chi vede le attività e chi può avviare i processi.</p>
+          <p className="mt-1 max-w-2xl text-grafite">Chi accede, a quali gruppi appartiene e con quali ruoli. I gruppi decidono chi lavora le attività dei processi, i ruoli che cosa si può fare nello Studio.</p>
         </div>
         <div className="flex gap-2">
           <Esporta nome="utenti" titolo="Utenti" disabled={!lista} sottotitolo={cerca ? `ricerca "${cerca}"` : ''}
@@ -60,7 +67,7 @@ export default function Utenti() {
                      { titolo: 'Cognome', valore: u => u.lastName },
                      { titolo: 'Email', valore: u => u.email },
                      { titolo: 'Gruppi', valore: u => (u.groups || []).join(', ') },
-                     { titolo: 'Amministratore', valore: u => u.admin ? 'Sì' : 'No' },
+                     { titolo: 'Ruoli', valore: u => [...(u.ruoli || []), ...(u.ruoliDaGruppi || [])].map(nomeRuolo).join(', ') },
                      { titolo: 'Attivo', valore: u => u.enabled ? 'Sì' : 'No' }
                    ]} />
           <Button variante="primario" icona={UserPlus} onClick={() => { setErrore(''); setEdit({ ...VUOTO }) }}>Nuovo utente</Button>
@@ -90,7 +97,7 @@ export default function Utenti() {
                           <span className="block truncate text-[13px] text-grafite">{u.username}{u.email ? `, ${u.email}` : ''}</span>
                         </span>
                         <span className="hidden flex-wrap justify-end gap-1 sm:flex">
-                          {u.admin && <Badge tono="pino">admin</Badge>}
+                          {[...(u.ruoli || []), ...(u.ruoliDaGruppi || [])].map(r => <Badge key={`r-${r}`} tono="pino">{nomeRuolo(r)}</Badge>)}
                           {!u.enabled && <Badge tono="mattone">disattivato</Badge>}
                           {u.groups.map(g => <Badge key={g}>{g}</Badge>)}
                         </span>
@@ -119,9 +126,10 @@ export default function Utenti() {
                   </div>
                 </div>
                 <Gruppi valori={edit.groups} noti={gruppi} onChange={g => set('groups', g)} />
+                <SceltaRuoli ruoli={ruoli} scelti={edit.ruoli || []} daGruppi={edit.id ? (edit.ruoliDaGruppi || []) : []}
+                             onChange={r => set('ruoli', r)} />
                 <div className="space-y-2 rounded-campo bg-carta px-3.5 py-3">
                   <label className="flex items-center gap-2 text-[15px]"><input type="checkbox" className="size-4 accent-verde-600" checked={edit.enabled} onChange={e => set('enabled', e.target.checked)} /> Può accedere</label>
-                  <label className="flex items-center gap-2 text-[15px]"><input type="checkbox" className="size-4 accent-verde-600" checked={edit.admin} onChange={e => set('admin', e.target.checked)} /> Amministratore: gestisce processi, form e utenti</label>
                 </div>
                 <Errore>{errore}</Errore>
                 <div className="flex items-center gap-2 border-t border-linea pt-4">
@@ -140,35 +148,30 @@ export default function Utenti() {
   )
 }
 
-function Gruppi({ valori, noti, onChange }) {
-  const [nuovo, setNuovo] = useState('')
-  const aggiungi = (g) => { const v = g.trim(); if (v && !valori.includes(v)) onChange([...valori, v]); setNuovo('') }
-  const suggeriti = noti.filter(g => !valori.includes(g))
+/** Ruoli assegnati direttamente; quelli che arrivano dai gruppi si vedono ma si cambiano nella pagina Ruoli. */
+function SceltaRuoli({ ruoli, scelti, daGruppi, onChange }) {
+  const cambia = (codice, si) => onChange(si ? [...scelti, codice] : scelti.filter(c => c !== codice))
   return (
-    <div>
-      <p className="etichetta">Gruppi</p>
-      <div className="flex flex-wrap gap-2">
-        {valori.length === 0 && <span className="text-sm text-grafite">Nessun gruppo</span>}
-        {valori.map(g => (
-          <span key={g} className="inline-flex items-center gap-1 rounded-full bg-verde-50 py-1 pl-3 pr-1.5 text-sm text-verde-700 ring-1 ring-verde-100">
-            {g}
-            <button type="button" onClick={() => onChange(valori.filter(x => x !== g))} className="rounded-full p-0.5 hover:bg-white" aria-label={`Togli ${g}`}><X className="size-3.5" /></button>
-          </span>
-        ))}
-      </div>
-      <div className="mt-2 flex gap-2">
-        <input className="campo h-9" value={nuovo} placeholder="Aggiungi un gruppo" onChange={e => setNuovo(e.target.value)}
-               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); aggiungi(nuovo) } }} />
-        <Button type="button" misura="sm" icona={Plus} onClick={() => aggiungi(nuovo)}>Aggiungi</Button>
-      </div>
-      {suggeriti.length > 0 && (
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">
-          <span className="text-[13px] text-grafite">Esistenti:</span>
-          {suggeriti.map(g => (
-            <button key={g} type="button" onClick={() => aggiungi(g)} className="rounded-full px-2.5 py-0.5 text-[13px] text-pino-800 ring-1 ring-linea hover:bg-carta">+ {g}</button>
-          ))}
+    <fieldset>
+      <legend className="etichetta">Ruoli</legend>
+      {ruoli.length === 0 ? <p className="text-sm text-grafite">Nessun ruolo disponibile</p> : (
+        <div className="space-y-1.5 rounded-campo bg-carta px-3.5 py-3">
+          {ruoli.map(r => {
+            const dalGruppo = daGruppi.includes(r.codice) && !scelti.includes(r.codice)
+            return (
+              <label key={r.codice} className="flex items-start gap-2 text-[15px]">
+                <input type="checkbox" className="mt-1 size-4 accent-verde-600" checked={scelti.includes(r.codice) || dalGruppo}
+                       disabled={dalGruppo} onChange={e => cambia(r.codice, e.target.checked)} />
+                <span>
+                  <span className="font-medium text-pino-900">{r.nome}</span>
+                  {dalGruppo && <span className="text-grafite"> (da un gruppo)</span>}
+                  {r.descrizione && <span className="block text-[13px] text-grafite">{r.descrizione}</span>}
+                </span>
+              </label>
+            )
+          })}
         </div>
       )}
-    </div>
+    </fieldset>
   )
 }

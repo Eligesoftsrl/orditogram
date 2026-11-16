@@ -9,6 +9,8 @@ import {
   Maximize, Redo2, TriangleAlert, Undo2, ZoomIn, ZoomOut
 } from 'lucide-react'
 import { api } from '../../api.js'
+import { useAuth } from '../../lib/auth.jsx'
+import { PERMESSI, puo } from '../../lib/permessi.js'
 import { cx, quando } from '../../lib/format.js'
 import activitiModdle from '../../lib/bpmn/activiti.json'
 import orditogramModdle from '../../lib/bpmn/orditogram.json'
@@ -47,6 +49,8 @@ export default function ProcessEditor() {
   const [mostraProblemi, setMostraProblemi] = useState(true)
   const [storia, setStoria] = useState({ undo: false, redo: false })
   const [pubblicazione, setPubblicazione] = useState(false)
+  const { me } = useAuth()
+  const puoPubblicare = puo(me, PERMESSI.pubblica)
   const [formAperto, setFormAperto] = useState(null)
   const [simulando, setSimulando] = useState(false)
 
@@ -334,8 +338,9 @@ export default function ProcessEditor() {
           {info?.bozza && info?.inProduzione && <Button misura="sm" variante="fantasma" onClick={scartaBozza}>Scarta bozza</Button>}
           <Button misura="sm" variante="fantasma" icona={Download} onClick={scaricaBpmn}>BPMN</Button>
           <Button misura="sm" variante="primario" icona={CloudUpload} attesa={pubblicazione}
-                  disabled={nErrori > 0 || problemi.inCorso || stato === 'caricamento'}
-                  title={nErrori > 0 ? 'Correggi gli errori prima di pubblicare' : ''}
+                  disabled={!puoPubblicare || nErrori > 0 || problemi.inCorso || stato === 'caricamento'}
+                  title={!puoPubblicare ? 'Il tuo ruolo prepara le bozze: a pubblicare è chi ha il permesso di pubblicazione'
+                    : nErrori > 0 ? 'Correggi gli errori prima di pubblicare' : ''}
                   onClick={pubblica}>
             Pubblica
           </Button>

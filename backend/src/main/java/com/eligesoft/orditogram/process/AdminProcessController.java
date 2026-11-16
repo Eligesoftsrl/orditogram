@@ -146,6 +146,11 @@ public class AdminProcessController {
                                       @RequestParam(value = "forms", required = false) List<MultipartFile> formFiles,
                                       @RequestParam(value = "extensions", required = false) MultipartFile extFile)
             throws IOException {
+        // chi pubblica senza il permesso sui form non li sovrascrive passando di qui
+        if (formFiles != null && formFiles.stream().anyMatch(f -> !f.isEmpty())
+                && !currentUser.puo(com.eligesoft.orditogram.accesso.Permesso.STUDIO_FORM))
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN,
+                "Per caricare i form insieme al processo serve il permesso sui form");
 
         String fileName = Optional.ofNullable(bpmnFile.getOriginalFilename()).orElse("").toLowerCase();
         if (!(fileName.endsWith(".bpmn") || fileName.endsWith(".xml")))

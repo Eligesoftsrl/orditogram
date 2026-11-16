@@ -1,5 +1,8 @@
 package com.eligesoft.orditogram.auth;
 
+import com.eligesoft.orditogram.accesso.PermessiService;
+import com.eligesoft.orditogram.accesso.Ruolo;
+import com.eligesoft.orditogram.accesso.RuoloRepository;
 import com.eligesoft.orditogram.user.AppUser;
 import com.eligesoft.orditogram.user.AppUserRepository;
 import org.slf4j.Logger;
@@ -20,8 +23,9 @@ import java.util.*;
 
 /**
  * Dopo l'accesso sul provider: trova (o crea) l'utente in Orditogram, aggiorna nome, email e gruppi dal token
- * e prepara le autorizzazioni che usano Orditogram e Activiti (ROLE_ACTIVITI_USER, GROUP_x, ROLE_ADMIN),
- * esattamente come per gli utenti locali.
+ * e prepara le autorizzazioni che usa Activiti (ROLE_ACTIVITI_USER, GROUP_x), esattamente come per gli utenti locali.
+ * I permessi di Orditogram vengono dai ruoli (accesso/PermessiService): il gruppo amministratore del provider
+ * (app.oidc.gruppo-admin) dà o toglie il ruolo amministratore; gli altri ruoli si legano ai gruppi nello Studio.
  */
 @Service
 public class OrditogramOidcUserService extends OidcUserService {
@@ -31,9 +35,14 @@ public class OrditogramOidcUserService extends OidcUserService {
     private final AppUserRepository utenti;
     private final OidcProperties proprieta;
     private final PasswordEncoder passwordEncoder;
+    private final RuoloRepository ruoli;
+    private final PermessiService permessi;
 
-    public OrditogramOidcUserService(AppUserRepository utenti, OidcProperties proprieta, PasswordEncoder passwordEncoder) {
+    public OrditogramOidcUserService(AppUserRepository utenti, OidcProperties proprieta, PasswordEncoder passwordEncoder,
+                                     RuoloRepository ruoli, PermessiService permessi) {
         this.utenti = utenti;
+        this.ruoli = ruoli;
+        this.permessi = permessi;
         this.proprieta = proprieta;
         this.passwordEncoder = passwordEncoder;
     }
@@ -63,7 +72,8 @@ public class OrditogramOidcUserService extends OidcUserService {
                 if (omonimo.getOidcSoggetto() != null)
                     throw new OAuth2AuthenticationException(new OAuth2Error("utente_gia_collegato"),
                         "Il nome utente " + nome + " è già collegato a un'altra identità");
-                if (omonimo.isAdmin() || !proprieta.isCollegaUtentiEsistenti())
+                // un utente locale con permessi di amministrazione non si collega da solo a un'identità esterna
+                if (!permessi.permessiDi(omonimo).isEmpty() || !proprieta.isCollegaUtentiEsistenti())
                     throw new OAuth2AuthenticationException(new OAuth2Error("utente_locale"),
                         "Esiste già un utente locale " + nome + ": l'amministratore deve collegarlo");
                 u = omonimo;
@@ -90,12 +100,17 @@ public class OrditogramOidcUserService extends OidcUserService {
         if (utenteOidc.getEmail() != null) u.setEmail(utenteOidc.getEmail());
         if (proprieta.isSincronizzaGruppi() && claims.containsKey(radice(proprieta.getClaimGruppi())))
             u.setGroups(new HashSet<>(gruppiToken));
-        if (proprieta.getGruppoAdmin() != null) u.setAdmin(adminDaToken);
+        if (proprieta.getGruppoAdmin() != null) {
+            AppUser utente = u;
+            ruoli.findByCodice(Ruolo.AMMINISTRATORE).ifPresent(admin -> {
+                if (adminDaToken) utente.getRuoli().add(admin);
+                else utente.getRuoli().removeIf(Ruolo::isAmministratore);
+            });
+        }
         u = utenti.save(u);
 
         List<GrantedAuthority> autorizzazioni = new ArrayList<>();
         autorizzazioni.add(new SimpleGrantedAuthority("ROLE_ACTIVITI_USER"));
-        if (u.isAdmin()) autorizzazioni.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
         u.getGroups().forEach(g -> autorizzazioni.add(new SimpleGrantedAuthority("GROUP_" + g)));
 
         // il "nome" dell'utente autenticato è lo username di Orditogram (anche se il claim non c'era)

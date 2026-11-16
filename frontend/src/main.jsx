@@ -21,6 +21,8 @@ import FormStudio from './pages/studio/Form.jsx'
 import Utenti from './pages/studio/Utenti.jsx'
 import Registro from './pages/studio/Registro.jsx'
 import Integrazioni from './pages/studio/Integrazioni.jsx'
+import Ruoli from './pages/studio/Ruoli.jsx'
+import { PERMESSI, puo } from './lib/permessi.js'
 import ProcessEditor from './pages/studio/ProcessEditor.jsx'
 
 function App() {
@@ -34,14 +36,17 @@ function App() {
         <Route path="pratiche" element={<Pratiche />} />
         <Route path="pratiche/:id" element={<PraticaPage />} />
         <Route path="attivita/:id" element={<TaskPage />} />
-        {me.admin && <>
+        {puo(me, PERMESSI.processi) && <>
           <Route path="studio/processi" element={<Processi />} />
-          <Route path="studio/form" element={<FormStudio />} />
-          <Route path="studio/utenti" element={<Utenti />} />
-          <Route path="studio/registro" element={<Registro />} />
-          <Route path="studio/integrazioni" element={<Integrazioni />} />
           <Route path="studio/editor/:chiave" element={<ProcessEditor />} />
         </>}
+        {puo(me, PERMESSI.form) && <Route path="studio/form" element={<FormStudio />} />}
+        {puo(me, PERMESSI.utenti) && <>
+          <Route path="studio/utenti" element={<Utenti />} />
+          <Route path="studio/ruoli" element={<Ruoli />} />
+        </>}
+        {puo(me, PERMESSI.registro) && <Route path="studio/registro" element={<Registro />} />}
+        {puo(me, PERMESSI.integrazioni) && <Route path="studio/integrazioni" element={<Integrazioni />} />}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
