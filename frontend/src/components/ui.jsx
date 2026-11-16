@@ -115,17 +115,29 @@ export function Schede({ voci, attiva, onChange, className }) {
 
 // ================================================================= finestra modale
 
+/** Le finestre aperte, dalla prima all'ultima: Esc chiude solo quella in primo piano. */
+const finestreAperte = []
+
 export function Dialogo({ aperto, onClose, titolo, sottotitolo, larghezza = 'max-w-2xl', children }) {
   const ref = useRef(null)
+  // onClose cambia a ogni disegno del chiamante: la finestra si registra una volta sola, all'apertura
+  const chiudi = useRef(onClose)
+  useEffect(() => { chiudi.current = onClose }, [onClose])
   useEffect(() => {
     if (!aperto) return
-    const onKey = (e) => e.key === 'Escape' && onClose()
+    const io = {}
+    finestreAperte.push(io)
+    const onKey = (e) => e.key === 'Escape' && finestreAperte[finestreAperte.length - 1] === io && chiudi.current()
     document.addEventListener('keydown', onKey)
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     ref.current?.focus()
-    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev }
-  }, [aperto, onClose])
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prev
+      finestreAperte.splice(finestreAperte.indexOf(io), 1)
+    }
+  }, [aperto])
   if (!aperto) return null
   return (
     // lo sfondo chiude con il mouse; da tastiera si chiude con Esc (sopra)

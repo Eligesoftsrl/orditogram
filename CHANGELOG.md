@@ -108,6 +108,17 @@ Form avanzati, prima parte.
   dei dati, date GG/MM/AAAA, sì/no) che aggiorna le schede con la stessa chiave; ogni riga si salva da sola e le
   righe scartate arrivano con il motivo. Esportazione in Excel, CSV e PDF per chi ha la regola *esporta*; il CSV
   esportato si reimporta così com'è. Importazioni ed esportazioni vanno nel registro.
+- **Anagrafiche dall'API pubblica**: `/api/v1/anagrafiche` per cercare, leggere, creare e modificare le schede, con i
+  permessi `anagrafiche:leggi` e `anagrafiche:scrivi`. Ogni chiave elenca le anagrafiche a cui accede (nessuna per
+  default); chi la crea deve vederle (e modificarle, se la chiave scrive). Errori `dati_non_validi` (422) e
+  `conflitto` (409); OpenAPI aggiornata. L'avvio di una pratica dall'API accetta i campi anagrafica con le schede
+  delle anagrafiche della chiave. Migrazione `V10`.
+- **Regola *sceglie***: trova le schede per nome e le sceglie nei form senza consultare l'archivio
+  (`/api/anagrafiche/{tipo}/scelta`, solo numero e titolo). È l'unica regola che vale per gli utenti esterni
+  (gruppi `esterni` e `org:<id>`), che ora possono compilare i campi anagrafica.
+- **Nuova scheda dal form**: un campo anagrafica con *Si può creare una scheda nuova da qui* fa creare la scheda senza
+  lasciare la pratica, a chi ha la regola *modifica*; *Apri la scheda* la apre in un'altra scheda del browser.
+  Con più finestre aperte, Esc chiude solo quella in primo piano.
 - **Esportazioni protette dalle formule**: nei CSV esportati un testo che inizia con `=`, `+`, `-` o `@` ha un
   apostrofo davanti, così Excel non lo esegue come formula (CSV injection).
 - **Referente dell'organizzazione**: chi ha il permesso organizzazioni sceglie uno o più referenti tra gli utenti

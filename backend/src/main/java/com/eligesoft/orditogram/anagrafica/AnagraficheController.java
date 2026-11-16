@@ -39,6 +39,12 @@ public class AnagraficheController {
         return schede.tipo(tipo);
     }
 
+    /** Le schede da scegliere in un campo anagrafica: solo numero e nome. Vale anche per gli utenti esterni. */
+    @GetMapping("/{tipo}/scelta")
+    public List<SchedeService.Scelta> scelta(@PathVariable String tipo, @RequestParam(required = false) String testo) {
+        return schede.scelta(tipo, testo);
+    }
+
     @GetMapping("/{tipo}/schede")
     public SchedeService.Pagina cerca(@PathVariable String tipo,
                                       @RequestParam(required = false) String testo,

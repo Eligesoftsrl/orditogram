@@ -43,9 +43,9 @@ public final class ValoriForm {
         }
     }
 
-    /** Proprietà del campo che sono regole di validazione (vedi RegoleCampo). */
+    /** Proprietà del campo che sono regole di validazione (vedi RegoleCampo), più l'anagrafica da cui si sceglie. */
     static final List<String> REGOLE = List.of("min", "max", "minLunghezza", "maxLunghezza", "formato", "espressione",
-        "messaggioFormato", "minRighe", "maxRighe");
+        "messaggioFormato", "minRighe", "maxRighe", "tipoAnagrafica");
 
     /** Tipo del campo che raccoglie più righe (vedi in alto). */
     public static final String TABELLA = "tabella";

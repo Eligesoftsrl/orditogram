@@ -2,6 +2,7 @@
 import { eSezione } from './formCondizioni.js'
 
 export const AZIONI_ANAGRAFICA = [
+  { codice: 'SCEGLIE', titolo: 'Chi la sceglie nei form', aiuto: 'Cerca per nome e sceglie la scheda in un campo Anagrafica, senza vederne i dati. Per gli utenti esterni usa il gruppo esterni o org:<id> dell\'organizzazione.' },
   { codice: 'VEDE', titolo: 'Chi consulta le schede', aiuto: 'Cerca e legge le schede, e le sceglie nei form delle pratiche.' },
   { codice: 'MODIFICA', titolo: 'Chi crea e modifica le schede', aiuto: 'Crea, modifica, cessa e importa da CSV; consulta anche.' },
   { codice: 'ESPORTA', titolo: 'Chi esporta le schede', aiuto: 'Scarica tutte le schede in Excel, CSV o PDF; consulta anche.' }

@@ -216,7 +216,8 @@ e l'organizzazione ci sono già.
 
 Le anagrafiche sono gli archivi di dati stabili che le pratiche usano: fondi, società, fornitori, immobili, soggetti
 vigilati. L'analista ne definisce i **tipi** e il personale autorizzato ne gestisce le **schede**; i form delle
-pratiche le scelgono. L'API pubblica `/api/v1` per le anagrafiche arriva nella prossima versione.
+pratiche le scelgono, anche quelli compilati dagli utenti esterni e dall'API pubblica, che legge e scrive le schede
+(`/api/v1/anagrafiche`).
 
 **Nell'interfaccia**: lo Studio → *Anagrafiche* elenca i tipi e li modifica con il costruttore dei form (in più le
 spunte *Dà il nome alla scheda*, *Chiave* e *Si trova con la ricerca*, e il campo *Anagrafica* per i collegamenti);
@@ -237,10 +238,17 @@ Quando cambiano i campi chiave o ricercabili, l'indice si ricostruisce subito; s
 ripetuti, la modifica è rifiutata. Ogni modifica della definizione aumenta la versione del tipo e va nel registro.
 Un tipo si elimina solo se non ha schede e nessun altro lo collega: altrimenti si disattiva.
 
-**Chi vede e modifica le schede** (`/api/admin/anagrafiche/{codice}/permessi`): regole *vede*, *modifica* (comprende
-vede) ed *esporta*, per gruppi (anche del provider di accesso) o ruoli. Senza regole solo l'amministratore vede le
-schede, e il permesso di definire i tipi non dà accesso ai dati. Gli utenti esterni non accedono alle anagrafiche.
-Un tipo o una scheda che l'utente non può vedere risponde "non trovata", come se non esistesse.
+**Chi vede e modifica le schede** (`/api/admin/anagrafiche/{codice}/permessi`): regole *sceglie*, *vede*, *modifica*
+(comprende vede) ed *esporta*, per gruppi (anche del provider di accesso) o ruoli. Senza regole solo l'amministratore
+vede le schede, e il permesso di definire i tipi non dà accesso ai dati. Un tipo o una scheda che l'utente non può
+vedere risponde "non trovata", come se non esistesse.
+
+*Sceglie* serve a chi compila un form ma non deve consultare l'archivio: trova le schede attive per nome
+(`GET /api/anagrafiche/{codice}/scelta?testo=`, al massimo 30, solo numero e titolo) e le sceglie nei form; non apre
+le schede, non le vede nell'elenco e il tipo non compare nel menu. Chi vede le schede le sceglie anche. Per gli
+**utenti esterni** conta solo *sceglie*, data al gruppo `esterni` (tutti) o `org:<id>` (gli utenti di
+un'organizzazione); le altre regole e quelle per ruolo per loro non valgono, e del resto delle anagrafiche non
+raggiungono nulla.
 
 **Schede** (`/api/anagrafiche`):
 ```
@@ -262,8 +270,8 @@ riattivare.
 
 **Nelle pratiche**: un campo di form `{ "name": "fondo", "type": "anagrafica", "tipoAnagrafica": "fondi" }` fa
 scegliere una scheda (il valore è il suo id). Quando il form si invia:
-- la scheda deve esistere, essere del tipo indicato, attiva e visibile a chi compila (regola *vede* del tipo);
-  altrimenti "scheda non trovata". Per questo, per ora, gli utenti esterni e l'API pubblica non compilano questi campi;
+- la scheda deve esistere, essere del tipo indicato, attiva e sceglibile da chi compila (regola *sceglie* o *vede*;
+  per l'API pubblica, un'anagrafica della chiave con il permesso `anagrafiche:leggi`); altrimenti "scheda non trovata";
 - la pratica si **collega** alla scheda con una **fotografia** dei dati di quel momento, senza i campi riservati: se
   la scheda cambia dopo, la pratica resta legata ai dati su cui si è deciso;
 - nelle variabili del processo vanno anche `fondo_titolo` e `fondo_dati`, così BPMN, gateway ed email li usano:
@@ -276,6 +284,11 @@ elenca le pratiche collegate che l'utente vede. Un'attività successiva può cam
 si aggiorna e lo storico conserva il passaggio. Lo Studio rifiuta un form che sceglie da un'anagrafica che non esiste,
 e un'anagrafica usata da un form non si elimina.
 
+**Nuova scheda dal form**: con *Si può creare una scheda nuova da qui* (`"creaScheda": true` sul campo) chi ha la
+regola *modifica* vede il pulsante *Nuova scheda*: si apre il form dell'anagrafica sopra quello della pratica, la scheda
+si crea con le solite regole e resta scelta nel campo. Accanto alla scheda scelta, *Apri la scheda* (per chi la vede)
+la apre in un'altra scheda del browser, dove si aggiorna.
+
 **Importazione da CSV** (`POST /api/anagrafiche/fondi/importa`, regola *modifica*, al massimo 5.000 righe e 10 MB):
 prima riga con le etichette o i nomi dei campi, separatore punto e virgola o virgola; date anche GG/MM/AAAA, caselle
 sì/no, numeri all'italiana. Se c'è una colonna chiave, la riga con una chiave già presente aggiorna quella scheda
@@ -286,6 +299,20 @@ della scheda collegata (`Fondo (nome)`) si ignorano, così il file esportato si 
 **Esportazione** (`GET /api/anagrafiche/fondi/esporta`, regola *esporta*, al massimo 20.000 schede): tutte le schede
 con i dati che l'utente vede; l'interfaccia ne fa Excel, CSV o PDF. Nei CSV un testo che inizia con `=`, `+`, `-` o
 `@` ha un apostrofo davanti, così Excel non lo esegue come formula. Importazioni ed esportazioni vanno nel registro.
+
+**API pubblica** (`/api/v1/anagrafiche`, chiave API): la chiave elenca le anagrafiche a cui accede (nessuna per
+default) e ha il permesso `anagrafiche:leggi` o `anagrafiche:scrivi` (che comprende la lettura). Chi crea la chiave
+deve vedere quelle anagrafiche (e modificarle, se la chiave scrive). Per il sistema un tipo non elencato non esiste.
+```
+GET  /api/v1/anagrafiche                                   tipi della chiave, con i campi
+GET  /api/v1/anagrafiche/fornitori/schede?testo=&campo=&valore=&stato=&pagina=&dimensione=
+GET  /api/v1/anagrafiche/fornitori/schede/{id}
+POST /api/v1/anagrafiche/fornitori/schede        { "dati": { ... } }                          → 201 e Location
+PUT  /api/v1/anagrafiche/fornitori/schede/{id}   { "versione": 2, "dati": { ... }, "nota": "..." }
+```
+Stesse regole dell'interfaccia: dati controllati (422 `dati_non_validi` con i campi), chiavi uniche, versione letta
+(409 `conflitto`), niente campi riservati ai ruoli né esportazione. Avviando una pratica dall'API, un campo anagrafica
+accetta l'id di una scheda attiva di un'anagrafica della chiave. L'OpenAPI generata descrive tutto.
 
 **Pacchetti**: l'esportazione di un processo include le definizioni delle anagrafiche usate dai suoi form (e di quelle
 che collegano), in `anagrafiche/<codice>.json`, senza schede né permessi. All'importazione si creano quelle che mancano

@@ -227,7 +227,7 @@ public class TipiAnagraficaService {
             if (r == null) continue;
             String azione = maiuscolo(r.azione()), tipo = maiuscolo(r.tipoSoggetto());
             String soggetto = r.soggetto() == null ? "" : r.soggetto().trim();
-            if (!AZIONI.contains(azione)) throw bad("Azione sconosciuta: " + r.azione() + " (vede, modifica, esporta)");
+            if (!AZIONI.contains(azione)) throw bad("Azione sconosciuta: " + r.azione() + " (sceglie, vede, modifica, esporta)");
             if (!SOGGETTI.contains(tipo)) throw bad("Indica se la regola vale per un gruppo o per un ruolo");
             if (soggetto.isEmpty() || soggetto.length() > 100) throw bad("Indica il gruppo o il ruolo (al massimo 100 caratteri)");
             uniche.put(azione + "|" + tipo + "|" + soggetto, new Regola(azione, tipo, soggetto));

@@ -1,3 +1,4 @@
+import { createContext, useContext } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { cx, giorno } from '../lib/format.js'
 import { MAX_RIGHE } from '../lib/formRegole.js'
@@ -7,6 +8,9 @@ import { Button } from './ui.jsx'
  * Tabella di righe da compilare: { type: "tabella", colonne: [...], minRighe, maxRighe }.
  * Il valore è un elenco di oggetti { colonna: valore }; le righe lasciate in bianco si tolgono all'invio.
  */
+/** Il prefisso degli id dei campi: diverso per un form aperto dentro un altro (es. nuova scheda da un campo). */
+export const PrefissoId = createContext('campo-')
+
 export const rigaVuota = (f) => Object.fromEntries((f.colonne || []).map(c => [c.name, c.type === 'checkbox' ? false : '']))
 
 /** Righe iniziali: quelle già salvate, altrimenti tante righe vuote quante ne servono (almeno una). */
@@ -17,7 +21,7 @@ export function righeIniziali(f, valore) {
 }
 
 export function CampoTabella({ f, value, onChange, disabled, errore }) {
-  const id = `campo-${f.name}`
+  const id = `${useContext(PrefissoId)}${f.name}`
   const idErrore = `${id}-errore`
   const righe = Array.isArray(value) ? value : []
   const colonne = f.colonne || []

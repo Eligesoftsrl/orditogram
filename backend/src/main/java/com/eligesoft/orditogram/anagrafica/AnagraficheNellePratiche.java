@@ -73,9 +73,19 @@ public class AnagraficheNellePratiche {
      */
     @Transactional(readOnly = true)
     public List<Scelta> daForm(JsonNode form, Map<String, Object> valori, AppUser chi, Map<String, Object> giaNellaPratica) {
+        if (!haCampi(form)) return new ArrayList<>();
+        return daForm(form, valori, accesso.utente(chi), giaNellaPratica);
+    }
+
+    /**
+     * Come sopra, per chi è già stato riconosciuto (anche un sistema esterno con la sua chiave API). Basta la regola
+     * "sceglie" del tipo: chi sceglie non legge i dati della scheda, che vanno solo nella pratica.
+     */
+    @Transactional(readOnly = true)
+    public List<Scelta> daForm(JsonNode form, Map<String, Object> valori, AccessoAnagrafiche.Utente u,
+                               Map<String, Object> giaNellaPratica) {
         List<Scelta> out = new ArrayList<>();
         if (!haCampi(form)) return out;
-        AccessoAnagrafiche.Utente u = accesso.utente(chi);
         for (JsonNode f : form.path("fields")) {
             if (!ValoriForm.ANAGRAFICA.equals(f.path("type").asText())) continue;
             String nome = f.path("name").asText();
@@ -86,9 +96,9 @@ public class AnagraficheNellePratiche {
             String etichetta = f.path("label").asText(nome);
             SchedaAnagrafica s = id(v).flatMap(schede::findById).orElse(null);
             if (s == null || !s.getTipo().getCodice().equals(f.path("tipoAnagrafica").asText())
-                || !accesso.puo(u, s.getTipo(), PermessoAnagrafica.VEDE))
-                throw bad(etichetta + ": scheda non trovata");
-            if (!s.isAttiva()) throw bad(etichetta + ": la scheda \"" + s.getTitolo() + "\" è cessata");
+                || !accesso.puo(u, s.getTipo(), PermessoAnagrafica.SCEGLIE))
+                throw new SceltaNonValida(nome, etichetta + ": scheda non trovata");
+            if (!s.isAttiva()) throw new SceltaNonValida(nome, etichetta + ": la scheda \"" + s.getTitolo() + "\" è cessata");
             out.add(new Scelta(nome, s, fotografia(s), versioni.countBySchedaId(s.getId())));
         }
         return out;
@@ -183,7 +193,15 @@ public class AnagraficheNellePratiche {
         }
     }
 
-    private static ResponseStatusException bad(String msg) {
-        return new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
+    /** Una scheda scelta che non va bene: 400, con il campo del form. */
+    public static class SceltaNonValida extends ResponseStatusException {
+        private final String campo;
+
+        public SceltaNonValida(String campo, String messaggio) {
+            super(HttpStatus.BAD_REQUEST, messaggio);
+            this.campo = campo;
+        }
+
+        public String campo() { return campo; }
     }
 }

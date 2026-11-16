@@ -187,6 +187,40 @@ public final class OpenApiGeneratore {
                 "dati", obj("type", "object", "additionalProperties", obj("type", List.of("string", "number", "boolean")))))))),
             risposteMessaggio())));
 
+        // ------------------------------------------------------------ anagrafiche
+        Object parTipo = parPercorso("tipo", "Codice dell'anagrafica");
+        Object parScheda = parPercorso("id", "Id della scheda");
+        Map<String, Object> corpoScheda = obj("required", true, "content", obj(JSON, obj("schema", ref("RichiestaScheda"))));
+        paths.put("/anagrafiche", obj("get", op("Anagrafiche", "anagrafiche", "Anagrafiche consentite",
+            "I tipi di anagrafica elencati nella chiave, con i campi delle schede (stesso formato dei form). "
+                + "Serve il permesso anagrafiche:leggi o anagrafiche:scrivi.", null, null,
+            risposte("200", "Tipi di anagrafica", arrayDi("TipoAnagrafica")))));
+        paths.put("/anagrafiche/{tipo}/schede", obj(
+            "get", op("Anagrafiche", "cercaSchede", "Cerca schede",
+                "Per testo (nel titolo e nei campi ricercabili) o per valore esatto di un campo chiave, ricercabile o collegamento.",
+                List.of(parTipo,
+                    parQuery("testo", "Testo contenuto, senza maiuscole", obj("type", "string", "maxLength", 100)),
+                    parQuery("campo", "Campo chiave, ricercabile o collegamento", obj("type", "string")),
+                    parQuery("valore", "Valore esatto del campo", obj("type", "string")),
+                    parQuery("stato", "Stato", obj("type", "string", "enum", List.of("ATTIVA", "CESSATA", "TUTTE"), "default", "ATTIVA")),
+                    parQuery("pagina", "Numero di pagina, da 0", obj("type", "integer", "minimum", 0, "default", 0)),
+                    parQuery("dimensione", "Schede per pagina", obj("type", "integer", "minimum", 1, "maximum", 100, "default", 50))),
+                null, risposte("200", "Una pagina di schede", ref("PaginaSchede"), "404", "Anagrafica non consentita alla chiave", ref("Errore"))),
+            "post", op("Anagrafiche", "creaScheda", "Crea una scheda",
+                "Serve il permesso anagrafiche:scrivi. I dati seguono i campi dell'anagrafica; un campo chiave non si ripete.",
+                List.of(parTipo), corpoScheda,
+                risposte("201", "Scheda creata", ref("Scheda"), "422", "Dati non validi (dettagli in errore.campi)", ref("Errore"),
+                    "409", "Chiave già usata da un'altra scheda", ref("Errore")))));
+        paths.put("/anagrafiche/{tipo}/schede/{id}", obj(
+            "get", op("Anagrafiche", "scheda", "Una scheda", null, List.of(parTipo, parScheda), null,
+                risposte("200", "La scheda", ref("Scheda"), "404", "Scheda non trovata", ref("Errore"))),
+            "put", op("Anagrafiche", "modificaScheda", "Modifica una scheda",
+                "Serve il permesso anagrafiche:scrivi e la `versione` letta: se nel frattempo la scheda è cambiata, 409. "
+                    + "I dati sostituiscono quelli della scheda.",
+                List.of(parTipo, parScheda), corpoScheda,
+                risposte("200", "Scheda modificata", ref("Scheda"), "422", "Dati non validi (dettagli in errore.campi)", ref("Errore"),
+                    "409", "La scheda è cambiata nel frattempo, oppure è cessata", ref("Errore")))));
+
         // ------------------------------------------------------------ sistema
         paths.put("/io", obj("get", op("Sistema", "io", "Chi sono",
             "Per verificare la chiave: nome del sistema, permessi, processi consentiti.", null, null,
@@ -248,12 +282,17 @@ public final class OpenApiGeneratore {
             case "checkbox" -> obj("type", "boolean");
             case "select" -> obj("type", "string", "enum", c.opzioni());
             case ValoriForm.TABELLA -> schemaTabella(c);
+            case ValoriForm.ANAGRAFICA -> obj("type", "string", "pattern", "^[1-9][0-9]{0,17}$");
             default -> obj("type", "string");
         };
         s.put("title", c.etichetta());
         List<String> descrizione = new ArrayList<>();
         if (c.aiuto() != null && !c.aiuto().isBlank()) descrizione.add(c.aiuto());
-        regole(c, s, descrizione);
+        if (ValoriForm.ANAGRAFICA.equals(c.tipo())) {
+            String tipo = c.regole() != null ? c.regole().get("tipoAnagrafica") : null;
+            descrizione.add("Id di una scheda attiva dell'anagrafica \"" + tipo + "\" (GET /anagrafiche/" + tipo
+                + "/schede). Serve il permesso anagrafiche:leggi su quell'anagrafica.");
+        } else regole(c, s, descrizione);
         if (c.visibileSe() != null)
             descrizione.add("Si usa solo se " + c.visibileSe().campo() + " vale " + String.join(" o ", c.visibileSe().valori())
                 + (c.obbligatorio() ? ", e in quel caso è obbligatorio" : "") + "; altrimenti il valore viene ignorato.");
@@ -408,7 +447,30 @@ public final class OpenApiGeneratore {
             "versioni", arrayDi("VersioneDocumento"))));
         s.put("Identita", obj("type", "object", "properties", obj(
             "sistema", stringa, "permessi", obj("type", "array", "items", stringa),
-            "processi", obj("type", "array", "items", stringa, "description", "Vuoto = tutti"))));
+            "processi", obj("type", "array", "items", stringa, "description", "Vuoto = tutti"),
+            "anagrafiche", obj("type", "array", "items", stringa, "description", "Anagrafiche consentite; vuoto = nessuna"))));
+        s.put("TipoAnagrafica", obj("type", "object", "properties", obj(
+            "codice", stringa, "nome", stringa, "descrizione", stringa, "attiva", obj("type", "boolean"),
+            "campi", obj("type", "array", "items", obj("type", "object"), "description", "Campi delle schede, nel formato dei form"))));
+        s.put("RigaScheda", obj("type", "object", "properties", obj(
+            "id", obj("type", "integer"), "titolo", stringa, "stato", obj("type", "string", "enum", List.of("ATTIVA", "CESSATA")),
+            "modificataIl", dataOra)));
+        s.put("PaginaSchede", obj("type", "object", "properties", obj(
+            "righe", arrayDi("RigaScheda"), "totale", obj("type", "integer"),
+            "pagina", obj("type", "integer"), "dimensione", obj("type", "integer"))));
+        s.put("Scheda", obj("type", "object", "properties", obj(
+            "id", obj("type", "integer"), "tipo", stringa, "titolo", stringa,
+            "stato", obj("type", "string", "enum", List.of("ATTIVA", "CESSATA")),
+            "versione", obj("type", "integer", "description", "Da indicare per modificare la scheda"),
+            "dati", obj("type", "object"),
+            "collegamenti", obj("type", "object", "description", "Per ogni campo collegamento: id, tipo e (se visibile) titolo della scheda collegata",
+                "additionalProperties", obj("type", "object", "properties", obj("id", obj("type", "integer"), "tipo", stringa, "titolo", stringa, "stato", stringa))),
+            "creataIl", dataOra, "modificataIl", dataOra)));
+        s.put("RichiestaScheda", obj("type", "object", "properties", obj(
+            "versione", obj("type", "integer", "description", "Per modificare: la versione letta"),
+            "dati", obj("type", "object"),
+            "nota", obj("type", "string", "description", "Nota della modifica, resta nelle versioni")),
+            "required", List.of("dati")));
         s.put("Evento", obj("type", "object", "properties", obj(
             "id", obj("type", "string", "description", "Univoco: serve a riconoscere gli invii ripetuti"),
             "tipo", obj("type", "string", "enum", new ArrayList<>(TipiEvento.TUTTI.keySet())),

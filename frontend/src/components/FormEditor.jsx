@@ -11,7 +11,7 @@ import { FORMATI, descriviRegole } from '../lib/formRegole.js'
 
 const NESSUNA_REGOLA = { min: undefined, max: undefined, minLunghezza: undefined, maxLunghezza: undefined,
   formato: undefined, espressione: undefined, messaggioFormato: undefined, colonne: undefined, minRighe: undefined, maxRighe: undefined,
-  parte: undefined, tipoAnagrafica: undefined, chiave: undefined, cercabile: undefined }
+  parte: undefined, tipoAnagrafica: undefined, chiave: undefined, cercabile: undefined, creaScheda: undefined }
 /** Identificativi interni dell'editor (chiavi di React): basta un contatore, non serve casualità. */
 let ultimoId = 0
 const nuovoId = () => ++ultimoId
@@ -327,7 +327,7 @@ function pulisci(form) {
     if (f.precompila === false) c.precompila = false
     if (!c.type) c.type = 'text'
     if (c.type !== 'organizzazione') delete c.parte
-    if (c.type !== 'anagrafica') delete c.tipoAnagrafica
+    if (c.type !== 'anagrafica') { delete c.tipoAnagrafica; delete c.creaScheda }
     if (Array.isArray(c.ruoliVisibili) && c.ruoliVisibili.length === 0) delete c.ruoliVisibili
     return c
   })
@@ -429,7 +429,7 @@ function CampoEditor({ f, i, n, catalogo, campi, modo, tipiAnagrafica, onChange,
               <p className="mt-1 text-xs text-grafite">
                 {modo === 'anagrafica'
                   ? 'Collega la scheda a una scheda di un\'altra anagrafica (o della stessa), scelta tra quelle attive.'
-                  : 'Chi compila sceglie una scheda attiva tra quelle che può vedere; la pratica ne conserva una fotografia.'}
+                  : 'Chi compila sceglie una scheda attiva (serve la regola "sceglie" o "vede" dell\'anagrafica); la pratica ne conserva una fotografia. Una scheda nuova la crea solo chi può modificare l\'anagrafica.'}
               </p>
             </div>
           )}
@@ -439,6 +439,7 @@ function CampoEditor({ f, i, n, catalogo, campi, modo, tipiAnagrafica, onChange,
             <Spunta checked={!!f.readonly} onChange={v => onChange({ readonly: v, ...(v ? { required: false } : {}) })}>Sola lettura</Spunta>
             {modo === 'form' && !f.readonly && <Spunta checked={f.precompila === false} onChange={v => onChange({ precompila: v ? false : undefined })}>Non riproporre il valore precedente</Spunta>}
             {modo === 'form' && !f.readonly && ['text', 'anagrafica'].includes(f.type) && <Spunta checked={!!f.titolo} onChange={v => onChange({ titolo: v })}>Usa come titolo della pratica</Spunta>}
+            {!f.readonly && f.type === 'anagrafica' && <Spunta checked={!!f.creaScheda} onChange={v => onChange({ creaScheda: v || undefined })}>Si può creare una scheda nuova da qui</Spunta>}
             {modo === 'anagrafica' && INDICIZZABILI.includes(f.type || 'text') && <>
               <Spunta checked={!!f.titolo} onChange={v => onChange({ titolo: v || undefined })}>Dà il nome alla scheda</Spunta>
               <Spunta checked={!!f.chiave} onChange={v => onChange({ chiave: v || undefined, ...(v ? { visibileSe: undefined } : {}) })}>Chiave: non si ripete tra le schede</Spunta>

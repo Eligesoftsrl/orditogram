@@ -6,6 +6,8 @@ import jakarta.persistence.*;
  * Chi può fare che cosa sulle schede di un tipo di anagrafica: VEDE (cercare e leggere), MODIFICA (creare,
  * modificare, cessare; comprende vedere), ESPORTA (scaricare l'elenco; comprende vedere). Il soggetto è un gruppo
  * (anche del provider di accesso) o un ruolo applicativo. Senza regole, solo l'amministratore vede le schede.
+ * SCEGLIE (cercare per nome e scegliere nei form, vedendo solo il nome) è l'unica che vale anche per gli utenti
+ * esterni, con i loro gruppi "esterni" e "org:<id>".
  */
 @Entity
 @Table(name = "permesso_anagrafica")
@@ -14,6 +16,7 @@ public class PermessoAnagrafica {
     public static final String VEDE = "VEDE";
     public static final String MODIFICA = "MODIFICA";
     public static final String ESPORTA = "ESPORTA";
+    public static final String SCEGLIE = "SCEGLIE";
 
     public static final String GRUPPO = "GRUPPO";
     public static final String RUOLO = "RUOLO";

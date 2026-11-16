@@ -225,6 +225,8 @@ export const api = {
   cercaSchede: (tipo, { testo = '', campo = '', valore = '', stato = '', pagina = 0, dimensione = 25 } = {}) =>
     call('GET', `/api/anagrafiche/${encodeURIComponent(tipo)}/schede?testo=${encodeURIComponent(testo)}&campo=${encodeURIComponent(campo)}`
       + `&valore=${encodeURIComponent(valore)}&stato=${encodeURIComponent(stato)}&pagina=${pagina}&dimensione=${dimensione}`),
+  /** Schede attive da scegliere in un campo: [{id, titolo}], basta la regola "sceglie" (anche per gli esterni). */
+  sceltaSchede: (tipo, testo = '') => call('GET', `/api/anagrafiche/${encodeURIComponent(tipo)}/scelta?testo=${encodeURIComponent(testo)}`),
   scheda: (tipo, id) => call('GET', `/api/anagrafiche/${encodeURIComponent(tipo)}/schede/${id}`),
   creaScheda: (tipo, dati) => call('POST', `/api/anagrafiche/${encodeURIComponent(tipo)}/schede`, { dati }),
   modificaScheda: (tipo, id, versione, dati, nota) => call('PUT', `/api/anagrafiche/${encodeURIComponent(tipo)}/schede/${id}`, { versione, dati, nota }),
