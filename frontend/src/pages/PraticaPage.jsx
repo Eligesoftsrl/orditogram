@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Briefcase, Building2, CalendarDays, Hourglass, Inbox, UserRound, Workflow } from 'lucide-react'
+import { ArrowLeft, ArrowRight, BookUser, Briefcase, Building2, CalendarDays, Hourglass, Inbox, UserRound, Workflow } from 'lucide-react'
 import { api } from '../api.js'
 import { giorno, quando } from '../lib/format.js'
 import IterRail from '../components/IterRail.jsx'
@@ -138,6 +138,8 @@ export default function PraticaPage() {
 
           <Parti parti={p.parti || []} />
 
+          <AnagraficheCollegate voci={p.anagrafiche || []} />
+
           <Collegate madre={p.praticaMadre} figlie={p.praticheFiglie || []} />
         </div>
 
@@ -162,6 +164,44 @@ function Parti({ parti }) {
             </div>
           </li>
         ))}
+      </ul>
+    </Pannello>
+  )
+}
+
+/**
+ * Le schede di anagrafica scelte nei form: nome e dati come erano quando sono state scelte (la fotografia),
+ * con un avviso se oggi la scheda ha un altro nome o è cessata. Il link c'è solo se l'utente può vederla.
+ */
+function AnagraficheCollegate({ voci }) {
+  if (voci.length === 0) return null
+  return (
+    <Pannello titolo="Anagrafiche">
+      <ul className="space-y-2.5">
+        {voci.map(a => {
+          const avvisi = [
+            a.visibile && a.titoloAttuale && a.titoloAttuale !== a.titolo && `oggi si chiama ${a.titoloAttuale}`,
+            a.visibile && a.statoAttuale === 'CESSATA' && 'oggi è cessata'
+          ].filter(Boolean)
+          const corpo = (
+            <>
+              <BookUser className="mt-0.5 size-4 shrink-0 text-pino-700" aria-hidden="true" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13px] text-grafite">{a.etichetta}{a.tipoNome ? `, ${a.tipoNome}` : ''}</span>
+                <span className="block text-[15px] font-medium text-pino-900">{a.titolo}</span>
+                {a.collegataIl && <span className="block text-[13px] text-grafite">Dati della versione {a.versione}, scelta {quando(a.collegataIl)}</span>}
+                {avvisi.length > 0 && <span className="block text-[13px] text-zafferano-800">{avvisi.join(', ')}</span>}
+              </span>
+            </>
+          )
+          return (
+            <li key={a.campo}>
+              {a.visibile && a.id
+                ? <Link to={`/anagrafiche/${a.tipo}/${a.id}`} className="flex items-start gap-3 rounded-campo px-1 py-1 hover:bg-carta">{corpo}<ArrowRight className="mt-1 size-4 text-nebbia" aria-hidden="true" /></Link>
+                : <div className="flex items-start gap-3 px-1 py-1">{corpo}</div>}
+            </li>
+          )
+        })}
       </ul>
     </Pannello>
   )

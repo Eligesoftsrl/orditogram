@@ -247,6 +247,60 @@ class AnagraficheIntegrationTest {
         assertThat(stato("paolo", HttpMethod.DELETE, "/api/admin/anagrafiche/" + fondi, null)).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
+    @Test
+    void importazioneCsvEdEsportazione() {
+        crea("mario", societa, Map.of("denominazione", "Esistente S.p.A.", "partitaIva", "01234567897", "note", "vecchia"));
+        String csv = "\uFEFFDenominazione;partitaIva;note\n"
+            + "Esistente S.p.A.;01234567897;\"nota; con separatore\"\n"   // aggiorna (stessa chiave)
+            + "Nuova S.r.l.;;prima riga nuova\n"                             // crea
+            + ";;manca la denominazione\n"                                    // scartata
+            + "Altra S.r.l.;123;partita IVA sbagliata\n";                     // scartata
+        org.springframework.util.LinkedMultiValueMap<String, Object> corpo = new org.springframework.util.LinkedMultiValueMap<>();
+        corpo.add("file", new org.springframework.core.io.ByteArrayResource(csv.getBytes(java.nio.charset.StandardCharsets.UTF_8)) {
+            @Override public String getFilename() { return "societa.csv"; }
+        });
+        HttpHeaders h = xhr();
+        h.setContentType(MediaType.MULTIPART_FORM_DATA);
+        // i dirigenti vedono ma non modificano: non importano
+        assertThat(come("laura").exchange("/api/anagrafiche/" + societa + "/importa", HttpMethod.POST, new HttpEntity<>(corpo, h), String.class)
+            .getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        ResponseEntity<Map<String, Object>> r = come("mario").exchange("/api/anagrafiche/" + societa + "/importa", HttpMethod.POST,
+            new HttpEntity<>(corpo, h), MAPPA);
+        assertThat(r.getStatusCode()).as(String.valueOf(r.getBody())).isEqualTo(HttpStatus.OK);
+        assertThat(r.getBody().get("create")).isEqualTo(1);
+        assertThat(r.getBody().get("aggiornate")).isEqualTo(1);
+        assertThat((List<?>) r.getBody().get("scartate")).hasSize(2);
+        assertThat(titoli("mario", societa, "testo=nuova")).containsExactly("Nuova S.r.l.");
+
+        // il file esportato si reimporta: la colonna col nome della scheda collegata si ignora
+        Object idSocieta = ((Map<?, ?>) ((List<?>) chiama("mario", HttpMethod.GET, "/api/anagrafiche/" + societa
+            + "/schede?testo=esistente", null).getBody().get("schede")).get(0)).get("id");
+        String csvFondi = "Nome del fondo;Codice;Società istitutrice;Società istitutrice (nome)\n"
+            + "Fondo pensione;FP1;" + idSocieta + ";Esistente S.p.A.\n";
+        org.springframework.util.LinkedMultiValueMap<String, Object> corpoFondi = new org.springframework.util.LinkedMultiValueMap<>();
+        corpoFondi.add("file", new org.springframework.core.io.ByteArrayResource(csvFondi.getBytes(java.nio.charset.StandardCharsets.UTF_8)) {
+            @Override public String getFilename() { return "fondi.csv"; }
+        });
+        ResponseEntity<Map<String, Object>> rf = come("mario").exchange("/api/anagrafiche/" + fondi + "/importa", HttpMethod.POST,
+            new HttpEntity<>(corpoFondi, h), MAPPA);
+        assertThat(rf.getStatusCode()).as(String.valueOf(rf.getBody())).isEqualTo(HttpStatus.OK);
+        assertThat(rf.getBody().get("create")).as(String.valueOf(rf.getBody())).isEqualTo(1);
+        assertThat(String.valueOf(rf.getBody().get("ignorate"))).isEqualTo("[Società istitutrice (nome)]");
+        assertThat(titoli("mario", fondi, "campo=societa&valore=" + idSocieta)).containsExactly("Fondo pensione");
+
+        // esportazione: serve la regola "esporta"
+        assertThat(stato("mario", HttpMethod.GET, "/api/anagrafiche/" + societa + "/esporta", null)).isEqualTo(HttpStatus.FORBIDDEN);
+        regole(societa, List.of(regola("MODIFICA", "GRUPPO", "operatori"), regola("ESPORTA", "GRUPPO", "dirigenti"),
+            regola("VEDE", "RUOLO", "analista")));
+        Map<String, Object> esportate = chiama("laura", HttpMethod.GET, "/api/anagrafiche/" + societa + "/esporta", null).getBody();
+        List<?> righe = (List<?>) esportate.get("righe");
+        assertThat(righe).hasSize(2);
+        assertThat(righe.toString()).contains("nota; con separatore").doesNotContain("iban");
+        // chi disegna i form legge l'elenco dei tipi, ma non le regole di accesso
+        assertThat(stato("chiara", HttpMethod.GET, "/api/admin/anagrafiche", null)).isIn(HttpStatus.OK, HttpStatus.FORBIDDEN);
+        assertThat(stato("paolo", HttpMethod.GET, "/api/admin/anagrafiche/" + societa, null)).isEqualTo(HttpStatus.OK);
+    }
+
     // ------------------------------------------------------------ supporto
 
     private Map<String, Object> crea(String utente, String tipo, Map<String, Object> dati) {

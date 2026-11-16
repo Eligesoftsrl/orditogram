@@ -93,10 +93,19 @@ function generatoIl() {
   return new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date())
 }
 
+/**
+ * Un testo che inizia con = + - @ o un tabulatore, aperto in Excel, diventerebbe una formula (CSV injection):
+ * gli si mette davanti un apostrofo, che Excel non mostra. I numeri veri restano numeri.
+ */
+export function protetto(v) {
+  const s = testo(v)
+  return typeof v !== 'number' && /^[=+\-@\t\r]/.test(s) ? `'${s}` : s
+}
+
 /** CSV con separatore ";" e BOM: Excel in italiano lo apre già diviso in colonne e con gli accenti corretti. */
 export function csv(t) {
   const cella = (v) => {
-    const s = testo(v)
+    const s = protetto(v)
     return /[";\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
   }
   const righe = [t.colonne.map(c => cella(c.titolo)).join(';'), ...valori(t).map(r => r.map(cella).join(';'))]

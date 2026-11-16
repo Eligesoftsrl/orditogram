@@ -28,6 +28,10 @@ import { PERMESSI, puo } from './lib/permessi.js'
 import ProcessEditor from './pages/studio/ProcessEditor.jsx'
 import CambioPassword from './pages/CambioPassword.jsx'
 import MiaOrganizzazione from './pages/MiaOrganizzazione.jsx'
+import AnagraficheStudio from './pages/studio/Anagrafiche.jsx'
+import Anagrafiche from './pages/Anagrafiche.jsx'
+import SchedeAnagrafica from './pages/SchedeAnagrafica.jsx'
+import SchedaAnagrafica from './pages/SchedaAnagrafica.jsx'
 
 function App() {
   const { me, pronto } = useAuth()
@@ -43,12 +47,18 @@ function App() {
         <Route path="pratiche/:id" element={<PraticaPage />} />
         <Route path="attivita/:id" element={<TaskPage />} />
         <Route path="password" element={<CambioPassword />} />
+        {!me.esterno && <>
+          <Route path="anagrafiche" element={<Anagrafiche />} />
+          <Route path="anagrafiche/:tipo" element={<SchedeAnagrafica />} />
+          <Route path="anagrafiche/:tipo/:id" element={<SchedaAnagrafica />} />
+        </>}
         {me.referenteDi?.length > 0 && <Route path="organizzazione" element={<MiaOrganizzazione />} />}
         {puo(me, PERMESSI.processi) && <>
           <Route path="studio/processi" element={<Processi />} />
           <Route path="studio/editor/:chiave" element={<ProcessEditor />} />
         </>}
         {puo(me, PERMESSI.form) && <Route path="studio/form" element={<FormStudio />} />}
+        {puo(me, PERMESSI.anagrafiche) && <Route path="studio/anagrafiche" element={<AnagraficheStudio />} />}
         {puo(me, PERMESSI.utenti) && <>
           <Route path="studio/utenti" element={<Utenti />} />
           <Route path="studio/ruoli" element={<Ruoli />} />

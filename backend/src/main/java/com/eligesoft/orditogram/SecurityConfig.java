@@ -136,6 +136,10 @@ public class SecurityConfig {
                     "/api/admin/connettori/**", "/api/admin/credenziali/**").access(permessi.uno(Permesso.STUDIO_PROCESSI))
                 .requestMatchers("/api/admin/integrazioni/**").access(permessi.uno(Permesso.INTEGRAZIONI))
                 .requestMatchers(HttpMethod.GET, "/api/admin/registro/**").access(permessi.uno(Permesso.REGISTRO))
+                // l'elenco e la definizione dei tipi servono anche a chi disegna form e processi (campi anagrafica);
+                // le regole di accesso (/permessi) e le modifiche restano a chi definisce le anagrafiche
+                .requestMatchers(HttpMethod.GET, "/api/admin/anagrafiche", "/api/admin/anagrafiche/*")
+                    .access(permessi.uno(Permesso.ANAGRAFICHE_DEFINISCI, Permesso.STUDIO_FORM, Permesso.STUDIO_PROCESSI))
                 .requestMatchers("/api/admin/anagrafiche/**").access(permessi.uno(Permesso.ANAGRAFICHE_DEFINISCI))
                 // tutto il resto (sezioni nuove comprese): solo chi ha ogni permesso
                 .requestMatchers("/api/admin/**").access(permessi.tutti())
