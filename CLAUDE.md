@@ -73,6 +73,8 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
   `@Version`), `anagrafica_indice` (valori normalizzati di chiavi, ricercabili e relazioni; UNIQUE su chiave),
   `anagrafica_versione`, `permesso_anagrafica`. Ogni accesso alle schede passa da `SchedeService` →
   `AccessoAnagrafiche`; tipo o scheda non visibile = 404. Validazione con `ValoriForm.convalida`, tipo campo `anagrafica`.
+  Nei form delle pratiche: `AnagraficheNellePratiche` (controllo per chi compila, `pratica_anagrafica` con fotografia,
+  variabili `<campo>_dati`/`<campo>_titolo`, che `CampiVisibili` lega alla visibilità del campo; mai `_dati` agli esterni).
 - **Storico → eventi**: `StoricoService.registra` pubblica `EventoStorico`; i webhook lo ascoltano nella stessa transazione.
 
 ## Come si lavora

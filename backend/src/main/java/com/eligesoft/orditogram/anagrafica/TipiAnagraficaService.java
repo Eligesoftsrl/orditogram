@@ -132,9 +132,82 @@ public class TipiAnagraficaService {
             if (!altro.getId().equals(t.getId())
                 && DefinizioneAnagrafica.di(leggiJson(altro.getDefinizione())).tipiCollegati().contains(codice))
                 throw bad("L'anagrafica " + altro.getNome() + " ha un campo collegato a questa: togli prima il collegamento");
+        List<String> usata = formCheLoUsano(codice);
+        if (!usata.isEmpty())
+            throw bad("Il form " + usata.get(0) + " ha un campo che sceglie da questa anagrafica: toglilo prima");
         regole.cancellaDelTipo(t.getId());
         tipi.delete(t);
         registro.registra("ANAGRAFICA_ELIMINATA", codice, descrivi(t));
+    }
+
+    // ------------------------------------------------------------ pacchetti
+
+    /**
+     * I tipi da mettere in un pacchetto: quelli indicati e quelli che collegano con i loro campi relazione, a catena.
+     * Senza schede e senza regole di accesso, che dipendono dall'ambiente.
+     */
+    @Transactional(readOnly = true)
+    public List<Tipo> perPacchetto(Collection<String> codici) {
+        Map<String, Tipo> out = new LinkedHashMap<>();
+        Deque<String> daVedere = new ArrayDeque<>(codici);
+        while (!daVedere.isEmpty()) {
+            String c = daVedere.pop();
+            if (out.containsKey(c)) continue;
+            tipi.findByCodice(c).ifPresent(t -> {
+                JsonNode def = leggiJson(t.getDefinizione());
+                out.put(c, new Tipo(t.getCodice(), t.getNome(), t.getDescrizione(), def, null, null, null, null, null));
+                daVedere.addAll(DefinizioneAnagrafica.di(def).tipiCollegati());
+            });
+        }
+        return List.copyOf(out.values());
+    }
+
+    /**
+     * Crea i tipi di un pacchetto che qui non esistono; quelli già presenti restano come sono (la definizione di
+     * un'anagrafica in uso non cambia per un'importazione). L'ordine segue le relazioni. Restituisce che cosa è
+     * successo, in parole.
+     */
+    @Transactional
+    public String importa(List<Tipo> dalPacchetto) {
+        List<Tipo> nuovi = new ArrayList<>(dalPacchetto.stream().filter(t -> t.codice() != null && !tipi.existsByCodice(t.codice())).toList());
+        List<String> mantenuti = dalPacchetto.stream().map(Tipo::codice).filter(c -> c != null && tipi.existsByCodice(c)).toList();
+        List<String> creati = new ArrayList<>();
+        boolean avanti = true;
+        while (!nuovi.isEmpty() && avanti) {
+            avanti = false;
+            for (Iterator<Tipo> it = nuovi.iterator(); it.hasNext(); ) {
+                Tipo t = it.next();
+                boolean pronto = DefinizioneAnagrafica.di(t.definizione() == null ? mapper.createObjectNode() : t.definizione())
+                    .tipiCollegati().stream().allMatch(c -> c.equals(t.codice()) || tipi.existsByCodice(c));
+                if (!pronto) continue;
+                crea(new Tipo(t.codice(), t.nome(), t.descrizione(), t.definizione(), true, null, null, null, null));
+                creati.add(t.codice());
+                it.remove();
+                avanti = true;
+            }
+        }
+        if (!nuovi.isEmpty())
+            throw bad("Anagrafiche del pacchetto collegate ad anagrafiche che mancano: "
+                + nuovi.stream().map(Tipo::codice).collect(Collectors.joining(", ")));
+        List<String> parti = new ArrayList<>();
+        if (!creati.isEmpty()) parti.add("create " + String.join(", ", creati));
+        if (!mantenuti.isEmpty()) parti.add("mantenute quelle già presenti: " + String.join(", ", mantenuti));
+        return String.join("; ", parti);
+    }
+
+    public boolean esiste(String codice) {
+        return codice != null && tipi.existsByCodice(codice);
+    }
+
+    /** I codici dei tipi che i form indicati usano nei campi anagrafica. */
+    public static Set<String> usatiDai(Collection<JsonNode> forms) {
+        Set<String> out = new TreeSet<>();
+        for (JsonNode f : forms)
+            if (f != null) f.path("fields").forEach(c -> {
+                if (com.eligesoft.orditogram.form.ValoriForm.ANAGRAFICA.equals(c.path("type").asText()))
+                    out.add(c.path("tipoAnagrafica").asText());
+            });
+        return out;
     }
 
     // ------------------------------------------------------------ regole di accesso
@@ -175,6 +248,20 @@ public class TipiAnagraficaService {
     }
 
     // ------------------------------------------------------------ supporto
+
+    /** I form (Studio e progetto) con un campo anagrafica di questo tipo. */
+    private List<String> formCheLoUsano(String codice) {
+        List<String> out = new ArrayList<>();
+        try {
+            for (Map<String, Object> f : forms.list()) {
+                String chiave = String.valueOf(f.get("formKey"));
+                if (usatiDai(Collections.singletonList(forms.load(chiave))).contains(codice)) out.add(chiave);
+            }
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException("Form non leggibili", e);
+        }
+        return out;
+    }
 
     TipoAnagrafica trova(String codice) {
         return tipi.findByCodice(codice == null ? "" : codice)

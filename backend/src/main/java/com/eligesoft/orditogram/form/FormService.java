@@ -25,15 +25,23 @@ public class FormService {
 
     private static final String CLASSPATH_PATTERN = "classpath*:forms/*.json";
     public static final Set<String> TIPI_CAMPO = Set.of("text", "number", "date", "textarea", "select", "checkbox", ValoriForm.TABELLA,
-        ValoriForm.ORGANIZZAZIONE);
+        ValoriForm.ORGANIZZAZIONE, ValoriForm.ANAGRAFICA);
     public static final Set<String> TIPI_DOCUMENTI = Set.of("carica", "lettura", "modifica");
 
     private final FormDefinitionRepository repo;
     private final ObjectMapper mapper;
 
+    /** Dice se un tipo di anagrafica esiste (per i campi anagrafica dei form); senza database, sempre sì. */
+    private java.util.function.Predicate<String> anagraficaEsiste = codice -> true;
+
     public FormService(FormDefinitionRepository repo, ObjectMapper mapper) {
         this.repo = repo;
         this.mapper = mapper;
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setTipiAnagrafica(com.eligesoft.orditogram.anagrafica.TipoAnagraficaRepository tipi) {
+        this.anagraficaEsiste = tipi::existsByCodice;
     }
 
     /** Form come oggetto JSON pronto per il frontend, oppure null se non esiste. */
@@ -108,7 +116,12 @@ public class FormService {
     // ---------------------------------------------------------------- validazione
 
     public JsonNode validate(String formKey, String json) {
-        return validate(formKey, json, TIPI_CAMPO);
+        JsonNode node = validate(formKey, json, TIPI_CAMPO);
+        // un campo anagrafica di un form punta a un tipo che esiste già (le anagrafiche controllano da sé le loro relazioni)
+        for (JsonNode f : node.get("fields"))
+            if (ValoriForm.ANAGRAFICA.equals(f.path("type").asText()) && !anagraficaEsiste.test(f.path("tipoAnagrafica").asText()))
+                throw bad("Campo \"" + f.path("name").asText() + "\": l'anagrafica \"" + f.path("tipoAnagrafica").asText() + "\" non esiste");
+        return node;
     }
 
     /**
@@ -152,6 +165,8 @@ public class FormService {
             List<String> regole = RegoleCampo.problemi(f, type);
             if (!regole.isEmpty()) throw bad("Campo \"" + name + "\": " + regole.get(0));
             if (ValoriForm.TABELLA.equals(type)) validaTabella(name, f);
+            if (ValoriForm.ANAGRAFICA.equals(type) && !f.path("tipoAnagrafica").asText("").matches("[a-z][a-z0-9-]{1,59}"))
+                throw bad("Campo \"" + name + "\": indica il codice dell'anagrafica da cui scegliere (tipoAnagrafica)");
             validaAccesso(name, f, type, parti);
         }
         // condizioni: devono guardare un altro campo dello stesso form e indicare almeno un valore

@@ -118,6 +118,9 @@ public class StoricoService {
             else if (com.eligesoft.orditogram.form.ValoriForm.ORGANIZZAZIONE.equals(f.path("type").asText()) && v != null
                 && v.toString().matches("\\d{1,18}"))
                 text = organizzazioni.findById(Long.valueOf(v.toString())).map(o -> o.getNome()).orElse(v.toString());
+            else if (com.eligesoft.orditogram.form.ValoriForm.ANAGRAFICA.equals(f.path("type").asText()) && v != null
+                && values.get(name + com.eligesoft.orditogram.anagrafica.AnagraficheNellePratiche.SUFFISSO_TITOLO) != null)
+                text = values.get(name + com.eligesoft.orditogram.anagrafica.AnagraficheNellePratiche.SUFFISSO_TITOLO).toString();
             else if (v instanceof List<?> righe) text = righe.isEmpty() ? "" : righe.size() + (righe.size() == 1 ? " riga" : " righe");
             else text = v == null ? "" : v.toString().trim();
             if (text.isEmpty()) continue;

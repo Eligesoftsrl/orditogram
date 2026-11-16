@@ -1,5 +1,6 @@
 package com.eligesoft.orditogram.storico;
 
+import com.eligesoft.orditogram.anagrafica.AnagraficheNellePratiche;
 import com.eligesoft.orditogram.form.FormService;
 import com.eligesoft.orditogram.form.ValoriForm;
 import com.eligesoft.orditogram.process.BpmnResourceService;
@@ -53,6 +54,7 @@ public class PraticaController {
     private final com.eligesoft.orditogram.accesso.PermessiProcessoService permessiProcesso;
     private final com.eligesoft.orditogram.registro.RegistroService registro;
     private final com.eligesoft.orditogram.accesso.PartiService parti;
+    private final AnagraficheNellePratiche anagrafiche;
     private final CampiVisibili campiVisibili;
 
     /** Chi guarda la pratica: gli utenti esterni ne vedono una versione ridotta (vedi CampiVisibili). */
@@ -70,7 +72,9 @@ public class PraticaController {
                              com.eligesoft.orditogram.registro.RegistroService registro,
                              com.eligesoft.orditogram.accesso.PraticaStrutturaRepository praticaStruttura,
                              com.eligesoft.orditogram.accesso.OrganizzazioneRepository organizzazioni,
-                             com.eligesoft.orditogram.accesso.PartiService parti, CampiVisibili campiVisibili) {
+                             com.eligesoft.orditogram.accesso.PartiService parti, CampiVisibili campiVisibili,
+                             AnagraficheNellePratiche anagrafiche) {
+        this.anagrafiche = anagrafiche;
         this.parti = parti;
         this.campiVisibili = campiVisibili;
         this.praticaStruttura = praticaStruttura;
@@ -181,6 +185,8 @@ public class PraticaController {
         m.put("dati", dati(h, visibile));
         m.put("eventi", eventi);
         m.put("parti", parti.elenco(pi));
+        // schede di anagrafica collegate dai form, con la fotografia (agli esterni solo il titolo, se il campo lo vedono)
+        m.put("anagrafiche", anagraficheDellaPratica(pi, h, vista, visibile));
         if (vista.esterno()) {
             // un utente esterno non vede l'organizzazione interna né le pratiche collegate
             m.put("struttura", null);
@@ -204,6 +210,40 @@ public class PraticaController {
             TaskPayloadBuilder.tasks().withProcessInstanceId(pi).build()).getContent();
         m.put("taskId", mie.isEmpty() ? null : mie.get(0).getId());
         return m;
+    }
+
+    private List<Map<String, Object>> anagraficheDellaPratica(String pi, HistoricProcessInstance h, Vista vista,
+                                                              java.util.function.Predicate<String> visibile) {
+        Map<String, String> etichette = new HashMap<>();
+        Process p = repositoryService.getBpmnModel(h.getProcessDefinitionId()).getMainProcess();
+        List<String> formKeys = new ArrayList<>();
+        p.findFlowElementsOfType(StartEvent.class).forEach(s -> { if (s.getFormKey() != null) formKeys.add(s.getFormKey()); });
+        p.findFlowElementsOfType(UserTask.class, true).forEach(t -> { if (t.getFormKey() != null) formKeys.add(t.getFormKey()); });
+        for (String fk : formKeys) {
+            JsonNode form = forms.load(fk);
+            if (form != null) form.path("fields").forEach(f -> etichette.putIfAbsent(f.path("name").asText(), f.path("label").asText(f.path("name").asText())));
+        }
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (var c : anagrafiche.dellaPratica(pi, vista.utente(), etichette)) {
+            if (!visibile.test(c.campo())) continue;
+            Map<String, Object> x = new LinkedHashMap<>();
+            x.put("campo", c.campo());
+            x.put("etichetta", c.etichetta());
+            x.put("titolo", c.titolo());
+            if (!vista.esterno()) {
+                x.put("tipo", c.tipo());
+                x.put("tipoNome", c.tipoNome());
+                x.put("id", c.id());
+                x.put("fotografia", c.fotografia());
+                x.put("versione", c.versione());
+                x.put("collegataIl", c.collegataIl());
+                x.put("visibile", c.visibile());
+                x.put("titoloAttuale", c.titoloAttuale());
+                x.put("statoAttuale", c.statoAttuale());
+            }
+            out.add(x);
+        }
+        return out;
     }
 
     /** Diagramma con step attivi (in corso) e step già percorsi. */
@@ -398,6 +438,8 @@ public class PraticaController {
         for (String k : ordine) {
             if (NASCOSTE.contains(k) || k.startsWith("sys_") || k.startsWith(com.eligesoft.orditogram.accesso.PartiService.PREFISSO_VARIABILE)
                 || !vars.containsKey(k) || !visibile.test(k)) continue;
+            // titolo e fotografia di una scheda di anagrafica: si mostrano con il campo e in "anagrafiche"
+            if (derivataDaAnagrafica(k, tipi)) continue;
             Object v = vars.get(k);
             if (v == null || v.toString().isBlank()) continue;
             if (v instanceof List<?> righe && colonne.containsKey(k)) {
@@ -410,11 +452,20 @@ public class PraticaController {
             }
             String testo = "checkbox".equals(tipi.get(k)) ? (Boolean.TRUE.equals(v) ? "Sì" : "No")
                 : com.eligesoft.orditogram.form.ValoriForm.ORGANIZZAZIONE.equals(tipi.get(k)) ? nomeOrganizzazione(v.toString())
+                : ValoriForm.ANAGRAFICA.equals(tipi.get(k)) ? Objects.toString(vars.get(k + AnagraficheNellePratiche.SUFFISSO_TITOLO), v.toString())
                 : v.toString();
             out.add(Map.of("nome", k, "label", etichette.getOrDefault(k, k), "value", testo,
                 "tipo", tipi.getOrDefault(k, "text")));
         }
         return out;
+    }
+
+    /** &lt;campo&gt;_titolo e &lt;campo&gt;_dati di un campo anagrafica. */
+    private static boolean derivataDaAnagrafica(String nome, Map<String, String> tipi) {
+        for (String suffisso : List.of(AnagraficheNellePratiche.SUFFISSO_DATI, AnagraficheNellePratiche.SUFFISSO_TITOLO))
+            if (nome.endsWith(suffisso) && ValoriForm.ANAGRAFICA.equals(tipi.get(nome.substring(0, nome.length() - suffisso.length()))))
+                return true;
+        return false;
     }
 
     /** Il nome dell'organizzazione scelta in un campo Organizzazione (anche se nel frattempo è stata disattivata). */

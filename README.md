@@ -194,8 +194,8 @@ e l'organizzazione ci sono già.
 ## Anagrafiche configurabili (Studio → Anagrafiche)
 
 Le anagrafiche sono gli archivi di dati stabili che le pratiche usano: fondi, società, fornitori, immobili, soggetti
-vigilati. L'analista ne definisce i **tipi** e il personale autorizzato ne gestisce le **schede**. Per ora c'è il
-backend (API); interfaccia, collegamento alle pratiche e API pubblica arrivano nelle prossime versioni.
+vigilati. L'analista ne definisce i **tipi** e il personale autorizzato ne gestisce le **schede**; i form delle
+pratiche le scelgono. Per ora c'è il backend (API); interfaccia e API pubblica arrivano nelle prossime versioni.
 
 **Definizione** (`/api/admin/anagrafiche`, permesso `anagrafiche.definisci`, dato anche all'Analista): codice
 stabile (`fondi`), nome e campi nello **stesso formato dei form** (sezioni, tabelle, campi condizionali, regole e
@@ -232,6 +232,26 @@ modificato la scheda, la risposta è 409 e si ricarica. Una relazione punta solo
 scrive può vedere. I campi riservati non si vedono (neanche nelle versioni) e non si cambiano: chi non li vede
 modifica il resto e i loro valori restano. Le schede non si cancellano: si **cessano** (con una nota) e si possono
 riattivare.
+
+**Nelle pratiche**: un campo di form `{ "name": "fondo", "type": "anagrafica", "tipoAnagrafica": "fondi" }` fa
+scegliere una scheda (il valore è il suo id). Quando il form si invia:
+- la scheda deve esistere, essere del tipo indicato, attiva e visibile a chi compila (regola *vede* del tipo);
+  altrimenti "scheda non trovata". Per questo, per ora, gli utenti esterni e l'API pubblica non compilano questi campi;
+- la pratica si **collega** alla scheda con una **fotografia** dei dati di quel momento, senza i campi riservati: se
+  la scheda cambia dopo, la pratica resta legata ai dati su cui si è deciso;
+- nelle variabili del processo vanno anche `fondo_titolo` e `fondo_dati`, così BPMN, gateway ed email li usano:
+  `${fondo_dati.tipologia == 'Negoziale'}`;
+- con `"titolo": true` il campo dà alla pratica il titolo della scheda.
+
+La scheda della pratica (`GET /api/pratiche/{id}`, voce `anagrafiche`) mostra il titolo e i dati fotografati e, a chi
+può vedere la scheda, anche titolo e stato attuali. Dalla scheda, `GET /api/anagrafiche/fondi/schede/{id}/pratiche`
+elenca le pratiche collegate che l'utente vede. Un'attività successiva può cambiare la scheda scelta: il collegamento
+si aggiorna e lo storico conserva il passaggio. Lo Studio rifiuta un form che sceglie da un'anagrafica che non esiste,
+e un'anagrafica usata da un form non si elimina.
+
+**Pacchetti**: l'esportazione di un processo include le definizioni delle anagrafiche usate dai suoi form (e di quelle
+che collegano), in `anagrafiche/<codice>.json`, senza schede né permessi. All'importazione si creano quelle che mancano
+(serve anche il permesso `anagrafiche.definisci`); quelle già presenti restano come sono.
 
 ## Backup e ripristino
 

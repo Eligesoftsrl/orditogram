@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.*;
+import com.eligesoft.orditogram.anagrafica.TipiAnagraficaService;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -50,10 +51,13 @@ public class BozzaController {
     private final CurrentUserService currentUser;
     private final ObjectMapper mapper;
     private final RegolePermessiProcesso permessiProcesso;
+    private final TipiAnagraficaService anagrafiche;
 
     public BozzaController(ProcessoBozzaRepository bozze, RepositoryService repositoryService, BpmnResourceService bpmn,
                            FormService forms, CurrentUserService currentUser, ObjectMapper mapper,
-            com.eligesoft.orditogram.registro.RegistroService registro, RegolePermessiProcesso permessiProcesso) {
+            com.eligesoft.orditogram.registro.RegistroService registro, RegolePermessiProcesso permessiProcesso,
+            TipiAnagraficaService anagrafiche) {
+        this.anagrafiche = anagrafiche;
         this.permessiProcesso = permessiProcesso;
         this.registro = registro;
         this.bozze = bozze;
@@ -140,6 +144,7 @@ public class BozzaController {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         List<String> inclusi = new ArrayList<>();
+        List<JsonNode> formDelProcesso = new ArrayList<>();
         try (ZipOutputStream zip = new ZipOutputStream(bos, StandardCharsets.UTF_8)) {
             scrivi(zip, "processo.bpmn20.xml", xml);
             for (String fk : formKeys) {
@@ -147,6 +152,13 @@ public class BozzaController {
                 if (f == null) continue;
                 scrivi(zip, "form/" + fk + ".json", f.toPrettyString());
                 inclusi.add(fk);
+                formDelProcesso.add(f);
+            }
+            // anagrafiche usate dai form (e quelle che collegano): solo la definizione, senza schede né permessi
+            List<String> anagraficheIncluse = new ArrayList<>();
+            for (var t : anagrafiche.perPacchetto(TipiAnagraficaService.usatiDai(formDelProcesso))) {
+                scrivi(zip, "anagrafiche/" + t.codice() + ".json", mapper.writerWithDefaultPrettyPrinter().writeValueAsString(t));
+                anagraficheIncluse.add(t.codice());
             }
             // chi avvia, vede ed esporta: le regole dello Studio, se ci sono
             List<RegolePermessiProcesso.Regola> regole = permessiProcesso.elenco(chiave);
@@ -159,6 +171,7 @@ public class BozzaController {
             manifest.put("esportatoDa", currentUser.username());
             manifest.put("esportatoIl", OffsetDateTime.now().toString());
             manifest.putPOJO("form", inclusi);
+            if (!anagraficheIncluse.isEmpty()) manifest.putPOJO("anagrafiche", anagraficheIncluse);
             scrivi(zip, "orditogram-pacchetto.json", manifest.toPrettyString());
         }
         registro.registra("PACCHETTO_ESPORTATO", chiave, "Fonte: " + origine);
@@ -180,6 +193,7 @@ public class BozzaController {
         String xml = null;
         String permessiJson = null;
         Map<String, String> formFiles = new LinkedHashMap<>();
+        List<TipiAnagraficaService.Tipo> anagraficheDelPacchetto = new ArrayList<>();
         int n = 0;
         long totale = 0;
         try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(file.getBytes()), StandardCharsets.UTF_8)) {
@@ -199,6 +213,12 @@ public class BozzaController {
                     xml = testo;
                 } else if ("permessi.json".equals(nome)) {
                     permessiJson = testo;
+                } else if (nome.startsWith("anagrafiche/") && base.endsWith(".json")) {
+                    try {
+                        anagraficheDelPacchetto.add(mapper.readValue(testo, TipiAnagraficaService.Tipo.class));
+                    } catch (IOException ex) {
+                        throw bad("Il file " + nome + " del pacchetto non è valido");
+                    }
                 } else if (nome.startsWith("form/") && base.endsWith(".json")) {
                     formFiles.put(base.substring(0, base.length() - 5), testo);
                 }
@@ -211,6 +231,16 @@ public class BozzaController {
         Process p = bpmn.parse(xml.getBytes(StandardCharsets.UTF_8)).getMainProcess();
         if (p == null || p.getId() == null) throw bad("Il BPMN del pacchetto non contiene un processo");
 
+        // anagrafiche: prima dei form, che le usano; si creano solo quelle che qui mancano
+        String anagraficheImportate = "";
+        if (!anagraficheDelPacchetto.isEmpty()) {
+            if (!currentUser.puo(com.eligesoft.orditogram.accesso.Permesso.ANAGRAFICHE_DEFINISCI)
+                && anagraficheDelPacchetto.stream().anyMatch(t -> !anagrafiche.esiste(t.codice())))
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Il pacchetto contiene anagrafiche che qui non ci sono: serve il permesso di definire le anagrafiche");
+            anagraficheImportate = anagrafiche.importa(anagraficheDelPacchetto);
+        }
+
         // validazione e conflitti
         Map<String, JsonNode> validi = new LinkedHashMap<>();
         List<String> conflitti = new ArrayList<>();
@@ -221,6 +251,8 @@ public class BozzaController {
             if (esistente != null && !esistente.equals(nuovo)) conflitti.add(f.getKey());
         }
         if (!conflitti.isEmpty() && !sovrascrivi) {
+            // niente a metà: le anagrafiche appena create si annullano con il resto
+            org.springframework.transaction.interceptor.TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                 "message", "Questi form esistono già con un contenuto diverso: " + String.join(", ", conflitti),
                 "conflitti", conflitti));
@@ -240,9 +272,11 @@ public class BozzaController {
         registro.registra("PACCHETTO_IMPORTATO", p.getId(),
             "Form: " + (validi.isEmpty() ? "nessuno" : String.join(", ", validi.keySet()))
                 + (conflitti.isEmpty() ? "" : "; sovrascritti: " + String.join(", ", conflitti))
-                + (permessi.isEmpty() ? "" : "; permessi: " + permessi));
+                + (permessi.isEmpty() ? "" : "; permessi: " + permessi)
+                + (anagraficheImportate.isEmpty() ? "" : "; anagrafiche: " + anagraficheImportate));
         return ResponseEntity.ok(Map.of("chiave", p.getId(), "nome", b.getNome(),
-            "formSalvati", validi.keySet(), "sovrascritti", conflitti, "permessi", permessi));
+            "formSalvati", validi.keySet(), "sovrascritti", conflitti, "permessi", permessi,
+            "anagrafiche", anagraficheImportate));
     }
 
     // ================================================================= supporto
