@@ -47,7 +47,7 @@ vengono creati gli utenti di prova (password `password`, tranne `admin` / `admin
 | Utente | Nome | Gruppi |
 |---|---|---|
 | laura | Laura Verdi | dirigenti |
-| paolo, chiara | Paolo Neri, Chiara Galli | analisti |
+| paolo, chiara | Paolo Neri, Chiara Galli | analisti (paolo ha anche il ruolo Analista: entra nello Studio per processi, form e integrazioni) |
 | giulia | Giulia Russo | revisori |
 | mario, anna | Mario Rossi, Anna Bianchi | operatori (anna anche responsabili) |
 | admin | Amministratore | amministratore |
@@ -99,6 +99,34 @@ alle tabelle, Orditogram non parte e il log dice quale colonna manca, invece di 
 - Un database creato da Orditogram 0.12 (o precedente, aggiornato prima alla 0.12) si aggiorna da solo: la prima
   migrazione trova le tabelle già presenti e non le tocca.
 
+## Ruoli e permessi (Studio → Ruoli)
+
+Chi può fare che cosa nello Studio e nell'amministrazione si decide con i **ruoli**, insiemi di permessi:
+
+| Permesso | Che cosa apre |
+|---|---|
+| Processi (`studio.processi`) | Studio → Processi: bozze, pacchetti, connettori, credenziali |
+| Pubblicazione (`studio.pubblica`) | mettere in produzione un processo (senza, si preparano solo le bozze) |
+| Form (`studio.form`) | Studio → Form |
+| Integrazioni (`integrazioni.gestisci`) | Studio → Integrazioni: chiavi API e webhook |
+| Utenti e ruoli (`utenti.gestisci`) | Studio → Utenti e Ruoli |
+| Registro (`registro.leggi`) | Studio → Registro |
+| Tutte le pratiche (`pratiche.vedi-tutte`) | vedere ogni pratica, anche senza parteciparvi (non lavorarla) |
+
+Ruoli predefiniti: **Amministratore** (tutti i permessi, anche quelli futuri; non si modifica né si elimina),
+**Analista** (processi, pubblicazione, form, integrazioni), **Gestore utenti**, **Auditor** (registro e tutte le pratiche). Se ne creano altri
+con il pulsante *Nuovo ruolo*. Un ruolo si dà:
+- a una persona, in Studio → Utenti;
+- a un **gruppo**, nella pagina del ruolo: chi è nel gruppo lo riceve. Funziona anche con i gruppi del provider di
+  accesso (Keycloak, Entra ID), così i ruoli si governano dall'IdP dell'ente.
+
+Chi non ha ruoli lavora le attività dei suoi gruppi e vede le sue pratiche, come prima. Regole di sicurezza:
+- i permessi si leggono dal database a ogni richiesta: un ruolo tolto vale subito, anche per chi è collegato;
+- nessuno dà, toglie o modifica permessi che non ha (un gestore utenti non crea amministratori e non cambia la
+  password di un amministratore), nemmeno passando dai gruppi;
+- resta sempre almeno un amministratore attivo; nessuno disattiva o elimina sé stesso;
+- le sezioni nuove di `/api/admin` sono aperte solo a chi ha tutti i permessi finché non ricevono il loro.
+
 ## Backup e ripristino
 
 `strumenti/backup.sh` salva database e documenti in una cartella datata (con Docker Compose o, con `MODO=locale`,
@@ -107,7 +135,7 @@ Conserva i backup fuori dal server.
 
 ## Registro delle azioni
 
-Studio, Registro: pubblicazioni di processi, form salvati ed eliminati, utenti creati, modificati ed eliminati,
+Studio, Registro: pubblicazioni di processi, form salvati ed eliminati, utenti e ruoli creati, modificati ed eliminati,
 pacchetti importati ed esportati, accessi negati e accessi con il provider, con utente, ora e indirizzo.
 Le stesse righe vanno anche nel log dell'applicazione (`orditogram.registro`) per chi usa un SIEM.
 
@@ -436,7 +464,9 @@ a chiamare l'API dal browser (CORS), intervallo e timeout degli invii, giorni di
 
 Basta configurare il provider in `application.yml` (esempi commentati in `spring.security.oauth2.client`): nella pagina
 di accesso compare "Accedi con …". Al primo accesso l'utente viene creato in Orditogram (o collegato a quello con lo stesso nome,
-mai a un amministratore locale) e a ogni accesso nome, email e gruppi vengono aggiornati dal token (`app.oidc`):
+mai a un utente locale con ruoli) e a ogni accesso nome, email e gruppi vengono aggiornati dal token (`app.oidc`).
+Il gruppo indicato in `gruppo-admin` dà o toglie il ruolo Amministratore; gli altri ruoli si legano ai gruppi in
+Studio → Ruoli:
 - Keycloak: aggiungi al client il mapper "Group Membership" (claim `groups`), oppure usa `claim-gruppi: realm_access.roles`;
 - Entra ID: i gruppi arrivano come ID: traducili con `mappa-gruppi`; con molti gruppi conviene usare gli "app roles"
   (`claim-gruppi: roles`).

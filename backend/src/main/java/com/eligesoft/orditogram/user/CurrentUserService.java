@@ -1,5 +1,7 @@
 package com.eligesoft.orditogram.user;
 
+import com.eligesoft.orditogram.accesso.PermessiService;
+import com.eligesoft.orditogram.accesso.Permesso;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -9,9 +11,11 @@ import org.springframework.stereotype.Service;
 public class CurrentUserService {
 
     private final AppUserRepository repo;
+    private final PermessiService permessi;
 
-    public CurrentUserService(AppUserRepository repo) {
+    public CurrentUserService(AppUserRepository repo, PermessiService permessi) {
         this.repo = repo;
+        this.permessi = permessi;
     }
 
     public String username() {
@@ -23,8 +27,14 @@ public class CurrentUserService {
         return repo.findByUsername(username()).orElseThrow();
     }
 
+    /** Ha tutti i permessi (ruolo amministratore, diretto o da un gruppo). */
     public boolean isAdmin() {
-        return repo.findByUsername(username()).map(AppUser::isAdmin).orElse(false);
+        return permessi.amministratore(username());
+    }
+
+    /** L'utente corrente ha il permesso indicato. */
+    public boolean puo(Permesso permesso) {
+        return permessi.ha(username(), permesso);
     }
 
     public java.util.Set<String> groups() {

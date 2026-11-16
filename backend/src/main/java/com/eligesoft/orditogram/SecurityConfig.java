@@ -1,5 +1,7 @@
 package com.eligesoft.orditogram;
 
+import com.eligesoft.orditogram.accesso.AutorizzazioniAdmin;
+import com.eligesoft.orditogram.accesso.Permesso;
 import com.eligesoft.orditogram.api.ApiProperties;
 import com.eligesoft.orditogram.api.ChiaviApiService;
 import com.eligesoft.orditogram.api.FiltroChiaveApi;
@@ -106,6 +108,7 @@ public class SecurityConfig {
                                            ObjectProvider<ClientRegistrationRepository> registrazioni,
                                            ObjectProvider<OrditogramOidcUserService> oidcUserService,
                                            OidcProperties oidc,
+                                           AutorizzazioniAdmin permessi,
                                            @Value("${app.login.locale:true}") boolean loginLocale) throws Exception {
         // CSRF: il token di Spring non serve perché le richieste che modificano dati da un browser devono avere
         // l'intestazione X-Requested-With, che un altro sito non può aggiungere (vedi FiltroRichiesteSessione).
@@ -119,7 +122,20 @@ public class SecurityConfig {
                 .requestMatchers("/api/messaggi/**").permitAll()  // sistemi esterni: si autenticano con X-API-Key (app.messaggi.chiavi)
                 .requestMatchers("/api/demo/**").permitAll()      // servizi di prova chiamati dai processi (app.demo.servizi)
                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                // Studio e amministrazione: ogni sezione con il suo permesso (accesso/Permesso), letto dal database
+                .requestMatchers("/api/admin/users/**", "/api/admin/ruoli/**").access(permessi.uno(Permesso.UTENTI))
+                .requestMatchers(HttpMethod.GET, "/api/admin/forms/**").access(permessi.uno(Permesso.STUDIO_FORM, Permesso.STUDIO_PROCESSI))
+                .requestMatchers("/api/admin/forms/**").access(permessi.uno(Permesso.STUDIO_FORM))
+                .requestMatchers(HttpMethod.GET, "/api/admin/gruppi").access(permessi.uno(Permesso.STUDIO_PROCESSI, Permesso.STUDIO_FORM, Permesso.UTENTI))
+                .requestMatchers(HttpMethod.POST, "/api/admin/processes/deploy").access(permessi.tutti(Permesso.STUDIO_PROCESSI, Permesso.STUDIO_PUBBLICA))
+                // un pacchetto importato contiene processi e form
+                .requestMatchers(HttpMethod.POST, "/api/admin/pacchetti/**").access(permessi.tutti(Permesso.STUDIO_PROCESSI, Permesso.STUDIO_FORM))
+                .requestMatchers("/api/admin/processes/**", "/api/admin/bozze/**", "/api/admin/pacchetti/**",
+                    "/api/admin/connettori/**", "/api/admin/credenziali/**").access(permessi.uno(Permesso.STUDIO_PROCESSI))
+                .requestMatchers("/api/admin/integrazioni/**").access(permessi.uno(Permesso.INTEGRAZIONI))
+                .requestMatchers(HttpMethod.GET, "/api/admin/registro/**").access(permessi.uno(Permesso.REGISTRO))
+                // tutto il resto (sezioni nuove comprese): solo chi ha ogni permesso
+                .requestMatchers("/api/admin/**").access(permessi.tutti())
                 .anyRequest().authenticated())
             // le API rispondono 401 (mai il popup del browser né un redirect): ci pensa il frontend
             .exceptionHandling(e -> e.defaultAuthenticationEntryPointFor(

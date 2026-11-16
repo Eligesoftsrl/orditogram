@@ -5,6 +5,10 @@ la MAGGIORE quando un aggiornamento richiede interventi (indicati qui sotto).
 
 ## 0.12.0 (in preparazione)
 
+**Aggiornamento**: chi era amministratore riceve il ruolo Amministratore (migrazione `V3`); gli altri utenti non
+hanno ruoli e lavorano come prima le loro attività e pratiche. Il campo `admin` di `/api/admin/users` diventa
+`ruoli` (codici); `/api/me` aggiunge `ruoli` e `permessi`.
+
 Form avanzati, prima parte.
 
 - **Sezioni**: i form si dividono in parti con titolo e istruzioni (`{ "type": "sezione", "label" }`).
@@ -51,6 +55,13 @@ Form avanzati, prima parte.
   (`db/migration`), gli stessi in produzione e nei test; Hibernate controlla soltanto che lo schema corrisponda
   (`ddl-auto: validate`). Il vincolo sui tipi di evento dello storico si toglie con una migrazione, al posto della
   classe `SchemaCompatibilita`.
+- **Ruoli e permessi**: al posto della sola casella "amministratore", ruoli fatti di permessi (processi, pubblicazione,
+  form, integrazioni, utenti e ruoli, registro, tutte le pratiche): chi ha i processi senza la pubblicazione
+  prepara le bozze e un altro le mette in produzione. Predefiniti: Amministratore, Analista, Gestore utenti,
+  Auditor; altri si creano in Studio → **Ruoli**. Un ruolo si assegna alle persone o a un gruppo, anche del provider
+  di accesso (Keycloak, Entra ID). Lo Studio mostra solo le sezioni permesse e il server controlla ogni sezione a
+  ogni richiesta, quindi un ruolo tolto vale subito. Nessuno dà, toglie o modifica permessi che non ha, e resta
+  sempre almeno un amministratore attivo. Creazioni, modifiche ed eliminazioni dei ruoli vanno nel registro.
 
 **Aggiornamento**: impostare `ORDITOGRAM_INDIRIZZO` nel file `.env` (es. `orditogram.ente.it`). Chi chiama l'API interna (`/api`, non `/api/v1`) da un browser o da uno script che manda
 cookie o `Origin` deve aggiungere l'intestazione `X-Requested-With: XMLHttpRequest`, come già fa l'interfaccia.

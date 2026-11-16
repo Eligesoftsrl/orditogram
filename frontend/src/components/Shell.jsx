@@ -1,9 +1,10 @@
 import { api } from '../api.js'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { FolderOpen, Inbox, ListChecks, LogOut, Menu, Plug, Plus, ScrollText, Users, Workflow, X } from 'lucide-react'
+import { FolderOpen, Inbox, ListChecks, LogOut, Menu, Plug, Plus, ScrollText, ShieldCheck, Users, Workflow, X } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
 import { cx } from '../lib/format.js'
+import { descriviUtente, sezioniStudio } from '../lib/permessi.js'
 import Logo from './Logo.jsx'
 import NotificationBell from './NotificationBell.jsx'
 import StartDialog from './StartDialog.jsx'
@@ -26,13 +27,8 @@ export default function Shell() {
     { to: '/', label: 'Scrivania', icona: Inbox, end: true },
     { to: '/pratiche', label: 'Pratiche', icona: FolderOpen }
   ]
-  const studio = [
-    { to: '/studio/processi', label: 'Processi', icona: Workflow },
-    { to: '/studio/form', label: 'Form', icona: ListChecks },
-    { to: '/studio/utenti', label: 'Utenti', icona: Users },
-    { to: '/studio/integrazioni', label: 'Integrazioni', icona: Plug },
-    { to: '/studio/registro', label: 'Registro', icona: ScrollText }
-  ]
+  const icone = { processi: Workflow, form: ListChecks, utenti: Users, ruoli: ShieldCheck, integrazioni: Plug, registro: ScrollText }
+  const studio = sezioniStudio(me).map(s => ({ ...s, icona: icone[s.chiave] }))
 
   const Voce = ({ v }) => (
     <NavLink to={v.to} end={v.end} onClick={() => setMenu(false)}
@@ -60,7 +56,7 @@ export default function Shell() {
         {nav.map(v => <Voce key={v.to} v={v} />)}
       </nav>
 
-      {me.admin && (
+      {studio.length > 0 && (
         <nav className="mt-8 space-y-0.5" aria-label="Studio">
           <p className="px-3 pb-2 text-[13px] font-medium text-pino-300">Studio</p>
           {studio.map(v => <Voce key={v.to} v={v} />)}
@@ -71,7 +67,7 @@ export default function Shell() {
         <Avatar nome={me.fullName} className="bg-pino-600" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-[15px] font-medium text-white">{me.fullName}</p>
-          <p className="truncate text-[13px] text-pino-300">{me.admin ? 'Amministratore' : (me.groups.join(', ') || 'Nessun gruppo')}</p>
+          <p className="truncate text-[13px] text-pino-300">{descriviUtente(me)}</p>
         </div>
         <button onClick={logout} className="rounded-md p-2 text-pino-300 hover:bg-white/10 hover:text-white" aria-label="Esci" title="Esci">
           <LogOut className="size-[18px]" />

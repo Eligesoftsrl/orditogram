@@ -1,5 +1,7 @@
 package com.eligesoft.orditogram.user;
 
+import com.eligesoft.orditogram.accesso.Ruolo;
+import com.eligesoft.orditogram.accesso.RuoloRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,14 +19,17 @@ import java.util.Set;
 public class UserDataInitializer implements CommandLineRunner {
 
     private final AppUserRepository repo;
+    private final RuoloRepository ruoli;
     private final PasswordEncoder encoder;
     private final boolean demo;
+    private final Set<String> creati = new HashSet<>();
     private final String passwordAdmin;
 
-    public UserDataInitializer(AppUserRepository repo, PasswordEncoder encoder,
+    public UserDataInitializer(AppUserRepository repo, RuoloRepository ruoli, PasswordEncoder encoder,
                                @Value("${app.demo.utenti:false}") boolean demo,
                                @Value("${app.admin.password-iniziale:admin}") String passwordAdmin) {
         this.repo = repo;
+        this.ruoli = ruoli;
         this.encoder = encoder;
         this.demo = demo;
         this.passwordAdmin = passwordAdmin;
@@ -44,12 +49,24 @@ public class UserDataInitializer implements CommandLineRunner {
         ensure("anna", "Anna", "Bianchi", Set.of("operatori", "responsabili"));
         ensure("laura", "Laura", "Verdi", Set.of("dirigenti"));
         ensure("paolo", "Paolo", "Neri", Set.of("analisti"));
+        // un analista che disegna processi e form senza essere amministratore
+        if (creati.contains("paolo")) assegna("paolo", "analista");
         ensure("chiara", "Chiara", "Galli", Set.of("analisti"));
         ensure("giulia", "Giulia", "Russo", Set.of("revisori"));
     }
 
     private void ensure(String username, String first, String last, Set<String> groups) {
-        if (!repo.existsByUsername(username)) create(username, "password", first, last, false, groups);
+        if (!repo.existsByUsername(username)) {
+            create(username, "password", first, last, false, groups);
+            creati.add(username);
+        }
+    }
+
+    private void assegna(String username, String ruolo) {
+        repo.findByUsername(username).ifPresent(u -> ruoli.findByCodice(ruolo).ifPresent(r -> {
+            u.getRuoli().add(r);
+            repo.save(u);
+        }));
     }
 
     private void create(String username, String pwd, String first, String last,
@@ -59,7 +76,8 @@ public class UserDataInitializer implements CommandLineRunner {
         u.setPassword(encoder.encode(pwd));
         u.setFirstName(first);
         u.setLastName(last);
-        u.setAdmin(admin);
+        // il ruolo amministratore viene creato dalla migrazione V3
+        if (admin) ruoli.findByCodice(Ruolo.AMMINISTRATORE).ifPresent(r -> u.getRuoli().add(r));
         u.setGroups(new HashSet<>(groups));
         repo.save(u);
     }

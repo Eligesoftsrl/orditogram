@@ -16,7 +16,8 @@ import java.util.List;
  * Activiti legge utente e gruppi da qui:
  *   ROLE_ACTIVITI_USER -> può usare ProcessRuntime / TaskRuntime
  *   GROUP_<nome>       -> candidateGroups="<nome>" nel BPMN
- *   ROLE_ADMIN         -> accesso a /api/admin/**
+ * I permessi applicativi (ruoli di Orditogram) non sono qui: si leggono dal database a ogni controllo
+ * (accesso/PermessiService), così valgono subito anche per chi ha già una sessione.
  */
 @Service
 public class DbUserDetailsService implements UserDetailsService {
@@ -34,7 +35,6 @@ public class DbUserDetailsService implements UserDetailsService {
 
         List<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority("ROLE_ACTIVITI_USER"));
-        if (u.isAdmin()) authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
         u.getGroups().forEach(g -> authorities.add(new SimpleGrantedAuthority("GROUP_" + g)));
 
         return User.withUsername(u.getUsername())

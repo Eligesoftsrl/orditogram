@@ -1,5 +1,6 @@
 package com.eligesoft.orditogram.storico;
 
+import com.eligesoft.orditogram.accesso.Permesso;
 import com.eligesoft.orditogram.form.FormService;
 import com.eligesoft.orditogram.form.ValoriForm;
 import com.eligesoft.orditogram.process.BpmnResourceService;
@@ -95,7 +96,7 @@ public class PraticaController {
         if ("concluse".equals(stato)) query.finished();
         if (processo != null && !processo.isBlank()) query.processDefinitionKey(processo.trim());
 
-        if (!currentUser.isAdmin()) {
+        if (!currentUser.puo(Permesso.PRATICHE_TUTTE)) {
             Set<String> mie = new HashSet<>(storico.praticheDi(currentUser.username()));
             // anche quelle con un'attività disponibile per i miei gruppi
             taskRuntime.tasks(Pageable.of(0, 500)).getContent()
