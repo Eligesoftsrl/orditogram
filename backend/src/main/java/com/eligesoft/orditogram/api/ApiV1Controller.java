@@ -1,5 +1,7 @@
 package com.eligesoft.orditogram.api;
 
+import com.eligesoft.orditogram.anagrafica.AccessoAnagrafiche;
+import com.eligesoft.orditogram.anagrafica.AnagraficheNellePratiche;
 import com.eligesoft.orditogram.api.ErroriApi.ErroreApi;
 import com.eligesoft.orditogram.documento.Documento;
 import com.eligesoft.orditogram.documento.DocumentoService;
@@ -69,13 +71,16 @@ public class ApiV1Controller {
     private final ObjectMapper mapper;
     private final ObjectProvider<BuildProperties> build;
     private final com.eligesoft.orditogram.accesso.PartiService parti;
+    private final AnagraficheNellePratiche anagrafiche;
 
     public ApiV1Controller(DescrizioneProcessi descrizioni, RuntimeService runtimeService, HistoryService historyService,
                            RepositoryService repositoryService, TaskService taskService, StoricoService storico,
                            DocumentoService documenti, ScadenzeService scadenze, MessaggiService messaggi,
                            ObjectMapper mapper, ObjectProvider<BuildProperties> build,
-                           com.eligesoft.orditogram.accesso.PartiService parti) {
+                           com.eligesoft.orditogram.accesso.PartiService parti,
+                           AnagraficheNellePratiche anagrafiche) {
         this.parti = parti;
+        this.anagrafiche = anagrafiche;
         this.descrizioni = descrizioni;
         this.runtimeService = runtimeService;
         this.historyService = historyService;
@@ -98,6 +103,7 @@ public class ApiV1Controller {
         m.put("sistema", id.sistema());
         m.put("permessi", new ArrayList<>(id.ambiti()));
         m.put("processi", new ArrayList<>(id.processi()));
+        m.put("anagrafiche", new ArrayList<>(id.anagrafiche()));
         return m;
     }
 
@@ -220,12 +226,16 @@ public class ApiV1Controller {
         List<Map<String, String>> errori = new ArrayList<>();
         esito.errori().forEach(e -> errori.add(Map.of("campo", e.campo(), "messaggio", e.messaggio())));
 
-        // i campi anagrafica richiedono un utente con la regola "vede" del tipo: dall'API pubblica non si compilano
-        // ancora (arriveranno con /api/v1/anagrafiche e i suoi ambiti)
-        if (form != null) form.path("fields").forEach(f -> {
-            if (ValoriForm.ANAGRAFICA.equals(f.path("type").asText()) && esito.valori().get(f.path("name").asText()) != null)
-                errori.add(Map.of("campo", f.path("name").asText(), "messaggio", "i campi anagrafica non si compilano dall'API pubblica"));
-        });
+        // i campi anagrafica: la scheda deve essere di un'anagrafica della chiave, con il permesso anagrafiche:leggi
+        List<AnagraficheNellePratiche.Scelta> scelte = List.of();
+        if (errori.isEmpty()) {
+            try {
+                scelte = anagrafiche.daForm(form, esito.valori(), AccessoAnagrafiche.sistema(id.sistema(), id.anagrafiche(),
+                    id.puo(Ambiti.ANAGRAFICHE_LEGGI), id.puo(Ambiti.ANAGRAFICHE_SCRIVI)), Map.of());
+            } catch (AnagraficheNellePratiche.SceltaNonValida e) {
+                errori.add(Map.of("campo", e.campo(), "messaggio", Objects.toString(e.getReason(), "scheda non valida")));
+            }
+        }
 
         List<MultipartFile> allegati = files.stream().filter(f -> !f.isEmpty()).toList();
         String modo = ValoriForm.allegatiAvvio(form);
@@ -247,6 +257,7 @@ public class ApiV1Controller {
                 List.of(Map.of("campo", "organizzazione", "messaggio", Objects.toString(e.getReason(), "organizzazione non valida"))));
         }
         vars.putAll(com.eligesoft.orditogram.accesso.PartiService.variabili(partiNuove));
+        vars.putAll(AnagraficheNellePratiche.variabili(scelte));
         vars.put("avviataDa", id.sistema() + " (sistema esterno)");
         String nomeProcesso = def.getName() != null ? def.getName() : def.getKey();
 
@@ -270,6 +281,7 @@ public class ApiV1Controller {
         dettagli.addAll(storico.dettagliDaForm(form, vars));
         storico.registra(pi.getId(), PraticaEvento.Tipo.AVVIO, nomeProcesso, dettagli);
         parti.registra(pi.getId(), partiNuove);
+        anagrafiche.registra(pi.getId(), scelte, id.getName());
         for (MultipartFile f : allegati) documenti.aggiungi(pi.getId(), f, null, "Avvio");
 
         Map<String, Object> m = pratica(pi.getId());
@@ -481,7 +493,7 @@ public class ApiV1Controller {
         vars.forEach((k, x) -> {
             if (x == null || NASCOSTE.contains(k) || k.startsWith(com.eligesoft.orditogram.accesso.PartiService.PREFISSO_VARIABILE)) return;
             // fotografie delle schede di anagrafica: dati dell'anagrafica, non della pratica
-            if (k.endsWith(com.eligesoft.orditogram.anagrafica.AnagraficheNellePratiche.SUFFISSO_DATI) && x instanceof Map) return;
+            if (k.endsWith(AnagraficheNellePratiche.SUFFISSO_DATI) && x instanceof Map) return;
             if (x instanceof String || x instanceof Number || x instanceof Boolean || x instanceof Date
                 || x instanceof java.time.temporal.Temporal || x instanceof JsonNode
                 || x instanceof Map || x instanceof Collection) out.put(k, x);

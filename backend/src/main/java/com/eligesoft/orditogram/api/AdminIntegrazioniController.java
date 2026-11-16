@@ -32,11 +32,14 @@ public class AdminIntegrazioniController {
     private final ApiV1Controller apiV1;
     private final ObjectMapper mapper;
     private final boolean demo;
+    private final com.eligesoft.orditogram.anagrafica.TipoAnagraficaRepository tipiAnagrafica;
 
     public AdminIntegrazioniController(ChiaviApiService chiavi, WebhookService webhook, InvioWebhook invio,
                                        ConsegnaWebhookRepository consegne, DescrizioneProcessi descrizioni,
                                        RicevitoreProva ricevitore, Cifratura cifratura, ApiV1Controller apiV1,
-                                       ObjectMapper mapper, @Value("${app.demo.servizi:true}") boolean demo) {
+                                       ObjectMapper mapper, @Value("${app.demo.servizi:true}") boolean demo,
+                                       com.eligesoft.orditogram.anagrafica.TipoAnagraficaRepository tipiAnagrafica) {
+        this.tipiAnagrafica = tipiAnagrafica;
         this.chiavi = chiavi;
         this.webhook = webhook;
         this.invio = invio;
@@ -56,6 +59,9 @@ public class AdminIntegrazioniController {
         m.put("permessi", Ambiti.TUTTI);
         m.put("eventi", TipiEvento.TUTTI);
         m.put("processi", descrizioni.pubblicati().stream().map(p -> Map.of("chiave", p.chiave(), "nome", p.nome())).toList());
+        // i nomi dei tipi di anagrafica, per scegliere quelli di una chiave (i dati restano protetti dalle regole)
+        m.put("anagrafiche", tipiAnagrafica.findAllByOrderByNomeAsc().stream()
+            .map(t -> Map.of("codice", t.getCodice(), "nome", t.getNome())).toList());
         m.put("cifratura", cifratura.attiva());
         m.put("sistemiConfigurati", chiavi.sistemiConfigurati());
         m.put("indirizzoBase", ApiV1Controller.indirizzoBase());
@@ -72,7 +78,7 @@ public class AdminIntegrazioniController {
     // ================================================================= chiavi
 
     public record DatiChiave(String nome, String descrizione, List<String> permessi, List<String> processi,
-                             LocalDate scadenza, Boolean attiva) {}
+                             List<String> anagrafiche, LocalDate scadenza, Boolean attiva) {}
 
     @GetMapping("/chiavi")
     public List<Map<String, Object>> elencoChiavi() {
@@ -81,13 +87,13 @@ public class AdminIntegrazioniController {
 
     @PostMapping("/chiavi")
     public Map<String, Object> creaChiave(@RequestBody DatiChiave d) {
-        ChiaviApiService.Creata c = chiavi.crea(d.nome(), d.descrizione(), d.permessi(), d.processi(), d.scadenza());
+        ChiaviApiService.Creata c = chiavi.crea(d.nome(), d.descrizione(), d.permessi(), d.processi(), d.anagrafiche(), d.scadenza());
         return Map.of("chiave", chiave(c.chiave()), "valore", c.valore());
     }
 
     @PutMapping("/chiavi/{id}")
     public Map<String, Object> modificaChiave(@PathVariable Long id, @RequestBody DatiChiave d) {
-        return chiave(chiavi.modifica(id, d.descrizione(), d.permessi(), d.processi(), d.scadenza(),
+        return chiave(chiavi.modifica(id, d.descrizione(), d.permessi(), d.processi(), d.anagrafiche(), d.scadenza(),
             d.attiva() == null || d.attiva()));
     }
 
@@ -110,6 +116,7 @@ public class AdminIntegrazioniController {
         m.put("prefisso", c.getPrefisso());
         m.put("permessi", new ArrayList<>(c.ambitiSet()));
         m.put("processi", new ArrayList<>(c.processiSet()));
+        m.put("anagrafiche", new ArrayList<>(c.anagraficheSet()));
         m.put("scadenza", c.getScadenza());
         m.put("attiva", c.isAttiva());
         m.put("valida", c.valida(LocalDate.now()));

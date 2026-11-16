@@ -10,6 +10,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import com.eligesoft.orditogram.api.Ambiti;
+import com.eligesoft.orditogram.api.IdentitaApi;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -32,6 +35,7 @@ public class SchedeService {
     static final int MAX_PAGINA = 100;
     static final int MAX_CITAZIONI = 100;
     static final int MAX_PRATICHE = 200;
+    static final int MAX_SCELTA = 30;
 
     public record TipoVisibile(String codice, String nome, String descrizione, boolean attivo, int versione,
                                JsonNode definizione, Set<String> azioni) { }
@@ -85,16 +89,50 @@ public class SchedeService {
 
     // ------------------------------------------------------------ tipi
 
-    /** I tipi su cui l'utente ha almeno un'azione, con la definizione senza i campi a lui riservati. */
+    /** I tipi di cui l'utente vede le schede, con la definizione senza i campi a lui riservati. */
     @Transactional(readOnly = true)
     public List<TipoVisibile> tipi() {
         AccessoAnagrafiche.Utente u = io();
         List<TipoVisibile> out = new ArrayList<>();
         for (TipoAnagrafica t : tipi.findAllByOrderByNomeAsc()) {
             Set<String> azioni = accesso.azioni(u, t);
-            if (!azioni.isEmpty()) out.add(visibile(t, azioni, u));
+            if (azioni.contains(PermessoAnagrafica.VEDE)) out.add(visibile(t, azioni, u));
         }
         return out;
+    }
+
+    /**
+     * Controlla che chi sta dando l'accesso a una chiave API abbia lui stesso, su ogni tipo, la regola "vede" (o
+     * "modifica" se la chiave scrive): nessuno dà a un sistema esterno più di quanto ha.
+     */
+    @Transactional(readOnly = true)
+    public void controllaConcedibili(Collection<String> codici, boolean scrivi) {
+        AccessoAnagrafiche.Utente u = io();
+        for (String codice : codici) {
+            TipoAnagrafica t = tipi.findByCodice(codice).orElseThrow(() -> bad("L'anagrafica \"" + codice + "\" non esiste"));
+            Set<String> azioni = accesso.azioni(u, t);
+            if (!azioni.contains(scrivi ? PermessoAnagrafica.MODIFICA : PermessoAnagrafica.VEDE))
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Non puoi dare a una chiave l'accesso all'anagrafica \""
+                    + t.getNome() + "\": tu stesso non " + (scrivi ? "ne modifichi" : "ne vedi") + " le schede");
+        }
+    }
+
+    /** Una scheda come si sceglie in un form: solo numero e nome. */
+    public record Scelta(Long id, String titolo) { }
+
+    /**
+     * Le schede attive da scegliere in un campo anagrafica, cercate per titolo e campi ricercabili: basta la regola
+     * "sceglie" (anche per gli utenti esterni) e si vede solo il nome. Al massimo MAX_SCELTA risultati.
+     */
+    @Transactional(readOnly = true)
+    public List<Scelta> scelta(String codice, String testo) {
+        AccessoAnagrafiche.Utente u = io();
+        TipoAnagrafica t = tipoPer(u, codice, PermessoAnagrafica.SCEGLIE);
+        if (!t.isAttivo()) return List.of();
+        String like = like(testo);
+        return schede.cerca(t, SchedaAnagrafica.ATTIVA, like, null, null,
+                PageRequest.of(0, MAX_SCELTA, Sort.by("titolo").ascending().and(Sort.by("id"))))
+            .getContent().stream().map(s -> new Scelta(s.getId(), s.getTitolo())).toList();
     }
 
     @Transactional(readOnly = true)
@@ -122,12 +160,7 @@ public class SchedeService {
             case "TUTTE" -> null;
             default -> throw bad("Stato sconosciuto: usa ATTIVA, CESSATA o TUTTE");
         };
-        String like = null;
-        String normalizzato = DefinizioneAnagrafica.normalizza(testo);
-        if (normalizzato != null) {
-            if (normalizzato.length() > 100) throw bad("Testo da cercare troppo lungo (al massimo 100 caratteri)");
-            like = "%" + normalizzato.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
-        }
+        String like = like(testo);
         String filtroCampo = null, filtroValore = null;
         if (campo != null && !campo.isBlank()) {
             if (def.indice().stream().noneMatch(c -> c.nome().equals(campo)))
@@ -429,19 +462,35 @@ public class SchedeService {
 
     // ------------------------------------------------------------ supporto
 
+    /** Chi sta agendo: l'utente collegato o, dall'API pubblica, il sistema esterno con la sua chiave. */
     private AccessoAnagrafiche.Utente io() {
+        if (SecurityContextHolder.getContext().getAuthentication() instanceof IdentitaApi api)
+            return AccessoAnagrafiche.sistema(api.sistema(), api.anagrafiche(),
+                api.puo(Ambiti.ANAGRAFICHE_LEGGI), api.puo(Ambiti.ANAGRAFICHE_SCRIVI));
         return accesso.utente(utenti.findByUsername(utenteCorrente.username()).orElse(null));
     }
 
-    /** Il tipo, se l'utente ha l'azione indicata; se non lo vede proprio, "non trovata". */
+    /**
+     * Il tipo, se l'utente ha l'azione indicata; se non lo vede proprio, "non trovata". Chi ha solo "sceglie" non
+     * vede le schede: per tutto il resto il tipo per lui non esiste.
+     */
     private TipoAnagrafica tipoPer(AccessoAnagrafiche.Utente u, String codice, String azione) {
         TipoAnagrafica t = tipi.findByCodice(codice == null ? "" : codice).orElseThrow(SchedeService::nonTrovata);
         Set<String> azioni = accesso.azioni(u, t);
-        if (azioni.isEmpty()) throw nonTrovata();
+        if (azioni.isEmpty() || (!azioni.contains(PermessoAnagrafica.VEDE) && !PermessoAnagrafica.SCEGLIE.equals(azione)))
+            throw nonTrovata();
         if (!azioni.contains(azione)) throw new ResponseStatusException(HttpStatus.FORBIDDEN,
             PermessoAnagrafica.ESPORTA.equals(azione) ? "Non hai il permesso di esportare queste schede"
                 : "Non hai il permesso di modificare queste schede");
         return t;
+    }
+
+    /** Il testo da cercare come modello LIKE (contiene), con i caratteri jolly protetti; null se vuoto. */
+    private static String like(String testo) {
+        String normalizzato = DefinizioneAnagrafica.normalizza(testo);
+        if (normalizzato == null) return null;
+        if (normalizzato.length() > 100) throw bad("Testo da cercare troppo lungo (al massimo 100 caratteri)");
+        return "%" + normalizzato.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
     }
 
     private SchedaAnagrafica schedaDi(TipoAnagrafica t, Long id) {

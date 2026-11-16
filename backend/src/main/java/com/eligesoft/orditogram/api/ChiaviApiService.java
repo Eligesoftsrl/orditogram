@@ -1,5 +1,6 @@
 package com.eligesoft.orditogram.api;
 
+import com.eligesoft.orditogram.anagrafica.SchedeService;
 import com.eligesoft.orditogram.messaggio.MessaggiProperties;
 import com.eligesoft.orditogram.registro.RegistroService;
 import com.eligesoft.orditogram.user.CurrentUserService;
@@ -38,15 +39,17 @@ public class ChiaviApiService {
     private final MessaggiProperties chiaviConfigurate;
     private final CurrentUserService currentUser;
     private final RegistroService registro;
+    private final SchedeService schede;
     /** Ultimo aggiornamento di "ultimo uso" per chiave: si scrive sul database al massimo una volta al minuto. */
     private final Map<Long, Instant> ultimiUsi = new ConcurrentHashMap<>();
 
     public ChiaviApiService(ChiaveApiRepository repo, MessaggiProperties chiaviConfigurate,
-                            CurrentUserService currentUser, RegistroService registro) {
+                            CurrentUserService currentUser, RegistroService registro, SchedeService schede) {
         this.repo = repo;
         this.chiaviConfigurate = chiaviConfigurate;
         this.currentUser = currentUser;
         this.registro = registro;
+        this.schede = schede;
     }
 
     public record Creata(ChiaveApi chiave, String valore) {}
@@ -55,7 +58,7 @@ public class ChiaviApiService {
 
     @Transactional
     public Creata crea(String nome, String descrizione, Collection<String> ambiti, Collection<String> processi,
-                       LocalDate scadenza) {
+                       Collection<String> anagrafiche, LocalDate scadenza) {
         String n = nome == null ? "" : nome.trim().toLowerCase(Locale.ROOT);
         if (!NOME.matcher(n).matches())
             throw bad("Il nome deve avere da 2 a 60 caratteri: lettere minuscole, numeri e trattini (es. portale-cittadino)");
@@ -65,23 +68,25 @@ public class ChiaviApiService {
         c.setCreata(OffsetDateTime.now());
         c.setCreataDa(currentUser.username());
         applica(c, descrizione, ambiti, processi, scadenza);
+        applicaAnagrafiche(c, anagrafiche);
         String valore = nuovoValore();
         c.setPrefisso(valore.substring(0, LUNGHEZZA_PREFISSO));
         c.setImpronta(impronta(valore));
         repo.save(c);
-        registro.registra("CHIAVE_API_CREATA", n, "Permessi: " + c.getAmbiti() + processiTesto(c));
+        registro.registra("CHIAVE_API_CREATA", n, "Permessi: " + c.getAmbiti() + processiTesto(c) + anagraficheTesto(c));
         return new Creata(c, valore);
     }
 
     @Transactional
     public ChiaveApi modifica(Long id, String descrizione, Collection<String> ambiti, Collection<String> processi,
-                              LocalDate scadenza, boolean attiva) {
+                              Collection<String> anagrafiche, LocalDate scadenza, boolean attiva) {
         ChiaveApi c = trova(id);
         if (c.getRevocata() != null) throw new ResponseStatusException(HttpStatus.CONFLICT, "La chiave è revocata");
         applica(c, descrizione, ambiti, processi, scadenza);
+        applicaAnagrafiche(c, anagrafiche);
         c.setAttiva(attiva);
         registro.registra("CHIAVE_API_MODIFICATA", c.getNome(),
-            (attiva ? "Attiva" : "Sospesa") + ". Permessi: " + c.getAmbiti() + processiTesto(c));
+            (attiva ? "Attiva" : "Sospesa") + ". Permessi: " + c.getAmbiti() + processiTesto(c) + anagraficheTesto(c));
         return c;
     }
 
@@ -143,6 +148,26 @@ public class ChiaviApiService {
         c.setScadenza(scadenza);
     }
 
+    /**
+     * Le anagrafiche della chiave: servono (e contano) solo con i permessi anagrafiche. Chi gestisce le chiavi non
+     * dà a un sistema esterno più di quanto ha lui: per leggere serve la regola "vede" del tipo, per scrivere "modifica".
+     */
+    private void applicaAnagrafiche(ChiaveApi c, Collection<String> anagrafiche) {
+        Set<String> a = new LinkedHashSet<>();
+        for (String x : anagrafiche == null ? List.<String>of() : anagrafiche)
+            if (x != null && !x.isBlank()) a.add(x.trim());
+        Set<String> ambiti = c.ambitiSet();
+        boolean leggi = ambiti.contains(Ambiti.ANAGRAFICHE_LEGGI), scrivi = ambiti.contains(Ambiti.ANAGRAFICHE_SCRIVI);
+        if (!leggi && !scrivi) a.clear();
+        else if (a.isEmpty()) throw bad("Indica le anagrafiche a cui la chiave può accedere");
+        else schede.controllaConcedibili(a, scrivi);
+        c.setAnagrafiche(a.isEmpty() ? null : String.join(",", a));
+    }
+
+    private static String anagraficheTesto(ChiaveApi c) {
+        return c.getAnagrafiche() == null ? "" : ". Anagrafiche: " + c.getAnagrafiche();
+    }
+
     private static String processiTesto(ChiaveApi c) {
         return c.getProcessi() == null ? ". Tutti i processi" : ". Processi: " + c.getProcessi();
     }
@@ -158,7 +183,7 @@ public class ChiaviApiService {
             for (ChiaveApi c : repo.findByPrefisso(v.substring(0, LUNGHEZZA_PREFISSO))) {
                 if (!MessageDigest.isEqual(attesa, c.getImpronta().getBytes(StandardCharsets.US_ASCII))) continue;
                 if (!c.valida(LocalDate.now())) return Optional.empty();
-                return Optional.of(new IdentitaApi(c.getId(), c.getNome(), c.ambitiSet(), c.processiSet()));
+                return Optional.of(new IdentitaApi(c.getId(), c.getNome(), c.ambitiSet(), c.processiSet(), c.anagraficheSet()));
             }
             return Optional.empty();
         }

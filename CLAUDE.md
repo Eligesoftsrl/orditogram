@@ -81,6 +81,11 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
   esporta → importa). Interfaccia: `FormEditor` con `anagrafica={...}` per i campi dei tipi, `CampoAnagrafica` in
   `DynamicForm`, pagine `studio/Anagrafiche.jsx`, `Anagrafiche.jsx`, `SchedeAnagrafica.jsx`, `SchedaAnagrafica.jsx`,
   regole comuni in `lib/anagrafiche.js`. Il CSV esportato (`Esporta.jsx`) protegge le formule con un apostrofo.
+  Azione SCEGLIE (`/scelta`, solo id e titolo; VEDE la comprende): l'unica che vale per gli esterni (gruppi `esterni`,
+  `org:<id>`). API pubblica `ApiV1AnagraficheController`: la chiave elenca i tipi (`chiave_api.anagrafiche`, vuoto =
+  nessuno), `AccessoAnagrafiche.sistema(...)` dà al sistema VEDE/SCEGLIE (+MODIFICA con `anagrafiche:scrivi`) solo su
+  quelli, mai ESPORTA né campi riservati; `SchedeService.controllaConcedibili` impedisce di dare più di quanto si vede.
+  Campo con `creaScheda: true`: *Nuova scheda* in `CampoAnagrafica` (form annidato in un portale, `prefissoId`).
 - **Storico → eventi**: `StoricoService.registra` pubblica `EventoStorico`; i webhook lo ascoltano nella stessa transazione.
 
 ## Come si lavora

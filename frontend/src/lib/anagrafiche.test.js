@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { campiCambiati, colonneEsportazione, descriviImportazione, valoriScheda } from './anagrafiche.js'
+import { AZIONI_ANAGRAFICA, campiCambiati, colonneEsportazione, descriviImportazione, valoriScheda } from './anagrafiche.js'
 
 const definizione = {
   fields: [
@@ -36,5 +36,9 @@ describe('anagrafiche', () => {
 
   it('esito di un\'importazione', () => {
     expect(descriviImportazione({ create: 1, aggiornate: 2, invariate: 0, scartate: ['Riga 3: x'] })).toBe('1 nuova, 2 aggiornate, 1 riga scartata')
+  })
+
+  it('le azioni delle regole, dalla più ristretta', () => {
+    expect(AZIONI_ANAGRAFICA.map(a => a.codice)).toEqual(['SCEGLIE', 'VEDE', 'MODIFICA', 'ESPORTA'])
   })
 })

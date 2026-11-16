@@ -39,6 +39,10 @@ public class ChiaveApi {
     @Column(length = 2000)
     private String processi;
 
+    /** Codici dei tipi di anagrafica consentiti, separati da virgola; vuoto = nessuno (mai tutti per difetto). */
+    @Column(length = 2000)
+    private String anagrafiche;
+
     private LocalDate scadenza;
 
     @Column(nullable = false)
@@ -59,6 +63,7 @@ public class ChiaveApi {
 
     public Set<String> ambitiSet() { return elenco(ambiti); }
     public Set<String> processiSet() { return elenco(processi); }
+    public Set<String> anagraficheSet() { return elenco(anagrafiche); }
 
     static Set<String> elenco(String s) {
         Set<String> out = new LinkedHashSet<>();
@@ -84,6 +89,8 @@ public class ChiaveApi {
     public void setAmbiti(String ambiti) { this.ambiti = ambiti; }
     public String getProcessi() { return processi; }
     public void setProcessi(String processi) { this.processi = processi; }
+    public String getAnagrafiche() { return anagrafiche; }
+    public void setAnagrafiche(String anagrafiche) { this.anagrafiche = anagrafiche; }
     public LocalDate getScadenza() { return scadenza; }
     public void setScadenza(LocalDate scadenza) { this.scadenza = scadenza; }
     public boolean isAttiva() { return attiva; }

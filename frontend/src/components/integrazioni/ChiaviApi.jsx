@@ -37,7 +37,7 @@ export default function ChiaviApi({ panoramica }) {
     void esegui(() => api.revocaChiaveApi(c.id), 'Chiave revocata')
   }
   const sospendi = (c) => esegui(() => api.modificaChiaveApi(c.id, {
-    descrizione: c.descrizione, permessi: c.permessi, processi: c.processi, scadenza: c.scadenza, attiva: !c.attiva
+    descrizione: c.descrizione, permessi: c.permessi, processi: c.processi, anagrafiche: c.anagrafiche || [], scadenza: c.scadenza, attiva: !c.attiva
   }), c.attiva ? 'Chiave sospesa' : 'Chiave riattivata')
 
   const attive = (lista || []).filter(c => !c.revocata)
@@ -101,6 +101,7 @@ export default function ChiaviApi({ panoramica }) {
 function Riga({ c, panoramica, onModifica, onRuota, onSospendi, onRevoca }) {
   const [etichetta, tono] = stato(c)
   const nomiProcessi = Object.fromEntries((panoramica.processi || []).map(p => [p.chiave, p.nome]))
+  const nomiAnagrafiche = Object.fromEntries((panoramica.anagrafiche || []).map(a => [a.codice, a.nome]))
   return (
     <li className="rounded-pannello border border-linea bg-white p-4 shadow-pannello sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -135,6 +136,10 @@ function Riga({ c, panoramica, onModifica, onRuota, onSospendi, onRevoca }) {
         {c.processi.length === 0
           ? <span className="text-sm text-grafite">tutti i processi</span>
           : c.processi.map(p => <span key={p} className="rounded-full bg-zafferano-50 px-2.5 py-0.5 text-[12px] text-zafferano-800 ring-1 ring-inset ring-zafferano-100" title={p}>{nomiProcessi[p] || p}</span>)}
+        {(c.anagrafiche || []).length > 0 && <>
+          <span className="mx-1 text-nebbia">·</span>
+          {c.anagrafiche.map(a => <span key={a} className="rounded-full bg-verde-50 px-2.5 py-0.5 text-[12px] text-verde-700 ring-1 ring-inset ring-verde-100" title={a}>{nomiAnagrafiche[a] || a}</span>)}
+        </>}
       </div>
 
       {!c.revocata && (
@@ -154,6 +159,8 @@ function DialogoChiave({ chiave, panoramica, onClose, onSalvata }) {
   const [descrizione, setDescrizione] = useState(chiave?.descrizione || '')
   const [permessi, setPermessi] = useState(chiave?.permessi || ['pratiche:avvia', 'pratiche:leggi'])
   const [processi, setProcessi] = useState(chiave?.processi || [])
+  const [anagrafiche, setAnagrafiche] = useState(chiave?.anagrafiche || [])
+  const conAnagrafiche = permessi.some(p => p.startsWith('anagrafiche:'))
   const [scadenza, setScadenza] = useState(chiave?.scadenza || '')
   const [errore, setErrore] = useState('')
   const [attesa, setAttesa] = useState(false)
@@ -161,7 +168,7 @@ function DialogoChiave({ chiave, panoramica, onClose, onSalvata }) {
   const salva = async (e) => {
     e.preventDefault()
     setErrore(''); setAttesa(true)
-    const dati = { nome, descrizione, permessi, processi, scadenza: scadenza || null, attiva: chiave ? chiave.attiva : true }
+    const dati = { nome, descrizione, permessi, processi, anagrafiche: conAnagrafiche ? anagrafiche : [], scadenza: scadenza || null, attiva: chiave ? chiave.attiva : true }
     try {
       onSalvata(chiave ? await api.modificaChiaveApi(chiave.id, dati) : await api.creaChiaveApi(dati))
     } catch (err) { setErrore(err.message) } finally { setAttesa(false) }
@@ -191,6 +198,19 @@ function DialogoChiave({ chiave, panoramica, onClose, onSalvata }) {
           <span className="etichetta">Processi</span>
           <SceltaProcessi processi={panoramica.processi || []} valori={processi} onChange={setProcessi} />
         </div>
+        {conAnagrafiche && (
+          <div>
+            <span className="etichetta">Anagrafiche</span>
+            <p className="mb-2 text-xs text-grafite">
+              Solo quelle scelte qui: la chiave non vede le altre né i campi riservati ai ruoli. Puoi scegliere solo le
+              anagrafiche di cui vedi (o, per scrivere, modifichi) le schede.
+            </p>
+            {(panoramica.anagrafiche || []).length === 0
+              ? <p className="text-sm text-grafite">Nessuna anagrafica definita.</p>
+              : <Caselle voci={panoramica.anagrafiche.map(a => ({ id: a.codice, label: a.codice, aiuto: a.nome }))}
+                         valori={anagrafiche} onChange={setAnagrafiche} />}
+          </div>
+        )}
         <label className="block sm:w-64">
           <span className="etichetta">Scadenza <span className="font-normal text-nebbia">(facoltativa)</span></span>
           <input type="date" className="campo" value={scadenza} onChange={e => setScadenza(e.target.value)} />

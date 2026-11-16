@@ -18,13 +18,19 @@ public class IdentitaApi extends AbstractAuthenticationToken {
     private final String sistema;
     private final Set<String> ambiti;
     private final Set<String> processi;
+    private final Set<String> anagrafiche;
 
     public IdentitaApi(Long chiaveId, String sistema, Set<String> ambiti, Set<String> processi) {
+        this(chiaveId, sistema, ambiti, processi, Set.of());
+    }
+
+    public IdentitaApi(Long chiaveId, String sistema, Set<String> ambiti, Set<String> processi, Set<String> anagrafiche) {
         super(ambiti.stream().map(a -> new SimpleGrantedAuthority("SCOPE_" + a)).collect(Collectors.toSet()));
         this.chiaveId = chiaveId;
         this.sistema = sistema;
         this.ambiti = Set.copyOf(ambiti);
         this.processi = Set.copyOf(processi);
+        this.anagrafiche = Set.copyOf(anagrafiche);
         setAuthenticated(true);
     }
 
@@ -37,6 +43,9 @@ public class IdentitaApi extends AbstractAuthenticationToken {
     public Set<String> ambiti() { return ambiti; }
     /** Vuoto = tutti i processi. */
     public Set<String> processi() { return processi; }
+
+    /** Codici dei tipi di anagrafica consentiti (vuoto = nessuno). */
+    public Set<String> anagrafiche() { return anagrafiche; }
 
     public boolean puo(String ambito) { return ambiti.contains(ambito); }
 

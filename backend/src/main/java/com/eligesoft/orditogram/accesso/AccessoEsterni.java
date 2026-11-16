@@ -54,7 +54,9 @@ public class AccessoEsterni {
         P.matcher(HttpMethod.GET, "/api/documenti/versioni/*/contenuto"),
         // cambio della propria password e, per i referenti, la propria organizzazione (controlli nel servizio)
         P.matcher(HttpMethod.POST, "/api/me/password"),
-        P.matcher("/api/organizzazione/**"));
+        P.matcher("/api/organizzazione/**"),
+        // campi anagrafica dei form: solo nome delle schede, con la regola "sceglie" del tipo
+        P.matcher(HttpMethod.GET, "/api/anagrafiche/*/scelta"));
 
     /** Con una password temporanea (data da altri) si può solo vedere chi si è e cambiarla. */
     static final List<RequestMatcher> CON_PASSWORD_TEMPORANEA = List.of(

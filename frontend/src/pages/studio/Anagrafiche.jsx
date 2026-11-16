@@ -201,10 +201,10 @@ function AccessoAnagrafica({ aperto, onClose, tipo }) {
 
   return (
     <Dialogo aperto={aperto} onClose={onClose} titolo={`Chi può accedere: ${tipo.nome}`}
-             sottotitolo="Vale subito. Senza regole le schede le vede solo l'amministratore. Gli utenti esterni non le vedono mai.">
+             sottotitolo={'Vale subito. Senza regole le schede le vede solo l\'amministratore. Agli utenti esterni vale solo "sceglie": non vedono mai i dati delle schede.'}>
       {!regole ? (errore ? <Errore>{errore}</Errore> : <Caricamento />) : (
         <div className="space-y-6">
-          <datalist id={`${uid}-gruppi`}>{gruppi.map(g => <option key={g} value={g} />)}</datalist>
+          <datalist id={`${uid}-gruppi`}>{['esterni', ...gruppi.filter(g => g !== 'esterni')].map(g => <option key={g} value={g} />)}</datalist>
           <datalist id={`${uid}-ruoli`}>{ruoli.map(r => <option key={r.codice} value={r.codice}>{r.nome}</option>)}</datalist>
           {AZIONI_ANAGRAFICA.map(a => {
             const righe = regole.map((r, i) => ({ r, i })).filter(x => x.r.azione === a.codice)

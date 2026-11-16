@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 /** Errori dell'API pubblica, sempre nel formato { "errore": { "codice", "messaggio", "campi" } }. */
-@RestControllerAdvice(assignableTypes = ApiV1Controller.class)
+@RestControllerAdvice(assignableTypes = {ApiV1Controller.class, ApiV1AnagraficheController.class})
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class GestoreErroriApiV1 {
 
@@ -30,6 +30,21 @@ public class GestoreErroriApiV1 {
     @ExceptionHandler(ErroreApi.class)
     public ResponseEntity<Map<String, Object>> api(ErroreApi e) {
         return risposta(e.stato(), e.codice(), e.getMessage(), e.campi());
+    }
+
+    /** Dati di una scheda di anagrafica che non vanno: come i dati di una pratica, tutti insieme. */
+    @ExceptionHandler(com.eligesoft.orditogram.anagrafica.DatiNonValidi.class)
+    public ResponseEntity<Map<String, Object>> datiScheda(com.eligesoft.orditogram.anagrafica.DatiNonValidi e) {
+        List<Map<String, String>> campi = e.errori().stream().map(x -> Map.of("campo", x.campo(), "messaggio", x.messaggio())).toList();
+        return risposta(422, "dati_non_validi", "Dati non validi: " + campi.size()
+            + (campi.size() == 1 ? " problema" : " problemi") + ", dettagli in \"campi\"", campi);
+    }
+
+    /** Due modifiche contemporanee della stessa scheda, o la stessa chiave creata due volte nello stesso istante. */
+    @ExceptionHandler({org.springframework.orm.ObjectOptimisticLockingFailureException.class,
+        org.springframework.dao.DataIntegrityViolationException.class})
+    public ResponseEntity<Map<String, Object>> concorrenza(RuntimeException e) {
+        return risposta(409, "conflitto", "La scheda è stata modificata o creata da qualcun altro nello stesso momento: rileggi e riprova", List.of());
     }
 
     @ExceptionHandler(ResponseStatusException.class)

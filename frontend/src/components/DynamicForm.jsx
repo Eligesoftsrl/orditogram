@@ -1,11 +1,12 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useContext, useEffect, useId, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { api } from '../api.js'
-import { FileUp, Paperclip, X } from 'lucide-react'
+import { ExternalLink, FileUp, Paperclip, Plus, X } from 'lucide-react'
 import { cx, dimensione, giorno } from '../lib/format.js'
-import { Button, Errore } from './ui.jsx'
+import { Button, Dialogo, Errore } from './ui.jsx'
 import { campiNascosti, eSezione, raggruppa, senzaNascosti } from '../lib/formCondizioni.js'
 import { erroriForm, righePiene } from '../lib/formRegole.js'
-import { CampoTabella, TabellaLettura, righeIniziali } from './CampoTabella.jsx'
+import { CampoTabella, PrefissoId, TabellaLettura, righeIniziali } from './CampoTabella.jsx'
 
 /**
  * Form generato dalla definizione JSON (formKey del BPMN).
@@ -31,11 +32,12 @@ import { CampoTabella, TabellaLettura, righeIniziali } from './CampoTabella.jsx'
  * anteprima:            nello Studio, i campi che cercano dati sul server (anagrafiche) non li cercano.
  * erroriServer:         [{campo, messaggio}] restituiti dal server, mostrati accanto ai campi.
  * children:             contenuto in più prima del pulsante (es. la nota di una modifica).
+ * prefissoId:           prefisso degli id dei campi ("campo-"), diverso per un form dentro un altro.
  *
  * I campi in sola lettura diventano un riepilogo in alto; quelli da compilare restano campi.
  * I campi nascosti dalle condizioni non si mostrano, non sono obbligatori e non vengono inviati.
  */
-export default function DynamicForm({ form, initialValues = {}, organizzazioni = {}, onSubmit, disabled, busy, avvio, mostraTitolo = true, anteprima, erroriServer, children }) {
+export default function DynamicForm({ form, initialValues = {}, organizzazioni = {}, onSubmit, disabled, busy, avvio, mostraTitolo = true, anteprima, erroriServer, children, prefissoId = 'campo-' }) {
   const campi = form.fields || []
   const lettura = campi.filter(f => f.readonly && !eSezione(f))
   const modificabili = campi.filter(f => !f.readonly && !eSezione(f))
@@ -59,8 +61,8 @@ export default function DynamicForm({ form, initialValues = {}, organizzazioni =
   useEffect(() => {
     if (!erroriServer?.length) return
     setErroriCampi(Object.fromEntries(erroriServer.map(e => [e.campo, e.messaggio])))
-    document.getElementById(`campo-${erroriServer[0].campo}`)?.focus()
-  }, [erroriServer])
+    document.getElementById(`${prefissoId}${erroriServer[0].campo}`)?.focus()
+  }, [erroriServer, prefissoId])
   const set = (name, value) => {
     setValues(prev => ({ ...prev, [name]: value }))
     setErroriCampi(prev => { if (!prev[name]) return prev; const { [name]: _, ...resto } = prev; return resto })
@@ -76,7 +78,7 @@ export default function DynamicForm({ form, initialValues = {}, organizzazioni =
     setErroriCampi(sbagliati)
     if (Object.keys(sbagliati).length > 0) {
       setErrore(Object.keys(sbagliati).length === 1 ? 'Un campo va corretto' : `${Object.keys(sbagliati).length} campi vanno corretti`)
-      document.getElementById(`campo-${Object.keys(sbagliati)[0]}`)?.focus()
+      document.getElementById(`${prefissoId}${Object.keys(sbagliati)[0]}`)?.focus()
       return
     }
     setErrore('')
@@ -96,6 +98,7 @@ export default function DynamicForm({ form, initialValues = {}, organizzazioni =
   })
 
   return (
+    <PrefissoId.Provider value={prefissoId}>
     <form onSubmit={submit} noValidate className="space-y-6">
       {((mostraTitolo && form.title) || form.description) && (
         <div>
@@ -154,6 +157,7 @@ export default function DynamicForm({ form, initialValues = {}, organizzazioni =
         </div>
       )}
     </form>
+    </PrefissoId.Provider>
   )
 }
 
@@ -164,10 +168,11 @@ function mostraValore(f, v) {
 }
 
 function Campo({ f, value, onChange, disabled, errore, nomeIniziale, anteprima }) {
+  const prefisso = useContext(PrefissoId)
   if (f.type === 'tabella') return <CampoTabella f={f} value={value} onChange={onChange} disabled={disabled} errore={errore} />
   if (f.type === 'anagrafica') return <CampoAnagrafica f={f} value={value} onChange={onChange} disabled={disabled} errore={errore} nomeIniziale={nomeIniziale} anteprima={anteprima} />
   if (f.type === 'organizzazione') return <CampoOrganizzazione f={f} value={value} onChange={onChange} disabled={disabled} errore={errore} nomeIniziale={nomeIniziale} />
-  const id = `campo-${f.name}`
+  const id = `${prefisso}${f.name}`
   const largo = f.type === 'textarea'
   const idErrore = `${id}-errore`
   if (errore) errore = errore[0].toUpperCase() + errore.slice(1)
@@ -251,7 +256,7 @@ function Campo({ f, value, onChange, disabled, errore, nomeIniziale, anteprima }
  */
 function CampoOrganizzazione({ f, value, onChange, disabled, errore, nomeIniziale }) {
   const uid = useId()
-  const id = `campo-${f.name}`
+  const id = `${useContext(PrefissoId)}${f.name}`
   const [cerca, setCerca] = useState('')
   const [risultati, setRisultati] = useState([])
   const [problema, setProblema] = useState('')
@@ -296,59 +301,111 @@ function CampoOrganizzazione({ f, value, onChange, disabled, errore, nomeInizial
 }
 
 /**
- * Scelta di una scheda di anagrafica: si cerca per titolo o per i campi ricercabili e si sceglie dall'elenco delle
- * schede attive che l'utente può vedere. Il valore inviato è l'id; il server controlla di nuovo scheda e permessi.
+ * Scelta di una scheda di anagrafica: si cerca per nome e si sceglie tra le schede attive (basta la regola "sceglie"
+ * del tipo, che vale anche per gli utenti esterni). Il valore inviato è l'id; il server controlla di nuovo scheda e
+ * permessi. Con "creaScheda": true chi può modificare l'anagrafica crea una scheda nuova senza lasciare il form.
  */
 export function CampoAnagrafica({ f, value, onChange, disabled, errore, nomeIniziale, anteprima }) {
   const uid = useId()
-  const id = `campo-${f.name}`
+  const id = `${useContext(PrefissoId)}${f.name}`
   const [cerca, setCerca] = useState('')
   const [risultati, setRisultati] = useState([])
-  const [altre, setAltre] = useState(0)
   const [problema, setProblema] = useState('')
   const [scelta, setScelta] = useState(value ? { id: value, titolo: nomeIniziale || `Scheda n. ${value}` } : null)
+  const [tipo, setTipo] = useState(null)        // definizione e azioni, solo per chi vede le schede del tipo
+  const [nuova, setNuova] = useState(false)
 
   useEffect(() => {
     if (anteprima || !f.tipoAnagrafica) return
     const t = setTimeout(() => {
-      api.cercaSchede(f.tipoAnagrafica, { testo: cerca, stato: 'ATTIVA', dimensione: 30 })
-        .then(r => { setRisultati(r.schede); setAltre(Math.max(0, r.totale - r.schede.length)); setProblema('') })
-        .catch(e => setProblema(e.message))
+      api.sceltaSchede(f.tipoAnagrafica, cerca).then(r => { setRisultati(r); setProblema('') }).catch(e => setProblema(e.message))
     }, 250)
     return () => clearTimeout(t)
   }, [cerca, f.tipoAnagrafica, anteprima])
 
+  // il tipo completo serve per aprire la scheda o crearne una: agli altri (e agli esterni) risponde "non trovata"
+  useEffect(() => {
+    if (anteprima || !f.tipoAnagrafica) return
+    api.tipoAnagrafica(f.tipoAnagrafica).then(setTipo).catch(() => setTipo(null))
+  }, [f.tipoAnagrafica, anteprima])
+
+  const scegli = (o) => { setScelta(o || null); onChange(o ? String(o.id) : '') }
   const opzioni = scelta && !risultati.some(o => String(o.id) === String(scelta.id)) ? [scelta, ...risultati] : risultati
-  const descritto = [errore && `${uid}-e`, altre > 0 && `${uid}-altre`, f.help && `${uid}-h`].filter(Boolean).join(' ') || undefined
+  const tante = risultati.length >= MAX_SCELTA
+  const puoCreare = f.creaScheda && !disabled && tipo?.attivo && tipo.azioni.includes('MODIFICA')
+  const descritto = [errore && `${uid}-e`, tante && `${uid}-altre`, f.help && `${uid}-h`].filter(Boolean).join(' ') || undefined
   return (
     <fieldset className="sm:col-span-2">
       <legend className="etichetta">{f.label || f.name}{f.required && <span className="text-mattone-600"> *</span>}</legend>
       <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
         <label className="block">
           <span className="sr-only">Cerca {f.label || f.name}</span>
-          <input type="search" className="campo" placeholder="Cerca per nome o codice" value={cerca} disabled={disabled || anteprima}
+          <input type="search" className="campo" placeholder="Cerca per nome" value={cerca} disabled={disabled || anteprima}
                  maxLength={100} onChange={e => setCerca(e.target.value)} aria-controls={id} />
         </label>
         <label className="block">
           <span className="sr-only">Scegli {f.label || f.name}</span>
           <select id={id} className={cx('campo', errore && 'border-mattone-600!')} value={value ?? ''} disabled={disabled}
                   aria-invalid={errore ? true : undefined} aria-describedby={descritto}
-                  onChange={e => {
-                    const o = opzioni.find(x => String(x.id) === e.target.value)
-                    setScelta(o || null)
-                    onChange(o ? String(o.id) : '')
-                  }}>
+                  onChange={e => scegli(opzioni.find(x => String(x.id) === e.target.value))}>
             <option value="">{anteprima ? 'Le schede si scelgono nella pratica' : opzioni.length ? 'Scegli…' : 'Nessuna scheda trovata'}</option>
             {opzioni.map(o => <option key={o.id} value={String(o.id)}>{o.titolo}</option>)}
           </select>
         </label>
       </div>
-      {altre > 0 && <p id={`${uid}-altre`} className="mt-1 text-[13px] text-grafite">Altre {altre} schede: restringi la ricerca.</p>}
+      {(puoCreare || (value && tipo)) && (
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+          {puoCreare && (
+            <button type="button" onClick={() => setNuova(true)} className="inline-flex items-center gap-1.5 text-sm font-medium text-verde-700 hover:underline">
+              <Plus className="size-4" aria-hidden="true" /> Nuova scheda
+            </button>
+          )}
+          {value && tipo && (
+            <a href={`#/anagrafiche/${f.tipoAnagrafica}/${value}`} target="_blank" rel="noopener noreferrer"
+               className="inline-flex items-center gap-1.5 text-sm font-medium text-pino-800 hover:underline">
+              <ExternalLink className="size-4" aria-hidden="true" /> Apri la scheda<span className="sr-only"> (si apre in una nuova scheda del browser)</span>
+            </a>
+          )}
+        </div>
+      )}
+      {tante && <p id={`${uid}-altre`} className="mt-1 text-[13px] text-grafite">Ci sono altre schede: restringi la ricerca.</p>}
       {errore && <p id={`${uid}-e`} role="alert" className="mt-1 text-[13px] font-medium text-mattone-600">{errore[0].toUpperCase() + errore.slice(1)}</p>}
       {problema && <p role="alert" className="mt-1 text-[13px] text-mattone-600">{problema}</p>}
       {f.help && <p id={`${uid}-h`} className="mt-1 text-[13px] text-grafite">{f.help}</p>}
+      {nuova && <NuovaSchedaDalForm tipo={tipo} onClose={() => setNuova(false)}
+                                    onCreata={s => { setNuova(false); scegli({ id: s.id, titolo: s.titolo }); document.getElementById(id)?.focus() }} />}
     </fieldset>
   )
+}
+
+/** Quante schede mostra al massimo la scelta (come SchedeService.MAX_SCELTA). */
+const MAX_SCELTA = 30
+
+/**
+ * La finestra per creare una scheda da un campo del form. Sta fuori dal form della pratica (portale) e ferma
+ * l'invio, così il suo pulsante non invia anche la pratica.
+ */
+function NuovaSchedaDalForm({ tipo, onClose, onCreata }) {
+  const [attesa, setAttesa] = useState(false)
+  const [errori, setErrori] = useState(null)
+  const [errore, setErrore] = useState('')
+  const crea = async (valori) => {
+    setAttesa(true); setErrore('')
+    try { onCreata(await api.creaScheda(tipo.codice, valori)) }
+    catch (e) { setErrore(e.message); if (e.campi) setErrori(e.campi) }
+    finally { setAttesa(false) }
+  }
+  return createPortal(
+    <div onSubmit={e => e.stopPropagation()}>
+      <Dialogo aperto onClose={onClose} titolo={`Nuova scheda: ${tipo.nome}`} larghezza="max-w-3xl">
+        <div className="space-y-4">
+          <Errore>{errore}</Errore>
+          <DynamicForm form={{ fields: tipo.definizione.fields, submitLabel: 'Crea e scegli' }} onSubmit={crea} busy={attesa}
+                       erroriServer={errori} prefissoId="nuova-scheda-" />
+        </div>
+      </Dialogo>
+    </div>,
+    document.body)
 }
 
 /** Area per trascinare o scegliere i documenti da allegare all'avvio. */
