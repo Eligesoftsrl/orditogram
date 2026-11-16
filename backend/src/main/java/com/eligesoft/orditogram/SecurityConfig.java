@@ -136,6 +136,7 @@ public class SecurityConfig {
                     "/api/admin/connettori/**", "/api/admin/credenziali/**").access(permessi.uno(Permesso.STUDIO_PROCESSI))
                 .requestMatchers("/api/admin/integrazioni/**").access(permessi.uno(Permesso.INTEGRAZIONI))
                 .requestMatchers(HttpMethod.GET, "/api/admin/registro/**").access(permessi.uno(Permesso.REGISTRO))
+                .requestMatchers("/api/admin/anagrafiche/**").access(permessi.uno(Permesso.ANAGRAFICHE_DEFINISCI))
                 // tutto il resto (sezioni nuove comprese): solo chi ha ogni permesso
                 .requestMatchers("/api/admin/**").access(permessi.tutti())
                 // tutto il resto: utenti autenticati; gli utenti esterni solo le API del portale (accesso/AccessoEsterni)
