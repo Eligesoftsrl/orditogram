@@ -114,7 +114,10 @@ export default function Organizzazioni() {
                         {o.codiceFiscale && <span className="block text-[13px] text-grafite">{o.codiceFiscale}</span>}
                       </span>
                       {!o.attiva && <Badge tono="mattone">disattivata</Badge>}
-                      <span className="numeri text-[13px] text-grafite">{o.utenti} {o.utenti === 1 ? 'utente' : 'utenti'}</span>
+                      <span className="numeri text-right text-[13px] text-grafite">
+                        {o.utenti} {o.utenti === 1 ? 'utente' : 'utenti'}
+                        {o.referenti > 0 && <span className="block">{o.referenti} {o.referenti === 1 ? 'referente' : 'referenti'}</span>}
+                      </span>
                     </button>
                   </li>
                 ))}
@@ -148,7 +151,10 @@ export default function Organizzazioni() {
                   <input type="checkbox" className="size-4 accent-verde-600" checked={edit.attiva} onChange={e => set('attiva', e.target.checked)} />
                   Attiva (si può scegliere nei form)
                 </label>
-                <p className="text-sm text-grafite">Gli utenti dell'organizzazione si aggiungono dalla pagina Utenti, come utenti esterni.</p>
+                <p className="text-sm text-grafite">
+                  Gli utenti dell'organizzazione si aggiungono dalla pagina Utenti, come utenti esterni, oppure li aggiunge
+                  il suo referente dal portale.
+                </p>
                 <Errore>{errore}</Errore>
                 <div className="flex items-center gap-2 border-t border-linea pt-4">
                   {edit.id && <Button type="button" variante="pericolo" onClick={elimina}>Elimina</Button>}
@@ -156,6 +162,7 @@ export default function Organizzazioni() {
                   <Button type="submit" variante="primario" attesa={attesa}>Salva</Button>
                 </div>
               </form>
+              {edit.id && <PersoneReferenti org={edit} onCambio={carica} />}
             </Pannello>
           ) : (
             <Pannello>
@@ -166,5 +173,59 @@ export default function Organizzazioni() {
         </div>
       )}
     </div>
+  )
+}
+
+/**
+ * Le persone dell'organizzazione e chi ne è referente. Il referente gestisce da solo i colleghi dal portale
+ * (La mia organizzazione); resta un utente esterno, senza ruoli né permessi.
+ */
+function PersoneReferenti({ org, onCambio }) {
+  const toast = useToast()
+  const [persone, setPersone] = useState(null)
+  const [scelti, setScelti] = useState(new Set())
+  const [errore, setErrore] = useState('')
+  const [attesa, setAttesa] = useState(false)
+
+  const mostra = (lista) => { setPersone(lista); setScelti(new Set(lista.filter(p => p.referente).map(p => p.id))) }
+  useEffect(() => { api.personeOrganizzazione(org.id).then(mostra).catch(e => setErrore(e.message)) }, [org.id])
+
+  const cambiato = persone && persone.some(p => p.referente !== scelti.has(p.id))
+  const salva = async () => {
+    setAttesa(true); setErrore('')
+    try { mostra(await api.impostaReferenti(org.id, [...scelti])); toast.ok('Referenti salvati'); onCambio() }
+    catch (e) { setErrore(e.message) } finally { setAttesa(false) }
+  }
+  const scegli = (id, si) => setScelti(s => { const n = new Set(s); if (si) n.add(id); else n.delete(id); return n })
+
+  return (
+    <section className="mt-6 border-t border-linea pt-5" aria-labelledby={`ref-${org.id}`}>
+      <h3 id={`ref-${org.id}`} className="font-semibold">Persone e referenti</h3>
+      <p className="mt-1 text-sm text-grafite">
+        Il referente aggiunge, disattiva e toglie le persone della sua organizzazione dal portale, senza passare dall'ufficio.
+      </p>
+      {!persone ? (errore ? <Errore>{errore}</Errore> : <Caricamento />) : persone.length === 0 ? (
+        <p className="mt-3 text-sm text-grafite">Nessuna persona: aggiungi prima un utente esterno dalla pagina Utenti.</p>
+      ) : (<>
+        <ul className="mt-3 space-y-1.5">
+          {persone.map(p => {
+            const nome = [p.nome, p.cognome].filter(Boolean).join(' ') || p.username
+            return (
+              <li key={p.id}>
+                <label className={cx('flex items-center gap-2 text-[15px]', !p.attivo && 'opacity-60')}>
+                  <input type="checkbox" className="size-4 accent-verde-600" checked={scelti.has(p.id)} onChange={e => scegli(p.id, e.target.checked)} />
+                  <span className="min-w-0 flex-1 truncate">{nome} <span className="text-[13px] text-grafite">{p.username}</span></span>
+                  {!p.attivo && <Badge tono="mattone">disattivata</Badge>}
+                </label>
+              </li>
+            )
+          })}
+        </ul>
+        <Errore>{errore}</Errore>
+        <div className="mt-3 flex justify-end">
+          <Button misura="sm" variante="primario" disabled={!cambiato} attesa={attesa} onClick={salva}>Salva referenti</Button>
+        </div>
+      </>)}
+    </section>
   )
 }

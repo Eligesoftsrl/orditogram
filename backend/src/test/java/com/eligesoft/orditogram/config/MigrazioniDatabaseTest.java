@@ -76,6 +76,9 @@ class MigrazioniDatabaseTest {
             + "WHERE r.codice = 'gestore-utenti' ORDER BY permesso", String.class)).containsExactly("organizzazioni.gestisci", "utenti.gestisci");
         // V7: anagrafiche vuote, pronte all'uso
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM anagrafica_scheda", Integer.class)).isZero();
+        // V8: nessuna password temporanea per chi c'era, nessun referente
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM app_user WHERE password_temporanea", Integer.class)).isZero();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM organizzazione_referente", Integer.class)).isZero();
         // V2 ha tolto il vincolo che rifiutava i tipi di evento nuovi
         jdbc.update("INSERT INTO pratica_evento (process_instance_id, quando, tipo) VALUES ('1', CURRENT_TIMESTAMP, 'EMAIL')");
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM pratica_evento", Integer.class)).isEqualTo(1);

@@ -143,6 +143,15 @@ export const api = {
   modificaOrganizzazione: (id, o) => call('PUT', `/api/admin/organizzazioni/${id}`, o),
   eliminaOrganizzazione: (id) => call('DELETE', `/api/admin/organizzazioni/${id}`),
   importaOrganizzazioni: (file) => { const fd = new FormData(); fd.append('file', file); return call('POST', '/api/admin/organizzazioni/importa', fd) },
+  personeOrganizzazione: (id) => call('GET', `/api/admin/organizzazioni/${id}/persone`),
+  impostaReferenti: (id, utenti) => call('PUT', `/api/admin/organizzazioni/${id}/referenti`, { utenti }),
+  /** Portale: le organizzazioni di cui sono referente e le loro persone. */
+  mieOrganizzazioni: () => call('GET', '/api/organizzazione'),
+  aggiungiPersona: (org, p) => call('POST', `/api/organizzazione/${org}/persone`, p),
+  disattivaPersona: (org, id) => call('POST', `/api/organizzazione/${org}/persone/${id}/disattiva`),
+  riattivaPersona: (org, id) => call('POST', `/api/organizzazione/${org}/persone/${id}/riattiva`),
+  togliPersona: (org, id) => call('DELETE', `/api/organizzazione/${org}/persone/${id}`),
+  cambiaPassword: (attuale, nuova) => call('POST', '/api/me/password', { attuale, nuova }),
   /** Organizzazioni esterne attive, per i campi Organizzazione dei form (solo personale). */
   cercaOrganizzazioni: (q = '') => call('GET', `/api/organizzazioni?q=${encodeURIComponent(q)}`),
   visibilitaDocumento: (id, visibilita) => call('POST', `/api/documenti/${id}/visibilita`, { visibilita }),

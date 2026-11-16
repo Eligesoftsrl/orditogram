@@ -26,7 +26,10 @@ public class AdminOrganizzazioniController {
     /** Righe al massimo in un file da importare. */
     static final int MAX_RIGHE_CSV = 5000;
 
-    public record OrganizzazioneDto(Long id, String codice, String nome, String codiceFiscale, Boolean attiva, long utenti) { }
+    public record OrganizzazioneDto(Long id, String codice, String nome, String codiceFiscale, Boolean attiva, long utenti, long referenti) { }
+
+    /** I referenti scelti per un'organizzazione (id degli utenti). */
+    public record Referenti(List<Long> utenti) { }
 
     /** Esito di un'importazione: quante create e aggiornate, e le righe scartate con il motivo. */
     public record EsitoImport(int create, int aggiornate, List<String> scartate) { }
@@ -35,9 +38,11 @@ public class AdminOrganizzazioniController {
     private final AppUserRepository utenti;
     private final PraticaParteRepository parti;
     private final RegistroService registro;
+    private final ReferentiService referenti;
 
     public AdminOrganizzazioniController(OrganizzazioneRepository organizzazioni, AppUserRepository utenti,
-                                         PraticaParteRepository parti, RegistroService registro) {
+                                         PraticaParteRepository parti, RegistroService registro, ReferentiService referenti) {
+        this.referenti = referenti;
         this.organizzazioni = organizzazioni;
         this.utenti = utenti;
         this.parti = parti;
@@ -51,6 +56,19 @@ public class AdminOrganizzazioniController {
         return organizzazioni.findByTipoOrderByNomeAsc(Organizzazione.ESTERNA).stream()
             .map(o -> dto(o, conteggio.getOrDefault(o.getId(), 0L)))
             .toList();
+    }
+
+    /** Le persone dell'organizzazione e chi ne è referente. */
+    @GetMapping("/{id}/persone")
+    public List<ReferentiService.Collega> persone(@PathVariable Long id) {
+        return referenti.membri(trova(id));
+    }
+
+    /** Sceglie i referenti tra gli utenti esterni dell'organizzazione (l'elenco sostituisce quello di prima). */
+    @PutMapping("/{id}/referenti")
+    @Transactional
+    public List<ReferentiService.Collega> referenti(@PathVariable Long id, @RequestBody Referenti scelti) {
+        return referenti.impostaReferenti(trova(id), scelti.utenti());
     }
 
     @PostMapping
@@ -157,8 +175,9 @@ public class AdminOrganizzazioniController {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Organizzazione non trovata"));
     }
 
-    private static OrganizzazioneDto dto(Organizzazione o, long utenti) {
-        return new OrganizzazioneDto(o.getId(), o.getCodice(), o.getNome(), o.getCodiceFiscale(), o.isAttiva(), utenti);
+    private OrganizzazioneDto dto(Organizzazione o, long utenti) {
+        return new OrganizzazioneDto(o.getId(), o.getCodice(), o.getNome(), o.getCodiceFiscale(), o.isAttiva(), utenti,
+            o.getId() == null ? 0 : referenti.numeroReferenti(o.getId()));
     }
 
     private static String descrivi(Organizzazione o) {

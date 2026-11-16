@@ -43,6 +43,18 @@ public class AppUser {
     @Column(unique = true, length = 500)
     private String oidcSoggetto;
 
+    /** Password data da altri (es. dal referente dell'organizzazione): va cambiata al primo accesso. */
+    @Column(nullable = false)
+    private boolean passwordTemporanea;
+
+    /** Chi ha creato l'utente, se è stato un referente di organizzazione (null: amministrazione, demo, provider). */
+    @Column(length = 100)
+    private String creatoDa;
+
+    private java.time.OffsetDateTime creatoIl;
+
+    private java.time.OffsetDateTime ultimoAccesso;
+
     /** Ruoli assegnati direttamente all'utente; altri arrivano dai gruppi (vedi accesso/PermessiService). */
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "app_user_ruolo", joinColumns = @JoinColumn(name = "user_id"),
@@ -100,6 +112,14 @@ public class AppUser {
     public void setOrganizzazioni(Set<Long> organizzazioni) { this.organizzazioni = organizzazioni; }
     public String getOidcSoggetto() { return oidcSoggetto; }
     public void setOidcSoggetto(String oidcSoggetto) { this.oidcSoggetto = oidcSoggetto; }
+    public boolean isPasswordTemporanea() { return passwordTemporanea; }
+    public void setPasswordTemporanea(boolean passwordTemporanea) { this.passwordTemporanea = passwordTemporanea; }
+    public String getCreatoDa() { return creatoDa; }
+    public void setCreatoDa(String creatoDa) { this.creatoDa = creatoDa; }
+    public java.time.OffsetDateTime getCreatoIl() { return creatoIl; }
+    public void setCreatoIl(java.time.OffsetDateTime creatoIl) { this.creatoIl = creatoIl; }
+    public java.time.OffsetDateTime getUltimoAccesso() { return ultimoAccesso; }
+    public void setUltimoAccesso(java.time.OffsetDateTime ultimoAccesso) { this.ultimoAccesso = ultimoAccesso; }
     public Set<String> getGroups() { return groups; }
     public void setGroups(Set<String> groups) { this.groups = groups; }
 }

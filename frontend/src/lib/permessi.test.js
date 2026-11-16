@@ -25,6 +25,7 @@ describe('permessi', () => {
     expect(descriviUtente(operatore)).toBe('operatori')
     expect(descriviUtente({ groups: [] })).toBe('Nessun gruppo')
     expect(descriviUtente({ esterno: true, groups: ['detenuti'] })).toBe('Utente esterno')
+    expect(descriviUtente({ esterno: true, referenteDi: [{ id: 1, nome: 'Studio Bianchi' }] })).toBe('Referente, Studio Bianchi')
   })
 })
 
