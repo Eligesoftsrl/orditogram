@@ -1,0 +1,19 @@
+{
+  "title": "Parere del dirigente",
+  "description": "Il contributo richiesto supera i 5.000 euro: serve il tuo parere prima della decisione.",
+  "fields": [
+    { "name": "associazione_titolo", "label": "Associazione", "type": "text", "readonly": true },
+    { "name": "titoloEvento", "label": "Evento", "type": "text", "readonly": true },
+    { "name": "importoRichiesto", "label": "Contributo richiesto (€)", "type": "number", "readonly": true },
+    { "name": "spese", "label": "Piano delle spese", "type": "tabella", "readonly": true,
+      "colonne": [
+        { "name": "voce", "label": "Voce di spesa", "type": "text" },
+        { "name": "importo", "label": "Importo (€)", "type": "number" }
+      ] },
+    { "name": "parere", "label": "Parere", "type": "select", "required": true, "options": ["Favorevole", "Contrario"] },
+    { "name": "noteParere", "label": "Note per l'istruttore", "type": "textarea",
+      "visibileSe": { "campo": "parere", "valori": ["Contrario"] }, "required": true }
+  ],
+  "documenti": "lettura",
+  "submitLabel": "Dai il parere"
+}

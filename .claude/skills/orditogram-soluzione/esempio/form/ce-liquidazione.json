@@ -1,0 +1,12 @@
+{
+  "title": "Liquida il contributo",
+  "fields": [
+    { "name": "associazione_titolo", "label": "Associazione", "type": "text", "readonly": true },
+    { "name": "titoloEvento", "label": "Evento", "type": "text", "readonly": true },
+    { "name": "importoConcesso", "label": "Contributo concesso (€)", "type": "number", "readonly": true },
+    { "name": "numeroMandato", "label": "Numero del mandato di pagamento", "type": "text", "required": true },
+    { "name": "dataPagamento", "label": "Data del pagamento", "type": "date", "required": true, "max": "oggi" }
+  ],
+  "documenti": "lettura",
+  "submitLabel": "Registra il pagamento"
+}

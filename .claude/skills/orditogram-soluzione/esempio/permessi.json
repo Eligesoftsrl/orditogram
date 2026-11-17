@@ -1,0 +1,6 @@
+[
+  { "azione": "AVVIA", "tipoSoggetto": "GRUPPO", "soggetto": "cultura", "ambito": "TUTTE" },
+  { "azione": "VEDE", "tipoSoggetto": "GRUPPO", "soggetto": "cultura", "ambito": "TUTTE" },
+  { "azione": "VEDE", "tipoSoggetto": "GRUPPO", "soggetto": "dirigenti", "ambito": "TUTTE" },
+  { "azione": "ESPORTA", "tipoSoggetto": "GRUPPO", "soggetto": "dirigenti", "ambito": "TUTTE" }
+]

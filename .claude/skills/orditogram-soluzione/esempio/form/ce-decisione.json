@@ -1,0 +1,17 @@
+{
+  "title": "Decidi il contributo",
+  "fields": [
+    { "name": "associazione_titolo", "label": "Associazione", "type": "text", "readonly": true },
+    { "name": "titoloEvento", "label": "Evento", "type": "text", "readonly": true },
+    { "name": "importoRichiesto", "label": "Contributo richiesto (€)", "type": "number", "readonly": true },
+    { "name": "parere", "label": "Parere del dirigente", "type": "text", "readonly": true },
+    { "name": "noteParere", "label": "Note del dirigente", "type": "textarea", "readonly": true },
+    { "name": "esito", "label": "Decisione", "type": "select", "required": true, "options": ["Concesso", "Negato"] },
+    { "name": "importoConcesso", "label": "Contributo concesso (€)", "type": "number", "required": true, "min": 1, "max": 20000,
+      "visibileSe": { "campo": "esito", "valori": ["Concesso"] } },
+    { "name": "motivazioneDecisione", "label": "Motivazione", "type": "textarea", "required": true,
+      "help": "Va nell'email all'associazione." }
+  ],
+  "documenti": "modifica",
+  "submitLabel": "Conferma la decisione"
+}

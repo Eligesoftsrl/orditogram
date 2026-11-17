@@ -1,0 +1,12 @@
+{
+  "title": "Protocolla a mano",
+  "description": "Il protocollo informatico non ha risposto. Protocolla la domanda dal programma del protocollo e scrivi qui numero e data.",
+  "fields": [
+    { "name": "titoloEvento", "label": "Evento", "type": "text", "readonly": true },
+    { "name": "associazione_titolo", "label": "Associazione", "type": "text", "readonly": true },
+    { "name": "numeroProtocollo", "label": "Numero di protocollo", "type": "text", "required": true },
+    { "name": "dataProtocollo", "label": "Data di protocollo", "type": "date", "required": true, "max": "oggi" }
+  ],
+  "documenti": "lettura",
+  "submitLabel": "Conferma il protocollo"
+}

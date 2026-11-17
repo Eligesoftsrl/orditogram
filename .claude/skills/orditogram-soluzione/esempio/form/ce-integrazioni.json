@@ -1,0 +1,33 @@
+{
+  "title": "Registra le integrazioni",
+  "description": "Quando l'associazione manda quanto richiesto, descrivi cosa è arrivato e allega i documenti. L'istruttoria riparte.",
+  "fields": [
+    {
+      "name": "titoloEvento",
+      "label": "Evento",
+      "type": "text",
+      "readonly": true
+    },
+    {
+      "name": "numeroProtocollo",
+      "label": "Protocollo",
+      "type": "text",
+      "readonly": true
+    },
+    {
+      "name": "noteVerifica",
+      "label": "Cosa era stato chiesto",
+      "type": "textarea",
+      "readonly": true
+    },
+    {
+      "name": "noteIntegrazioni",
+      "label": "Cosa è arrivato",
+      "type": "textarea",
+      "required": true,
+      "precompila": false
+    }
+  ],
+  "documenti": "carica",
+  "submitLabel": "Registra e riprendi l'istruttoria"
+}

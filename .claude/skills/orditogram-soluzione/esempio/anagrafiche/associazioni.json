@@ -1,0 +1,20 @@
+{
+  "codice": "associazioni",
+  "nome": "Albo delle associazioni",
+  "descrizione": "Associazioni iscritte all'albo comunale: possono chiedere contributi e patrocini.",
+  "attivo": true,
+  "definizione": {
+    "fields": [
+      { "type": "sezione", "label": "Associazione" },
+      { "name": "denominazione", "label": "Denominazione", "type": "text", "required": true, "titolo": true, "cercabile": true, "maxLunghezza": 200 },
+      { "name": "codiceFiscale", "label": "Codice fiscale", "type": "text", "required": true, "chiave": true, "formato": "codiceFiscale" },
+      { "name": "numeroIscrizione", "label": "Numero di iscrizione all'albo", "type": "text", "required": true, "cercabile": true },
+      { "name": "settore", "label": "Settore", "type": "select", "required": true,
+        "options": ["Musica", "Teatro", "Arti visive", "Letteratura", "Tradizioni popolari", "Altro"] },
+      { "type": "sezione", "label": "Recapiti" },
+      { "name": "sede", "label": "Sede", "type": "text" },
+      { "name": "pec", "label": "PEC", "type": "text", "formato": "email" },
+      { "name": "legaleRappresentante", "label": "Legale rappresentante", "type": "text", "required": true }
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "title": "Domanda di contributo per un evento culturale",
+  "description": "Inserisci la domanda dell'associazione così come è arrivata. Allega la domanda firmata e il bilancio preventivo.",
+  "fields": [
+    { "type": "sezione", "label": "Associazione" },
+    { "name": "associazione", "label": "Associazione", "type": "anagrafica", "tipoAnagrafica": "associazioni", "required": true,
+      "help": "Deve essere iscritta all'albo. Se manca, chiedi all'Ufficio Cultura di iscriverla." },
+    { "name": "pec", "label": "PEC per le comunicazioni", "type": "text", "required": true, "formato": "email" },
+    { "type": "sezione", "label": "Evento" },
+    { "name": "titoloEvento", "label": "Titolo dell'evento", "type": "text", "required": true, "titolo": true, "maxLunghezza": 150 },
+    { "name": "dataEvento", "label": "Data dell'evento", "type": "date", "required": true, "min": "oggi" },
+    { "name": "luogo", "label": "Luogo", "type": "text", "required": true },
+    { "name": "descrizione", "label": "Descrizione dell'evento", "type": "textarea", "required": true, "minLunghezza": 30 },
+    { "name": "patrocinio", "label": "Chiede anche il patrocinio del Comune", "type": "checkbox" },
+    { "name": "usoLogo", "label": "Userà il logo del Comune", "type": "select", "options": ["Sì", "No"], "required": true,
+      "visibileSe": { "campo": "patrocinio", "valori": ["true"] } },
+    { "type": "sezione", "label": "Spese e contributo" },
+    { "name": "spese", "label": "Piano delle spese", "type": "tabella", "required": true, "minRighe": 1, "maxRighe": 30,
+      "colonne": [
+        { "name": "voce", "label": "Voce di spesa", "type": "text", "required": true },
+        { "name": "importo", "label": "Importo (€)", "type": "number", "required": true, "min": 0 }
+      ] },
+    { "name": "importoRichiesto", "label": "Contributo richiesto (€)", "type": "number", "required": true, "min": 100, "max": 20000 }
+  ],
+  "documenti": "carica",
+  "documentiObbligatori": true,
+  "submitLabel": "Registra la domanda"
+}

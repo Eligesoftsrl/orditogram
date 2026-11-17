@@ -1,0 +1,7 @@
+{
+  "associazioni": [
+    { "azione": "MODIFICA", "tipoSoggetto": "GRUPPO", "soggetto": "cultura" },
+    { "azione": "ESPORTA", "tipoSoggetto": "GRUPPO", "soggetto": "cultura" },
+    { "azione": "VEDE", "tipoSoggetto": "GRUPPO", "soggetto": "dirigenti" }
+  ]
+}

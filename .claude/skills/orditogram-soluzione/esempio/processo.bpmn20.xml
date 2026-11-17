@@ -1,0 +1,459 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_contributiEventi" targetNamespace="http://orditogram.it/processi">
+  <message id="rinunciaAssociazione" name="rinunciaAssociazione" />
+  <process id="contributiEventi" name="Contributi per eventi culturali" isExecutable="true" activiti:candidateStarterGroups="cultura">
+    <documentation>Domanda di contributo di un'associazione dell'albo comunale per un evento culturale: protocollo, istruttoria entro 60 giorni con integrazioni e parere del dirigente sopra i 5.000 euro, comunicazione dell'esito e liquidazione.</documentation>
+    <startEvent id="inizio" name="Domanda ricevuta" activiti:formKey="ce-domanda" />
+    <serviceTask id="protocolla" name="Protocolla la domanda" implementation="apiConnector">
+      <extensionElements>
+        <activiti:field name="metodo" stringValue="POST" />
+        <activiti:field name="url" stringValue="http://localhost:8080/api/demo/protocollo" />
+        <activiti:field name="credenziale" stringValue="protocollo-demo" />
+        <activiti:field name="corpo" stringValue="{&#10;  &quot;oggetto&quot;: &quot;Domanda di contributo: ${titoloEvento}&quot;,&#10;  &quot;mittente&quot;: &quot;${associazione_titolo}&quot;,&#10;  &quot;verso&quot;: &quot;entrata&quot;&#10;}" />
+        <activiti:field name="risposta" stringValue="numeroProtocollo = numero&#10;dataProtocollo = data" />
+        <activiti:field name="timeout" stringValue="20" />
+        <activiti:field name="inErrore" stringValue="Segui la strada di errore" />
+      </extensionElements>
+    </serviceTask>
+    <boundaryEvent id="erroreProtocollo" name="Protocollo non disponibile" attachedToRef="protocolla">
+      <errorEventDefinition />
+    </boundaryEvent>
+    <userTask id="protocolloManuale" name="Protocolla a mano" activiti:candidateGroups="cultura" activiti:formKey="ce-protocollo" />
+    <serviceTask id="conferma" name="Conferma ricezione all'associazione" implementation="emailConnector">
+      <extensionElements>
+        <activiti:field name="destinatari" stringValue="campo:pec" />
+        <activiti:field name="oggetto" stringValue="Domanda di contributo per &quot;${titoloEvento}&quot;: protocollo ${numeroProtocollo}" />
+        <activiti:field name="testo" stringValue="Gentile associazione,&#10;&#10;la domanda di contributo per l'evento &quot;${titoloEvento}&quot; è stata registrata con il protocollo n. ${numeroProtocollo} del ${dataProtocollo}.&#10;&#10;L'istruttoria si conclude entro 60 giorni (regolamento comunale, art. 8).&#10;&#10;Ufficio Cultura del Comune di Valfiorita" />
+        <activiti:field name="allegati" stringValue="Nessuno" />
+      </extensionElements>
+    </serviceTask>
+    <subProcess id="istruttoria" name="Istruttoria (60 giorni)">
+      <startEvent id="iInizio" />
+      <userTask id="verifica" name="Verifica la domanda" activiti:candidateGroups="cultura" activiti:formKey="ce-verifica" />
+      <boundaryEvent id="sollecitoVerifica" name="Sollecito ogni 10 giorni" attachedToRef="verifica" cancelActivity="false">
+        <timerEventDefinition>
+          <timeCycle>R2/P10D</timeCycle>
+        </timerEventDefinition>
+      </boundaryEvent>
+      <serviceTask id="notificaSollecito" name="Sollecita l'istruttore" implementation="notificaConnector">
+        <extensionElements>
+          <activiti:field name="destinatario" stringValue="gruppo:cultura" />
+          <activiti:field name="titolo" stringValue="Da verificare: contributo per ${titoloEvento}" />
+          <activiti:field name="messaggio" stringValue="La domanda di ${associazione_titolo} (protocollo ${numeroProtocollo}) aspetta la verifica. L'istruttoria si chiude entro 60 giorni dal protocollo." />
+        </extensionElements>
+      </serviceTask>
+      <endEvent id="iFineSollecito" name="Sollecito inviato" />
+      <exclusiveGateway id="esitoVerificaGw" name="Esito della verifica?" default="iAmmissibile" />
+      <endEvent id="iFineIntegrazione" name="Servono integrazioni" />
+      <endEvent id="iFineNonAmmissibile" name="Non ammissibile" />
+      <exclusiveGateway id="sogliaGw" name="Più di 5.000 euro?" default="iSottoSoglia" />
+      <userTask id="parere" name="Dai il parere sul contributo" activiti:candidateGroups="dirigenti" activiti:formKey="ce-parere" />
+      <userTask id="decisione" name="Decidi il contributo" activiti:candidateGroups="cultura" activiti:formKey="ce-decisione" />
+      <endEvent id="iFineDecisione" name="Decisione presa" />
+      <sequenceFlow id="i1" sourceRef="iInizio" targetRef="verifica" />
+      <sequenceFlow id="i2" sourceRef="verifica" targetRef="esitoVerificaGw" />
+      <sequenceFlow id="i3" sourceRef="sollecitoVerifica" targetRef="notificaSollecito" />
+      <sequenceFlow id="i4" sourceRef="notificaSollecito" targetRef="iFineSollecito" />
+      <sequenceFlow id="iIntegrazione" name="Serve integrazione" sourceRef="esitoVerificaGw" targetRef="iFineIntegrazione">
+        <conditionExpression xsi:type="tFormalExpression">${esitoVerifica == 'Serve integrazione'}</conditionExpression>
+      </sequenceFlow>
+      <sequenceFlow id="iNonAmmissibile" name="Non ammissibile" sourceRef="esitoVerificaGw" targetRef="iFineNonAmmissibile">
+        <conditionExpression xsi:type="tFormalExpression">${esitoVerifica == 'Non ammissibile'}</conditionExpression>
+      </sequenceFlow>
+      <sequenceFlow id="iAmmissibile" name="Ammissibile" sourceRef="esitoVerificaGw" targetRef="sogliaGw" />
+      <sequenceFlow id="iSopraSoglia" name="Sì" sourceRef="sogliaGw" targetRef="parere">
+        <conditionExpression xsi:type="tFormalExpression">${importoRichiesto &gt; 5000.0}</conditionExpression>
+      </sequenceFlow>
+      <sequenceFlow id="iSottoSoglia" name="No" sourceRef="sogliaGw" targetRef="decisione" />
+      <sequenceFlow id="i5" sourceRef="parere" targetRef="decisione" />
+      <sequenceFlow id="i7" sourceRef="decisione" targetRef="iFineDecisione" />
+    </subProcess>
+    <boundaryEvent id="termine60" name="Termine di 60 giorni" attachedToRef="istruttoria">
+      <timerEventDefinition activiti:businessCalendarName="proroga">
+        <timeDuration>P60D</timeDuration>
+      </timerEventDefinition>
+    </boundaryEvent>
+    <boundaryEvent id="rinuncia" name="Rinuncia dell'associazione" attachedToRef="istruttoria">
+      <messageEventDefinition messageRef="rinunciaAssociazione" />
+    </boundaryEvent>
+    <endEvent id="fineRinuncia" name="Archiviata per rinuncia" />
+    <serviceTask id="avvisoTermine" name="Avvisa i dirigenti del termine scaduto" implementation="notificaConnector">
+      <extensionElements>
+        <activiti:field name="destinatario" stringValue="gruppo:dirigenti" />
+        <activiti:field name="titolo" stringValue="Termine scaduto: contributo per ${titoloEvento}" />
+        <activiti:field name="messaggio" stringValue="Sono passati 60 giorni senza decisione sulla domanda di ${associazione_titolo} (protocollo ${numeroProtocollo}). La pratica è chiusa: la domanda va decisa fuori dal sistema." />
+      </extensionElements>
+    </serviceTask>
+    <endEvent id="fineTermine" name="Termine decorso" />
+    <exclusiveGateway id="dopoIstruttoria" name="Com'è finita l'istruttoria?" default="fDecisa" />
+    <subProcess id="integrazioni" name="Richiesta di integrazioni">
+      <startEvent id="rInizio" />
+      <serviceTask id="emailIntegrazioni" name="Chiedi le integrazioni" implementation="emailConnector">
+        <extensionElements>
+          <activiti:field name="destinatari" stringValue="campo:pec" />
+          <activiti:field name="oggetto" stringValue="Domanda di contributo ${numeroProtocollo}: servono integrazioni" />
+          <activiti:field name="testo" stringValue="Gentile associazione,&#10;&#10;per completare l'istruttoria della domanda per l'evento &quot;${titoloEvento}&quot; ci servono:&#10;${noteVerifica}&#10;&#10;Le chiediamo di inviarle via PEC entro 15 giorni: senza risposta la domanda sarà archiviata.&#10;&#10;Ufficio Cultura del Comune di Valfiorita" />
+          <activiti:field name="allegati" stringValue="Nessuno" />
+        </extensionElements>
+      </serviceTask>
+      <userTask id="registraIntegrazioni" name="Registra le integrazioni" activiti:candidateGroups="cultura" activiti:formKey="ce-integrazioni" />
+      <endEvent id="rFine" name="Integrazioni registrate" />
+      <sequenceFlow id="r1" sourceRef="rInizio" targetRef="emailIntegrazioni" />
+      <sequenceFlow id="r2" sourceRef="emailIntegrazioni" targetRef="registraIntegrazioni" />
+      <sequenceFlow id="r3" sourceRef="registraIntegrazioni" targetRef="rFine" />
+    </subProcess>
+    <boundaryEvent id="nessunaIntegrazione" name="Nessuna risposta in 15 giorni" attachedToRef="integrazioni">
+      <timerEventDefinition activiti:businessCalendarName="proroga">
+        <timeDuration>P15D</timeDuration>
+      </timerEventDefinition>
+    </boundaryEvent>
+    <endEvent id="fineArchiviata" name="Archiviata per mancate integrazioni" />
+    <serviceTask id="emailNonAmmissibile" name="Comunica la non ammissibilità" implementation="emailConnector">
+      <extensionElements>
+        <activiti:field name="destinatari" stringValue="campo:pec" />
+        <activiti:field name="oggetto" stringValue="Domanda di contributo ${numeroProtocollo}: non ammissibile" />
+        <activiti:field name="testo" stringValue="Gentile associazione,&#10;&#10;la domanda di contributo per l'evento &quot;${titoloEvento}&quot; non è ammissibile per questo motivo:&#10;${noteVerifica}&#10;&#10;Contro questa decisione può presentare ricorso al TAR entro 60 giorni.&#10;&#10;Ufficio Cultura del Comune di Valfiorita" />
+        <activiti:field name="allegati" stringValue="Nessuno" />
+      </extensionElements>
+    </serviceTask>
+    <endEvent id="fineNonAmmissibile" name="Domanda non ammissibile" />
+    <exclusiveGateway id="esitoGw" name="Contributo concesso?" default="fNegato" />
+    <serviceTask id="emailConcesso" name="Comunica la concessione" implementation="emailConnector">
+      <extensionElements>
+        <activiti:field name="destinatari" stringValue="campo:pec" />
+        <activiti:field name="oggetto" stringValue="Domanda di contributo ${numeroProtocollo}: contributo concesso" />
+        <activiti:field name="testo" stringValue="Gentile associazione,&#10;&#10;per l'evento &quot;${titoloEvento}&quot; le è stato concesso un contributo di ${importoConcesso} euro.&#10;${motivazioneDecisione}&#10;&#10;La Ragioneria provvederà al pagamento.&#10;&#10;Ufficio Cultura del Comune di Valfiorita" />
+        <activiti:field name="allegati" stringValue="Tutti i documenti della pratica" />
+      </extensionElements>
+    </serviceTask>
+    <userTask id="liquidazione" name="Liquida il contributo" activiti:candidateGroups="ragioneria" activiti:formKey="ce-liquidazione" />
+    <endEvent id="fineLiquidato" name="Contributo liquidato" />
+    <serviceTask id="emailNegato" name="Comunica il diniego" implementation="emailConnector">
+      <extensionElements>
+        <activiti:field name="destinatari" stringValue="campo:pec" />
+        <activiti:field name="oggetto" stringValue="Domanda di contributo ${numeroProtocollo}: contributo non concesso" />
+        <activiti:field name="testo" stringValue="Gentile associazione,&#10;&#10;per l'evento &quot;${titoloEvento}&quot; il contributo non è stato concesso:&#10;${motivazioneDecisione}&#10;&#10;Contro questa decisione può presentare ricorso al TAR entro 60 giorni.&#10;&#10;Ufficio Cultura del Comune di Valfiorita" />
+        <activiti:field name="allegati" stringValue="Nessuno" />
+      </extensionElements>
+    </serviceTask>
+    <endEvent id="fineNegato" name="Contributo negato" />
+    <sequenceFlow id="f1" sourceRef="inizio" targetRef="protocolla" />
+    <sequenceFlow id="f2" sourceRef="protocolla" targetRef="conferma" />
+    <sequenceFlow id="f3" sourceRef="erroreProtocollo" targetRef="protocolloManuale" />
+    <sequenceFlow id="f4" sourceRef="protocolloManuale" targetRef="conferma" />
+    <sequenceFlow id="f5" sourceRef="conferma" targetRef="istruttoria" />
+    <sequenceFlow id="f6" sourceRef="istruttoria" targetRef="dopoIstruttoria" />
+    <sequenceFlow id="fIntegrazioni" name="Servono integrazioni" sourceRef="dopoIstruttoria" targetRef="integrazioni">
+      <conditionExpression xsi:type="tFormalExpression">${esitoVerifica == 'Serve integrazione'}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="fNonAmmissibile" name="Non ammissibile" sourceRef="dopoIstruttoria" targetRef="emailNonAmmissibile">
+      <conditionExpression xsi:type="tFormalExpression">${esitoVerifica == 'Non ammissibile'}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="fDecisa" name="Decisa" sourceRef="dopoIstruttoria" targetRef="esitoGw" />
+    <sequenceFlow id="fRiesame" name="Riprende l'istruttoria" sourceRef="integrazioni" targetRef="istruttoria" />
+    <sequenceFlow id="f7" sourceRef="nessunaIntegrazione" targetRef="fineArchiviata" />
+    <sequenceFlow id="f8" sourceRef="emailNonAmmissibile" targetRef="fineNonAmmissibile" />
+    <sequenceFlow id="fConcesso" name="Concesso" sourceRef="esitoGw" targetRef="emailConcesso">
+      <conditionExpression xsi:type="tFormalExpression">${esito == 'Concesso'}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="fNegato" name="Negato" sourceRef="esitoGw" targetRef="emailNegato" />
+    <sequenceFlow id="f9" sourceRef="emailConcesso" targetRef="liquidazione" />
+    <sequenceFlow id="f10" sourceRef="liquidazione" targetRef="fineLiquidato" />
+    <sequenceFlow id="f11" sourceRef="emailNegato" targetRef="fineNegato" />
+    <sequenceFlow id="f12" sourceRef="termine60" targetRef="avvisoTermine" />
+    <sequenceFlow id="f13" sourceRef="avvisoTermine" targetRef="fineTermine" />
+    <sequenceFlow id="f14" sourceRef="rinuncia" targetRef="fineRinuncia" />
+  </process>
+  <bpmndi:BPMNDiagram id="Diagram_contributiEventi">
+    <bpmndi:BPMNPlane id="Plane_contributiEventi" bpmnElement="contributiEventi">
+      <bpmndi:BPMNShape id="s_istruttoria" bpmnElement="istruttoria" isExpanded="true">
+        <dc:Bounds x="696" y="80" width="1022" height="626" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_integrazioni" bpmnElement="integrazioni" isExpanded="true">
+        <dc:Bounds x="1958" y="283" width="562" height="220" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_inizio" bpmnElement="inizio">
+        <dc:Bounds x="80" y="375" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_protocolla" bpmnElement="protocolla">
+        <dc:Bounds x="186" y="353" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_erroreProtocollo" bpmnElement="erroreProtocollo">
+        <dc:Bounds x="240" y="415" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_protocolloManuale" bpmnElement="protocolloManuale">
+        <dc:Bounds x="356" y="776" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_conferma" bpmnElement="conferma">
+        <dc:Bounds x="526" y="353" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_termine60" bpmnElement="termine60">
+        <dc:Bounds x="726" y="688" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_rinuncia" bpmnElement="rinuncia">
+        <dc:Bounds x="786" y="688" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fineRinuncia" bpmnElement="fineRinuncia">
+        <dc:Bounds x="1820" y="948" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_avvisoTermine" bpmnElement="avvisoTermine">
+        <dc:Bounds x="1788" y="776" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fineTermine" bpmnElement="fineTermine">
+        <dc:Bounds x="2221" y="798" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_dopoIstruttoria" bpmnElement="dopoIstruttoria" isMarkerVisible="true">
+        <dc:Bounds x="1813" y="368" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_nessunaIntegrazione" bpmnElement="nessunaIntegrazione">
+        <dc:Bounds x="1988" y="485" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fineArchiviata" bpmnElement="fineArchiviata">
+        <dc:Bounds x="2622" y="798" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_emailNonAmmissibile" bpmnElement="emailNonAmmissibile">
+        <dc:Bounds x="2189" y="926" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fineNonAmmissibile" bpmnElement="fineNonAmmissibile">
+        <dc:Bounds x="2622" y="948" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_esitoGw" bpmnElement="esitoGw" isMarkerVisible="true">
+        <dc:Bounds x="2214" y="1091" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_emailConcesso" bpmnElement="emailConcesso">
+        <dc:Bounds x="2590" y="1076" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_liquidazione" bpmnElement="liquidazione">
+        <dc:Bounds x="2760" y="1076" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fineLiquidato" bpmnElement="fineLiquidato">
+        <dc:Bounds x="2930" y="1098" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_emailNegato" bpmnElement="emailNegato">
+        <dc:Bounds x="2590" y="1226" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fineNegato" bpmnElement="fineNegato">
+        <dc:Bounds x="2792" y="1248" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_iInizio" bpmnElement="iInizio">
+        <dc:Bounds x="736" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_verifica" bpmnElement="verifica">
+        <dc:Bounds x="842" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_sollecitoVerifica" bpmnElement="sollecitoVerifica">
+        <dc:Bounds x="896" y="182" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_notificaSollecito" bpmnElement="notificaSollecito">
+        <dc:Bounds x="1012" y="270" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_iFineSollecito" bpmnElement="iFineSollecito">
+        <dc:Bounds x="1189" y="292" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_esitoVerificaGw" bpmnElement="esitoVerificaGw" isMarkerVisible="true">
+        <dc:Bounds x="1037" y="135" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_iFineIntegrazione" bpmnElement="iFineIntegrazione">
+        <dc:Bounds x="1189" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_iFineNonAmmissibile" bpmnElement="iFineNonAmmissibile">
+        <dc:Bounds x="1189" y="420" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_sogliaGw" bpmnElement="sogliaGw" isMarkerVisible="true">
+        <dc:Bounds x="1182" y="541" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_parere" bpmnElement="parere">
+        <dc:Bounds x="1302" y="526" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_decisione" bpmnElement="decisione">
+        <dc:Bounds x="1472" y="526" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_iFineDecisione" bpmnElement="iFineDecisione">
+        <dc:Bounds x="1642" y="548" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_rInizio" bpmnElement="rInizio">
+        <dc:Bounds x="1998" y="345" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_emailIntegrazioni" bpmnElement="emailIntegrazioni">
+        <dc:Bounds x="2104" y="323" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_registraIntegrazioni" bpmnElement="registraIntegrazioni">
+        <dc:Bounds x="2274" y="323" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_rFine" bpmnElement="rFine">
+        <dc:Bounds x="2444" y="345" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="e_i1" bpmnElement="i1">
+        <di:waypoint x="772" y="160" />
+        <di:waypoint x="842" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_i2" bpmnElement="i2">
+        <di:waypoint x="942" y="160" />
+        <di:waypoint x="1037" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_i3" bpmnElement="i3">
+        <di:waypoint x="914" y="218" />
+        <di:waypoint x="914" y="235" />
+        <di:waypoint x="977" y="235" />
+        <di:waypoint x="977" y="310" />
+        <di:waypoint x="1012" y="310" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_i4" bpmnElement="i4">
+        <di:waypoint x="1112" y="310" />
+        <di:waypoint x="1189" y="310" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_iIntegrazione" bpmnElement="iIntegrazione">
+        <di:waypoint x="1087" y="160" />
+        <di:waypoint x="1189" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_iNonAmmissibile" bpmnElement="iNonAmmissibile">
+        <di:waypoint x="1087" y="160" />
+        <di:waypoint x="1135" y="160" />
+        <di:waypoint x="1135" y="438" />
+        <di:waypoint x="1189" y="438" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_iAmmissibile" bpmnElement="iAmmissibile">
+        <di:waypoint x="1087" y="160" />
+        <di:waypoint x="1141" y="160" />
+        <di:waypoint x="1141" y="566" />
+        <di:waypoint x="1182" y="566" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_iSopraSoglia" bpmnElement="iSopraSoglia">
+        <di:waypoint x="1232" y="566" />
+        <di:waypoint x="1302" y="566" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_iSottoSoglia" bpmnElement="iSottoSoglia">
+        <di:waypoint x="1232" y="566" />
+        <di:waypoint x="1273" y="566" />
+        <di:waypoint x="1273" y="647" />
+        <di:waypoint x="1443" y="647" />
+        <di:waypoint x="1443" y="566" />
+        <di:waypoint x="1472" y="566" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_i5" bpmnElement="i5">
+        <di:waypoint x="1402" y="566" />
+        <di:waypoint x="1472" y="566" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_i7" bpmnElement="i7">
+        <di:waypoint x="1572" y="566" />
+        <di:waypoint x="1642" y="566" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_r1" bpmnElement="r1">
+        <di:waypoint x="2034" y="363" />
+        <di:waypoint x="2104" y="363" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_r2" bpmnElement="r2">
+        <di:waypoint x="2204" y="363" />
+        <di:waypoint x="2274" y="363" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_r3" bpmnElement="r3">
+        <di:waypoint x="2374" y="363" />
+        <di:waypoint x="2444" y="363" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f1" bpmnElement="f1">
+        <di:waypoint x="116" y="393" />
+        <di:waypoint x="186" y="393" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f2" bpmnElement="f2">
+        <di:waypoint x="286" y="393" />
+        <di:waypoint x="526" y="393" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f3" bpmnElement="f3">
+        <di:waypoint x="258" y="451" />
+        <di:waypoint x="258" y="741" />
+        <di:waypoint x="321" y="741" />
+        <di:waypoint x="321" y="816" />
+        <di:waypoint x="356" y="816" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f4" bpmnElement="f4">
+        <di:waypoint x="456" y="816" />
+        <di:waypoint x="497" y="816" />
+        <di:waypoint x="497" y="393" />
+        <di:waypoint x="526" y="393" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f5" bpmnElement="f5">
+        <di:waypoint x="626" y="393" />
+        <di:waypoint x="696" y="393" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f6" bpmnElement="f6">
+        <di:waypoint x="1718" y="393" />
+        <di:waypoint x="1813" y="393" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fIntegrazioni" bpmnElement="fIntegrazioni">
+        <di:waypoint x="1863" y="393" />
+        <di:waypoint x="1958" y="393" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fNonAmmissibile" bpmnElement="fNonAmmissibile">
+        <di:waypoint x="1863" y="393" />
+        <di:waypoint x="1923" y="393" />
+        <di:waypoint x="1923" y="966" />
+        <di:waypoint x="2189" y="966" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fDecisa" bpmnElement="fDecisa">
+        <di:waypoint x="1863" y="393" />
+        <di:waypoint x="1929" y="393" />
+        <di:waypoint x="1929" y="1116" />
+        <di:waypoint x="2214" y="1116" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fRiesame" bpmnElement="fRiesame">
+        <di:waypoint x="2520" y="393" />
+        <di:waypoint x="2567" y="393" />
+        <di:waypoint x="2567" y="1343" />
+        <di:waypoint x="673" y="1343" />
+        <di:waypoint x="673" y="393" />
+        <di:waypoint x="696" y="393" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f7" bpmnElement="f7">
+        <di:waypoint x="2006" y="521" />
+        <di:waypoint x="2006" y="729" />
+        <di:waypoint x="2543" y="729" />
+        <di:waypoint x="2543" y="816" />
+        <di:waypoint x="2622" y="816" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f8" bpmnElement="f8">
+        <di:waypoint x="2289" y="966" />
+        <di:waypoint x="2622" y="966" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fConcesso" bpmnElement="fConcesso">
+        <di:waypoint x="2264" y="1116" />
+        <di:waypoint x="2590" y="1116" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fNegato" bpmnElement="fNegato">
+        <di:waypoint x="2264" y="1116" />
+        <di:waypoint x="2561" y="1116" />
+        <di:waypoint x="2561" y="1266" />
+        <di:waypoint x="2590" y="1266" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f9" bpmnElement="f9">
+        <di:waypoint x="2690" y="1116" />
+        <di:waypoint x="2760" y="1116" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f10" bpmnElement="f10">
+        <di:waypoint x="2860" y="1116" />
+        <di:waypoint x="2930" y="1116" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f11" bpmnElement="f11">
+        <di:waypoint x="2690" y="1266" />
+        <di:waypoint x="2792" y="1266" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f12" bpmnElement="f12">
+        <di:waypoint x="744" y="724" />
+        <di:waypoint x="744" y="741" />
+        <di:waypoint x="1753" y="741" />
+        <di:waypoint x="1753" y="816" />
+        <di:waypoint x="1788" y="816" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f13" bpmnElement="f13">
+        <di:waypoint x="1888" y="816" />
+        <di:waypoint x="2221" y="816" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f14" bpmnElement="f14">
+        <di:waypoint x="804" y="724" />
+        <di:waypoint x="804" y="753" />
+        <di:waypoint x="1765" y="753" />
+        <di:waypoint x="1765" y="966" />
+        <di:waypoint x="1820" y="966" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

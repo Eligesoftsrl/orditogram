@@ -1,0 +1,22 @@
+{
+  "title": "Verifica la domanda",
+  "description": "Controlla che l'associazione e l'evento rispettino il regolamento e che la domanda sia completa.",
+  "fields": [
+    { "type": "sezione", "label": "Domanda" },
+    { "name": "associazione_titolo", "label": "Associazione", "type": "text", "readonly": true },
+    { "name": "numeroProtocollo", "label": "Protocollo", "type": "text", "readonly": true },
+    { "name": "titoloEvento", "label": "Evento", "type": "text", "readonly": true },
+    { "name": "dataEvento", "label": "Data", "type": "date", "readonly": true },
+    { "name": "descrizione", "label": "Descrizione", "type": "textarea", "readonly": true },
+    { "name": "importoRichiesto", "label": "Contributo richiesto (€)", "type": "number", "readonly": true },
+    { "name": "noteIntegrazioni", "label": "Integrazioni ricevute", "type": "textarea", "readonly": true },
+    { "type": "sezione", "label": "Esito della verifica" },
+    { "name": "esitoVerifica", "label": "Esito", "type": "select", "required": true, "precompila": false,
+      "options": ["Ammissibile", "Serve integrazione", "Non ammissibile"] },
+    { "name": "noteVerifica", "label": "Cosa manca o perché non è ammissibile", "type": "textarea", "required": true,
+      "precompila": false, "visibileSe": { "campo": "esitoVerifica", "valori": ["Serve integrazione", "Non ammissibile"] },
+      "help": "Questo testo va nell'email all'associazione." }
+  ],
+  "documenti": "modifica",
+  "submitLabel": "Conferma la verifica"
+}
