@@ -718,6 +718,11 @@ arrotondate, gli stati hanno sempre icona e parola, il focus da tastiera è gial
   lavora, il percorso); *Apri la pratica* porta alla pagina completa. Ctrl/Cmd + clic apre subito la pagina.
 - **Specchietto del flusso**: in cima alla pratica il percorso si riempie fino al passo in cui si trova, con
   chi ce l'ha in carico, la scadenza e la durata di ogni passo.
+- **Scelta dell'esito**: se le opzioni di un campo a scelta (fino a 4) sono esiti, compaiono come tessere con
+  icona e colore: verde per accolta o approvata, arancione per integrazioni e sospensioni, rosso per respinta o
+  diniego, blu per le altre. Il colore accompagna sempre la parola.
+- **Anteprima dei documenti**: *Vedi* apre il documento nel pannello laterale (PDF, immagini, testo; per le buste
+  `.p7m` il contenuto estratto), con *Scarica* e *Apri in una nuova scheda*.
 - **Movimento**: tessere ed elenchi entrano in sequenza, i pannelli scorrono, il passo attuale pulsa. Se nel
   sistema è attivo "riduci il movimento" tutto appare fermo.
 

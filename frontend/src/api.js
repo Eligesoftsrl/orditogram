@@ -75,6 +75,20 @@ export async function scarica(url, { apri = false } = {}) {
   }
 }
 
+/** Legge un file protetto per mostrarlo nella pagina: indirizzo temporaneo, nome e tipo. Chi lo usa chiama revoca(). */
+export async function leggiFile(url) {
+  const res = await call('GET', url, undefined, 'blob')
+  const blob = await res.blob()
+  const href = URL.createObjectURL(blob)
+  return {
+    href,
+    nome: nomeDaHeader(res.headers.get('Content-Disposition')) || 'documento',
+    tipo: blob.type || res.headers.get('Content-Type') || '',
+    byte: blob.size,
+    revoca: () => URL.revokeObjectURL(href)
+  }
+}
+
 function nomeDaHeader(h) {
   if (!h) return null
   const utf = /filename\*=UTF-8''([^;]+)/i.exec(h)

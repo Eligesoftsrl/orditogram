@@ -1,7 +1,8 @@
 import { useContext, useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { api } from '../api.js'
-import { ExternalLink, FileUp, Paperclip, Plus, X } from 'lucide-react'
+import { CircleCheck, CircleDot, CircleX, Clock, ExternalLink, FileUp, Paperclip, Plus, X } from 'lucide-react'
+import { sonoEsiti, tonoEsito } from '../lib/esiti.js'
 import { cx, dimensione, giorno } from '../lib/format.js'
 import { Button, Dialogo, Errore } from './ui.jsx'
 import { campiNascosti, eSezione, raggruppa, senzaNascosti } from '../lib/formCondizioni.js'
@@ -200,6 +201,10 @@ function Campo({ f, value, onChange, disabled, errore, nomeIniziale, anteprima }
         </span>
       </label>
     )
+  }
+
+  if (f.type === 'select' && (f.options || []).length <= 4 && sonoEsiti(f.options)) {
+    return <SceltaEsito f={f} value={value} onChange={onChange} disabled={disabled} messaggio={messaggio} aiuto={aiuto} />
   }
 
   if (f.type === 'select' && (f.options || []).length <= 4) {
@@ -449,5 +454,44 @@ function Allegati({ files, setFiles, obbligatori, disabled }) {
         </ul>
       )}
     </div>
+  )
+}
+
+const TONI_ESITO = {
+  positivo: { icona: CircleCheck, scelto: 'border-ok-600 bg-ok-50', segno: 'bg-ok-600 text-white', riposo: 'text-ok-700' },
+  negativo: { icona: CircleX, scelto: 'border-mattone-600 bg-mattone-50', segno: 'bg-mattone-600 text-white', riposo: 'text-mattone-700' },
+  attesa:   { icona: Clock, scelto: 'border-zafferano-500 bg-zafferano-50', segno: 'bg-zafferano-500 text-pino-950', riposo: 'text-zafferano-800' },
+  neutro:   { icona: CircleDot, scelto: 'border-verde-600 bg-verde-50', segno: 'bg-verde-600 text-white', riposo: 'text-verde-700' }
+}
+
+/** Scelta dell'esito: tessere grandi con icona e parola, la scelta fatta si vede da lontano (bordo, fondo, segno). */
+function SceltaEsito({ f, value, onChange, disabled, messaggio, aiuto }) {
+  return (
+    <fieldset className="sm:col-span-2">
+      <legend className="etichetta">{f.label || f.name}{f.required && <span className="text-mattone-600"> *</span>}</legend>
+      <div className="grid gap-2.5 in-sequenza sm:grid-cols-[repeat(auto-fit,minmax(170px,1fr))]">
+        {f.options.map(o => {
+          const t = TONI_ESITO[tonoEsito(o)]
+          const Icona = t.icona
+          const scelto = value === o
+          return (
+            <label key={o} className={cx('group relative flex cursor-pointer items-center gap-3 rounded-blocco border-2 bg-white px-4 py-3.5 transition-[border-color,background-color] duration-200 ease-[var(--ease-morbido)]',
+              'has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[#FFB000]',
+              scelto ? t.scelto : 'border-linea hover:border-pino-200 hover:bg-carta',
+              disabled && 'pointer-events-none opacity-60')}>
+              <input type="radio" name={f.name} value={o} checked={scelto} required={f.required} disabled={disabled}
+                     onChange={() => onChange(o)} className="sr-only" />
+              <span className={cx('inline-flex size-9 shrink-0 items-center justify-center rounded-full transition-colors duration-200',
+                scelto ? t.segno : cx('bg-carta', t.riposo))}>
+                <Icona className="size-5" aria-hidden="true" />
+              </span>
+              <span className="text-[15px] font-semibold leading-snug text-pino-900">{o}</span>
+            </label>
+          )
+        })}
+      </div>
+      {messaggio}
+      {aiuto}
+    </fieldset>
   )
 }

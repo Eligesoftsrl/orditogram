@@ -3,6 +3,8 @@ import { ChevronDown, Download, Eye, EyeOff, FilePlus, FileText, FileUp, Layers,
 import { api, scarica } from '../api.js'
 import { cx, dimensione, quando } from '../lib/format.js'
 import { Badge, Button, Caricamento, Errore, Vuoto, useToast } from './ui.jsx'
+import AnteprimaDocumento from './AnteprimaDocumento.jsx'
+import { siPuoVedere } from '../lib/anteprima.js'
 
 const ESITO = {
   OK:         { tono: 'verde',     icona: ShieldCheck, testo: 'Firma valida' },
@@ -84,7 +86,7 @@ function Documento({ d, modificabile, condivisibile, onCaricato }) {
       </div>
 
       <div className="flex flex-wrap items-center gap-2 border-t border-linea px-4 py-2.5">
-        <AzioniVersione v={corrente} toast={toast} />
+        <AzioniVersione v={corrente} nome={d.nome} toast={toast} />
         {d.versioni.length > 1 && (
           <Button misura="sm" variante="fantasma" icona={Layers} onClick={() => setAperto(!aperto)} aria-expanded={aperto}>
             {aperto ? 'Nascondi' : `Versioni (${d.versioni.length})`}
@@ -134,7 +136,7 @@ function Documento({ d, modificabile, condivisibile, onCaricato }) {
                 <span className="numeri inline-flex h-6 min-w-8 items-center justify-center rounded-md bg-carta px-1.5 text-[13px] font-semibold text-pino-800">v{v.numero}</span>
                 <span className="text-[15px] text-pino-900">{v.filename}</span>
                 <FirmaBadge esito={v.firmaEsito} />
-                <span className="ml-auto"><AzioniVersione v={v} toast={toast} /></span>
+                <span className="ml-auto"><AzioniVersione v={v} nome={d.nome} toast={toast} /></span>
               </div>
               <p className="mt-1 text-[13px] text-grafite">
                 {v.caricatoDa}, {quando(v.caricatoIl)}{v.fase && <> in {v.fase}</>}
@@ -149,23 +151,27 @@ function Documento({ d, modificabile, condivisibile, onCaricato }) {
   )
 }
 
-function AzioniVersione({ v, toast }) {
-  const pdf = v.filename.toLowerCase().endsWith('.pdf')
+function AzioniVersione({ v, nome, toast }) {
+  const [vedi, setVedi] = useState(false)
   const cades = v.firmaTipo === 'CADES' && v.firma?.contenutoNome
-  const esegui = (url, apri) => scarica(url, { apri }).catch(e => toast.errore(e.message))
+  // le buste firmate si leggono sul contenuto estratto, gli altri file così come sono
+  const visibile = cades ? siPuoVedere(v.firma.contenutoNome) : siPuoVedere(v.filename)
   const m = 'sm'
   return (
     <div className="flex flex-wrap gap-1.5">
-      {pdf && <Button misura={m} variante="fantasma" icona={Eye} onClick={() => esegui(api.urlFile(v.id), true)}>Apri</Button>}
-      {cades && (
-        <Button misura={m} variante="fantasma" icona={Eye} onClick={() => esegui(api.urlContenuto(v.id), true)}
-                title={`Apri ${v.firma.contenutoNome} estratto dalla busta firmata`}>
-          Apri
+      {visibile && (
+        <Button misura={m} variante="fantasma" icona={Eye} onClick={() => setVedi(true)}
+                title={cades ? `Vedi ${v.firma.contenutoNome} estratto dalla busta firmata` : `Vedi ${v.filename}`}>
+          Vedi
         </Button>
       )}
-      <Button misura={m} variante="fantasma" icona={Download} onClick={() => esegui(api.urlFile(v.id), false)}>
+      <Button misura={m} variante="fantasma" icona={Download} onClick={() => scarica(api.urlFile(v.id)).catch(e => toast.errore(e.message))}>
         {cades ? 'Scarica .p7m' : 'Scarica'}
       </Button>
+      {visibile && (
+        <AnteprimaDocumento aperto={vedi} onClose={() => setVedi(false)} titolo={nome}
+                            url={cades ? api.urlContenuto(v.id) : api.urlFile(v.id)} urlScarica={api.urlFile(v.id)} />
+      )}
     </div>
   )
 }
