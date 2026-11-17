@@ -1,53 +1,72 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------- token
-   Pino: identità e testo · Verde: azioni · Zafferano: "tocca a te" / step corrente
-   Carta: sfondo · Linea: bordi · Mattone: errori                                   */
+   Linguaggio di Designers Italia (AgID, Bootstrap Italia 2) con superfici morbide.
+   I nomi storici restano, i valori sono quelli AgID:
+   pino      → blu notte: testo, identità          verde  → Blu Italia: azioni, link, selezione
+   zafferano → attenzione: in scadenza, avvisi        mattone → errore
+   ok        → successo: conclusa, firma valida      carta/linea/inchiostro/grafite/nebbia → neutri
+   Ogni coppia testo/sfondo usata supera 4,5:1 (WCAG 2.1 AA). Regole in CLAUDE.md, sezione "Interfaccia". */
 @theme {
-  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Bricolage Grotesque Variable", "Bricolage Grotesque", "IBM Plex Sans", ui-sans-serif, sans-serif;
+  --font-sans: "Titillium Web", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Titillium Web", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "Roboto Mono", ui-monospace, Menlo, monospace;
+  /* Titillium non ha il 500: "medium" usa il 600 */
+  --font-weight-medium: 600;
 
-  --color-pino-950: #0A201F;
-  --color-pino-900: #0F2E2C;
-  --color-pino-800: #163F3C;
-  --color-pino-700: #1E524E;
-  --color-pino-600: #2D6A64;
-  --color-pino-300: #8FB5AE;
-  --color-pino-200: #BCD3CE;
+  --color-pino-950: #0B1E33;
+  --color-pino-900: #17324D;
+  --color-pino-800: #1F3F60;
+  --color-pino-700: #2A4F75;
+  --color-pino-600: #3F6489;
+  --color-pino-400: #6E87A0;
+  --color-pino-300: #94A7BA;
+  --color-pino-200: #C3D0DC;
 
-  --color-verde-50: #E8F5F1;
-  --color-verde-100: #CFEAE2;
-  --color-verde-400: #5FB8A3;
-  --color-verde-500: #1F9A80;
-  --color-verde-600: #0E7C66;
-  --color-verde-700: #0A6352;
+  --color-verde-50: #E5F0FA;
+  --color-verde-100: #CCE0F5;
+  --color-verde-400: #4D94DB;
+  --color-verde-500: #1A7AD6;
+  --color-verde-600: #0066CC;
+  --color-verde-700: #004D99;
 
-  --color-zafferano-50: #FEF6E7;
-  --color-zafferano-100: #FCE9C6;
-  --color-zafferano-400: #F2A93B;
-  --color-zafferano-500: #E0921C;
-  --color-zafferano-800: #7A4A06;
+  --color-ok-50: #E1F2EC;
+  --color-ok-100: #C2E5D8;
+  --color-ok-600: #008055;
+  --color-ok-700: #005C3D;
 
-  --color-mattone-50: #FCEDEA;
-  --color-mattone-100: #F7D5CE;
-  --color-mattone-600: #C2412D;
-  --color-mattone-700: #9E3322;
+  --color-zafferano-50: #FDF1E1;
+  --color-zafferano-100: #F9DFBA;
+  --color-zafferano-400: #F0A040;
+  --color-zafferano-500: #CC7A00;
+  --color-zafferano-800: #7A4900;
 
-  --color-carta: #F4F6F5;
-  --color-linea: #DCE3E0;
-  --color-inchiostro: #0F2E2C;
-  --color-grafite: #576865;
-  --color-nebbia: #8A9A97;
+  --color-mattone-50: #FBE9EC;
+  --color-mattone-100: #F5CDD4;
+  --color-mattone-600: #CC334D;
+  --color-mattone-700: #A3213A;
 
-  --radius-pannello: 14px;
-  --radius-campo: 9px;
+  --color-carta: #F2F5F8;
+  --color-linea: #D4DCE4;
+  --color-inchiostro: #17324D;
+  --color-grafite: #5D7083;
+  --color-nebbia: #8496A9;
+  --color-focus: #FFB000;
 
-  --shadow-pannello: 0 1px 0 rgb(15 46 44 / 0.04), 0 1px 2px rgb(15 46 44 / 0.06);
-  --shadow-sollevato: 0 12px 32px -12px rgb(15 46 44 / 0.28), 0 2px 6px rgb(15 46 44 / 0.08);
+  --radius-pannello: 18px;
+  --radius-blocco: 12px;
+  --radius-campo: 10px;
 
+  --shadow-pannello: 0 1px 2px rgb(0 40 80 / 0.05);
+  --shadow-sollevato: 0 20px 48px -16px rgb(0 30 60 / 0.38), 0 2px 6px rgb(0 30 60 / 0.06);
+
+  --ease-morbido: cubic-bezier(.2, .8, .2, 1);
   --animate-treno: treno 7s cubic-bezier(.65,0,.35,1) infinite;
   --animate-respiro: respiro 2.4s ease-in-out infinite;
-  --animate-entra: entra .18s ease-out;
+  --animate-entra: entra .2s var(--ease-morbido);
+  --animate-sale: sale .32s var(--ease-morbido) both;
+  --animate-cassetto: cassetto .3s var(--ease-morbido);
+  --animate-velo: velo .2s ease-out;
 }
 
 @keyframes treno {
@@ -58,16 +77,32 @@
   80%, 100% { left: 100%; }
 }
 @keyframes respiro {
-  0%, 100% { box-shadow: 0 0 0 0 rgb(242 169 59 / 0.55); }
-  50%      { box-shadow: 0 0 0 6px rgb(242 169 59 / 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgb(0 102 204 / 0.45); }
+  50%      { box-shadow: 0 0 0 7px rgb(0 102 204 / 0); }
+}
+@keyframes sale {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes cassetto {
+  from { transform: translateX(104%); }
+  to   { transform: none; }
+}
+@keyframes cassetto-sinistra {
+  from { transform: translateX(-104%); }
+  to   { transform: none; }
+}
+@keyframes velo {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 @keyframes entra {
-  from { opacity: 0; transform: translateY(4px) scale(.99); }
+  from { opacity: 0; transform: translateY(6px) scale(.98); }
   to   { opacity: 1; transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; }
+  *, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; }
 }
 
 /* ---------------------------------------------------------------- base */
@@ -75,8 +110,9 @@
   html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
   body { @apply bg-carta text-inchiostro font-sans; font-feature-settings: "tnum" 0; }
   h1, h2, h3 { @apply font-display tracking-tight; }
-  ::selection { background: var(--color-zafferano-100); }
-  :focus-visible { outline: 2px solid var(--color-verde-500); outline-offset: 2px; border-radius: 6px; }
+  ::selection { background: var(--color-verde-100); }
+  /* focus AgID: giallo spesso, visibile su ogni sfondo */
+  :focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; border-radius: 6px; }
 }
 
 @layer components {
@@ -88,13 +124,18 @@
   }
   .etichetta { @apply mb-1.5 block text-sm font-medium text-pino-800; }
   .numeri { font-variant-numeric: tabular-nums; }
+  /* entrata in sequenza: figli con style="--i: n" (fino a 8, poi tutti insieme) */
+  .in-sequenza > * { animation: var(--animate-sale); animation-delay: calc(min(var(--i, 0), 8) * 50ms); }
+  .in-sequenza > :nth-child(1) { --i: 0; } .in-sequenza > :nth-child(2) { --i: 1; } .in-sequenza > :nth-child(3) { --i: 2; }
+  .in-sequenza > :nth-child(4) { --i: 3; } .in-sequenza > :nth-child(5) { --i: 4; } .in-sequenza > :nth-child(6) { --i: 5; }
+  .in-sequenza > :nth-child(7) { --i: 6; } .in-sequenza > :nth-child(n+8) { --i: 7; }
 }
 
 /* ---------------------------------------------------------------- bpmn-js */
 .bpmn-host .djs-container { font-family: var(--font-sans); }
 .bpmn-host .bjs-powered-by { opacity: .35; transform: scale(.8); }
 .bpmn-corrente:not(.djs-connection) .djs-visual > :nth-child(1) {
-  stroke: var(--color-zafferano-500) !important; stroke-width: 3px !important; fill: var(--color-zafferano-50) !important;
+  stroke: var(--color-verde-700) !important; stroke-width: 3.5px !important; fill: var(--color-verde-100) !important;
 }
 .bpmn-fatto:not(.djs-connection) .djs-visual > :nth-child(1) {
   stroke: var(--color-verde-600) !important; fill: var(--color-verde-50) !important;

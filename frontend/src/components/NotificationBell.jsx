@@ -5,7 +5,7 @@ import { api } from '../api.js'
 import { cx, fa } from '../lib/format.js'
 
 /** Campanella: notifiche dell'utente, aggiornate ogni 30 secondi. */
-export default function NotificationBell() {
+export default function NotificationBell({ suBlu = false }) {
   const [dati, setDati] = useState({ nonLette: 0, notifiche: [] })
   const [aperto, setAperto] = useState(false)
   const box = useRef(null)
@@ -39,7 +39,7 @@ export default function NotificationBell() {
   return (
     <div ref={box} className="relative">
       <button onClick={() => setAperto(!aperto)} aria-label={`Notifiche, ${dati.nonLette} da leggere`} aria-expanded={aperto}
-              className="relative inline-flex size-10 items-center justify-center rounded-campo text-pino-800 hover:bg-pino-900/5">
+              className={cx('relative inline-flex size-10 items-center justify-center rounded-full transition-colors', suBlu ? 'text-white hover:bg-white/15' : 'text-pino-800 hover:bg-pino-900/5')}>
         <Bell className="size-5" />
         {dati.nonLette > 0 && (
           <span className="numeri absolute right-1 top-1 inline-flex min-w-[18px] items-center justify-center rounded-full bg-zafferano-400 px-1 text-[11px] font-bold leading-[18px] text-pino-950">
@@ -51,7 +51,7 @@ export default function NotificationBell() {
       {aperto && (
         <div className="absolute right-0 z-40 mt-2 w-[min(92vw,380px)] animate-entra overflow-hidden rounded-pannello border border-linea bg-white shadow-sollevato">
           <div className="flex items-center justify-between border-b border-linea px-4 py-3">
-            <p className="font-display text-[17px] font-semibold">Notifiche</p>
+            <p className="text-lg font-semibold">Notifiche</p>
             {dati.nonLette > 0 && (
               <button onClick={tutteLette} className="inline-flex items-center gap-1 text-sm font-medium text-verde-700 hover:underline">
                 <CheckCheck className="size-4" /> Segna tutte come lette

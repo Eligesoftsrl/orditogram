@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, FolderOpen, Search } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { ArrowRight, ChevronLeft, ChevronRight, FolderOpen, Search } from 'lucide-react'
 import { api } from '../api.js'
 import { dataOraCompleta, fa, quando } from '../lib/format.js'
 import IterRail from '../components/IterRail.jsx'
-import { Badge, Caricamento, Errore, Schede, Vuoto } from '../components/ui.jsx'
+import { Badge, Button, Caricamento, Cassetto, Errore, Schede, Vuoto } from '../components/ui.jsx'
 import { BadgeScadenza } from '../components/Scadenza.jsx'
 import Esporta from '../components/Esporta.jsx'
 
@@ -34,6 +34,9 @@ export default function Pratiche() {
   const [tipologie, setTipologie] = useState([])
   const [errore, setErrore] = useState('')
   const lista = risultato?.righe || null
+  // anteprima nel pannello laterale; Ctrl/Cmd + clic o clic centrale aprono la pagina come prima
+  const [anteprima, setAnteprima] = useState(null)
+  const navigate = useNavigate()
 
   useEffect(() => { api.tipologie().then(setTipologie).catch(() => {}) }, [])
   // un filtro nuovo riparte dalla prima pagina
@@ -99,11 +102,12 @@ export default function Pratiche() {
             </Vuoto>
           )}
           {lista && lista.length > 0 && (
-            <ul className="divide-y divide-linea">
+            <ul className="in-sequenza divide-y divide-linea">
               {lista.map(p => (
                 <li key={p.id}>
-                  <Link to={`/pratiche/${p.id}`}
-                        className="grid gap-x-6 gap-y-2 px-5 py-4 hover:bg-carta/70 md:grid-cols-[minmax(0,2fr)_auto_minmax(0,1.4fr)_auto] md:items-center">
+                  <Link to={`/pratiche/${p.id}`} aria-haspopup="dialog"
+                        onClick={(e) => { if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return; e.preventDefault(); setAnteprima(p) }}
+                        className="grid gap-x-6 gap-y-2 px-5 py-4 transition-colors hover:bg-verde-50/60 md:grid-cols-[minmax(0,2fr)_auto_minmax(0,1.4fr)_auto] md:items-center">
                     <div className="min-w-0">
                       <p className="truncate font-medium text-pino-900">{p.titolo}</p>
                       <p className="mt-0.5 truncate text-[13px] text-grafite">{p.processo}{p.avviataDa ? `, avviata da ${p.avviataDa}` : ''}</p>
@@ -126,7 +130,7 @@ export default function Pratiche() {
                     <div className="flex items-center gap-3 md:justify-end">
                       {p.stato === 'conclusa' ? <Badge tono="pino">Conclusa</Badge>
                         : p.prossimaScadenza ? <BadgeScadenza s={p.prossimaScadenza} conNome={false} />
-                        : <Badge tono="zafferano">In corso</Badge>}
+                        : <Badge tono="blu">In corso</Badge>}
                       <span className="whitespace-nowrap text-[13px] text-grafite">{fa(p.inizio)}</span>
                     </div>
                   </Link>
@@ -158,6 +162,62 @@ export default function Pratiche() {
           </nav>
         )}
       </div>
+
+      <Cassetto aperto={!!anteprima} onClose={() => setAnteprima(null)} icona={FolderOpen}
+                titolo={anteprima?.titolo || ''} sottotitolo={anteprima?.processo}
+                piede={<>
+                  <Button onClick={() => setAnteprima(null)}>Chiudi</Button>
+                  <Button variante="primario" icona={ArrowRight} onClick={() => navigate(`/pratiche/${anteprima.id}`)}>Apri la pratica</Button>
+                </>}>
+        {anteprima && <AnteprimaPratica p={anteprima} />}
+      </Cassetto>
+    </div>
+  )
+}
+
+/** Il riassunto della pratica nel pannello laterale: stato, a che punto è, chi ci lavora, il percorso. */
+function AnteprimaPratica({ p }) {
+  const conclusa = p.stato === 'conclusa'
+  return (
+    <div className="space-y-5">
+      <div className="space-y-3 rounded-blocco bg-carta p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          {conclusa ? <Badge tono="pino">Conclusa</Badge> : <Badge tono="blu">In corso</Badge>}
+          {!conclusa && p.prossimaScadenza && <BadgeScadenza s={p.prossimaScadenza} />}
+        </div>
+        <dl className="grid grid-cols-[110px_minmax(0,1fr)] gap-x-3 gap-y-2 text-[15px]">
+          {!conclusa && <>
+            <dt className="text-grafite">Adesso</dt>
+            <dd className="font-semibold">{p.stepCorrenti.map(s => s.nome).join(', ') || 'In attesa'}</dd>
+            <dt className="text-grafite">In carico a</dt>
+            <dd className="font-semibold">{p.stepCorrenti.map(s => s.assegnatario || 'disponibile per il gruppo').join(', ') || '—'}</dd>
+          </>}
+          {p.avviataDa && <><dt className="text-grafite">Avviata da</dt><dd className="font-semibold">{p.avviataDa}</dd></>}
+          <dt className="text-grafite">Avvio</dt><dd className="font-semibold">{dataOraCompleta(p.inizio)}</dd>
+          {conclusa && <><dt className="text-grafite">Conclusione</dt><dd className="font-semibold">{dataOraCompleta(p.fine)}</dd></>}
+        </dl>
+      </div>
+      {p.percorso?.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-[.06em] text-grafite">Il percorso</p>
+          <ol className="in-sequenza space-y-0">
+            {p.percorso.map((f, i) => (
+              <li key={i} className="relative grid grid-cols-[24px_minmax(0,1fr)] gap-3 pb-4 last:pb-0">
+                {i < p.percorso.length - 1 && <span className="absolute left-[11px] top-6 bottom-0 w-0.5 bg-linea" aria-hidden="true" />}
+                <span className={f.stato === 'corrente'
+                  ? 'mt-0.5 size-6 animate-respiro rounded-full border-[3px] border-verde-600 bg-white'
+                  : 'mt-0.5 size-6 rounded-full bg-verde-600'} aria-hidden="true" />
+                <div>
+                  <p className={f.stato === 'corrente' ? 'font-semibold text-verde-700' : 'font-semibold text-pino-900'}>{f.nome}</p>
+                  <p className="text-[13px] text-grafite">
+                    {f.stato === 'corrente' ? (f.chi ? `in corso, ${f.chi}` : 'in corso, in attesa di presa in carico') : [f.chi, f.quando && quando(f.quando)].filter(Boolean).join(', ')}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
     </div>
   )
 }

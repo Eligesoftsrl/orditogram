@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ChevronRight, Hand, Inbox, Plus, Route } from 'lucide-react'
+import { CircleAlert, ChevronRight, Hand, Inbox, Plus, Route, Timer, Users } from 'lucide-react'
 import { api } from '../api.js'
 import { useAuth } from '../lib/auth.jsx'
 import { fa, giorno, saluto } from '../lib/format.js'
+import { contaScadenze } from '../lib/scadenze.js'
 import IterRail from '../components/IterRail.jsx'
 import { useAvvio } from '../components/Shell.jsx'
-import { Badge, Button, Caricamento, Errore, Pannello, Vuoto, useToast } from '../components/ui.jsx'
+import { Badge, Button, Caricamento, Errore, Pannello, Tessera, Vuoto, useToast } from '../components/ui.jsx'
 import { BadgeScadenza, principale } from '../components/Scadenza.jsx'
 
 export default function Scrivania() {
@@ -43,9 +44,10 @@ export default function Scrivania() {
   const mie = tasks.filter(t => t.mine)
   const libere = tasks.filter(t => !t.assignee)
   const nome = me.fullName.split(' ')[0]
+  const conteggi = contaScadenze(tasks)
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-7">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm text-grafite">{giorno(new Date())}</p>
@@ -54,7 +56,18 @@ export default function Scrivania() {
         </div>
       </header>
 
-      <div className="grid gap-6 xl:grid-cols-[1.35fr_1fr]">
+      <div className="in-sequenza grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Riepilogo">
+        <Tessera tono="blu" icona={Inbox} etichetta="Tocca a te" valore={mie.length}
+                 nota={mie.length ? 'attività in carico a te' : 'niente in sospeso'} />
+        <Tessera icona={Users} etichetta="Del tuo gruppo" valore={libere.length}
+                 nota={libere.length ? 'da prendere in carico' : 'nessuna in attesa'} />
+        <Tessera tono={conteggi.scadute ? 'mattone' : 'neutro'} icona={CircleAlert} etichetta="Scadute" valore={conteggi.scadute}
+                 pastiglia={conteggi.scadute ? 'da recuperare' : null} nota="tra le tue attività e del gruppo" />
+        <Tessera tono={conteggi.vicine ? 'zafferano' : 'neutro'} icona={Timer} etichetta="In scadenza" valore={conteggi.vicine}
+                 pastiglia={conteggi.vicine ? 'entro 2 giorni' : null} nota={`${totalePratiche} pratiche in corso`} />
+      </div>
+
+      <div className="in-sequenza grid gap-6 xl:grid-cols-[1.35fr_1fr] [&>*]:min-w-0">
         <div className="space-y-6">
           <Pannello titolo={<Titolo testo="Tocca a te" n={mie.length} accento />} corpoClassName="p-0">
             {mie.length === 0
@@ -126,8 +139,8 @@ function riassunto(mie, libere) {
 
 function Titolo({ testo, n, accento }) {
   return (
-    <h2 className="flex items-center gap-2 text-[17px] font-semibold">
-      {accento && <span className="size-2 rounded-full bg-zafferano-400" />}
+    <h2 className="flex items-center gap-2 text-lg font-semibold">
+      {accento && <span className="size-2 animate-respiro rounded-full bg-verde-600" />}
       {testo}
       <span className="numeri text-[15px] font-normal text-grafite">{n}</span>
     </h2>
@@ -137,11 +150,11 @@ function Titolo({ testo, n, accento }) {
 function RigaAttivita({ t, azione }) {
   return (
     <li>
-      <Link to={`/attivita/${t.id}`} className="flex items-center gap-4 px-5 py-3.5 hover:bg-carta/70">
+      <Link to={`/attivita/${t.id}`} className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-verde-50/60">
         <div className="min-w-0 flex-1">
           <p className="truncate font-medium text-pino-900">{t.pratica || 'Pratica senza titolo'}</p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
-            <Badge tono={t.mine ? 'zafferano' : 'neutro'}>{t.name}</Badge>
+            <Badge tono={t.mine ? 'blu' : 'neutro'}>{t.name}</Badge>
             <BadgeScadenza s={principale(t.scadenze)} />
             {t.processo && t.processo !== t.name && <span className="truncate text-[13px] text-grafite">{t.processo}</span>}
           </div>

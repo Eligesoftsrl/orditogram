@@ -36,7 +36,8 @@ Lingua: italiano, in tutto (nomi, etichette, testi, documenti). Testi per person
 ```
 
 Leggi il riferimento giusto prima di scrivere ogni artefatto: `riferimenti/bpmn.md`, `riferimenti/form.md`,
-`riferimenti/anagrafiche-e-accessi.md`, `riferimenti/collaudo.md`, `riferimenti/documentazione.md`.
+`riferimenti/anagrafiche-e-accessi.md`, `riferimenti/collaudo.md`, `riferimenti/documentazione.md`,
+`riferimenti/interfaccia.md` (nomi delle parti dell'interfaccia e regole per le schermate dei manuali).
 Un esempio completo e collaudato è in `esempio/` (specifica di partenza compresa): imitane la forma.
 
 ## Fase 1. Capire e verificare le specifiche
@@ -104,6 +105,7 @@ PEC vanno in un'attività con un form). Nel dubbio leggi il componente in `front
 Segui `riferimenti/documentazione.md`: `documenta.py` genera la scheda tecnica dagli artefatti; scrivi tu
 documento funzionale, manuale utente (per gruppo), manuale di esercizio, piano e report di test, integrazioni (se ci
 sono), sempre partendo da scheda tecnica, report e analisi. Mai descrivere funzioni o configurazioni che non ci sono.
+Per nominare le parti dello schermo e preparare le schermate segui `riferimenti/interfaccia.md`.
 
 ## Fase 6. Consegna
 

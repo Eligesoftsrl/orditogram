@@ -20,7 +20,7 @@ export default function IterRail({ percorso = [], compatto = false, className })
         {nascoste > 0 && <span className="mr-1.5 text-xs text-nebbia numeri">+{nascoste}</span>}
         {visibili.map((p, i) => (
           <div key={i} className="flex items-center" title={p.nome + (p.chi ? ` (${p.chi})` : '')}>
-            {i > 0 && <span className={cx('h-0.5 w-4 sm:w-5', p.stato === 'corrente' ? 'bg-zafferano-400/60' : 'bg-verde-400')} />}
+            {i > 0 && <span className={cx('h-0.5 w-4 sm:w-5', p.stato === 'corrente' ? 'bg-verde-100' : 'bg-verde-600')} />}
             <Punto stato={p.stato} piccolo />
           </div>
         ))}
@@ -37,17 +37,17 @@ export default function IterRail({ percorso = [], compatto = false, className })
             <Punto stato={p.stato} />
             {i < percorso.length - 1 && (
               <span className={cx('mx-1.5 h-0.5 flex-1 rounded-full',
-                percorso[i + 1].stato === 'corrente' ? 'bg-[repeating-linear-gradient(90deg,var(--color-zafferano-400)_0_6px,transparent_6px_10px)]' : 'bg-verde-400')} />
+                percorso[i + 1].stato === 'corrente' ? 'bg-[repeating-linear-gradient(90deg,var(--color-verde-400)_0_6px,transparent_6px_10px)]' : 'bg-verde-600')} />
             )}
           </div>
           <div className="mt-2 pr-3">
-            <p className={cx('text-sm font-medium leading-snug', p.stato === 'corrente' ? 'text-zafferano-800' : 'text-pino-900')}>{p.nome}</p>
+            <p className={cx('text-sm font-medium leading-snug', p.stato === 'corrente' ? 'text-verde-700' : 'text-pino-900')}>{p.nome}</p>
             {(p.chi || p.quando) && (
               <p className="mt-0.5 text-xs leading-snug text-grafite">
                 {p.chi}{p.chi && p.quando ? ', ' : ''}{p.quando && quando(p.quando)}
               </p>
             )}
-            {p.stato === 'corrente' && !p.chi && <p className="mt-0.5 text-xs text-zafferano-800/80">in attesa di presa in carico</p>}
+            {p.stato === 'corrente' && !p.chi && <p className="mt-0.5 text-xs text-grafite">in attesa di presa in carico</p>}
           </div>
         </li>
       ))}
@@ -58,7 +58,7 @@ export default function IterRail({ percorso = [], compatto = false, className })
 function Punto({ stato, piccolo }) {
   const dim = piccolo ? 'size-2.5' : 'size-6'
   if (stato === 'corrente')
-    return <span className={cx(dim, 'shrink-0 rounded-full border-2 border-zafferano-400 bg-zafferano-100 animate-respiro')} />
+    return <span className={cx(dim, 'shrink-0 rounded-full border-[3px] border-verde-600 bg-white animate-respiro')} />
   if (stato === 'fine')
     return (
       <span className={cx(dim, 'inline-flex shrink-0 items-center justify-center rounded-full bg-pino-900 text-white')}>
