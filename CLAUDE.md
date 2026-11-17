@@ -21,6 +21,7 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
   Spring Boot e Activiti), Spring Security 6.5, JPA/Hibernate 6, PostgreSQL (H2 in memoria nei test).
   Pacchetto radice `com.eligesoft.orditogram`.
 - **frontend/**: React 19, Vite 8, Tailwind 4, bpmn-js 18 (+ token simulation 1.x), lucide-react, Vitest 5, Node 24.
+  Grafica nel linguaggio di Designers Italia (AgID): vedi la sezione *Interfaccia*.
   Librerie sempre all'ultima versione: l'unico vincolo è Activiti nel backend (vedi sotto).
 - **esempi/accesso-atti/**: processo dimostrativo completo (legge 241/1990) con form e pacchetto `.orditogram.zip`.
 - **docker-compose.yml**: postgres + backend + frontend (nginx), Keycloak di prova con `--profile keycloak`.
@@ -87,6 +88,34 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
   quelli, mai ESPORTA né campi riservati; `SchedeService.controllaConcedibili` impedisce di dare più di quanto si vede.
   Campo con `creaScheda: true`: *Nuova scheda* in `CampoAnagrafica` (form annidato in un portale, `prefissoId`).
 - **Storico → eventi**: `StoricoService.registra` pubblica `EventoStorico`; i webhook lo ascoltano nella stessa transazione.
+
+## Interfaccia
+
+Regole per ogni schermata nuova o cambiata (proposta approvata da Filippo, novembre 2026: "UX/UI 2026, accessibile,
+in linea AgID").
+
+- **Linguaggio**: Designers Italia (AgID, Bootstrap Italia 2) con superfici morbide. Blu Italia `#0066CC` solo per
+  azioni, link, selezione e "adesso"; verde, arancione e rosso solo per gli stati, sempre con icona e parola (mai il
+  solo colore). Testo `#17324D`, secondario `#5D7083`, fondo `#F2F5F8`. Ogni coppia testo/sfondo almeno 4,5:1.
+- **Gettoni**: in `frontend/src/index.css` (`@theme`). I nomi storici restano (`pino` = blu notte del testo,
+  `verde` = Blu Italia delle azioni, `ok` = successo, `zafferano` = attenzione, `mattone` = errore): mai colori
+  scritti a mano nei componenti. Caratteri Titillium Web e Roboto Mono, serviti dall'applicazione (`@fontsource`).
+- **Forme**: pannelli e tessere `rounded-pannello` (18px), blocchi interni `rounded-blocco` (12px) su fondo `carta`,
+  pulsanti e campi `rounded-campo` (10px), stati e filtri a capsula. Niente righe colorate sopra le tessere.
+- **Componenti** (`components/ui.jsx`): `Button` (primario, secondario, fantasma, pericolo, chiaro), `Badge`
+  (verde = successo, blu = in corso, zafferano, mattone, neutro, pino), `Tessera` (numero con icona e pastiglia;
+  `tono="blu"` piena per la cosa principale), `Pannello`, `Schede`, `Dialogo` (al centro, per confermare),
+  `Cassetto` (pannello laterale da destra: vedere o fare qualcosa senza cambiare pagina). Prima di crearne uno nuovo,
+  usa o estendi questi.
+- **Aperture laterali**: un elemento di un elenco si apre nel `Cassetto` con il riassunto e l'azione principale;
+  Ctrl/Cmd + clic apre la pagina. Le decisioni importanti si confermano in un `Dialogo` che dice cosa succede e
+  che resta nello storico.
+- **Movimento**: solo opacità e spostamento, 160–320 ms, `--ease-morbido`. Elenchi e tessere entrano in sequenza con
+  `.in-sequenza` (massimo 8 passi da 50 ms), il cassetto scorre da destra, le finestre si aprono con `animate-entra`,
+  "adesso" pulsa con `animate-respiro`. Con "riduci il movimento" tutto è fermo (regola globale in `index.css`).
+- **Accessibilità** (WCAG 2.1 AA): focus giallo `#FFB000` spesso 3px, link "Vai al contenuto", finestre con Esc,
+  focus dentro all'apertura e di ritorno alla chiusura, `aria-label` sui pulsanti con sola icona, nessuno
+  scorrimento orizzontale a 400px.
 
 ## Come si lavora
 

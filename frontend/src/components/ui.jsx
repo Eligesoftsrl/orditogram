@@ -5,11 +5,12 @@ import { cx, iniziali } from '../lib/format.js'
 // ================================================================= pulsanti
 
 const varianti = {
-  primario: 'bg-verde-600 text-white hover:bg-verde-700 active:bg-verde-700 shadow-[inset_0_-1px_0_rgb(0_0_0/0.15)]',
-  secondario: 'bg-white text-pino-900 border border-linea hover:border-pino-200 hover:bg-carta',
+  primario: 'bg-verde-600 text-white hover:bg-verde-700 active:bg-verde-700',
+  secondario: 'bg-white text-verde-700 border-2 border-verde-600 hover:bg-verde-50',
   fantasma: 'text-pino-800 hover:bg-pino-900/5',
   pericolo: 'bg-white text-mattone-600 border border-mattone-100 hover:bg-mattone-50',
-  scuro: 'bg-pino-900 text-white hover:bg-pino-800'
+  scuro: 'bg-pino-900 text-white hover:bg-pino-800',
+  chiaro: 'bg-white text-verde-700 hover:bg-verde-50'
 }
 const misure = { sm: 'h-8 px-3 text-sm gap-1.5', md: 'h-10 px-4 text-[15px] gap-2', lg: 'h-12 px-5 text-base gap-2' }
 
@@ -18,7 +19,7 @@ export function Button({ variante = 'secondario', misura = 'md', icona: Icona, a
     <button
       {...props}
       disabled={props.disabled || attesa}
-      className={cx('inline-flex shrink-0 items-center justify-center rounded-campo font-medium transition-colors',
+      className={cx('inline-flex shrink-0 items-center justify-center rounded-campo font-semibold transition-[background-color,color,border-color,transform] duration-150 active:scale-[.97]',
         'disabled:cursor-not-allowed disabled:opacity-55', varianti[variante], misure[misura], className)}>
       {attesa ? <LoaderCircle className="size-4 animate-spin" /> : Icona && <Icona className="size-4" strokeWidth={2} />}
       {children}
@@ -29,7 +30,8 @@ export function Button({ variante = 'secondario', misura = 'md', icona: Icona, a
 // ================================================================= etichette di stato
 
 const toni = {
-  verde: 'bg-verde-50 text-verde-700 ring-verde-100',
+  verde: 'bg-ok-50 text-ok-700 ring-ok-100',
+  blu: 'bg-verde-50 text-verde-700 ring-verde-100',
   zafferano: 'bg-zafferano-50 text-zafferano-800 ring-zafferano-100',
   mattone: 'bg-mattone-50 text-mattone-700 ring-mattone-100',
   neutro: 'bg-carta text-grafite ring-linea',
@@ -37,7 +39,7 @@ const toni = {
 }
 export function Badge({ tono = 'neutro', icona: Icona, className, children }) {
   return (
-    <span className={cx('inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-[13px] font-medium ring-1 ring-inset', toni[tono], className)}>
+    <span className={cx('inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-[13px] font-semibold ring-1 ring-inset', toni[tono], className)}>
       {Icona && <Icona className="size-3.5" strokeWidth={2.2} />}
       {children}
     </span>
@@ -59,9 +61,9 @@ export function Pannello({ titolo, azioni, className, corpoClassName, children }
   return (
     <section className={cx('rounded-pannello border border-linea bg-white shadow-pannello', className)}>
       {(titolo || azioni) && (
-        <header className="flex items-center justify-between gap-3 border-b border-linea px-5 py-3.5">
-          {typeof titolo === 'string' ? <h2 className="text-[17px] font-semibold">{titolo}</h2> : titolo}
-          {azioni && <div className="flex items-center gap-2">{azioni}</div>}
+        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-linea px-5 py-4">
+          {typeof titolo === 'string' ? <h2 className="text-lg font-semibold">{titolo}</h2> : titolo}
+          {azioni && <div className="flex flex-wrap items-center gap-2">{azioni}</div>}
         </header>
       )}
       <div className={cx('p-5', corpoClassName)}>{children}</div>
@@ -103,10 +105,10 @@ export function Schede({ voci, attiva, onChange, className }) {
     <div role="tablist" className={cx('flex gap-1 border-b border-linea', className)}>
       {voci.map(v => (
         <button key={v.id} role="tab" aria-selected={attiva === v.id} onClick={() => onChange(v.id)}
-          className={cx('-mb-px inline-flex items-center gap-2 border-b-2 px-3 py-2.5 text-[15px] font-medium transition-colors',
-            attiva === v.id ? 'border-verde-600 text-pino-900' : 'border-transparent text-grafite hover:text-pino-900')}>
+          className={cx('-mb-px inline-flex items-center gap-2 border-b-[3px] px-3 py-2.5 text-[15px] font-semibold transition-colors',
+            attiva === v.id ? 'border-verde-600 text-verde-700' : 'border-transparent text-grafite hover:text-pino-900')}>
           {v.label}
-          {v.conteggio > 0 && <span className="numeri rounded-full bg-carta px-1.5 text-xs text-grafite ring-1 ring-linea">{v.conteggio}</span>}
+          {v.conteggio > 0 && <span className={cx('numeri rounded-full px-1.5 text-xs', attiva === v.id ? 'bg-verde-600 text-white' : 'bg-carta text-grafite ring-1 ring-linea')}>{v.conteggio}</span>}
         </button>
       ))}
     </div>
@@ -120,13 +122,38 @@ const finestreAperte = []
 
 export function Dialogo({ aperto, onClose, titolo, sottotitolo, larghezza = 'max-w-2xl', children }) {
   const ref = useRef(null)
-  // onClose cambia a ogni disegno del chiamante: la finestra si registra una volta sola, all'apertura
+  useFinestra(aperto, onClose, ref)
+  if (!aperto) return null
+  return (
+    // lo sfondo chiude con il mouse; da tastiera si chiude con Esc (sopra)
+    <div role="presentation" className="fixed inset-0 z-50 flex animate-velo items-start justify-center overflow-y-auto bg-pino-950/40 p-4 backdrop-blur-[2px] sm:p-8"
+         onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={titolo}
+           className={cx('w-full animate-entra rounded-pannello bg-white shadow-sollevato outline-none', larghezza)}>
+        <header className="flex items-start justify-between gap-4 border-b border-linea px-6 py-4">
+          <div>
+            <h2 className="text-xl font-semibold">{titolo}</h2>
+            {sottotitolo && <p className="mt-0.5 text-sm text-grafite">{sottotitolo}</p>}
+          </div>
+          <button onClick={onClose} className="rounded-full p-1.5 text-grafite hover:bg-carta" aria-label="Chiudi">
+            <X className="size-5" />
+          </button>
+        </header>
+        <div className="px-6 py-5">{children}</div>
+      </div>
+    </div>
+  )
+}
+
+/** Gestisce Esc, il blocco dello scorrimento e il focus di una finestra aperta (modale o laterale). */
+function useFinestra(aperto, onClose, ref) {
   const chiudi = useRef(onClose)
   useEffect(() => { chiudi.current = onClose }, [onClose])
   useEffect(() => {
     if (!aperto) return
     const io = {}
     finestreAperte.push(io)
+    const prima = document.activeElement
     const onKey = (e) => e.key === 'Escape' && finestreAperte[finestreAperte.length - 1] === io && chiudi.current()
     document.addEventListener('keydown', onKey)
     const prev = document.body.style.overflow
@@ -136,27 +163,73 @@ export function Dialogo({ aperto, onClose, titolo, sottotitolo, larghezza = 'max
       document.removeEventListener('keydown', onKey)
       document.body.style.overflow = prev
       finestreAperte.splice(finestreAperte.indexOf(io), 1)
+      // il focus torna dove era prima dell'apertura (WCAG 2.4.3)
+      if (prima instanceof HTMLElement) prima.focus()
     }
-  }, [aperto])
+  }, [aperto, ref])
+}
+
+/**
+ * Pannello laterale: si apre da destra sopra la pagina, per vedere o fare qualcosa senza cambiare pagina.
+ * piede: i pulsanti in fondo (azione principale a destra).
+ */
+export function Cassetto({ aperto, onClose, titolo, sottotitolo, icona: Icona, piede, larghezza = 'max-w-[440px]', children }) {
+  const ref = useRef(null)
+  useFinestra(aperto, onClose, ref)
   if (!aperto) return null
   return (
-    // lo sfondo chiude con il mouse; da tastiera si chiude con Esc (sopra)
-    <div role="presentation" className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-pino-950/45 p-4 backdrop-blur-[2px] sm:p-8"
+    <div role="presentation" className="fixed inset-0 z-50 animate-velo bg-pino-950/35"
          onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={titolo}
-           className={cx('w-full animate-entra rounded-pannello bg-white shadow-sollevato outline-none', larghezza)}>
-        <header className="flex items-start justify-between gap-4 border-b border-linea px-6 py-4">
-          <div>
-            <h2 className="text-xl font-semibold">{titolo}</h2>
+      <aside ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={titolo}
+             className={cx('absolute inset-y-0 right-0 flex w-full animate-cassetto flex-col bg-white shadow-sollevato outline-none sm:inset-y-3 sm:right-3 sm:rounded-pannello', larghezza)}>
+        <header className="flex items-start gap-3 px-6 pb-4 pt-5">
+          {Icona && <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-blocco bg-verde-50 text-verde-700"><Icona className="size-5" /></span>}
+          <div className="min-w-0 flex-1">
+            <h2 className="text-xl font-semibold leading-tight">{titolo}</h2>
             {sottotitolo && <p className="mt-0.5 text-sm text-grafite">{sottotitolo}</p>}
           </div>
-          <button onClick={onClose} className="rounded-md p-1.5 text-grafite hover:bg-carta" aria-label="Chiudi">
+          <button onClick={onClose} className="rounded-full p-1.5 text-grafite hover:bg-carta" aria-label="Chiudi">
             <X className="size-5" />
           </button>
         </header>
-        <div className="px-6 py-5">{children}</div>
-      </div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6">{children}</div>
+        {piede && <footer className="flex flex-wrap justify-end gap-2 border-t border-linea px-6 py-4">{piede}</footer>}
+      </aside>
     </div>
+  )
+}
+
+// ================================================================= tessere numeriche
+
+const toniTessera = {
+  blu: 'bg-verde-600 border-verde-600 text-white',
+  neutro: 'bg-white border-linea text-pino-900',
+  mattone: 'bg-white border-linea text-pino-900',
+  zafferano: 'bg-white border-linea text-pino-900',
+  verde: 'bg-white border-linea text-pino-900'
+}
+const iconeTessera = {
+  blu: 'bg-white/20 text-white', neutro: 'bg-carta text-grafite', mattone: 'bg-mattone-50 text-mattone-700',
+  zafferano: 'bg-zafferano-50 text-zafferano-800', verde: 'bg-ok-50 text-ok-700'
+}
+
+/** Tessera con un numero: icona, etichetta, valore grande, pastiglia e nota. Con `to` è un collegamento. */
+export function Tessera({ tono = 'neutro', icona: Icona, etichetta, valore, pastiglia, nota, as: Comp = 'div', className, ...props }) {
+  const piena = tono === 'blu'
+  return (
+    <Comp {...props}
+      className={cx('group flex flex-col gap-2.5 rounded-pannello border p-4 shadow-pannello transition-[transform,box-shadow] duration-150',
+        props.to || props.href || props.onClick ? 'hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-12px_rgb(0_40_80/0.35)]' : '', toniTessera[tono], className)}>
+      <span className="flex items-center gap-2.5">
+        {Icona && <span className={cx('inline-flex size-9 items-center justify-center rounded-[10px]', iconeTessera[tono])}><Icona className="size-[18px]" /></span>}
+        <span className={cx('text-[15px] font-semibold', piena ? 'text-white/90' : 'text-grafite')}>{etichetta}</span>
+      </span>
+      <span className="flex flex-wrap items-baseline gap-2.5">
+        <span className="numeri text-4xl font-semibold leading-none tracking-tight">{valore}</span>
+        {pastiglia && <span className={cx('rounded-full px-2 py-0.5 text-xs font-semibold', iconeTessera[tono])}>{pastiglia}</span>}
+      </span>
+      {nota && <span className={cx('text-[13px]', piena ? 'text-white/85' : 'text-grafite')}>{nota}</span>}
+    </Comp>
   )
 }
 
@@ -182,7 +255,7 @@ export function ToastProvider({ children }) {
           <div key={t.id}
                className={cx('pointer-events-auto flex max-w-lg animate-entra items-start gap-2.5 rounded-pannello px-4 py-3 text-[15px] shadow-sollevato',
                  t.tipo === 'errore' ? 'bg-mattone-700 text-white' : 'bg-pino-900 text-white')}>
-            {t.tipo === 'errore' ? <CircleX className="mt-0.5 size-4 shrink-0" /> : <CircleCheck className="mt-0.5 size-4 shrink-0 text-verde-400" />}
+            {t.tipo === 'errore' ? <CircleX className="mt-0.5 size-4 shrink-0" /> : <CircleCheck className="mt-0.5 size-4 shrink-0 text-ok-100" />}
             <span>{t.testo}</span>
             <button onClick={() => togli(t.id)} className="ml-2 opacity-60 hover:opacity-100" aria-label="Chiudi avviso"><X className="size-4" /></button>
           </div>

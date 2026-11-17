@@ -10,8 +10,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@fontsource-variable/bricolage-grotesque": "^5.3.0",
-    "@fontsource/ibm-plex-sans": "^5.3.0",
+    "@fontsource/roboto-mono": "^5.3.0",
+    "@fontsource/titillium-web": "^5.3.0",
     "bpmn-js": "^18.31.1",
     "bpmn-js-token-simulation": "^1.1.0",
     "jspdf": "^4.2.1",

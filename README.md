@@ -706,6 +706,21 @@ soluzione Orditogram per queste specifiche"* allegando documenti o BPMN degli an
 Un esempio completo, dalle specifiche alla documentazione, è in `.claude/skills/orditogram-soluzione/esempio/`.
 La skill va aggiornata insieme a ogni funzione che cambia i formati (vedi `CLAUDE.md`).
 
+## Interfaccia
+
+Orditogram usa il linguaggio di [Designers Italia](https://designers.italia.it/) (AgID, Bootstrap Italia 2):
+Blu Italia per le azioni, caratteri Titillium Web e Roboto Mono serviti dall'applicazione (nessuna chiamata a
+server esterni), intestazione blu come nei siti della PA e menu laterale chiaro. Le superfici sono morbide e
+arrotondate, gli stati hanno sempre icona e parola, il focus da tastiera è giallo e ben visibile.
+
+- **Scrivania**: in alto le tessere con le tue attività, quelle del gruppo, le scadute e quelle in scadenza.
+- **Pannello laterale**: nell'elenco delle pratiche un clic apre il riassunto a destra (a che punto è, chi ci
+  lavora, il percorso); *Apri la pratica* porta alla pagina completa. Ctrl/Cmd + clic apre subito la pagina.
+- **Movimento**: tessere ed elenchi entrano in sequenza, i pannelli scorrono, il passo attuale pulsa. Se nel
+  sistema è attivo "riduci il movimento" tutto appare fermo.
+
+Le regole per chi sviluppa (colori, componenti, animazioni, accessibilità) sono in `CLAUDE.md`, sezione *Interfaccia*.
+
 ## Struttura
 
 ```

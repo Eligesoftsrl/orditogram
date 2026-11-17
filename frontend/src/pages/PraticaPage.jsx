@@ -44,7 +44,7 @@ export default function PraticaPage() {
             <p className="text-sm text-grafite">{p.processo}</p>
             <h1 className="mt-1 text-[30px] font-semibold leading-tight">{p.titolo}</h1>
             <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-grafite">
-              {conclusa ? <Badge tono="pino">Conclusa</Badge> : <Badge tono="zafferano">In corso</Badge>}
+              {conclusa ? <Badge tono="pino">Conclusa</Badge> : <Badge tono="blu">In corso</Badge>}
               {!conclusa && p.prossimaScadenza && <BadgeScadenza s={p.prossimaScadenza} />}
               {p.avviataDa && <span className="inline-flex items-center gap-1.5"><UserRound className="size-4" /> {p.avviataDa}</span>}
               {p.struttura && <span className="inline-flex items-center gap-1.5" title="Struttura competente"><Building2 className="size-4" /> {p.struttura.nome}</span>}
@@ -72,7 +72,7 @@ export default function PraticaPage() {
               <ul className="space-y-3">
                 {p.stepCorrenti.map((s, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <span className="mt-1.5 size-2.5 shrink-0 rounded-full border-2 border-zafferano-400 bg-zafferano-100" />
+                    <span className="mt-1.5 size-2.5 shrink-0 rounded-full border-[3px] border-verde-600 bg-white animate-respiro" />
                     <div>
                       <p className="font-medium text-pino-900">{s.nome}</p>
                       <p className="text-sm text-grafite">
@@ -218,7 +218,7 @@ function Collegate({ madre, figlie }) {
           <span className="block truncate text-[15px] font-medium text-pino-900">{c.processo}</span>
           <span className="block text-[13px] text-grafite">{ruolo}, dal {quando(c.inizio)}</span>
         </span>
-        {c.stato === 'conclusa' ? <Badge tono="pino">Conclusa</Badge> : <Badge tono="zafferano">In corso</Badge>}
+        {c.stato === 'conclusa' ? <Badge tono="pino">Conclusa</Badge> : <Badge tono="blu">In corso</Badge>}
         <ArrowRight className="size-4 text-nebbia" />
       </Link>
     </li>

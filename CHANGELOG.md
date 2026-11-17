@@ -11,6 +11,14 @@ hanno ruoli e lavorano come prima le loro attività e pratiche. Il campo `admin`
 
 Form avanzati, prima parte.
 
+- **Nuova grafica nel linguaggio AgID** (Designers Italia, Bootstrap Italia 2): Blu Italia per le azioni,
+  Titillium Web e Roboto Mono, intestazione blu come nei siti della PA, menu laterale chiaro, superfici arrotondate,
+  stati con icona e parola, focus giallo, link "Vai al contenuto". Contrasti verificati (WCAG 2.1 AA).
+- **Scrivania come cruscotto**: tessere con attività tue, del gruppo, scadute e in scadenza.
+- **Pannello laterale** nell'elenco delle pratiche: riassunto, chi ci lavora e percorso senza cambiare pagina.
+- **Movimento**: entrate in sequenza, pannelli che scorrono, passo attuale che pulsa; tutto fermo con
+  "riduci il movimento". Nuovi componenti `Cassetto` e `Tessera`; le finestre riportano il focus dove era.
+
 - **Skill per costruire soluzioni** (`.claude/skills/orditogram-soluzione`): dalle specifiche di un cliente Claude
   scrive l'analisi (lacune, scelte, domande), genera BPMN, form, anagrafiche, permessi e pacchetto `.orditogram.zip`,
   li verifica con le stesse regole della pubblicazione (`verifica.py`), li disegna, li collauda su un Orditogram
