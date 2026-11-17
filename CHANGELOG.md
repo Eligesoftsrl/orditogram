@@ -16,6 +16,9 @@ Form avanzati, prima parte.
   stati con icona e parola, focus giallo, link "Vai al contenuto". Contrasti verificati (WCAG 2.1 AA).
 - **Scrivania come cruscotto**: tessere con attività tue, del gruppo, scadute e in scadenza.
 - **Pannello laterale** nell'elenco delle pratiche: riassunto, chi ci lavora e percorso senza cambiare pagina.
+- **Specchietto del flusso** nella pagina della pratica: il percorso si riempie fino al passo attuale, che pulsa;
+  accanto chi ha in carico la pratica, la scadenza e quanto è durato ogni passo.
+- **Conferma in finestra AgID** per *Registra arrivo* dei messaggi, al posto della finestra del browser.
 - **Movimento**: entrate in sequenza, pannelli che scorrono, passo attuale che pulsa; tutto fermo con
   "riduci il movimento". Nuovi componenti `Cassetto` e `Tessera`; le finestre riportano il focus dove era.
 

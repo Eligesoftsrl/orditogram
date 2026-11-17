@@ -716,6 +716,8 @@ arrotondate, gli stati hanno sempre icona e parola, il focus da tastiera è gial
 - **Scrivania**: in alto le tessere con le tue attività, quelle del gruppo, le scadute e quelle in scadenza.
 - **Pannello laterale**: nell'elenco delle pratiche un clic apre il riassunto a destra (a che punto è, chi ci
   lavora, il percorso); *Apri la pratica* porta alla pagina completa. Ctrl/Cmd + clic apre subito la pagina.
+- **Specchietto del flusso**: in cima alla pratica il percorso si riempie fino al passo in cui si trova, con
+  chi ce l'ha in carico, la scadenza e la durata di ogni passo.
 - **Movimento**: tessere ed elenchi entrano in sequenza, i pannelli scorrono, il passo attuale pulsa. Se nel
   sistema è attivo "riduci il movimento" tutto appare fermo.
 
