@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { CircleCheck, CircleX, LoaderCircle, X } from 'lucide-react'
 import { cx, iniziali } from '../lib/format.js'
@@ -177,7 +178,8 @@ export function Cassetto({ aperto, onClose, titolo, sottotitolo, icona: Icona, p
   const ref = useRef(null)
   useFinestra(aperto, onClose, ref)
   if (!aperto) return null
-  return (
+  // nel body: così nessun contenitore con animazioni o z-index lo chiude sotto l'intestazione
+  return createPortal(
     <div role="presentation" className="fixed inset-0 z-50 animate-velo bg-pino-950/35"
          onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <aside ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={titolo}
@@ -195,7 +197,8 @@ export function Cassetto({ aperto, onClose, titolo, sottotitolo, icona: Icona, p
         <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6">{children}</div>
         {piede && <footer className="flex flex-wrap justify-end gap-2 border-t border-linea px-6 py-4">{piede}</footer>}
       </aside>
-    </div>
+    </div>,
+    document.body
   )
 }
 

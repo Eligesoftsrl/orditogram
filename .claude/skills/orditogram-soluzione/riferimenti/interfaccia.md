@@ -15,6 +15,17 @@ nomi e queste regole, così il documento corrisponde a quello che l'utente vede.
 | Finestra al centro che chiede conferma | finestra di conferma |
 | Etichette colorate a capsula | stati (verde = concluso o valido, blu = in corso, arancione = in scadenza, rosso = scaduto o errore) |
 | Binario con i passi della pratica | percorso (il passo attuale è il cerchio blu che pulsa) |
+| Riquadro in cima alla pratica con percorso, *Adesso* e tempi | specchietto del flusso |
+| Tessere grandi per scegliere l'esito di un'attività | scelta dell'esito |
+| Pannello laterale aperto da *Vedi* su un documento | anteprima del documento |
+
+## Scelta dell'esito: come scrivere le opzioni
+
+Un campo `select` con al massimo 4 opzioni, di cui almeno due riconosciute come esiti, si mostra a tessere
+con icona e colore (regole in `frontend/src/lib/esiti.js`). Scrivi opzioni brevi che inizino dalla parola chiave:
+*Accolta*, *Accolta in parte*, *Serve integrazione*, *Respinta*. Parole riconosciute: accolta/accoglibile,
+approvata, concessa, sì (verde); integrazione, sospesa, chiarimenti, in parte (arancione); respinta, rigetto,
+diniego, inammissibile, no (rosso). Le altre restano blu.
 
 ## Schermate per la documentazione
 

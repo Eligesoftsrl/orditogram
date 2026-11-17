@@ -108,7 +108,7 @@ in linea AgID").
   `Cassetto` (pannello laterale da destra: vedere o fare qualcosa senza cambiare pagina). Prima di crearne uno nuovo,
   usa o estendi questi.
 - **Aperture laterali**: un elemento di un elenco si apre nel `Cassetto` con il riassunto e l'azione principale;
-  Ctrl/Cmd + clic apre la pagina. Le decisioni importanti si confermano in un `Dialogo` che dice cosa succede e
+  Ctrl/Cmd + clic apre la pagina; i documenti si vedono nel cassetto con `AnteprimaDocumento`. Le decisioni importanti si confermano in un `Dialogo` che dice cosa succede e
   che resta nello storico.
 - **Movimento**: solo opacità e spostamento, 160–320 ms, `--ease-morbido`. Elenchi e tessere entrano in sequenza con
   `.in-sequenza` (massimo 8 passi da 50 ms), il cassetto scorre da destra, le finestre si aprono con `animate-entra`,

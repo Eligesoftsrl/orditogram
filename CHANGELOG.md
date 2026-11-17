@@ -19,6 +19,10 @@ Form avanzati, prima parte.
 - **Specchietto del flusso** nella pagina della pratica: il percorso si riempie fino al passo attuale, che pulsa;
   accanto chi ha in carico la pratica, la scadenza e quanto è durato ogni passo.
 - **Conferma in finestra AgID** per *Registra arrivo* dei messaggi, al posto della finestra del browser.
+- **Scelta dell'esito a tessere**: un campo a scelta con al massimo 4 opzioni che sono esiti (accolta, respinta,
+  serve integrazione...) si mostra con tessere grandi, icona e colore di stato accanto alla parola.
+- **Anteprima dei documenti** nel pannello laterale: PDF, immagini e testo si leggono senza lasciare la pagina;
+  per le buste firmate `.p7m` si vede il contenuto estratto.
 - **Movimento**: entrate in sequenza, pannelli che scorrono, passo attuale che pulsa; tutto fermo con
   "riduci il movimento". Nuovi componenti `Cassetto` e `Tessera`; le finestre riportano il focus dove era.
 
