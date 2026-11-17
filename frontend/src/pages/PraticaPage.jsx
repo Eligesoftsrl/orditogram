@@ -3,9 +3,9 @@ import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, BookUser, Briefcase, Building2, CalendarDays, Hourglass, Inbox, UserRound, Workflow } from 'lucide-react'
 import { api } from '../api.js'
 import { giorno, quando } from '../lib/format.js'
-import IterRail from '../components/IterRail.jsx'
+import Specchietto from '../components/Specchietto.jsx'
 import Approfondimenti from '../components/Approfondimenti.jsx'
-import { Badge, Button, Caricamento, Errore, Pannello, useToast } from '../components/ui.jsx'
+import { Badge, Button, Caricamento, Dialogo, Errore, Pannello, useToast } from '../components/ui.jsx'
 import { BadgeScadenza } from '../components/Scadenza.jsx'
 import { TabellaLettura } from '../components/CampoTabella.jsx'
 
@@ -15,6 +15,7 @@ export default function PraticaPage() {
   const [p, setP] = useState(null)
   const [errore, setErrore] = useState('')
   const [invio, setInvio] = useState(null)
+  const [daConfermare, setDaConfermare] = useState(null)
   const toast = useToast()
 
   const carica = useCallback(() => api.pratica(id).then(setP).catch(e => setErrore(e.message)), [id])
@@ -28,7 +29,7 @@ export default function PraticaPage() {
   const attese = scadenze.filter(x => x.tipo === 'attesa')
   const messaggi = p.messaggiAttesi || []
   const registra = async (m) => {
-    if (!confirm(`Registrare l'arrivo di "${m.elemento}"? La pratica prosegue subito.`)) return
+    setDaConfermare(null)
     setInvio(m.nome)
     try { await api.registraMessaggio(p.id, m.nome); toast.ok(`Arrivo di "${m.elemento}" registrato`); await carica() }
     catch (e) { toast.errore(e.message) } finally { setInvio(null) }
@@ -60,9 +61,7 @@ export default function PraticaPage() {
             </Link>
           )}
         </div>
-        <div className="rounded-pannello border border-linea bg-white px-5 pb-3 pt-4 shadow-pannello">
-          <IterRail percorso={p.percorso} />
-        </div>
+        <Specchietto p={p} />
       </header>
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
@@ -99,7 +98,7 @@ export default function PraticaPage() {
                       <p className="font-medium text-pino-900">{m.tipo === 'bordo' ? `Può arrivare: ${m.elemento}` : `In attesa: ${m.elemento}`}</p>
                       <p className="text-sm text-grafite">Arriva da un sistema esterno, oppure lo registri tu quando lo ricevi (es. una PEC).</p>
                     </div>
-                    <Button misura="sm" variante="fantasma" icona={Inbox} attesa={invio === m.nome} onClick={() => registra(m)}>Registra arrivo</Button>
+                    <Button misura="sm" variante="fantasma" icona={Inbox} attesa={invio === m.nome} onClick={() => setDaConfermare(m)}>Registra arrivo</Button>
                   </li>
                 ))}
                 {attese.map((a, i) => (
@@ -145,6 +144,18 @@ export default function PraticaPage() {
 
         <Approfondimenti pratica={p} onDocumenti={carica} />
       </div>
+
+      <Dialogo aperto={!!daConfermare} onClose={() => setDaConfermare(null)} larghezza="max-w-lg"
+               titolo={daConfermare ? `Registrare l'arrivo di "${daConfermare.elemento}"?` : ''}>
+        <div className="space-y-4">
+          <p className="text-pino-800">La pratica prosegue subito dal punto previsto nel processo, come se il messaggio fosse arrivato da un sistema esterno.</p>
+          <p className="rounded-blocco bg-carta px-3 py-2 text-sm text-grafite">Resta nello storico della pratica con il tuo nome e l'ora.</p>
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button onClick={() => setDaConfermare(null)}>Annulla</Button>
+            <Button variante="primario" icona={Inbox} onClick={() => registra(daConfermare)}>Registra l'arrivo</Button>
+          </div>
+        </div>
+      </Dialogo>
     </div>
   )
 }
