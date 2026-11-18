@@ -253,6 +253,34 @@ class AccessoAttiIntegrationTest {
 
     @Test
     @SuppressWarnings("unchecked")
+    void indicatoriDellaScrivania() throws Exception {
+        pubblica(protocolloDemo());
+        String pi = avvia("Indicatori uno");
+        avvia("Indicatori due");
+        completa("anna", attivita("anna", pi, "Esamina la richiesta"), Map.of("esito", "Accoglibile", "noteIstruttoria", "Ok"));
+
+        Map<String, Object> ind = come("anna").exchange("/api/pratiche/indicatori", HttpMethod.GET, new HttpEntity<>(xhr()), Map.class).getBody();
+        assertTrue(((Number) ind.get("inCorso")).intValue() >= 2, () -> "pratiche in corso: " + ind);
+        List<Map<String, Object>> processi = (List<Map<String, Object>>) ind.get("processi");
+        Map<String, Object> atti = processi.stream().filter(p -> "accessoAtti".equals(p.get("chiave"))).findFirst().orElseThrow();
+        List<Map<String, Object>> passi = (List<Map<String, Object>>) atti.get("passi");
+        assertTrue(passi.stream().anyMatch(p -> "Decidi sulla richiesta".equals(p.get("nome"))), () -> "dove si trovano: " + passi);
+        assertTrue(passi.stream().anyMatch(p -> "Esamina la richiesta".equals(p.get("nome"))), () -> "dove si trovano: " + passi);
+        int media = ((Number) atti.get("avanzamentoMedio")).intValue();
+        assertTrue(media > 0 && media <= 95, "avanzamento stimato: " + media);
+        assertEquals(8, ((List<?>) ind.get("settimane")).size());
+        long aperteSettimana = ((List<Map<String, Object>>) ind.get("settimane")).stream().mapToLong(s -> ((Number) s.get("aperte")).longValue()).sum();
+        assertTrue(aperteSettimana >= 2, "aperte nelle ultime settimane");
+        assertEquals(15, ((List<?>) ind.get("termini")).size());
+
+        // chi non vede le pratiche non vede nemmeno i loro numeri
+        Map<String, Object> diGiulia = come("giulia").exchange("/api/pratiche/indicatori", HttpMethod.GET, new HttpEntity<>(xhr()), Map.class).getBody();
+        assertEquals(0, ((Number) diGiulia.get("inCorso")).intValue());
+        assertTrue(((List<?>) diGiulia.get("processi")).isEmpty());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
     void controlloDelProcessoERegistro() throws Exception {
         Map<String, Object> esito = come("admin").postForEntity("/api/admin/processes/valida",
             new HttpEntity<>(Map.of("xml", xmlOriginale), xhr()), Map.class).getBody();

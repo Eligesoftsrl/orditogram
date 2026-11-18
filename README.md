@@ -710,10 +710,22 @@ La skill va aggiornata insieme a ogni funzione che cambia i formati (vedi `CLAUD
 
 Orditogram usa il linguaggio di [Designers Italia](https://designers.italia.it/) (AgID, Bootstrap Italia 2):
 Blu Italia per le azioni, caratteri Titillium Web e Roboto Mono serviti dall'applicazione (nessuna chiamata a
-server esterni), intestazione blu come nei siti della PA e menu laterale chiaro. Le superfici sono morbide e
-arrotondate, gli stati hanno sempre icona e parola, il focus da tastiera è giallo e ben visibile.
+server esterni), menu laterale scuro che si stringe a sole icone (*Stringi il menu*) e, sul telefono, intestazione
+blu. Le superfici sono morbide e arrotondate, gli stati hanno sempre icona e parola, il focus da tastiera è giallo.
 
-- **Scrivania**: in alto le tessere con le tue attività, quelle del gruppo, le scadute e quelle in scadenza.
+- **Scrivania a tessere**: la tessera blu grande *Tocca a te* con le prime tre attività (prima quelle che scadono),
+  accanto le tessere colorate del gruppo, delle scadenze, delle scadute e delle pratiche in corso; i numeri salgono
+  contando. Un clic su un'attività o una pratica apre il riassunto nel pannello da destra, con *Lavora l'attività*.
+- **Grafici** (*Come vanno le pratiche*): dove si trovano le pratiche in corso (passo per passo, con l'avanzamento
+  medio stimato di ogni processo), quante sono a che punto, aperte e chiuse nelle ultime 8 settimane, termini dei
+  prossimi 14 giorni. Contano solo le pratiche che vedi (`GET /api/pratiche/indicatori`); *Tabella* mostra gli
+  stessi valori in una tabella. L'avanzamento è una stima: attività fatte sul totale del modello, al massimo 95%
+  finché la pratica è in corso.
+- **Il processo dal vivo**: nella pratica e nell'attività il diagramma BPMN è sempre in vista; il passo dove la
+  pratica è ferma pulsa, i passi fatti si accendono in fila e ogni tanto un segnalino percorre il cammino fatto.
+  Gli utenti esterni non lo vedono.
+- **Pratica**: tre tessere in cima (termine con i giorni che mancano, chi la riguarda, da quanto è aperta) e il menu
+  *Altre azioni* (registra l'arrivo di un messaggio, copia il collegamento, stampa).
 - **Pannello laterale**: nell'elenco delle pratiche un clic apre il riassunto a destra (a che punto è, chi ci
   lavora, il percorso); *Apri la pratica* porta alla pagina completa. Ctrl/Cmd + clic apre subito la pagina.
 - **Specchietto del flusso**: in cima alla pratica il percorso si riempie fino al passo in cui si trova, con
