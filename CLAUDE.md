@@ -92,25 +92,44 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
 ## Interfaccia
 
 Regole per ogni schermata nuova o cambiata (proposta approvata da Filippo, novembre 2026: "UX/UI 2026, accessibile,
-in linea AgID").
+in linea AgID"; direzione "bento a colori" scelta il 18 novembre 2026). **Valgono per tutto ciò che costruiamo**:
+Orditogram e ogni soluzione consegnata ai clienti. Obiettivo dichiarato: un effetto "wow" senza uscire da AgID.
 
-- **Linguaggio**: Designers Italia (AgID, Bootstrap Italia 2) con superfici morbide. Blu Italia `#0066CC` solo per
-  azioni, link, selezione e "adesso"; verde, arancione e rosso solo per gli stati, sempre con icona e parola (mai il
-  solo colore). Testo `#17324D`, secondario `#5D7083`, fondo `#F2F5F8`. Ogni coppia testo/sfondo almeno 4,5:1.
+- **Ogni schermata ha**: tessere di misure e tinte diverse (mai tutte uguali), un pannello o menu che si apre da
+  destra, movimento fluido, il flusso BPMN visibile con il passo dove la pratica è ferma che pulsa, grafici degli
+  indicatori quando ci sono numeri da leggere, ciascuno con la sua tabella a un clic.
+
+- **Linguaggio**: Designers Italia (AgID, Bootstrap Italia 2) con superfici morbide. Blu Italia `#0066CC` per
+  azioni, link, selezione, "adesso" e la tessera principale; verde, arancione e rosso per gli stati, sempre con icona
+  e parola (mai il solo colore). Le tinte delle tessere (`acqua`, `lilla`, `ambra`, `rosa`: fondi chiari con testo
+  `pino`) distinguono gli argomenti, non gli stati: `rosa` e `ambra` solo dove il numero è davvero un problema o
+  un'attenzione. Testo `#17324D`, secondario `#5D7083`, fondo `#F2F5F8`. Ogni coppia testo/sfondo almeno 4,5:1.
 - **Gettoni**: in `frontend/src/index.css` (`@theme`). I nomi storici restano (`pino` = blu notte del testo,
-  `verde` = Blu Italia delle azioni, `ok` = successo, `zafferano` = attenzione, `mattone` = errore): mai colori
-  scritti a mano nei componenti. Caratteri Titillium Web e Roboto Mono, serviti dall'applicazione (`@fontsource`).
+  `verde` = Blu Italia delle azioni, `ok` = successo, `zafferano` = attenzione, `mattone` = errore; `acqua`, `lilla`
+  = tinte delle tessere): mai colori scritti a mano nei componenti. Caratteri Titillium Web e Roboto Mono, serviti
+  dall'applicazione (`@fontsource`).
+- **Guscio**: menu laterale scuro (`pino-950`) con la voce attiva piena di blu; si stringe a sole icone e si
+  riallarga (*Stringi il menu*, scelta ricordata nel browser). Sul telefono intestazione blu e menu che scorre.
 - **Forme**: pannelli e tessere `rounded-pannello` (18px), blocchi interni `rounded-blocco` (12px) su fondo `carta`,
   pulsanti e campi `rounded-campo` (10px), stati e filtri a capsula. Niente righe colorate sopra le tessere.
 - **Componenti** (`components/ui.jsx`): `Button` (primario, secondario, fantasma, pericolo, chiaro), `Badge`
-  (verde = successo, blu = in corso, zafferano, mattone, neutro, pino), `Tessera` (numero con icona e pastiglia;
-  `tono="blu"` piena per la cosa principale), `Pannello`, `Schede`, `Dialogo` (al centro, per confermare),
-  `Cassetto` (pannello laterale da destra: vedere o fare qualcosa senza cambiare pagina). Prima di crearne uno nuovo,
+  (verde = successo, blu = in corso, zafferano, mattone, neutro, pino), `Tessera` (numero che sale contando, icona,
+  pastiglia; `tono` blu piena per la cosa principale, `grande` per la tessera doppia del bento, tinte `acqua`,
+  `lilla`, `ambra`, `rosa`; `children` sotto il numero), `Contatore`, `Menu` (azioni a comparsa, frecce ed Esc),
+  `Pannello`, `Schede`, `Dialogo` (al centro, per confermare), `Cassetto` (pannello laterale da destra: vedere o
+  fare qualcosa senza cambiare pagina). Altri: `BpmnViewer` (con `segnalino`), `ProcessoVivo` (il diagramma della
+  pratica, non per gli esterni), `GraficiScrivania` (riquadri con *Tabella*), `AnteprimaPratica`. Prima di crearne uno nuovo,
   usa o estendi questi.
 - **Aperture laterali**: un elemento di un elenco si apre nel `Cassetto` con il riassunto e l'azione principale;
   Ctrl/Cmd + clic apre la pagina; i documenti si vedono nel cassetto con `AnteprimaDocumento`. Le decisioni importanti si confermano in un `Dialogo` che dice cosa succede e
   che resta nello storico.
-- **Movimento**: solo opacità e spostamento, 160–320 ms, `--ease-morbido`. Elenchi e tessere entrano in sequenza con
+- **Flusso e grafici**: il diagramma BPMN vero è sempre in vista nella pratica e nell'attività; il passo dove è ferma
+  pulsa (`.bpmn-corrente`), i passi fatti si accendono in fila, ogni 8 secondi un segnalino giallo percorre il
+  cammino fatto (`lib/percorsoBpmn.js`). Grafici: un solo tono di blu per le grandezze, due serie al massimo con
+  legenda, barre che crescono dalla base (`.cresce-y`, `.cresce-x`), valori scritti, `aria-label` con i numeri e
+  pulsante *Tabella* con gli stessi valori. Indicatori dal server solo sulle pratiche visibili (`IndicatoriPratiche`).
+- **Movimento**: solo opacità e spostamento (le barre crescono in scala), 160–320 ms, `--ease-morbido`; numeri
+  che contano fino al valore (700 ms), menu che scendono (`animate-menu`). Elenchi e tessere entrano in sequenza con
   `.in-sequenza` (massimo 8 passi da 50 ms), il cassetto scorre da destra, le finestre si aprono con `animate-entra`,
   "adesso" pulsa con `animate-respiro`. Con "riduci il movimento" tutto è fermo (regola globale in `index.css`).
 - **Accessibilità** (WCAG 2.1 AA): focus giallo `#FFB000` spesso 3px, link "Vai al contenuto", finestre con Esc,

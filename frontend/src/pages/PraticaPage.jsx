@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, BookUser, Briefcase, Building2, CalendarDays, Hourglass, Inbox, UserRound, Workflow } from 'lucide-react'
+import { ArrowLeft, ArrowRight, BookUser, Briefcase, Building2, CalendarDays, CalendarClock, Hourglass, Inbox, Link2, MoreHorizontal, Printer, Timer, UserRound, Users, Workflow } from 'lucide-react'
 import { api } from '../api.js'
 import { giorno, quando } from '../lib/format.js'
 import Specchietto from '../components/Specchietto.jsx'
+import ProcessoVivo from '../components/ProcessoVivo.jsx'
 import Approfondimenti from '../components/Approfondimenti.jsx'
-import { Badge, Button, Caricamento, Dialogo, Errore, Pannello, useToast } from '../components/ui.jsx'
+import { Badge, Button, Caricamento, Dialogo, Errore, Menu, Pannello, Tessera, useToast } from '../components/ui.jsx'
 import { BadgeScadenza } from '../components/Scadenza.jsx'
 import { TabellaLettura } from '../components/CampoTabella.jsx'
 
@@ -54,14 +55,23 @@ export default function PraticaPage() {
               </span>
             </div>
           </div>
-          {p.taskId && (
-            <Link to={`/attivita/${p.taskId}`}
-                  className="inline-flex h-10 items-center gap-2 rounded-campo bg-verde-600 px-4 font-medium text-white hover:bg-verde-700">
-              Lavora l'attività <ArrowRight className="size-4" />
-            </Link>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            <Menu etichetta="Altre azioni" icona={MoreHorizontal} voci={[
+              ...messaggi.map(m => ({ label: `Registra arrivo: ${m.elemento}`, icona: Inbox, onClick: () => setDaConfermare(m) })),
+              { label: 'Copia il collegamento', icona: Link2, onClick: () => navigator.clipboard?.writeText(window.location.href).then(() => toast.ok('Collegamento copiato'), () => toast.errore('Non riesco a copiare il collegamento')) },
+              { label: 'Stampa la pratica', icona: Printer, onClick: () => window.print() }
+            ]} />
+            {p.taskId && (
+              <Link to={`/attivita/${p.taskId}`}
+                    className="inline-flex h-10 items-center gap-2 rounded-campo bg-verde-600 px-4 font-semibold text-white transition-colors hover:bg-verde-700">
+                Lavora l'attività <ArrowRight className="size-4" />
+              </Link>
+            )}
+          </div>
         </div>
+        <TesserePratica p={p} />
         <Specchietto p={p} />
+        <ProcessoVivo id={p.id} />
       </header>
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
@@ -156,6 +166,31 @@ export default function PraticaPage() {
           </div>
         </div>
       </Dialogo>
+    </div>
+  )
+}
+
+const GIORNO = 86400e3
+
+/** Tre tessere colorate in cima: il termine (tinta secondo l'urgenza), chi la riguarda, da quanto è aperta. */
+function TesserePratica({ p }) {
+  const conclusa = p.stato === 'conclusa'
+  const s = !conclusa && p.prossimaScadenza?.tipo === 'scadenza' ? p.prossimaScadenza : null
+  const manca = s ? new Date(s.quando).getTime() - Date.now() : null
+  const giorni = s ? Math.ceil(Math.abs(manca) / GIORNO) : null
+  const tonoTermine = !s ? 'neutro' : manca <= 0 ? 'rosa' : manca < 2 * GIORNO ? 'ambra' : 'acqua'
+  const parti = p.parti || []
+  const durata = Math.max(0, Math.floor(((conclusa ? new Date(p.fine) : new Date()) - new Date(p.inizio)) / GIORNO))
+  return (
+    <div className="in-sequenza grid gap-4 sm:grid-cols-3" aria-label="La pratica in breve">
+      <Tessera tono={tonoTermine} icona={Timer} etichetta={s ? (s.nome && s.nome !== 'Scadenza' ? s.nome : 'Termine') : 'Termine'}
+               valore={s ? giorni : '—'}
+               pastiglia={s ? (manca <= 0 ? (giorni === 1 ? 'giorno di ritardo' : 'giorni di ritardo') : giorni === 1 ? 'ultimo giorno' : 'giorni rimasti') : null}
+               nota={s ? (manca <= 0 ? `scaduto il ${quando(s.quando)}` : `scade il ${quando(s.quando)}`) : conclusa ? 'pratica conclusa' : 'nessun termine in corso'} />
+      <Tessera tono="lilla" icona={Users} etichetta="Chi la riguarda" valore={parti.length || (p.avviataDa ? 1 : 0)}
+               nota={parti.length ? parti.map(x => [x.utente, x.organizzazione].filter(Boolean).join(', ')).join(' · ') : p.avviataDa ? `avviata da ${p.avviataDa}` : 'nessuna parte'} />
+      <Tessera tono="neutro" icona={CalendarClock} etichetta={conclusa ? 'Durata' : 'Aperta da'} valore={durata}
+               pastiglia={durata === 1 ? 'giorno' : 'giorni'} nota={`dal ${quando(p.inizio)}`} />
     </div>
   )
 }

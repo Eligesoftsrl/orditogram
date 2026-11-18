@@ -123,6 +123,7 @@ export const api = {
     call('GET', `/api/admin/registro?q=${encodeURIComponent(q)}&azione=${encodeURIComponent(azione)}&pagina=${pagina}&dimensione=${dimensione}`),
   tipologie: () => call('GET', '/api/pratiche/tipologie'),
   pratica: (id) => call('GET', `/api/pratiche/${id}`),
+  indicatori: () => call('GET', '/api/pratiche/indicatori'),
   diagramma: (id) => call('GET', `/api/pratiche/${id}/diagramma`),
 
   // documenti

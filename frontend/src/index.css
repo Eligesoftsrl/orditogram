@@ -46,6 +46,14 @@
   --color-mattone-600: #CC334D;
   --color-mattone-700: #A3213A;
 
+  /* tinte delle tessere (direzione "bento a colori"): fondi chiari, testo pino, icona nel tono scuro */
+  --color-acqua-50: #DDF4F1;
+  --color-acqua-100: #BCE9E3;
+  --color-acqua-700: #00665C;
+  --color-lilla-50: #ECE9FB;
+  --color-lilla-100: #D9D3F7;
+  --color-lilla-700: #4B3BB0;
+
   --color-carta: #F2F5F8;
   --color-linea: #D4DCE4;
   --color-inchiostro: #17324D;
@@ -67,6 +75,7 @@
   --animate-sale: sale .32s var(--ease-morbido) both;
   --animate-cassetto: cassetto .3s var(--ease-morbido);
   --animate-velo: velo .2s ease-out;
+  --animate-menu: menu .18s var(--ease-morbido);
 }
 
 @keyframes treno {
@@ -92,6 +101,16 @@
   from { transform: translateX(-104%); }
   to   { transform: none; }
 }
+@keyframes menu {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes bpmn-pulsa {
+  0%, 100% { opacity: .95; }
+  50%      { opacity: .15; }
+}
+@keyframes cresce-y { from { transform: scaleY(0); } to { transform: none; } }
+@keyframes cresce-x { from { transform: scaleX(0); } to { transform: none; } }
 @keyframes velo {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -124,6 +143,9 @@
   }
   .etichetta { @apply mb-1.5 block text-sm font-medium text-pino-800; }
   .numeri { font-variant-numeric: tabular-nums; }
+  /* barre dei grafici che crescono dalla base, una dopo l'altra (--i = posizione) */
+  .cresce-y { transform-origin: bottom; animation: cresce-y .5s var(--ease-morbido) both; animation-delay: calc(min(var(--i, 0), 14) * 40ms + 150ms); }
+  .cresce-x { transform-origin: left; animation: cresce-x .5s var(--ease-morbido) both; animation-delay: calc(min(var(--i, 0), 14) * 40ms + 150ms); }
   /* entrata in sequenza: figli con style="--i: n" (fino a 8, poi tutti insieme) */
   .in-sequenza > * { animation: var(--animate-sale); animation-delay: calc(min(var(--i, 0), 8) * 50ms); }
   .in-sequenza > :nth-child(1) { --i: 0; } .in-sequenza > :nth-child(2) { --i: 1; } .in-sequenza > :nth-child(3) { --i: 2; }
@@ -133,10 +155,17 @@
 
 /* ---------------------------------------------------------------- bpmn-js */
 .bpmn-host .djs-container { font-family: var(--font-sans); }
+.bpmn-host .djs-visual > :nth-child(1) { transition: fill .32s var(--ease-morbido), stroke .32s var(--ease-morbido); }
 .bpmn-host .bjs-powered-by { opacity: .35; transform: scale(.8); }
 .bpmn-corrente:not(.djs-connection) .djs-visual > :nth-child(1) {
   stroke: var(--color-verde-700) !important; stroke-width: 3.5px !important; fill: var(--color-verde-100) !important;
 }
+.bpmn-corrente:not(.djs-connection) .djs-outline {
+  /* l'alone del passo dove la pratica è ferma: visibile e pulsante (solo opacità) */
+  visibility: visible !important; display: block !important; stroke: var(--color-verde-600) !important; stroke-width: 6px !important;
+  fill: none !important; animation: bpmn-pulsa 1.6s ease-in-out infinite;
+}
+.bpmn-fatto.djs-connection .djs-visual > path { stroke: var(--color-verde-600) !important; stroke-width: 2.5px !important; }
 .bpmn-fatto:not(.djs-connection) .djs-visual > :nth-child(1) {
   stroke: var(--color-verde-600) !important; fill: var(--color-verde-50) !important;
 }

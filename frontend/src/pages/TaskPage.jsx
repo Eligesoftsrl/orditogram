@@ -8,6 +8,7 @@ import DynamicForm from '../components/DynamicForm.jsx'
 import { Badge, Button, Caricamento, Errore, Pannello, useToast } from '../components/ui.jsx'
 import { BadgeScadenza } from '../components/Scadenza.jsx'
 import Approfondimenti from '../components/Approfondimenti.jsx'
+import ProcessoVivo from '../components/ProcessoVivo.jsx'
 
 /** Lavorare un'attività: il form a sinistra, documenti / storico / diagramma a destra. */
 export default function TaskPage() {
@@ -111,6 +112,8 @@ export default function TaskPage() {
                          suggerimentoDocumenti={null}
                          onDocumenti={carica} />
       </div>
+
+      <ProcessoVivo id={pratica.id} altezza={300} />
     </div>
   )
 }

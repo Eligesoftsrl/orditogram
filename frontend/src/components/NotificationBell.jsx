@@ -5,7 +5,7 @@ import { api } from '../api.js'
 import { cx, fa } from '../lib/format.js'
 
 /** Campanella: notifiche dell'utente, aggiornate ogni 30 secondi. */
-export default function NotificationBell({ suBlu = false }) {
+export default function NotificationBell({ suBlu = false, bluSoloMobile = false }) {
   const [dati, setDati] = useState({ nonLette: 0, notifiche: [] })
   const [aperto, setAperto] = useState(false)
   const box = useRef(null)
@@ -39,7 +39,8 @@ export default function NotificationBell({ suBlu = false }) {
   return (
     <div ref={box} className="relative">
       <button onClick={() => setAperto(!aperto)} aria-label={`Notifiche, ${dati.nonLette} da leggere`} aria-expanded={aperto}
-              className={cx('relative inline-flex size-10 items-center justify-center rounded-full transition-colors', suBlu ? 'text-white hover:bg-white/15' : 'text-pino-800 hover:bg-pino-900/5')}>
+              className={cx('relative inline-flex size-10 items-center justify-center rounded-full transition-colors', bluSoloMobile ? 'text-white hover:bg-white/15 lg:text-pino-800 lg:hover:bg-pino-900/5'
+                : suBlu ? 'text-white hover:bg-white/15' : 'text-pino-800 hover:bg-pino-900/5')}>
         <Bell className="size-5" />
         {dati.nonLette > 0 && (
           <span className="numeri absolute right-1 top-1 inline-flex min-w-[18px] items-center justify-center rounded-full bg-zafferano-400 px-1 text-[11px] font-bold leading-[18px] text-pino-950">

@@ -1,15 +1,25 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { CircleAlert, ChevronRight, Hand, Inbox, Plus, Route, Timer, Users } from 'lucide-react'
+import { ArrowRight, CircleAlert, ChevronRight, FolderOpen, Hand, Inbox, Plus, Route, Timer, Users } from 'lucide-react'
 import { api } from '../api.js'
 import { useAuth } from '../lib/auth.jsx'
 import { fa, giorno, saluto } from '../lib/format.js'
 import { contaScadenze } from '../lib/scadenze.js'
+import { inPrimoPiano, tonoScadenza } from '../lib/scrivania.js'
 import IterRail from '../components/IterRail.jsx'
+import AnteprimaPratica from '../components/AnteprimaPratica.jsx'
+import GraficiScrivania from '../components/GraficiScrivania.jsx'
 import { useAvvio } from '../components/Shell.jsx'
-import { Badge, Button, Caricamento, Errore, Pannello, Tessera, Vuoto, useToast } from '../components/ui.jsx'
+import { Badge, Button, Caricamento, Cassetto, Errore, Pannello, Tessera, Vuoto, useToast } from '../components/ui.jsx'
 import { BadgeScadenza, principale } from '../components/Scadenza.jsx'
 
+/** Ctrl/Cmd, Maiusc o clic centrale: il collegamento si apre come pagina, non nel pannello. */
+const apreLaPagina = (e) => e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0
+
+/**
+ * Scrivania a tessere ("bento"): la tessera blu grande con le prime attività, le altre con la loro tinta,
+ * poi gli elenchi. Un clic su un'attività o una pratica apre il riassunto nel pannello da destra.
+ */
 export default function Scrivania() {
   const { me } = useAuth()
   const apriAvvio = useAvvio()
@@ -20,6 +30,11 @@ export default function Scrivania() {
   const [errore, setErrore] = useState('')
   const [presa, setPresa] = useState(null)
   const [totalePratiche, setTotalePratiche] = useState(0)
+  // pannello laterale: { titolo, processo, idPratica, attivita? } e la pratica caricata
+  const [aperta, setAperta] = useState(null)
+  const [dettaglio, setDettaglio] = useState(null)
+  // i grafici arrivano dopo: se non ci sono (utente esterno, errore) la scrivania resta com'è
+  const [indicatori, setIndicatori] = useState(null)
 
   const carica = useCallback(async () => {
     try {
@@ -28,6 +43,15 @@ export default function Scrivania() {
     } catch (e) { setErrore(e.message) }
   }, [])
   useEffect(() => { carica() }, [carica])
+  useEffect(() => { if (!me.esterno) api.indicatori().then(setIndicatori).catch(() => setIndicatori(null)) }, [me.esterno])
+
+  useEffect(() => {
+    if (!aperta) { setDettaglio(null); return }
+    let annullato = false
+    setDettaglio(null)
+    api.pratica(aperta.idPratica).then(p => !annullato && setDettaglio(p)).catch(e => !annullato && setDettaglio({ errore: e.message }))
+    return () => { annullato = true }
+  }, [aperta])
 
   const prendi = async (t) => {
     setPresa(t.id)
@@ -45,44 +69,80 @@ export default function Scrivania() {
   const libere = tasks.filter(t => !t.assignee)
   const nome = me.fullName.split(' ')[0]
   const conteggi = contaScadenze(tasks)
+  const prime = inPrimoPiano(mie, 3)
+
+  const apriAttivita = (e, t) => {
+    if (apreLaPagina(e)) return
+    e.preventDefault()
+    setAperta({ titolo: t.pratica || 'Pratica senza titolo', processo: t.processo, idPratica: t.processInstanceId, attivita: t })
+  }
+  const apriPratica = (e, p) => {
+    if (apreLaPagina(e)) return
+    e.preventDefault()
+    setAperta({ titolo: p.titolo, processo: p.processo, idPratica: p.id })
+  }
 
   return (
     <div className="space-y-7">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm text-grafite">{giorno(new Date())}</p>
-          <h1 className="mt-1 text-[34px] font-semibold leading-tight">{saluto()}, {nome}</h1>
-          <p className="mt-2 max-w-2xl text-[17px] text-pino-800">{riassunto(mie.length, libere.length)}</p>
+          <p className="text-[15px] text-grafite">{giorno(new Date())}</p>
+          <h1 className="mt-1 text-[36px] font-bold leading-tight tracking-tight">{saluto()}, {nome}</h1>
+          <p className="mt-1.5 max-w-2xl text-[17px] text-pino-800">{riassunto(mie.length, libere.length)}</p>
         </div>
+        <Button variante="primario" misura="lg" icona={Plus} className="hidden lg:inline-flex" onClick={() => apriAvvio()}>Nuova pratica</Button>
       </header>
 
-      <div className="in-sequenza grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Riepilogo">
-        <Tessera tono="blu" icona={Inbox} etichetta="Tocca a te" valore={mie.length}
-                 nota={mie.length ? 'attività in carico a te' : 'niente in sospeso'} />
-        <Tessera icona={Users} etichetta="Del tuo gruppo" valore={libere.length}
+      {/* bento: la tessera blu grande e quattro tessere di tinte diverse */}
+      <div className="in-sequenza grid grid-cols-2 gap-4 lg:grid-cols-4" aria-label="Riepilogo">
+        <Tessera tono="blu" grande icona={Inbox} etichetta="Tocca a te" valore={mie.length} className="col-span-2 lg:row-span-2"
+                 pastiglia={libere.length ? `+${libere.length} nel gruppo` : null}
+                 nota={mie.length ? null : 'Niente in carico a te: prendi un\'attività del gruppo per iniziare.'}>
+          {prime.length > 0 && (
+            <ul className="mt-auto space-y-2 pt-2">
+              {prime.map(t => (
+                <li key={t.id}>
+                  <Link to={`/attivita/${t.id}`} onClick={(e) => apriAttivita(e, t)}
+                        className="flex items-center justify-between gap-3 rounded-blocco bg-white/12 px-4 py-3 text-white transition-[background-color,transform] duration-200 hover:translate-x-0.5 hover:bg-white/20">
+                    <span className="min-w-0">
+                      <span className="block truncate font-semibold">{t.name}</span>
+                      <span className="block truncate text-sm text-verde-50">{t.pratica || 'Pratica senza titolo'}</span>
+                    </span>
+                    <PastigliaScadenza t={t} />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Tessera>
+        <Tessera tono="lilla" icona={Users} etichetta="Del tuo gruppo" valore={libere.length}
                  nota={libere.length ? 'da prendere in carico' : 'nessuna in attesa'} />
-        <Tessera tono={conteggi.scadute ? 'mattone' : 'neutro'} icona={CircleAlert} etichetta="Scadute" valore={conteggi.scadute}
-                 pastiglia={conteggi.scadute ? 'da recuperare' : null} nota="tra le tue attività e del gruppo" />
-        <Tessera tono={conteggi.vicine ? 'zafferano' : 'neutro'} icona={Timer} etichetta="In scadenza" valore={conteggi.vicine}
-                 pastiglia={conteggi.vicine ? 'entro 2 giorni' : null} nota={`${totalePratiche} pratiche in corso`} />
+        <Tessera tono="acqua" icona={Timer} etichetta="In scadenza" valore={conteggi.vicine}
+                 nota={conteggi.vicine ? 'entro 2 giorni' : 'nulla nei prossimi 2 giorni'} />
+        <Tessera tono={conteggi.scadute ? 'rosa' : 'neutro'} icona={CircleAlert} etichetta="Scadute" valore={conteggi.scadute}
+                 nota={conteggi.scadute ? 'da recuperare' : 'tutto nei tempi'} />
+        <Tessera tono="ambra" icona={FolderOpen} etichetta="Pratiche in corso" valore={totalePratiche}
+                 nota="che puoi vedere" as={Link} to="/pratiche" />
       </div>
+
+      <GraficiScrivania dati={indicatori} />
 
       <div className="in-sequenza grid gap-6 xl:grid-cols-[1.35fr_1fr] [&>*]:min-w-0">
         <div className="space-y-6">
           <Pannello titolo={<Titolo testo="Tocca a te" n={mie.length} accento />} corpoClassName="p-0">
             {mie.length === 0
               ? <Vuoto icona={Inbox} titolo="Niente in carico a te">Prendi in carico un'attività del tuo gruppo per iniziare.</Vuoto>
-              : <ul className="divide-y divide-linea">{mie.map(t => <RigaAttivita key={t.id} t={t} />)}</ul>}
+              : <ul className="in-sequenza divide-y divide-linea">{mie.map(t => <RigaAttivita key={t.id} t={t} onApri={apriAttivita} />)}</ul>}
           </Pannello>
 
           <Pannello titolo={<Titolo testo="Disponibili per il tuo gruppo" n={libere.length} />} corpoClassName="p-0">
             {libere.length === 0
               ? <Vuoto titolo="Nessuna attività in attesa">Quando arriva una nuova attività per i tuoi gruppi la trovi qui.</Vuoto>
               : (
-                <ul className="divide-y divide-linea">
+                <ul className="in-sequenza divide-y divide-linea">
                   {libere.map(t => (
-                    <RigaAttivita key={t.id} t={t} azione={
-                      <Button misura="sm" icona={Hand} attesa={presa === t.id} onClick={(e) => { e.preventDefault(); void prendi(t) }}>
+                    <RigaAttivita key={t.id} t={t} onApri={apriAttivita} azione={
+                      <Button misura="sm" icona={Hand} attesa={presa === t.id} onClick={(e) => { e.preventDefault(); e.stopPropagation(); void prendi(t) }}>
                         Lavora
                       </Button>
                     } />
@@ -93,20 +153,20 @@ export default function Scrivania() {
         </div>
 
         <Pannello titolo={<Titolo testo="Pratiche in corso" n={totalePratiche} />}
-                  azioni={<Link to="/pratiche" className="text-sm font-medium text-verde-700 hover:underline">Tutte le pratiche</Link>}
+                  azioni={<Link to="/pratiche" className="text-sm font-semibold text-verde-700 hover:underline">Tutte le pratiche</Link>}
                   corpoClassName="p-0">
           {pratiche.length === 0
             ? <Vuoto icona={Route} titolo="Nessuna pratica in corso" azione={<Button misura="sm" icona={Plus} onClick={() => apriAvvio()}>Avvia una pratica</Button>}>
                 Le pratiche che avvii o su cui lavori compaiono qui, con il loro percorso.
               </Vuoto>
             : (
-              <ul className="divide-y divide-linea">
+              <ul className="in-sequenza divide-y divide-linea">
                 {pratiche.slice(0, 8).map(p => (
                   <li key={p.id}>
-                    <Link to={`/pratiche/${p.id}`} className="block px-5 py-4 hover:bg-carta/70">
+                    <Link to={`/pratiche/${p.id}`} onClick={(e) => apriPratica(e, p)} className="block px-5 py-4 transition-colors hover:bg-verde-50/60">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="truncate font-medium text-pino-900">{p.titolo}</p>
+                          <p className="truncate font-semibold text-pino-900">{p.titolo}</p>
                           <p className="mt-0.5 text-[13px] text-grafite">{p.processo}</p>
                         </div>
                         <IterRail percorso={p.percorso} compatto className="mt-1.5 shrink-0" />
@@ -124,6 +184,17 @@ export default function Scrivania() {
             )}
         </Pannello>
       </div>
+
+      <Cassetto aperto={!!aperta} onClose={() => setAperta(null)} icona={aperta?.attivita ? Inbox : FolderOpen}
+                titolo={aperta?.titolo || ''} sottotitolo={aperta?.attivita ? `${aperta.attivita.name}, ${aperta.processo || ''}` : aperta?.processo}
+                piede={aperta && <>
+                  <Button onClick={() => navigate(`/pratiche/${aperta.idPratica}`)}>Apri la pratica</Button>
+                  {aperta.attivita && (aperta.attivita.mine
+                    ? <Button variante="primario" icona={ArrowRight} onClick={() => navigate(`/attivita/${aperta.attivita.id}`)}>Lavora l'attività</Button>
+                    : !aperta.attivita.assignee && <Button variante="primario" icona={Hand} attesa={presa === aperta.attivita.id} onClick={() => prendi(aperta.attivita)}>Prendi e lavora</Button>)}
+                </>}>
+        {!dettaglio ? <Caricamento /> : dettaglio.errore ? <Errore>{dettaglio.errore}</Errore> : <AnteprimaPratica p={dettaglio} />}
+      </Cassetto>
     </div>
   )
 }
@@ -137,6 +208,15 @@ function riassunto(mie, libere) {
   return `Hai ${a} e ${b}.`
 }
 
+/** La scadenza sulla tessera blu: pastiglia bianca, con parola e simbolo (mai il solo colore). */
+function PastigliaScadenza({ t }) {
+  const s = principale(t.scadenze)
+  if (!s || s.tipo !== 'scadenza') return <span className="shrink-0 text-sm text-verde-50">{fa(t.createdDate)}</span>
+  const tono = tonoScadenza(t)
+  const testo = tono === 'mattone' ? '! scaduta' : `◷ ${fa(s.quando)}`
+  return <span className="shrink-0 whitespace-nowrap rounded-full bg-white px-2.5 py-0.5 text-[13px] font-semibold text-pino-950">{testo}</span>
+}
+
 function Titolo({ testo, n, accento }) {
   return (
     <h2 className="flex items-center gap-2 text-lg font-semibold">
@@ -147,12 +227,12 @@ function Titolo({ testo, n, accento }) {
   )
 }
 
-function RigaAttivita({ t, azione }) {
+function RigaAttivita({ t, azione, onApri }) {
   return (
     <li>
-      <Link to={`/attivita/${t.id}`} className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-verde-50/60">
+      <Link to={`/attivita/${t.id}`} onClick={(e) => onApri(e, t)} className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-verde-50/60">
         <div className="min-w-0 flex-1">
-          <p className="truncate font-medium text-pino-900">{t.pratica || 'Pratica senza titolo'}</p>
+          <p className="truncate font-semibold text-pino-900">{t.pratica || 'Pratica senza titolo'}</p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <Badge tono={t.mine ? 'blu' : 'neutro'}>{t.name}</Badge>
             <BadgeScadenza s={principale(t.scadenze)} />

@@ -2,6 +2,7 @@ import { createPortal } from 'react-dom'
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { CircleCheck, CircleX, LoaderCircle, X } from 'lucide-react'
 import { cx, iniziali } from '../lib/format.js'
+import { valoreContatore } from '../lib/scrivania.js'
 
 // ================================================================= pulsanti
 
@@ -15,9 +16,10 @@ const varianti = {
 }
 const misure = { sm: 'h-8 px-3 text-sm gap-1.5', md: 'h-10 px-4 text-[15px] gap-2', lg: 'h-12 px-5 text-base gap-2' }
 
-export function Button({ variante = 'secondario', misura = 'md', icona: Icona, attesa, className, children, ...props }) {
+export function Button({ ref, variante = 'secondario', misura = 'md', icona: Icona, attesa, className, children, ...props }) {
   return (
     <button
+      ref={ref}
       {...props}
       disabled={props.disabled || attesa}
       className={cx('inline-flex shrink-0 items-center justify-center rounded-campo font-semibold transition-[background-color,color,border-color,transform] duration-150 active:scale-[.97]',
@@ -209,30 +211,112 @@ const toniTessera = {
   neutro: 'bg-white border-linea text-pino-900',
   mattone: 'bg-white border-linea text-pino-900',
   zafferano: 'bg-white border-linea text-pino-900',
-  verde: 'bg-white border-linea text-pino-900'
+  verde: 'bg-white border-linea text-pino-900',
+  // tinte piene della scrivania a tessere: fondo chiaro, testo pino (contrasto oltre 10:1)
+  acqua: 'bg-acqua-50 border-acqua-50 text-pino-900',
+  lilla: 'bg-lilla-50 border-lilla-50 text-pino-900',
+  ambra: 'bg-zafferano-50 border-zafferano-50 text-pino-900',
+  rosa: 'bg-mattone-50 border-mattone-50 text-pino-900'
 }
 const iconeTessera = {
   blu: 'bg-white/20 text-white', neutro: 'bg-carta text-grafite', mattone: 'bg-mattone-50 text-mattone-700',
-  zafferano: 'bg-zafferano-50 text-zafferano-800', verde: 'bg-ok-50 text-ok-700'
+  zafferano: 'bg-zafferano-50 text-zafferano-800', verde: 'bg-ok-50 text-ok-700',
+  acqua: 'bg-white text-acqua-700', lilla: 'bg-white text-lilla-700', ambra: 'bg-white text-zafferano-800', rosa: 'bg-white text-mattone-700'
 }
+const noteTessera = { blu: 'text-white/90', acqua: 'text-pino-800', lilla: 'text-pino-800', ambra: 'text-pino-800', rosa: 'text-pino-800' }
 
-/** Tessera con un numero: icona, etichetta, valore grande, pastiglia e nota. Con `to` è un collegamento. */
-export function Tessera({ tono = 'neutro', icona: Icona, etichetta, valore, pastiglia, nota, as: Comp = 'div', className, ...props }) {
+/**
+ * Tessera con un numero: icona, etichetta, valore grande (che sale contando), pastiglia e nota.
+ * Con `to` è un collegamento; `children` va sotto il numero (es. le prime attività nella tessera grande).
+ */
+export function Tessera({ tono = 'neutro', icona: Icona, etichetta, valore, pastiglia, nota, grande, as: Comp = 'div', className, children, ...props }) {
   const piena = tono === 'blu'
   return (
     <Comp {...props}
-      className={cx('group flex flex-col gap-2.5 rounded-pannello border p-4 shadow-pannello transition-[transform,box-shadow] duration-150',
-        props.to || props.href || props.onClick ? 'hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-12px_rgb(0_40_80/0.35)]' : '', toniTessera[tono], className)}>
+      className={cx('group flex flex-col gap-2.5 rounded-pannello border shadow-pannello transition-[transform,box-shadow] duration-200 ease-[var(--ease-morbido)]',
+        grande ? 'p-6' : 'p-5',
+        props.to || props.href || props.onClick ? 'hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-14px_rgb(0_40_80/0.4)]' : '', toniTessera[tono], className)}>
       <span className="flex items-center gap-2.5">
         {Icona && <span className={cx('inline-flex size-9 items-center justify-center rounded-[10px]', iconeTessera[tono])}><Icona className="size-[18px]" /></span>}
-        <span className={cx('text-[15px] font-semibold', piena ? 'text-white/90' : 'text-grafite')}>{etichetta}</span>
+        <span className={cx('text-[15px] font-semibold', noteTessera[tono] || 'text-grafite')}>{etichetta}</span>
+        {grande && pastiglia && <span className={cx('ml-auto rounded-full px-2.5 py-0.5 text-[13px] font-semibold', iconeTessera[tono])}>{pastiglia}</span>}
       </span>
       <span className="flex flex-wrap items-baseline gap-2.5">
-        <span className="numeri text-4xl font-semibold leading-none tracking-tight">{valore}</span>
-        {pastiglia && <span className={cx('rounded-full px-2 py-0.5 text-xs font-semibold', iconeTessera[tono])}>{pastiglia}</span>}
+        <span className={cx('numeri font-bold leading-none tracking-tight', grande ? 'text-7xl' : 'text-[44px]')}><Contatore valore={valore} /></span>
+        {!grande && pastiglia && <span className={cx('rounded-full px-2 py-0.5 text-xs font-semibold', iconeTessera[tono])}>{pastiglia}</span>}
       </span>
-      {nota && <span className={cx('text-[13px]', piena ? 'text-white/85' : 'text-grafite')}>{nota}</span>}
+      {nota && <span className={cx('text-sm', noteTessera[tono] || 'text-grafite')}>{nota}</span>}
+      {children}
     </Comp>
+  )
+}
+
+const riduciMovimento = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
+/** Un numero che sale contando all'apertura (700 ms); fermo con "riduci il movimento". Per i lettori di schermo vale subito il valore finale. */
+export function Contatore({ valore, durata = 700 }) {
+  const numero = typeof valore === 'number' && Number.isFinite(valore)
+  const [mostrato, setMostrato] = useState(() => (numero && !riduciMovimento() ? 0 : valore))
+  useEffect(() => {
+    if (!numero || riduciMovimento()) { setMostrato(valore); return }
+    let id
+    const inizio = performance.now()
+    const passo = (ora) => {
+      const v = valoreContatore(valore, ora - inizio, durata)
+      setMostrato(v)
+      if (v !== valore) id = requestAnimationFrame(passo)
+    }
+    id = requestAnimationFrame(passo)
+    return () => cancelAnimationFrame(id)
+  }, [valore, numero, durata])
+  if (!numero) return valore
+  return <><span aria-hidden="true">{mostrato}</span><span className="sr-only">{valore}</span></>
+}
+
+// ================================================================= menu a comparsa
+
+/**
+ * Menu che si apre da un pulsante (es. "Altre azioni"): voci [{ label, icona, onClick, pericolo, disabled }].
+ * Si chiude con Esc, con un clic fuori o scegliendo una voce; frecce su e giù per muoversi tra le voci.
+ */
+export function Menu({ etichetta, icona: Icona, voci, allinea = 'destra', variante = 'secondario', className }) {
+  const [aperto, setAperto] = useState(false)
+  const radice = useRef(null)
+  const bottone = useRef(null)
+  useEffect(() => {
+    if (!aperto) return
+    const fuori = (e) => { if (!radice.current?.contains(e.target)) setAperto(false) }
+    document.addEventListener('mousedown', fuori)
+    radice.current?.querySelector('[role=menuitem]:not([disabled])')?.focus()
+    return () => document.removeEventListener('mousedown', fuori)
+  }, [aperto])
+  const tasti = (e) => {
+    if (e.key === 'Escape') { setAperto(false); bottone.current?.focus(); return }
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
+    e.preventDefault()
+    const lista = [...radice.current.querySelectorAll('[role=menuitem]:not([disabled])')]
+    const i = lista.indexOf(document.activeElement)
+    lista[(i + (e.key === 'ArrowDown' ? 1 : lista.length - 1)) % lista.length]?.focus()
+  }
+  return (
+    <div ref={radice} className={cx('relative', className)} onKeyDown={tasti}>
+      <Button ref={bottone} variante={variante} icona={Icona} aria-haspopup="menu" aria-expanded={aperto}
+              onClick={() => setAperto(a => !a)}>{etichetta}</Button>
+      {aperto && (
+        <div role="menu" aria-label={etichetta}
+             className={cx('absolute z-40 mt-2 w-64 origin-top animate-menu rounded-blocco border border-linea bg-white p-1.5 shadow-sollevato', allinea === 'destra' ? 'right-0' : 'left-0')}>
+          {voci.map((v, i) => (
+            <button key={i} role="menuitem" type="button" disabled={v.disabled}
+                    onClick={() => { setAperto(false); v.onClick?.() }}
+                    className={cx('flex w-full items-center gap-2.5 rounded-campo px-3 py-2.5 text-left text-[15px] transition-colors disabled:opacity-50',
+                      v.pericolo ? 'text-mattone-700 hover:bg-mattone-50 focus:bg-mattone-50' : 'text-pino-900 hover:bg-verde-50 focus:bg-verde-50')}>
+              {v.icona && <v.icona className="size-4 shrink-0" aria-hidden="true" />}
+              {v.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 

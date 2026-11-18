@@ -25,6 +25,15 @@ Form avanzati, prima parte.
   per le buste firmate `.p7m` si vede il contenuto estratto.
 - **Movimento**: entrate in sequenza, pannelli che scorrono, passo attuale che pulsa; tutto fermo con
   "riduci il movimento". Nuovi componenti `Cassetto` e `Tessera`; le finestre riportano il focus dove era.
+- **Grafica "bento a colori"**: scrivania a tessere di misure e tinte diverse (blu, acqua, lilla, ambra, rosa) con i
+  numeri che salgono contando; menu laterale scuro che si stringe a sole icone; clic su attività e pratiche della
+  scrivania che apre il riassunto da destra; nella pratica tessere del termine, delle parti e della durata e il menu
+  *Altre azioni*.
+- **Il processo dal vivo**: il diagramma BPMN è sempre in vista nella pratica e nell'attività, con il passo attuale
+  che pulsa, i passi fatti che si accendono in fila e un segnalino che percorre il cammino fatto.
+- **Grafici della scrivania** con tabella dei valori a un clic: dove si trovano le pratiche, avanzamento stimato,
+  aperte e chiuse per settimana, termini in arrivo. Nuova API `GET /api/pratiche/indicatori` (solo pratiche visibili,
+  non per gli utenti esterni).
 
 - **Skill per costruire soluzioni** (`.claude/skills/orditogram-soluzione`): dalle specifiche di un cliente Claude
   scrive l'analisi (lacune, scelte, domande), genera BPMN, form, anagrafiche, permessi e pacchetto `.orditogram.zip`,
