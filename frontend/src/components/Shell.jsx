@@ -44,27 +44,29 @@ export default function Shell() {
   const studio = sezioniStudio(me).map(s => ({ ...s, icona: icone[s.chiave] }))
 
   // `ridotta`: solo l'icona, con il nome come etichetta accessibile e suggerimento
+  // voce attiva come nella proposta approvata: fondo azzurro, testo blu e barretta blu a sinistra
   const Voce = ({ v, ridotta }) => (
     <NavLink to={v.to} end={v.end} onClick={() => setMenu(false)} aria-label={ridotta ? v.label : undefined} title={ridotta ? v.label : undefined}
-      className={({ isActive }) => cx('group flex h-11 items-center gap-3 rounded-blocco text-[15px] font-semibold transition-[background-color,color] duration-200',
+      className={({ isActive }) => cx('group relative flex h-11 items-center gap-3 rounded-blocco text-[15px] font-semibold transition-[background-color,color] duration-200',
         ridotta ? 'justify-center px-0' : 'px-3',
-        isActive ? 'bg-verde-600 text-white shadow-[0_8px_20px_-10px_rgb(0_102_204/0.9)]' : 'text-pino-200 hover:bg-white/8 hover:text-white')}>
+        isActive ? 'bg-verde-50 text-verde-700 before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:bg-verde-600'
+          : 'text-pino-800 hover:bg-carta hover:text-verde-700')}>
       <v.icona className="size-[19px] shrink-0" />
       {!ridotta && <span className="truncate">{v.label}</span>}
     </NavLink>
   )
 
-  // menu laterale scuro (blu notte): apre e chiude con il pulsante in basso
-  const barra = (ridotta) => (
-    <div className="flex h-full flex-col overflow-y-auto overflow-x-hidden bg-pino-950 px-3 py-5 text-pino-200">
-      <div className={cx('flex items-center px-1', ridotta ? 'justify-center' : 'justify-between')}>
-        {ridotta
-          ? <Logo soloSimbolo />
-          : <Logo />}
-        <button className="rounded-full p-1.5 text-pino-200 hover:bg-white/10 lg:hidden" onClick={() => setMenu(false)} aria-label="Chiudi menu"><X className="size-5" /></button>
-      </div>
+  // menu laterale chiaro sotto l'intestazione blu (proposta grafica approvata, linguaggio di Designers Italia)
+  const barra = (ridotta, nelCassetto = false) => (
+    <div className="flex h-full flex-col overflow-y-auto overflow-x-hidden border-r border-linea bg-white px-3 py-5 text-pino-800">
+      {nelCassetto && (
+        <div className="mb-2 flex items-center justify-between px-1">
+          <Logo chiaro={false} />
+          <button className="rounded-full p-1.5 text-grafite hover:bg-carta" onClick={() => setMenu(false)} aria-label="Chiudi menu"><X className="size-5" /></button>
+        </div>
+      )}
 
-      <Button variante="primario" icona={Plus} className={cx('mt-7', ridotta ? 'mx-auto w-11 px-0' : 'mx-1')}
+      <Button variante="primario" icona={Plus} className={cx(nelCassetto ? 'mt-5' : 'mt-1', ridotta ? 'mx-auto w-11 px-0' : 'mx-1')}
               aria-label={ridotta ? nuovaPratica() : undefined} title={ridotta ? nuovaPratica() : undefined}
               onClick={() => { setMenu(false); apriAvvio() }}>
         {!ridotta && nuovaPratica()}
@@ -76,37 +78,37 @@ export default function Shell() {
 
       {studio.length > 0 && (
         <nav className="mt-7 space-y-1" aria-label="Studio">
-          {ridotta ? <span className="mx-auto mb-2 block h-px w-8 bg-white/15" aria-hidden="true" />
-            : <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-[.06em] text-pino-300">Studio</p>}
+          {ridotta ? <span className="mx-auto mb-2 block h-px w-8 bg-linea" aria-hidden="true" />
+            : <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-[.06em] text-grafite">Studio</p>}
           {studio.map(v => <Voce key={v.to} v={v} ridotta={ridotta} />)}
         </nav>
       )}
 
       <div className="mt-auto space-y-2 pt-6">
-        <div className={cx('flex items-center gap-3 rounded-blocco bg-pino-900 py-2.5', ridotta ? 'flex-col px-1' : 'px-2.5')}>
+        <div className={cx('flex items-center gap-3 rounded-blocco bg-carta py-2.5', ridotta ? 'flex-col px-1' : 'px-2.5')}>
           <Avatar nome={me.fullName} className="bg-verde-600" />
           {!ridotta && (
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[15px] font-semibold text-white">{me.fullName}</p>
-              <p className="truncate text-[13px] text-pino-300">{descriviUtente(me)}</p>
+              <p className="truncate text-[15px] font-semibold text-pino-900">{me.fullName}</p>
+              <p className="truncate text-[13px] text-grafite">{descriviUtente(me)}</p>
             </div>
           )}
           {modo === 'locale' && (
-            <NavLink to="/password" onClick={() => setMenu(false)} className="rounded-full p-2 text-pino-200 hover:bg-white/10 hover:text-white"
+            <NavLink to="/password" onClick={() => setMenu(false)} className="rounded-full p-2 text-grafite hover:bg-white hover:text-verde-700"
                      aria-label="Cambia password" title="Cambia password">
               <KeyRound className="size-[18px]" />
             </NavLink>
           )}
-          <button onClick={logout} className="rounded-full p-2 text-pino-200 hover:bg-white/10 hover:text-white" aria-label="Esci" title="Esci">
+          <button onClick={logout} className="rounded-full p-2 text-grafite hover:bg-white hover:text-verde-700" aria-label="Esci" title="Esci">
             <LogOut className="size-[18px]" />
           </button>
         </div>
         <button type="button" onClick={cambiaLarghezza} aria-expanded={!ridotta} aria-controls="menu-laterale"
-                className={cx('hidden h-10 w-full items-center gap-2 rounded-blocco px-3 text-sm font-semibold text-pino-200 hover:bg-white/8 hover:text-white lg:flex', ridotta && 'justify-center px-0')}
+                className={cx('hidden h-10 w-full items-center gap-2 rounded-blocco px-3 text-sm font-semibold text-grafite hover:bg-carta hover:text-verde-700 lg:flex', ridotta && 'justify-center px-0')}
                 aria-label={ridotta ? 'Allarga il menu' : 'Stringi il menu'} title={ridotta ? 'Allarga il menu' : 'Stringi il menu'}>
           {ridotta ? <PanelLeftOpen className="size-[18px]" /> : <><PanelLeftClose className="size-[18px]" /> Stringi il menu</>}
         </button>
-        {versione && !ridotta && <p className="px-2 text-[11px] text-pino-300" title={versione.build ? `Build ${versione.build}` : ''}>Orditogram {versione.versione}</p>}
+        {versione && !ridotta && <p className="px-2 text-[11px] text-grafite" title={versione.build ? `Build ${versione.build}` : ''}>Orditogram {versione.versione}</p>}
       </div>
     </div>
   )
@@ -117,32 +119,30 @@ export default function Shell() {
       <a href="#contenuto" className="sr-only z-[70] rounded-campo bg-white px-4 py-2 font-semibold text-verde-700 focus:not-sr-only focus:fixed focus:left-4 focus:top-4">
         Vai al contenuto
       </a>
-      {/* intestazione a fasce come nei siti della PA */}
-      {/* sul telefono: intestazione blu con il menu; da tablet largo in su: barra chiara sopra il contenuto */}
-      <header className={cx('fixed right-0 top-0 z-30 bg-verde-600 text-white transition-[left] duration-300 ease-[var(--ease-morbido)] lg:bg-carta/85 lg:text-pino-900 lg:backdrop-blur',
-                            stretto ? 'left-0 lg:left-[84px]' : 'left-0 lg:left-[256px]')}>
-        <div className="flex h-16 items-center gap-3 px-4 sm:px-6 lg:px-8">
+      {/* intestazione blu a tutta larghezza, come nei siti della PA; sotto, il menu laterale chiaro */}
+      <header className="fixed inset-x-0 top-0 z-40 bg-verde-600 text-white shadow-[0_1px_0_rgb(0_0_0/.08)]">
+        <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
           <button className="rounded-full p-2 hover:bg-white/15 lg:hidden" onClick={() => setMenu(true)} aria-label="Apri menu"><Menu className="size-5" /></button>
-          <Logo className="lg:hidden" />
+          <Logo />
           <div className="ml-auto flex items-center gap-2">
             <Button variante="chiaro" misura="sm" icona={Plus} className="lg:hidden" onClick={() => apriAvvio()}>Nuova</Button>
-            <NotificationBell bluSoloMobile />
+            <NotificationBell suBlu />
           </div>
         </div>
       </header>
 
       <div className={cx('min-h-screen pt-16 transition-[padding] duration-300 ease-[var(--ease-morbido)]', stretto ? 'lg:pl-[84px]' : 'lg:pl-[256px]')}>
-        <aside id="menu-laterale" aria-label="Menu" className={cx('fixed inset-y-0 left-0 z-30 hidden transition-[width] duration-300 ease-[var(--ease-morbido)] lg:block', larghezza)}>{barra(stretto)}</aside>
+        <aside id="menu-laterale" aria-label="Menu" className={cx('fixed bottom-0 left-0 top-16 z-30 hidden transition-[width] duration-300 ease-[var(--ease-morbido)] lg:block', larghezza)}>{barra(stretto)}</aside>
 
         {menu && (
-          <div className="fixed inset-0 z-40 lg:hidden">
+          <div className="fixed inset-0 z-50 lg:hidden">
             <button type="button" aria-label="Chiudi il menu" className="absolute inset-0 animate-velo cursor-default bg-pino-950/40" onClick={() => setMenu(false)} />
-            <aside className="absolute inset-y-0 left-0 w-[280px] animate-[cassetto-sinistra_.28s_var(--ease-morbido)]">{barra(false)}</aside>
+            <aside className="absolute inset-y-0 left-0 w-[280px] animate-[cassetto-sinistra_.28s_var(--ease-morbido)]">{barra(false, true)}</aside>
           </div>
         )}
 
         <main id="contenuto" tabIndex={-1} key={location.pathname}
-              className={location.pathname.startsWith('/studio/editor') ? 'outline-none' : 'mx-auto max-w-[1280px] px-4 pb-16 pt-7 outline-none sm:px-8'}>
+              className={location.pathname.startsWith('/studio/editor') ? 'outline-none' : 'mx-auto max-w-[1280px] animate-pagina px-4 pb-16 pt-7 outline-none sm:px-8'}>
           <Outlet />
         </main>
       </div>

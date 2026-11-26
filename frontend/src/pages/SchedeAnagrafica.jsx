@@ -6,7 +6,7 @@ import { quando } from '../lib/format.js'
 import { STATI_SCHEDA, colonneEsportazione, descriviImportazione } from '../lib/anagrafiche.js'
 import DynamicForm from '../components/DynamicForm.jsx'
 import Esporta from '../components/Esporta.jsx'
-import { Badge, Button, Caricamento, Dialogo, Errore, Pannello, Vuoto, useToast } from '../components/ui.jsx'
+import { Badge, Button, Caricamento, Dialogo, Errore, Pannello, Vuoto, useToast, IntestazionePagina } from '../components/ui.jsx'
 
 const DIMENSIONE = 25
 
@@ -54,9 +54,9 @@ export default function SchedeAnagrafica() {
   const pagine = Math.max(1, Math.ceil(totale / DIMENSIONE))
 
   return (
-    <div className="space-y-6">
+    <div className="in-sequenza space-y-6">
       <Indietro />
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <IntestazionePagina percorso={[{ label: 'Anagrafiche', to: '/anagrafiche' }, { label: tipo.nome }]}>
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">{tipo.nome}</h1>
           {tipo.descrizione && <p className="mt-1 max-w-2xl text-grafite">{tipo.descrizione}</p>}
@@ -74,7 +74,7 @@ export default function SchedeAnagrafica() {
           )}
           {modifica && <Button variante="primario" icona={Plus} onClick={() => setNuova(true)}>Nuova scheda</Button>}
         </div>
-      </header>
+      </IntestazionePagina>
 
       {esito && (
         <Pannello titolo="Importazione" azioni={<button onClick={() => setEsito(null)} className="rounded-md p-1.5 text-grafite hover:bg-carta" aria-label="Chiudi l'esito dell'importazione"><X className="size-5" /></button>}>

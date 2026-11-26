@@ -3,7 +3,7 @@ import { ChevronDown, ChevronRight, FolderOpen, ListChecks, Plus, Search, Workfl
 import { api } from '../../api.js'
 import { cx, dataOraCompleta } from '../../lib/format.js'
 import FormEditor from '../../components/FormEditor.jsx'
-import { Button, Caricamento, Errore, Pannello, Vuoto } from '../../components/ui.jsx'
+import { Button, Caricamento, Errore, Pannello, Vuoto, IntestazionePagina } from '../../components/ui.jsx'
 import Esporta from '../../components/Esporta.jsx'
 import { gl } from '../../lib/glossario.js'
 
@@ -28,8 +28,8 @@ export default function FormStudio() {
   const alterna = (g) => setChiusi(s => { const n = new Set(s); n.has(g) ? n.delete(g) : n.add(g); return n })
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+    <div className="in-sequenza space-y-6">
+      <IntestazionePagina percorso={[{ label: 'Studio' }, { label: 'Form' }]}>
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Form</h1>
           <p className="mt-1 max-w-2xl text-grafite">Le schermate che gli utenti compilano, raggruppate per tipologia di {gl('pratica', 'nome')}. Li puoi creare qui o direttamente dall'editor dei processi.</p>
@@ -50,7 +50,7 @@ export default function FormStudio() {
           )}
           <Button variante="primario" icona={Plus} onClick={() => setScelta({ chiave: null, nuovo: true, n: Date.now() })}>Nuovo form</Button>
         </div>
-      </header>
+      </IntestazionePagina>
 
       <Errore>{errore}</Errore>
       {!lista && !errore && <Caricamento />}

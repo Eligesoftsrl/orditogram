@@ -5,6 +5,22 @@ la MAGGIORE quando un aggiornamento richiede interventi (indicati qui sotto).
 
 ## Non rilasciato
 
+### Grafica: intestazioni, benvenuto e tessere-filtro
+- Ogni pagina di lavoro e dello Studio apre con un'intestazione in una tessera bianca e il percorso (casa › sezione ›
+  pagina corrente in una capsula blu chiara), come le briciole di pane di Bootstrap Italia.
+- Scrivania: il benvenuto è la tessera blu doppia, con saluto, i numeri "Tocca a te" e "Del tuo gruppo", il disegno
+  dell'ordito e le prime attività (le tue o, se non ne hai, quelle del gruppo); accanto quattro tessere, con
+  "Concluse negli ultimi 30 giorni". Le tessere hanno l'icona in un cerchio pieno e forme morbide nell'angolo.
+- Pratiche: tre tessere-filtro con i conteggi (in corso, concluse, tutte) al posto delle schede, ricerca e tipologia a
+  capsula, a che punto è in grassetto con l'iniziale di chi la segue.
+- Movimento: le pagine entrano con una dissolvenza, tessere e riquadri arrivano a cascata (500 ms, 60 ms l'uno
+  dall'altro), le voci dei menu scendono in fila, la capsula dei selettori scorre, nel disegno del benvenuto un
+  segnalino giallo percorre il filo. Tutto fermo con "riduci il movimento".
+- Attività e pratica: il form e i dati prendono tutta la larghezza; documenti e storico non sono più una colonna
+  ma due capsule con il conteggio che aprono il pannello da destra (documenti nascosti se non ce ne sono e non se ne
+  possono aggiungere; "da caricare" se l'attività li chiede).
+- Grafici: *Grafico* e *Tabella* sono un selettore a capsula. A 390px i giorni dei termini non fanno più scorrere la pagina.
+
 ### Prima soluzione per un cliente: Bando ISI di INAIL
 - `soluzioni/isi-domanda` e `soluzioni/isi-elenchi`, costruite con la skill `orditogram-soluzione` dalla specifica
   `Requisiti_ISI_Domanda_v1`: domanda di finanziamento (compilazione, registrazione, codice e sportello, documenti e

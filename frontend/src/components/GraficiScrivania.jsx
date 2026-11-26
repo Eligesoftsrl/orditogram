@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CalendarClock, ChartColumn, Gauge, Route, Table2 } from 'lucide-react'
+import { CalendarClock, ChartColumn, ChartNoAxesColumn, Gauge, Route, Table2 } from 'lucide-react'
+import { Selettore } from './ui.jsx'
 import { cx } from '../lib/format.js'
 import { altezzaBarra, etichettaGiorno, etichettaSettimana, fasceAvanzamento } from '../lib/grafici.js'
 import { gl } from '../lib/glossario.js'
@@ -31,17 +32,15 @@ function Riquadro({ titolo, icona: Icona, sottotitolo, tabella, children, classN
     <section className={cx('rounded-pannello border border-linea bg-white p-5 shadow-pannello', className)}>
       <header className="mb-4 flex items-start justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <span className="inline-flex size-9 items-center justify-center rounded-[10px] bg-verde-50 text-verde-700"><Icona className="size-[18px]" aria-hidden="true" /></span>
+          <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-verde-50 text-verde-700"><Icona className="size-[18px]" aria-hidden="true" /></span>
           <div>
             <h3 className="text-[16px] font-semibold leading-tight">{titolo}</h3>
             {sottotitolo && <p className="text-[13px] text-grafite">{sottotitolo}</p>}
           </div>
         </div>
         {tabella && (
-          <button type="button" onClick={() => setVediTabella(v => !v)} aria-pressed={vediTabella}
-                  className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[13px] font-semibold text-verde-700 hover:bg-verde-50">
-            <Table2 className="size-4" aria-hidden="true" /> {vediTabella ? 'Grafico' : 'Tabella'}
-          </button>
+          <Selettore etichetta={`Come vedere: ${titolo}`} attiva={vediTabella ? 'tabella' : 'grafico'} onChange={(v) => setVediTabella(v === 'tabella')}
+                     voci={[{ id: 'grafico', label: 'Grafico', icona: ChartNoAxesColumn }, { id: 'tabella', label: 'Tabella', icona: Table2 }]} />
         )}
       </header>
       {vediTabella ? <Tabella {...tabella} /> : children}
@@ -162,11 +161,11 @@ function Termini({ termini }) {
               tabella={{ colonne: ['Giorno', 'Termini'], righe: termini.map((t, i) => [etichettaGiorno(t.giorno, i), t.termini]) }}>
       <div className="flex h-36 items-end gap-1.5" role="img" aria-label={termini.map((t, i) => `${etichettaGiorno(t.giorno, i)}: ${t.termini}`).join(', ')}>
         {termini.map((t, i) => (
-          <div key={t.giorno} className="flex h-full flex-1 flex-col items-center justify-end gap-1" title={`${etichettaGiorno(t.giorno, i)}: ${t.termini}`}>
+          <div key={t.giorno} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1" title={`${etichettaGiorno(t.giorno, i)}: ${t.termini}`}>
             {t.termini > 0 && <span className="numeri text-[11px] font-semibold">{t.termini}</span>}
             <span className={cx('cresce-y block w-full rounded-t-[4px]', i === 0 ? 'bg-zafferano-500' : 'bg-verde-400')}
                   style={{ height: altezzaBarra(t.termini, max, 100), '--i': i }} />
-            <span className={cx('text-[11px]', i === 0 ? 'font-semibold text-zafferano-800' : 'text-grafite')}>{i === 0 ? 'oggi' : etichettaGiorno(t.giorno, i).split(' ')[0]}</span>
+            <span className={cx('whitespace-nowrap text-[11px]', i === 0 ? 'font-semibold text-zafferano-800' : 'text-grafite', i % 2 && 'max-sm:invisible')}>{i === 0 ? 'oggi' : etichettaGiorno(t.giorno, i).split(' ')[0]}</span>
           </div>
         ))}
       </div>

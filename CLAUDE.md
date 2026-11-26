@@ -128,23 +128,25 @@ Orditogram e ogni soluzione consegnata ai clienti. Obiettivo dichiarato: un effe
 - **Componenti** (`components/ui.jsx`): `Button` (primario, secondario, fantasma, pericolo, chiaro), `Badge`
   (verde = successo, blu = in corso, zafferano, mattone, neutro, pino), `Tessera` (numero che sale contando, icona,
   pastiglia; `tono` blu piena per la cosa principale, `grande` per la tessera doppia del bento, tinte `acqua`,
-  `lilla`, `ambra`, `rosa`; `children` sotto il numero), `Contatore`, `Menu` (azioni a comparsa, frecce ed Esc),
+  `lilla`, `ambra`, `rosa`; `children` sotto il numero), `Contatore`, `Forme` (forme morbide decorative nell'angolo), `TesseraFiltro` (tessera-filtro in cima a un elenco, `aria-pressed`), `IntestazionePagina` (tessera bianca con `Percorso` e titolo: in ogni pagina nuova), `Selettore` (capsula per cambiare vista, es. Grafico/Tabella), `Menu` (azioni a comparsa, frecce ed Esc),
   `Pannello`, `Schede`, `Dialogo` (al centro, per confermare), `Cassetto` (pannello laterale da destra: vedere o
   fare qualcosa senza cambiare pagina). Altri: `BpmnViewer` (con `segnalino`), `ProcessoVivo` (il diagramma della
   pratica, non per gli esterni), `GraficiScrivania` (riquadri con *Tabella*), `AnteprimaPratica`. Prima di crearne uno nuovo,
   usa o estendi questi.
 - **Aperture laterali**: un elemento di un elenco si apre nel `Cassetto` con il riassunto e l'azione principale;
-  Ctrl/Cmd + clic apre la pagina; i documenti si vedono nel cassetto con `AnteprimaDocumento`. Le decisioni importanti si confermano in un `Dialogo` che dice cosa succede e
+  Ctrl/Cmd + clic apre la pagina; documenti e storico di attività e pratica sono capsule (`Approfondimenti`) che aprono il cassetto, il form ha tutta la larghezza; i documenti si vedono nel cassetto con `AnteprimaDocumento`. Le decisioni importanti si confermano in un `Dialogo` che dice cosa succede e
   che resta nello storico.
 - **Flusso e grafici**: il diagramma BPMN vero è sempre in vista nella pratica e nell'attività; il passo dove è ferma
   pulsa (`.bpmn-corrente`), i passi fatti si accendono in fila, ogni 8 secondi un segnalino giallo percorre il
   cammino fatto (`lib/percorsoBpmn.js`). Grafici: un solo tono di blu per le grandezze, due serie al massimo con
   legenda, barre che crescono dalla base (`.cresce-y`, `.cresce-x`), valori scritti, `aria-label` con i numeri e
   pulsante *Tabella* con gli stessi valori. Indicatori dal server solo sulle pratiche visibili (`IndicatoriPratiche`).
-- **Movimento**: solo opacità e spostamento (le barre crescono in scala), 160–320 ms, `--ease-morbido`; numeri
-  che contano fino al valore (700 ms), menu che scendono (`animate-menu`). Elenchi e tessere entrano in sequenza con
-  `.in-sequenza` (massimo 8 passi da 50 ms), il cassetto scorre da destra, le finestre si aprono con `animate-entra`,
-  "adesso" pulsa con `animate-respiro`. Con "riduci il movimento" tutto è fermo (regola globale in `index.css`).
+- **Movimento**: solo opacità e spostamento (le barre crescono in scala), 160–500 ms, `--ease-morbido`; numeri
+  che contano fino al valore (700 ms), menu che scendono (`animate-menu`). Pagine (`animate-pagina`), elenchi e tessere entrano a
+  cascata con `.in-sequenza` (dal basso, 500 ms, `--ease-cascata`, fino a 10 passi da 60 ms; anche il contenitore
+  della pagina), le voci dei menu con `.menu-sequenza`, il cassetto scorre da destra, le finestre si aprono con `animate-entra`,
+  "adesso" pulsa con `animate-respiro`, le forme delle tessere principali fluttuano piano (`animate-fluttua`),
+  i selettori a capsula scorrono, nel disegno del benvenuto (`Ordito`) i passi compaiono in fila e un segnalino giallo percorre il filo. Con "riduci il movimento" tutto è fermo (regola globale in `index.css`).
 - **Accessibilità** (WCAG 2.1 AA): focus giallo `#FFB000` spesso 3px, link "Vai al contenuto", finestre con Esc,
   focus dentro all'apertura e di ritorno alla chiusura, `aria-label` sui pulsanti con sola icona, nessuno
   scorrimento orizzontale a 400px.
