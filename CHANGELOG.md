@@ -3,13 +3,14 @@
 Le versioni seguono il formato MAGGIORE.MINORE.CORREZIONE: cambia la MINORE per funzioni nuove compatibili,
 la MAGGIORE quando un aggiornamento richiede interventi (indicati qui sotto).
 
-## 0.12.0 (in preparazione)
+## 0.12.0 (novembre 2026)
 
 **Aggiornamento**: chi era amministratore riceve il ruolo Amministratore (migrazione `V3`); gli altri utenti non
 hanno ruoli e lavorano come prima le loro attività e pratiche. Il campo `admin` di `/api/admin/users` diventa
 `ruoli` (codici); `/api/me` aggiunge `ruoli` e `permessi`.
 
-Form avanzati, prima parte.
+Form avanzati (sezioni, campi condizionali, regole, tabelle di righe), processi richiamati, ruoli e permessi
+granulari, utenti esterni e organizzazioni, anagrafiche configurabili, nuova grafica AgID "bento a colori".
 
 - **Nuova grafica nel linguaggio AgID** (Designers Italia, Bootstrap Italia 2): Blu Italia per le azioni,
   Titillium Web e Roboto Mono, intestazione blu come nei siti della PA, menu laterale chiaro, superfici arrotondate,
