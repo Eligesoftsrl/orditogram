@@ -23,6 +23,9 @@ la MAGGIORE quando un aggiornamento richiede interventi (indicati qui sotto).
 - Movimento: le pagine entrano con una dissolvenza, tessere e riquadri arrivano a cascata (500 ms, 60 ms l'uno
   dall'altro), le voci dei menu scendono in fila, la capsula dei selettori scorre, nel disegno del benvenuto un
   segnalino giallo percorre il filo. Tutto fermo con "riduci il movimento".
+- Attività e pratica: il form e i dati prendono tutta la larghezza; documenti e storico non sono più una colonna
+  ma due capsule con il conteggio che aprono il pannello da destra (documenti nascosti se non ce ne sono e non se ne
+  possono aggiungere; "da caricare" se l'attività li chiede).
 - Grafici: *Grafico* e *Tabella* sono un selettore a capsula. A 390px i giorni dei termini non fanno più scorrere la pagina.
 
 ### Prima soluzione per un cliente: Bando ISI di INAIL

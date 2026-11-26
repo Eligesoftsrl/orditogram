@@ -75,8 +75,10 @@ export default function PraticaPage() {
         <PercorsoPratica pratica={p} />
       </header>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+      {/* tutta la larghezza ai dati; documenti e storico si aprono da destra */}
+      <div>
         <div className="space-y-6">
+          <Approfondimenti pratica={p} onDocumenti={carica} className="justify-end" />
           {!conclusa && (p.stepCorrenti.length > 0 || attese.length > 0 || messaggi.length > 0) && (
             <Pannello titolo="A che punto è">
               <ul className="space-y-3">
@@ -129,9 +131,9 @@ export default function PraticaPage() {
             {p.dati.length === 0
               ? <p className="text-grafite">Nessun dato registrato.</p>
               : (
-                <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
+                <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2 xl:grid-cols-3">
                   {p.dati.map(d => (
-                    <div key={d.nome} className={d.tipo === 'textarea' || d.tipo === 'tabella' || String(d.value).length > 60 ? 'sm:col-span-2' : ''}>
+                    <div key={d.nome} className={d.tipo === 'textarea' || d.tipo === 'tabella' || String(d.value).length > 60 ? 'sm:col-span-2 xl:col-span-3' : ''}>
                       <dt className="text-[13px] text-grafite">{d.label}{d.tipo === 'tabella' && <span>, {d.value}</span>}</dt>
                       {d.tipo === 'tabella' ? (
                         <dd><TabellaLettura righe={d.righe} colonne={(d.colonne || []).map(c => ({ name: c.nome, label: c.label, type: c.tipo }))} /></dd>
@@ -153,7 +155,6 @@ export default function PraticaPage() {
           <Collegate madre={p.praticaMadre} figlie={p.praticheFiglie || []} />
         </div>
 
-        <Approfondimenti pratica={p} onDocumenti={carica} />
       </div>
 
       <Dialogo aperto={!!daConfermare} onClose={() => setDaConfermare(null)} larghezza="max-w-lg"

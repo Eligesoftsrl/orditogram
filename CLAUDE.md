@@ -134,7 +134,7 @@ Orditogram e ogni soluzione consegnata ai clienti. Obiettivo dichiarato: un effe
   resto spento, scia blu e segnalino fino al passo attuale; colore blu, non rosso, perché il rosso è l'errore), `GraficiScrivania` (riquadri con *Tabella*), `AnteprimaPratica`. Prima di crearne uno nuovo,
   usa o estendi questi.
 - **Aperture laterali**: un elemento di un elenco si apre nel `Cassetto` con il riassunto e l'azione principale;
-  Ctrl/Cmd + clic apre la pagina; i documenti si vedono nel cassetto con `AnteprimaDocumento`. Le decisioni importanti si confermano in un `Dialogo` che dice cosa succede e
+  Ctrl/Cmd + clic apre la pagina; documenti e storico di attività e pratica sono capsule (`Approfondimenti`) che aprono il cassetto, il form ha tutta la larghezza; i documenti si vedono nel cassetto con `AnteprimaDocumento`. Le decisioni importanti si confermano in un `Dialogo` che dice cosa succede e
   che resta nello storico.
 - **Flusso e grafici**: il diagramma BPMN vero è sempre a un tocco nella pratica e nell'attività (pulsante *Il percorso*,
   non più un riquadro nella pagina); il passo dove è ferma
