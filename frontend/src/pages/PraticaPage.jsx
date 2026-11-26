@@ -5,6 +5,7 @@ import { api } from '../api.js'
 import { giorno, quando } from '../lib/format.js'
 import Specchietto from '../components/Specchietto.jsx'
 import ProcessoVivo from '../components/ProcessoVivo.jsx'
+import PercorsoPratica from '../components/PercorsoPratica.jsx'
 import Approfondimenti from '../components/Approfondimenti.jsx'
 import { Badge, Button, Caricamento, Dialogo, Errore, Menu, Pannello, Tessera, useToast } from '../components/ui.jsx'
 import { BadgeScadenza } from '../components/Scadenza.jsx'
@@ -73,6 +74,7 @@ export default function PraticaPage() {
         <TesserePratica p={p} />
         <Specchietto p={p} />
         <ProcessoVivo id={p.id} />
+        <PercorsoPratica pratica={p} />
       </header>
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">

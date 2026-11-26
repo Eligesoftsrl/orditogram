@@ -199,6 +199,16 @@
   stroke: var(--color-verde-600) !important; fill: var(--color-verde-50) !important;
 }
 
+/* il viaggio della pratica (pulsante "Il percorso"): il resto si spegne, il segnalino lascia una scia blu */
+.bpmn-viaggio .djs-element > .djs-visual { transition: opacity .32s var(--ease-morbido); }
+.bpmn-spento > .djs-visual { opacity: .28; }
+.bpmn-spento.djs-connection > .djs-visual > path { stroke-dasharray: 4 5; }
+.viaggio-scia { stroke: var(--color-verde-400); stroke-width: 16px; opacity: .22; }
+.viaggio-filo { stroke: var(--color-verde-600); stroke-width: 4px; opacity: .55; }
+.viaggio-segnalino { fill: var(--color-focus); stroke: var(--color-pino-900); stroke-width: 2.5px; }
+.viaggio-alone { fill: var(--color-focus); opacity: .3; }
+.fermo .viaggio-alone { animation: bpmn-pulsa 1.6s ease-in-out infinite; }
+
 /* ---------------------------------------------------------------- editor dei processi */
 .orditogram-editor .djs-palette {
   top: 16px; left: 16px; border: 1px solid var(--color-linea); border-radius: 12px;

@@ -845,6 +845,11 @@ blu. Le superfici sono morbide e arrotondate, gli stati hanno sempre icona e par
 - **Il processo dal vivo**: nella pratica e nell'attività il diagramma BPMN è sempre in vista; il passo dove la
   pratica è ferma pulsa, i passi fatti si accendono in fila e ogni tanto un segnalino percorre il cammino fatto.
   Gli utenti esterni non lo vedono.
+- **Il percorso, sempre a un tocco**: in ogni pratica e in ogni attività un pulsante fisso in basso a destra
+  (*Il percorso*) apre da destra il diagramma grande. Ciò che la pratica non ha toccato si spegne, un segnalino
+  giallo parte dall'inizio, lascia una scia blu, entra nei sottoprocessi, accende ogni passo che raggiunge e si ferma
+  dove la pratica è adesso; sotto, le tappe in ordine in parole. *Rivedi il percorso* lo fa ripartire, i pulsanti
+  + / − / adatta servono col dito. Con "riduci il movimento" si vede subito il risultato. Gli utenti esterni non lo vedono.
 - **Pratica**: tre tessere in cima (termine con i giorni che mancano, chi la riguarda, da quanto è aperta) e il menu
   *Altre azioni* (registra l'arrivo di un messaggio, copia il collegamento, stampa).
 - **Pannello laterale**: nell'elenco delle pratiche un clic apre il riassunto a destra (a che punto è, chi ci

@@ -5,6 +5,12 @@ la MAGGIORE quando un aggiornamento richiede interventi (indicati qui sotto).
 
 ## Non rilasciato
 
+### Il percorso della pratica, sempre a un tocco
+- In ogni pratica e attività il pulsante *Il percorso* (in basso a destra) apre il diagramma BPMN in un pannello da
+  destra: il resto si spegne, un segnalino lascia una scia blu dall'inizio al passo attuale, accende i passi che
+  raggiunge (anche dentro i sottoprocessi) e si ferma dove la pratica è adesso. Le tappe sono scritte anche in parole.
+- Il diagramma della pratica riceve i passi fatti nell'ordine in cui sono iniziati.
+
 ### Grafica: intestazioni, benvenuto e tessere-filtro
 - Ogni pagina di lavoro e dello Studio apre con un'intestazione in una tessera bianca e il percorso (casa › sezione ›
   pagina corrente in una capsula blu chiara), come le briciole di pane di Bootstrap Italia.

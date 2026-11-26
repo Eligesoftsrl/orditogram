@@ -131,7 +131,8 @@ Orditogram e ogni soluzione consegnata ai clienti. Obiettivo dichiarato: un effe
   `lilla`, `ambra`, `rosa`; `children` sotto il numero), `Contatore`, `Forme` (forme morbide decorative nell'angolo), `TesseraFiltro` (tessera-filtro in cima a un elenco, `aria-pressed`), `IntestazionePagina` (tessera bianca con `Percorso` e titolo: in ogni pagina nuova), `Selettore` (capsula per cambiare vista, es. Grafico/Tabella), `Menu` (azioni a comparsa, frecce ed Esc),
   `Pannello`, `Schede`, `Dialogo` (al centro, per confermare), `Cassetto` (pannello laterale da destra: vedere o
   fare qualcosa senza cambiare pagina). Altri: `BpmnViewer` (con `segnalino`), `ProcessoVivo` (il diagramma della
-  pratica, non per gli esterni), `GraficiScrivania` (riquadri con *Tabella*), `AnteprimaPratica`. Prima di crearne uno nuovo,
+  pratica, non per gli esterni), `PercorsoPratica` (pulsante fisso *Il percorso* + cassetto con `BpmnViewer viaggio`:
+  resto spento, scia blu e segnalino fino al passo attuale; colore blu, non rosso, perché il rosso è l'errore), `GraficiScrivania` (riquadri con *Tabella*), `AnteprimaPratica`. Prima di crearne uno nuovo,
   usa o estendi questi.
 - **Aperture laterali**: un elemento di un elenco si apre nel `Cassetto` con il riassunto e l'azione principale;
   Ctrl/Cmd + clic apre la pagina; i documenti si vedono nel cassetto con `AnteprimaDocumento`. Le decisioni importanti si confermano in un `Dialogo` che dice cosa succede e

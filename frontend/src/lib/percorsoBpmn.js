@@ -56,3 +56,40 @@ export function puntoLungo(punti, q) {
   }
   return { ...punti[punti.length - 1] }
 }
+
+/**
+ * Le tappe del viaggio lungo una strada di frecce (id in ordine): il passo di partenza e poi l'arrivo di ogni
+ * freccia, ciascuno con la frazione (0..1) della strada a cui il segnalino lo raggiunge.
+ * flussi: [{ id, da, a, punti }]; restituisce [{ id, a }] (a = frazione di arrivo).
+ */
+export function tappeLungo(flussi, strada) {
+  const tratti = strada.map(id => flussi.find(f => f.id === id)).filter(Boolean)
+  if (!tratti.length) return []
+  // la strada è una sola linea: conta anche il raccordo tra la fine di una freccia e l'inizio della successiva
+  let ultimo = null
+  const lunghezze = tratti.map(t => {
+    let l = 0
+    for (const p of t.punti || []) { if (ultimo) l += Math.hypot(p.x - ultimo.x, p.y - ultimo.y); ultimo = p }
+    return l
+  })
+  const totale = lunghezze.reduce((s, l) => s + l, 0)
+  const tappe = [{ id: tratti[0].da, a: 0, flusso: null }]
+  let fatto = 0
+  tratti.forEach((t, i) => {
+    fatto += lunghezze[i]
+    tappe.push({ id: t.a, a: totale ? fatto / totale : (i + 1) / tratti.length, flusso: t.id })
+  })
+  return tappe
+}
+
+/**
+ * Il viaggio entra nei sottoprocessi: aggiunge una freccia "di passaggio" (id che inizia con ~) da ogni
+ * sottoprocesso al suo evento di inizio, con un solo punto (il centro dell'inizio): la strada vi arriva dritta
+ * dal bordo. sottoprocessi: [{ id, inizi: [{ id, x, y }] }].
+ */
+export function conPassaggi(flussi, sottoprocessi) {
+  return [...flussi, ...sottoprocessi.flatMap(s => s.inizi.map(i => ({ id: `~${s.id}~${i.id}`, da: s.id, a: i.id, punti: [{ x: i.x, y: i.y }] })))]
+}
+
+/** Quanto dura il viaggio del segnalino: cresce con la strada (in unità del diagramma), tra 1,8 e 7 secondi. */
+export const durataViaggio = (lunghezza) => Math.round(Math.min(7000, Math.max(1800, lunghezza * 2.4)))
