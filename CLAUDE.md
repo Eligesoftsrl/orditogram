@@ -46,7 +46,7 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
 | `registro` | registro delle azioni di amministrazione e accessi negati |
 | `api` | **API pubblica `/api/v1`** con chiavi, OpenAPI generata dai processi, Studio → Integrazioni |
 | `webhook` | avvisi firmati verso sistemi esterni: coda nel DB, invio con ripetizioni |
-| `config` | cifratura dei segreti, pianificazione |
+| `config` | cifratura dei segreti, pianificazione, `ControlloProduzione` (profilo `produzione`: niente avvio con impostazioni insicure) |
 
 ### Concetti chiave
 - **Pratica** = istanza di processo Activiti. Titolo da un campo del form marcato `titolo`.

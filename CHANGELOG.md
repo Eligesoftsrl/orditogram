@@ -28,6 +28,13 @@ Verso un Orditogram per ogni settore: il nucleo non parla più solo la lingua de
   sui documenti caricati. *PA*: servizi dimostrativi come il protocollo. Tutti accesi per default, quindi nulla
   cambia per chi aggiorna. Lo spegnimento si conferma e va nel registro (`MODULO_SPENTO`, `MODULO_ACCESO`).
   API `GET /api/admin/moduli`, `PUT /api/admin/moduli/{codice}`; `GET /api/info` restituisce `moduli`; migrazione `V12`.
+- **Profilo di produzione** (`ORDITOGRAM_PROFILO=produzione` nel `.env`, o `SPRING_PROFILES_ACTIVE=produzione`):
+  spegne utenti e servizi di prova, manda il cookie di sessione solo su HTTPS e impedisce l'avvio con impostazioni
+  insicure, elencandole tutte: password del database o dell'amministratore predefinite o sotto i 12 caratteri,
+  chiave di cifratura assente o sotto i 32, `admin` o utenti di prova ancora attivi con password `admin` o `password`.
+  Nuova sezione "Installazione in produzione" nel README (HTTPS, backup pianificato, aggiornamenti, risorse). La porta
+  di PostgreSQL in Docker Compose ora è aperta solo sul server stesso (`127.0.0.1`). **Aggiornamento**: il `.env`
+  d'esempio attiva il profilo; chi lo copia per una demo svuota `ORDITOGRAM_PROFILO`.
 - Esempi nei campi dello Studio senza riferimenti alla PA ("Richiesta d'acquisto", "portale-clienti",
   `numeroRegistrazione`).
 
