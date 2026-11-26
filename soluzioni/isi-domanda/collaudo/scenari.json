@@ -15,7 +15,7 @@
   "scenari": [
     {
       "nome": "Asse 2 in posizione utile e ammessa (TC-01)",
-      "descrizione": "Percorso principale: dati letti da INAIL, calcolo (201 punti, 70.200 €), registrazione, codice, sportello, posizione utile, documenti e perizia del tecnico, istruttoria, ammissione.",
+      "descrizione": "Percorso principale: dati letti da INAIL, un passo per attività, calcolo (201 punti, 70.200 €), riepilogo, registrazione, codice, sportello, posizione utile, documenti e perizia, istruttoria.",
       "passi": [
         {
           "azione": "avvia",
@@ -27,7 +27,7 @@
         },
         {
           "azione": "controlla",
-          "attivita": "Compila la domanda",
+          "attivita": "Controlla i dati dell'impresa",
           "dati": {
             "ragioneSociale": "Carpenterie Rossi S.r.l.",
             "avvisoAnagrafica": "Dati letti dall'anagrafica INAIL"
@@ -35,7 +35,7 @@
         },
         {
           "azione": "completa",
-          "attivita": "compila",
+          "attivita": "passoImpresa",
           "utente": "marco",
           "dati": {
             "ragioneSociale": "Carpenterie Rossi S.r.l.",
@@ -50,66 +50,51 @@
             "fatturato": "1500000",
             "dipendentiImpresa": "8",
             "dipendentiUnita": "8",
-            "finanziamentiPrecedenti": "Nessuno",
-            "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
-            "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
-            "dichR02": true,
-            "dichR03": true,
-            "dichR05": true,
-            "dichR06": true,
-            "dichR07": true,
-            "dichR08": true,
-            "dichR09": true,
-            "dichR10": true,
-            "dichR11": true,
-            "dichR12": true,
-            "dichR15": true,
-            "dichR16": true,
-            "dichR17": true,
-            "dichR18": true,
-            "nessunaSpesaNonAmmessa": true,
-            "asse": "2 Rischi infortunistici",
-            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
-            "aggiuntivo2": "Nessuno",
-            "tassoMedio": "60",
-            "partiSociali": "Ente bilaterale o Organismo paritetico",
-            "rls": true,
-            "certIso45001": true,
-            "speseProgetto": "100000",
-            "speseTecniche": "8000",
-            "anticipo": true,
-            "azione": "Calcola e salva"
+            "azione": "Continua"
           }
         },
         {
           "azione": "controlla",
-          "attivita": "Compila la domanda",
+          "attivita": "Scegli asse e progetto",
           "dati": {
-            "punteggio": "201",
-            "contributoTotaleTesto": "70.200,00 €",
-            "registrabile": "Sì"
+            "assiAmmessi": "*"
           }
         },
         {
           "azione": "completa",
-          "attivita": "compila",
+          "attivita": "passoProgetto",
           "utente": "marco",
           "dati": {
-            "ragioneSociale": "Carpenterie Rossi S.r.l.",
-            "ateco": "25.11",
-            "tipoSoggetto": "Impresa",
-            "rapportoAssicurativo": "INAIL",
-            "dataIscrizioneCciaa": "2010-03-01",
-            "dataAssociazionePortale": "2026-01-10",
-            "pec": "carpenterierossi@pec.it",
-            "regione": "Toscana",
-            "ula": "8",
-            "fatturato": "1500000",
-            "dipendentiImpresa": "8",
-            "dipendentiUnita": "8",
-            "finanziamentiPrecedenti": "Nessuno",
             "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
             "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoPunteggio",
+          "utente": "marco",
+          "dati": {
+            "nessunaSpesaNonAmmessa": true,
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoDichiarazioni",
+          "utente": "marco",
+          "dati": {
+            "finanziamentiPrecedenti": "Nessuno",
             "dichR02": true,
             "dichR03": true,
             "dichR05": true,
@@ -124,17 +109,24 @@
             "dichR16": true,
             "dichR17": true,
             "dichR18": true,
-            "nessunaSpesaNonAmmessa": true,
-            "asse": "2 Rischi infortunistici",
-            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
-            "aggiuntivo2": "Nessuno",
-            "tassoMedio": "60",
-            "partiSociali": "Ente bilaterale o Organismo paritetico",
-            "rls": true,
-            "certIso45001": true,
-            "speseProgetto": "100000",
-            "speseTecniche": "8000",
-            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Rivedi e registra la domanda",
+          "dati": {
+            "punteggio": "201",
+            "contributoTotaleTesto": "70.200,00 €",
+            "registrabile": "Sì",
+            "passoDaCorreggere": "nessuno"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "riepilogo",
+          "utente": "marco",
+          "dati": {
             "azione": "Registra la domanda",
             "confermaRegistrazione": true
           }
@@ -270,8 +262,8 @@
       }
     },
     {
-      "nome": "Sotto soglia, poi bozza annullata (TC-02)",
-      "descrizione": "89 punti: REGISTRA non procede e la domanda torna in compilazione; l'impresa annulla la bozza.",
+      "nome": "Sotto soglia: si torna al punteggio, poi indietro e bozza annullata (TC-02)",
+      "descrizione": "89 punti: il calcolo riporta l'impresa al passo del punteggio con il motivo; l'impresa torna all'asse e annulla la bozza.",
       "passi": [
         {
           "azione": "avvia",
@@ -283,13 +275,14 @@
         },
         {
           "azione": "controlla",
+          "attivita": "Controlla i dati dell'impresa",
           "dati": {
             "avvisoAnagrafica": "Impresa non trovata nell'anagrafica INAIL: compila i dati a mano"
           }
         },
         {
           "azione": "completa",
-          "attivita": "compila",
+          "attivita": "passoImpresa",
           "utente": "marco",
           "dati": {
             "ragioneSociale": "Presse Gialli S.p.a.",
@@ -304,9 +297,40 @@
             "fatturato": "40000000",
             "dipendentiImpresa": "60",
             "dipendentiUnita": "8",
-            "finanziamentiPrecedenti": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoProgetto",
+          "utente": "marco",
+          "dati": {
             "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
             "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "asse": "1.1 Rischi tecnopatici",
+            "tipologia11": "b) Riduzione del rischio rumore (sostituzione di macchine)",
+            "aggiuntivo11": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoPunteggio",
+          "utente": "marco",
+          "dati": {
+            "nessunaSpesaNonAmmessa": true,
+            "tassoMedio": "10",
+            "partiSociali": "Nessuna",
+            "speseProgetto": "100000",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoDichiarazioni",
+          "utente": "marco",
+          "dati": {
+            "finanziamentiPrecedenti": "Nessuno",
             "dichR02": true,
             "dichR03": true,
             "dichR05": true,
@@ -321,28 +345,42 @@
             "dichR16": true,
             "dichR17": true,
             "dichR18": true,
-            "nessunaSpesaNonAmmessa": true,
-            "tassoMedio": "10",
-            "asse": "1.1 Rischi tecnopatici",
-            "tipologia11": "b) Riduzione del rischio rumore (sostituzione di macchine)",
-            "aggiuntivo11": "Nessuno",
-            "partiSociali": "Nessuna",
-            "speseProgetto": "100000",
-            "azione": "Registra la domanda",
-            "confermaRegistrazione": true
+            "azione": "Continua"
           }
         },
         {
           "azione": "controlla",
-          "attivita": "Compila la domanda",
+          "attivita": "Criteri di punteggio e piano economico",
           "dati": {
             "punteggio": "89",
-            "registrabile": "No"
+            "registrabile": "No",
+            "passoDaCorreggere": "punteggio",
+            "erroriPunteggio": "*"
           }
         },
         {
           "azione": "completa",
-          "attivita": "compila",
+          "attivita": "passoPunteggio",
+          "utente": "marco",
+          "dati": {
+            "azione": "Torna al passo precedente"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Scegli asse e progetto"
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoProgetto",
+          "utente": "marco",
+          "dati": {
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoPunteggio",
           "utente": "marco",
           "dati": {
             "azione": "Annulla la bozza",
@@ -352,24 +390,56 @@
       ],
       "atteso": {
         "conclusa": true,
-        "fine": "fineAnnullata"
+        "fine": "fineAnnullata",
+        "passa": [
+          "erroriGw",
+          "passoPunteggioAnnullata"
+        ]
       }
     },
     {
-      "nome": "Seconda domanda della stessa impresa (TC-19) e chiusura della compilazione",
-      "descrizione": "L'impresa del primo scenario ha già registrato: la seconda bozza non si registra. Alla chiusura della compilazione la bozza resta non registrata.",
+      "nome": "Impresa senza requisiti: si resta sui dati dell'impresa",
+      "descrizione": "Meno di 1 ULA: dopo il primo calcolo la domanda torna ai dati dell'impresa con il motivo; corretti i dati si passa all'asse, si torna indietro e si annulla dal primo passo.",
       "passi": [
         {
           "azione": "avvia",
           "utente": "marco",
           "dati": {
             "codiceFiscaleImpresa": "01234560789",
-            "titoloProgetto": "Seconda ipotesi di progetto"
+            "titoloProgetto": "Prova con poche ULA"
           }
         },
         {
           "azione": "completa",
-          "attivita": "compila",
+          "attivita": "passoImpresa",
+          "utente": "marco",
+          "dati": {
+            "ragioneSociale": "Carpenterie Rossi S.r.l.",
+            "ateco": "25.11",
+            "tipoSoggetto": "Impresa",
+            "rapportoAssicurativo": "INAIL",
+            "dataIscrizioneCciaa": "2010-03-01",
+            "dataAssociazionePortale": "2026-01-10",
+            "pec": "carpenterierossi@pec.it",
+            "regione": "Toscana",
+            "ula": "0.5",
+            "fatturato": "1500000",
+            "dipendentiImpresa": "8",
+            "dipendentiUnita": "8",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Controlla i dati dell'impresa",
+          "dati": {
+            "passoDaCorreggere": "impresa",
+            "erroriImpresa": "*"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoImpresa",
           "utente": "marco",
           "dati": {
             "ragioneSociale": "Carpenterie Rossi S.r.l.",
@@ -384,9 +454,300 @@
             "fatturato": "1500000",
             "dipendentiImpresa": "8",
             "dipendentiUnita": "8",
-            "finanziamentiPrecedenti": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Scegli asse e progetto"
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoProgetto",
+          "utente": "marco",
+          "dati": {
+            "azione": "Torna al passo precedente"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Controlla i dati dell'impresa"
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoImpresa",
+          "utente": "marco",
+          "dati": {
+            "azione": "Annulla la bozza",
+            "confermaAnnullamento": true
+          }
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineAnnullata",
+        "passa": [
+          "impresaGw",
+          "passoProgettoGw",
+          "passoImpresaAnnullata"
+        ]
+      }
+    },
+    {
+      "nome": "Errori riportati al passo giusto: progetto e dichiarazioni",
+      "descrizione": "Manca la tipologia e una dichiarazione: il calcolo riporta prima al progetto, poi alle dichiarazioni; dalle dichiarazioni si torna al punteggio e infine si annulla.",
+      "passi": [
+        {
+          "azione": "avvia",
+          "utente": "marco",
+          "dati": {
+            "codiceFiscaleImpresa": "01234560789",
+            "titoloProgetto": "Domanda con errori"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoImpresa",
+          "utente": "marco",
+          "dati": {
+            "ragioneSociale": "Carpenterie Rossi S.r.l.",
+            "ateco": "25.11",
+            "tipoSoggetto": "Impresa",
+            "rapportoAssicurativo": "INAIL",
+            "dataIscrizioneCciaa": "2010-03-01",
+            "dataAssociazionePortale": "2026-01-10",
+            "pec": "carpenterierossi@pec.it",
+            "regione": "Toscana",
+            "ula": "8",
+            "fatturato": "1500000",
+            "dipendentiImpresa": "8",
+            "dipendentiUnita": "8",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoProgetto",
+          "utente": "marco",
+          "dati": {
             "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
             "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "asse": "2 Rischi infortunistici",
+            "aggiuntivo2": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoPunteggio",
+          "utente": "marco",
+          "dati": {
+            "nessunaSpesaNonAmmessa": true,
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoDichiarazioni",
+          "utente": "marco",
+          "dati": {
+            "finanziamentiPrecedenti": "Nessuno",
+            "dichR02": true,
+            "dichR03": true,
+            "dichR05": true,
+            "dichR06": true,
+            "dichR07": true,
+            "dichR08": true,
+            "dichR09": true,
+            "dichR10": true,
+            "dichR11": true,
+            "dichR12": true,
+            "dichR15": true,
+            "dichR16": true,
+            "dichR17": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Scegli asse e progetto",
+          "dati": {
+            "passoDaCorreggere": "progetto",
+            "erroriProgetto": "*"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoProgetto",
+          "utente": "marco",
+          "dati": {
+            "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
+            "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoPunteggio",
+          "utente": "marco",
+          "dati": {
+            "nessunaSpesaNonAmmessa": true,
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoDichiarazioni",
+          "utente": "marco",
+          "dati": {
+            "finanziamentiPrecedenti": "Nessuno",
+            "dichR02": true,
+            "dichR03": true,
+            "dichR05": true,
+            "dichR06": true,
+            "dichR07": true,
+            "dichR08": true,
+            "dichR09": true,
+            "dichR10": true,
+            "dichR11": true,
+            "dichR12": true,
+            "dichR15": true,
+            "dichR16": true,
+            "dichR17": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Firma le dichiarazioni",
+          "dati": {
+            "passoDaCorreggere": "dichiarazioni",
+            "erroriDichiarazioni": "*"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoDichiarazioni",
+          "utente": "marco",
+          "dati": {
+            "azione": "Torna al passo precedente"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Criteri di punteggio e piano economico"
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoPunteggio",
+          "utente": "marco",
+          "dati": {
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoDichiarazioni",
+          "utente": "marco",
+          "dati": {
+            "azione": "Annulla la bozza",
+            "confermaAnnullamento": true
+          }
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineAnnullata",
+        "passa": [
+          "erroriGw",
+          "passoDichiarazioniAnnullata"
+        ]
+      }
+    },
+    {
+      "nome": "Modifiche dal riepilogo, poi bozza annullata",
+      "descrizione": "Dal riepilogo l'impresa torna all'asse, poi al punteggio e alle dichiarazioni, ogni volta ricalcolando; infine annulla dal riepilogo.",
+      "passi": [
+        {
+          "azione": "avvia",
+          "utente": "marco",
+          "dati": {
+            "codiceFiscaleImpresa": "01234560789",
+            "titoloProgetto": "Domanda da rivedere"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoImpresa",
+          "utente": "marco",
+          "dati": {
+            "ragioneSociale": "Carpenterie Rossi S.r.l.",
+            "ateco": "25.11",
+            "tipoSoggetto": "Impresa",
+            "rapportoAssicurativo": "INAIL",
+            "dataIscrizioneCciaa": "2010-03-01",
+            "dataAssociazionePortale": "2026-01-10",
+            "pec": "carpenterierossi@pec.it",
+            "regione": "Toscana",
+            "ula": "8",
+            "fatturato": "1500000",
+            "dipendentiImpresa": "8",
+            "dipendentiUnita": "8",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoProgetto",
+          "utente": "marco",
+          "dati": {
+            "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
+            "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoPunteggio",
+          "utente": "marco",
+          "dati": {
+            "nessunaSpesaNonAmmessa": true,
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoDichiarazioni",
+          "utente": "marco",
+          "dati": {
+            "finanziamentiPrecedenti": "Nessuno",
             "dichR02": true,
             "dichR03": true,
             "dichR05": true,
@@ -401,10 +762,316 @@
             "dichR16": true,
             "dichR17": true,
             "dichR18": true,
-            "nessunaSpesaNonAmmessa": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "riepilogo",
+          "utente": "marco",
+          "dati": {
+            "azione": "Modifica un passo",
+            "passoDaModificare": "Asse e progetto"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Scegli asse e progetto"
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoProgetto",
+          "utente": "marco",
+          "dati": {
+            "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
+            "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
             "asse": "2 Rischi infortunistici",
             "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
             "aggiuntivo2": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoPunteggio",
+          "utente": "marco",
+          "dati": {
+            "nessunaSpesaNonAmmessa": true,
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "90000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoDichiarazioni",
+          "utente": "marco",
+          "dati": {
+            "finanziamentiPrecedenti": "Nessuno",
+            "dichR02": true,
+            "dichR03": true,
+            "dichR05": true,
+            "dichR06": true,
+            "dichR07": true,
+            "dichR08": true,
+            "dichR09": true,
+            "dichR10": true,
+            "dichR11": true,
+            "dichR12": true,
+            "dichR15": true,
+            "dichR16": true,
+            "dichR17": true,
+            "dichR18": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Rivedi e registra la domanda",
+          "dati": {
+            "contributoTotaleTesto": "*"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "riepilogo",
+          "utente": "marco",
+          "dati": {
+            "azione": "Modifica un passo",
+            "passoDaModificare": "Punteggio e piano economico"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoPunteggio",
+          "utente": "marco",
+          "dati": {
+            "nessunaSpesaNonAmmessa": true,
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoDichiarazioni",
+          "utente": "marco",
+          "dati": {
+            "finanziamentiPrecedenti": "Nessuno",
+            "dichR02": true,
+            "dichR03": true,
+            "dichR05": true,
+            "dichR06": true,
+            "dichR07": true,
+            "dichR08": true,
+            "dichR09": true,
+            "dichR10": true,
+            "dichR11": true,
+            "dichR12": true,
+            "dichR15": true,
+            "dichR16": true,
+            "dichR17": true,
+            "dichR18": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "riepilogo",
+          "utente": "marco",
+          "dati": {
+            "azione": "Modifica un passo",
+            "passoDaModificare": "Dichiarazioni"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoDichiarazioni",
+          "utente": "marco",
+          "dati": {
+            "finanziamentiPrecedenti": "Nessuno",
+            "dichR02": true,
+            "dichR03": true,
+            "dichR05": true,
+            "dichR06": true,
+            "dichR07": true,
+            "dichR08": true,
+            "dichR09": true,
+            "dichR10": true,
+            "dichR11": true,
+            "dichR12": true,
+            "dichR15": true,
+            "dichR16": true,
+            "dichR17": true,
+            "dichR18": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "riepilogo",
+          "utente": "marco",
+          "dati": {
+            "azione": "Modifica un passo",
+            "passoDaModificare": "Impresa e dimensione"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Controlla i dati dell'impresa"
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoImpresa",
+          "utente": "marco",
+          "dati": {
+            "ragioneSociale": "Carpenterie Rossi S.r.l.",
+            "ateco": "25.11",
+            "tipoSoggetto": "Impresa",
+            "rapportoAssicurativo": "INAIL",
+            "dataIscrizioneCciaa": "2010-03-01",
+            "dataAssociazionePortale": "2026-01-10",
+            "pec": "carpenterierossi@pec.it",
+            "regione": "Toscana",
+            "ula": "8",
+            "fatturato": "1500000",
+            "dipendentiImpresa": "8",
+            "dipendentiUnita": "8",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoProgetto",
+          "utente": "marco",
+          "dati": {
+            "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
+            "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoPunteggio",
+          "utente": "marco",
+          "dati": {
+            "nessunaSpesaNonAmmessa": true,
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoDichiarazioni",
+          "utente": "marco",
+          "dati": {
+            "finanziamentiPrecedenti": "Nessuno",
+            "dichR02": true,
+            "dichR03": true,
+            "dichR05": true,
+            "dichR06": true,
+            "dichR07": true,
+            "dichR08": true,
+            "dichR09": true,
+            "dichR10": true,
+            "dichR11": true,
+            "dichR12": true,
+            "dichR15": true,
+            "dichR16": true,
+            "dichR17": true,
+            "dichR18": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "riepilogo",
+          "utente": "marco",
+          "dati": {
+            "azione": "Annulla la bozza",
+            "confermaAnnullamento": true
+          }
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineAnnullata",
+        "passa": [
+          "qualePassoGw",
+          "riepilogoAnnullata"
+        ]
+      }
+    },
+    {
+      "nome": "Seconda domanda della stessa impresa (TC-19) e chiusura della compilazione",
+      "descrizione": "L'impresa del primo scenario ha già registrato: la seconda bozza non si registra e torna al riepilogo con il motivo. Alla chiusura della compilazione l'impresa è avvisata.",
+      "passi": [
+        {
+          "azione": "avvia",
+          "utente": "marco",
+          "dati": {
+            "codiceFiscaleImpresa": "01234560789",
+            "titoloProgetto": "Seconda ipotesi di progetto"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoImpresa",
+          "utente": "marco",
+          "dati": {
+            "ragioneSociale": "Carpenterie Rossi S.r.l.",
+            "ateco": "25.11",
+            "tipoSoggetto": "Impresa",
+            "rapportoAssicurativo": "INAIL",
+            "dataIscrizioneCciaa": "2010-03-01",
+            "dataAssociazionePortale": "2026-01-10",
+            "pec": "carpenterierossi@pec.it",
+            "regione": "Toscana",
+            "ula": "8",
+            "fatturato": "1500000",
+            "dipendentiImpresa": "8",
+            "dipendentiUnita": "8",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoProgetto",
+          "utente": "marco",
+          "dati": {
+            "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
+            "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoPunteggio",
+          "utente": "marco",
+          "dati": {
+            "nessunaSpesaNonAmmessa": true,
             "tassoMedio": "60",
             "partiSociali": "Ente bilaterale o Organismo paritetico",
             "rls": true,
@@ -412,13 +1079,44 @@
             "speseProgetto": "120000",
             "speseTecniche": "8000",
             "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoDichiarazioni",
+          "utente": "marco",
+          "dati": {
+            "finanziamentiPrecedenti": "Nessuno",
+            "dichR02": true,
+            "dichR03": true,
+            "dichR05": true,
+            "dichR06": true,
+            "dichR07": true,
+            "dichR08": true,
+            "dichR09": true,
+            "dichR10": true,
+            "dichR11": true,
+            "dichR12": true,
+            "dichR15": true,
+            "dichR16": true,
+            "dichR17": true,
+            "dichR18": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "riepilogo",
+          "utente": "marco",
+          "dati": {
             "azione": "Registra la domanda",
             "confermaRegistrazione": true
           }
         },
         {
           "azione": "controlla",
-          "attivita": "Compila la domanda",
+          "attivita": "Rivedi e registra la domanda",
           "dati": {
             "esitoRegistrazione": "GIA_REGISTRATA",
             "messaggioRegistrazione": "L'impresa ha già registrato una domanda per questo Avviso"
@@ -431,7 +1129,41 @@
       ],
       "atteso": {
         "conclusa": true,
-        "fine": "fineNonRegistrata"
+        "fine": "fineNonRegistrata",
+        "passa": [
+          "registrata",
+          "avvisaChiusura"
+        ],
+        "eventi": [
+          "NOTIFICA"
+        ]
+      }
+    },
+    {
+      "nome": "Fuori dal periodo di compilazione",
+      "descrizione": "Il calendario dice che la compilazione è chiusa: l'impresa riceve una notifica con le date e la pratica finisce con il motivo, senza attività da fare.",
+      "variante": {
+        "localhost:8095/calendario\"": "localhost:8095/calendario?simula=chiuso\""
+      },
+      "passi": [
+        {
+          "azione": "avvia",
+          "utente": "marco",
+          "dati": {
+            "codiceFiscaleImpresa": "01234560789",
+            "titoloProgetto": "Domanda fuori periodo"
+          }
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineFuoriPeriodo",
+        "passa": [
+          "avvisaFuoriPeriodo"
+        ],
+        "eventi": [
+          "NOTIFICA"
+        ]
       }
     },
     {
@@ -448,7 +1180,7 @@
         },
         {
           "azione": "completa",
-          "attivita": "compila",
+          "attivita": "passoImpresa",
           "utente": "marco",
           "dati": {
             "ragioneSociale": "Commercio Neri S.p.a.",
@@ -463,9 +1195,40 @@
             "fatturato": "1500000",
             "dipendentiImpresa": "20",
             "dipendentiUnita": "20",
-            "finanziamentiPrecedenti": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoProgetto",
+          "utente": "marco",
+          "dati": {
             "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
             "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "asse": "1.2 Modelli organizzativi",
+            "tipologia12": "a) SGSL certificato ISO 45001",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoPunteggio",
+          "utente": "marco",
+          "dati": {
+            "nessunaSpesaNonAmmessa": true,
+            "tassoMedio": "100",
+            "rls": true,
+            "partiSociali": "Due o più parti sociali",
+            "speseProgetto": "5000",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoDichiarazioni",
+          "utente": "marco",
+          "dati": {
+            "finanziamentiPrecedenti": "Nessuno",
             "dichR02": true,
             "dichR03": true,
             "dichR05": true,
@@ -480,13 +1243,14 @@
             "dichR16": true,
             "dichR17": true,
             "dichR18": true,
-            "nessunaSpesaNonAmmessa": true,
-            "asse": "1.2 Modelli organizzativi",
-            "tipologia12": "a) SGSL certificato ISO 45001",
-            "tassoMedio": "100",
-            "rls": true,
-            "partiSociali": "Due o più parti sociali",
-            "speseProgetto": "5000",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "riepilogo",
+          "utente": "marco",
+          "dati": {
             "azione": "Registra la domanda",
             "confermaRegistrazione": true
           }
@@ -686,7 +1450,7 @@
         },
         {
           "azione": "completa",
-          "attivita": "compila",
+          "attivita": "passoImpresa",
           "utente": "marco",
           "dati": {
             "ragioneSociale": "Falegnameria Bianchi S.n.c.",
@@ -701,9 +1465,42 @@
             "fatturato": "1500000",
             "dipendentiImpresa": "8",
             "dipendentiUnita": "8",
-            "finanziamentiPrecedenti": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoProgetto",
+          "utente": "marco",
+          "dati": {
             "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
             "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "asse": "4 Settori specifici (micro e piccole)",
+            "tipologia4a": true,
+            "tipologia4c": true,
+            "aggiuntivo4": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoPunteggio",
+          "utente": "marco",
+          "dati": {
+            "nessunaSpesaNonAmmessa": true,
+            "partiSociali": "Due o più parti sociali",
+            "rls": true,
+            "speseProgetto": "80000",
+            "speseTecniche": "5000",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoDichiarazioni",
+          "utente": "marco",
+          "dati": {
+            "finanziamentiPrecedenti": "Nessuno",
             "dichR02": true,
             "dichR03": true,
             "dichR05": true,
@@ -718,15 +1515,14 @@
             "dichR16": true,
             "dichR17": true,
             "dichR18": true,
-            "nessunaSpesaNonAmmessa": true,
-            "asse": "4 Settori specifici (micro e piccole)",
-            "tipologia4a": true,
-            "tipologia4c": true,
-            "aggiuntivo4": "Nessuno",
-            "partiSociali": "Due o più parti sociali",
-            "rls": true,
-            "speseProgetto": "80000",
-            "speseTecniche": "5000",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "riepilogo",
+          "utente": "marco",
+          "dati": {
             "azione": "Registra la domanda",
             "confermaRegistrazione": true
           }
@@ -812,7 +1608,7 @@
         },
         {
           "azione": "completa",
-          "attivita": "compila",
+          "attivita": "passoImpresa",
           "utente": "marco",
           "dati": {
             "ragioneSociale": "Logistica Viola S.r.l.",
@@ -827,9 +1623,44 @@
             "fatturato": "1500000",
             "dipendentiImpresa": "8",
             "dipendentiUnita": "8",
-            "finanziamentiPrecedenti": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoProgetto",
+          "utente": "marco",
+          "dati": {
             "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
             "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoPunteggio",
+          "utente": "marco",
+          "dati": {
+            "nessunaSpesaNonAmmessa": true,
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoDichiarazioni",
+          "utente": "marco",
+          "dati": {
+            "finanziamentiPrecedenti": "Nessuno",
             "dichR02": true,
             "dichR03": true,
             "dichR05": true,
@@ -844,17 +1675,14 @@
             "dichR16": true,
             "dichR17": true,
             "dichR18": true,
-            "nessunaSpesaNonAmmessa": true,
-            "asse": "2 Rischi infortunistici",
-            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
-            "aggiuntivo2": "Nessuno",
-            "tassoMedio": "60",
-            "partiSociali": "Ente bilaterale o Organismo paritetico",
-            "rls": true,
-            "certIso45001": true,
-            "speseProgetto": "100000",
-            "speseTecniche": "8000",
-            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "riepilogo",
+          "utente": "marco",
+          "dati": {
             "azione": "Registra la domanda",
             "confermaRegistrazione": true
           }
@@ -939,7 +1767,7 @@
         },
         {
           "azione": "completa",
-          "attivita": "compila",
+          "attivita": "passoImpresa",
           "utente": "marco",
           "dati": {
             "ragioneSociale": "Edile Blu S.r.l.",
@@ -954,9 +1782,44 @@
             "fatturato": "1500000",
             "dipendentiImpresa": "8",
             "dipendentiUnita": "8",
-            "finanziamentiPrecedenti": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoProgetto",
+          "utente": "marco",
+          "dati": {
             "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
             "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoPunteggio",
+          "utente": "marco",
+          "dati": {
+            "nessunaSpesaNonAmmessa": true,
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoDichiarazioni",
+          "utente": "marco",
+          "dati": {
+            "finanziamentiPrecedenti": "Nessuno",
             "dichR02": true,
             "dichR03": true,
             "dichR05": true,
@@ -971,17 +1834,14 @@
             "dichR16": true,
             "dichR17": true,
             "dichR18": true,
-            "nessunaSpesaNonAmmessa": true,
-            "asse": "2 Rischi infortunistici",
-            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
-            "aggiuntivo2": "Nessuno",
-            "tassoMedio": "60",
-            "partiSociali": "Ente bilaterale o Organismo paritetico",
-            "rls": true,
-            "certIso45001": true,
-            "speseProgetto": "100000",
-            "speseTecniche": "8000",
-            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "riepilogo",
+          "utente": "marco",
+          "dati": {
             "azione": "Registra la domanda",
             "confermaRegistrazione": true
           }
@@ -1064,7 +1924,7 @@
         },
         {
           "azione": "completa",
-          "attivita": "compila",
+          "attivita": "passoImpresa",
           "utente": "marco",
           "dati": {
             "ragioneSociale": "Tetti Arancio S.r.l.",
@@ -1079,9 +1939,44 @@
             "fatturato": "1500000",
             "dipendentiImpresa": "8",
             "dipendentiUnita": "8",
-            "finanziamentiPrecedenti": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoProgetto",
+          "utente": "marco",
+          "dati": {
             "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
             "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoPunteggio",
+          "utente": "marco",
+          "dati": {
+            "nessunaSpesaNonAmmessa": true,
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoDichiarazioni",
+          "utente": "marco",
+          "dati": {
+            "finanziamentiPrecedenti": "Nessuno",
             "dichR02": true,
             "dichR03": true,
             "dichR05": true,
@@ -1096,17 +1991,14 @@
             "dichR16": true,
             "dichR17": true,
             "dichR18": true,
-            "nessunaSpesaNonAmmessa": true,
-            "asse": "2 Rischi infortunistici",
-            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
-            "aggiuntivo2": "Nessuno",
-            "tassoMedio": "60",
-            "partiSociali": "Ente bilaterale o Organismo paritetico",
-            "rls": true,
-            "certIso45001": true,
-            "speseProgetto": "100000",
-            "speseTecniche": "8000",
-            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "riepilogo",
+          "utente": "marco",
+          "dati": {
             "azione": "Registra la domanda",
             "confermaRegistrazione": true
           }
@@ -1148,7 +2040,7 @@
         },
         {
           "azione": "completa",
-          "attivita": "compila",
+          "attivita": "passoImpresa",
           "utente": "marco",
           "dati": {
             "ragioneSociale": "Coperture Rosa S.r.l.",
@@ -1163,9 +2055,44 @@
             "fatturato": "1500000",
             "dipendentiImpresa": "8",
             "dipendentiUnita": "8",
-            "finanziamentiPrecedenti": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoProgetto",
+          "utente": "marco",
+          "dati": {
             "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
             "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoPunteggio",
+          "utente": "marco",
+          "dati": {
+            "nessunaSpesaNonAmmessa": true,
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoDichiarazioni",
+          "utente": "marco",
+          "dati": {
+            "finanziamentiPrecedenti": "Nessuno",
             "dichR02": true,
             "dichR03": true,
             "dichR05": true,
@@ -1180,17 +2107,14 @@
             "dichR16": true,
             "dichR17": true,
             "dichR18": true,
-            "nessunaSpesaNonAmmessa": true,
-            "asse": "2 Rischi infortunistici",
-            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
-            "aggiuntivo2": "Nessuno",
-            "tassoMedio": "60",
-            "partiSociali": "Ente bilaterale o Organismo paritetico",
-            "rls": true,
-            "certIso45001": true,
-            "speseProgetto": "100000",
-            "speseTecniche": "8000",
-            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "riepilogo",
+          "utente": "marco",
+          "dati": {
             "azione": "Registra la domanda",
             "confermaRegistrazione": true
           }
@@ -1263,7 +2187,7 @@
         },
         {
           "azione": "completa",
-          "attivita": "compila",
+          "attivita": "passoImpresa",
           "utente": "marco",
           "dati": {
             "ragioneSociale": "Ponti Grigi S.r.l.",
@@ -1278,9 +2202,44 @@
             "fatturato": "1500000",
             "dipendentiImpresa": "8",
             "dipendentiUnita": "8",
-            "finanziamentiPrecedenti": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoProgetto",
+          "utente": "marco",
+          "dati": {
             "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
             "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoPunteggio",
+          "utente": "marco",
+          "dati": {
+            "nessunaSpesaNonAmmessa": true,
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoDichiarazioni",
+          "utente": "marco",
+          "dati": {
+            "finanziamentiPrecedenti": "Nessuno",
             "dichR02": true,
             "dichR03": true,
             "dichR05": true,
@@ -1295,17 +2254,14 @@
             "dichR16": true,
             "dichR17": true,
             "dichR18": true,
-            "nessunaSpesaNonAmmessa": true,
-            "asse": "2 Rischi infortunistici",
-            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
-            "aggiuntivo2": "Nessuno",
-            "tassoMedio": "60",
-            "partiSociali": "Ente bilaterale o Organismo paritetico",
-            "rls": true,
-            "certIso45001": true,
-            "speseProgetto": "100000",
-            "speseTecniche": "8000",
-            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "riepilogo",
+          "utente": "marco",
+          "dati": {
             "azione": "Registra la domanda",
             "confermaRegistrazione": true
           }
@@ -1378,7 +2334,7 @@
         },
         {
           "azione": "completa",
-          "attivita": "compila",
+          "attivita": "passoImpresa",
           "utente": "marco",
           "dati": {
             "ragioneSociale": "Strutture Ocra S.r.l.",
@@ -1393,9 +2349,44 @@
             "fatturato": "1500000",
             "dipendentiImpresa": "25",
             "dipendentiUnita": "25",
-            "finanziamentiPrecedenti": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoProgetto",
+          "utente": "marco",
+          "dati": {
             "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
             "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoPunteggio",
+          "utente": "marco",
+          "dati": {
+            "nessunaSpesaNonAmmessa": true,
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoDichiarazioni",
+          "utente": "marco",
+          "dati": {
+            "finanziamentiPrecedenti": "Nessuno",
             "dichR02": true,
             "dichR03": true,
             "dichR05": true,
@@ -1410,17 +2401,14 @@
             "dichR16": true,
             "dichR17": true,
             "dichR18": true,
-            "nessunaSpesaNonAmmessa": true,
-            "asse": "2 Rischi infortunistici",
-            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
-            "aggiuntivo2": "Nessuno",
-            "tassoMedio": "60",
-            "partiSociali": "Ente bilaterale o Organismo paritetico",
-            "rls": true,
-            "certIso45001": true,
-            "speseProgetto": "100000",
-            "speseTecniche": "8000",
-            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "riepilogo",
+          "utente": "marco",
+          "dati": {
             "azione": "Registra la domanda",
             "confermaRegistrazione": true
           }
@@ -1616,7 +2604,7 @@
         },
         {
           "azione": "completa",
-          "attivita": "compila",
+          "attivita": "passoImpresa",
           "utente": "marco",
           "dati": {
             "ragioneSociale": "Capannoni Lilla S.r.l.",
@@ -1631,9 +2619,44 @@
             "fatturato": "1500000",
             "dipendentiImpresa": "8",
             "dipendentiUnita": "8",
-            "finanziamentiPrecedenti": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoProgetto",
+          "utente": "marco",
+          "dati": {
             "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
             "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoPunteggio",
+          "utente": "marco",
+          "dati": {
+            "nessunaSpesaNonAmmessa": true,
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoDichiarazioni",
+          "utente": "marco",
+          "dati": {
+            "finanziamentiPrecedenti": "Nessuno",
             "dichR02": true,
             "dichR03": true,
             "dichR05": true,
@@ -1648,17 +2671,14 @@
             "dichR16": true,
             "dichR17": true,
             "dichR18": true,
-            "nessunaSpesaNonAmmessa": true,
-            "asse": "2 Rischi infortunistici",
-            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
-            "aggiuntivo2": "Nessuno",
-            "tassoMedio": "60",
-            "partiSociali": "Ente bilaterale o Organismo paritetico",
-            "rls": true,
-            "certIso45001": true,
-            "speseProgetto": "100000",
-            "speseTecniche": "8000",
-            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "riepilogo",
+          "utente": "marco",
+          "dati": {
             "azione": "Registra la domanda",
             "confermaRegistrazione": true
           }
@@ -1784,7 +2804,7 @@
         },
         {
           "azione": "completa",
-          "attivita": "compila",
+          "attivita": "passoImpresa",
           "utente": "marco",
           "dati": {
             "ragioneSociale": "Officine Sabbia S.r.l.",
@@ -1799,9 +2819,44 @@
             "fatturato": "1500000",
             "dipendentiImpresa": "8",
             "dipendentiUnita": "8",
-            "finanziamentiPrecedenti": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoProgetto",
+          "utente": "marco",
+          "dati": {
             "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
             "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoPunteggio",
+          "utente": "marco",
+          "dati": {
+            "nessunaSpesaNonAmmessa": true,
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoDichiarazioni",
+          "utente": "marco",
+          "dati": {
+            "finanziamentiPrecedenti": "Nessuno",
             "dichR02": true,
             "dichR03": true,
             "dichR05": true,
@@ -1816,17 +2871,14 @@
             "dichR16": true,
             "dichR17": true,
             "dichR18": true,
-            "nessunaSpesaNonAmmessa": true,
-            "asse": "2 Rischi infortunistici",
-            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
-            "aggiuntivo2": "Nessuno",
-            "tassoMedio": "60",
-            "partiSociali": "Ente bilaterale o Organismo paritetico",
-            "rls": true,
-            "certIso45001": true,
-            "speseProgetto": "100000",
-            "speseTecniche": "8000",
-            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "riepilogo",
+          "utente": "marco",
+          "dati": {
             "azione": "Registra la domanda",
             "confermaRegistrazione": true
           }
@@ -1884,7 +2936,7 @@
         },
         {
           "azione": "completa",
-          "attivita": "compila",
+          "attivita": "passoImpresa",
           "utente": "marco",
           "dati": {
             "ragioneSociale": "Ferro Celeste S.r.l.",
@@ -1899,9 +2951,44 @@
             "fatturato": "1500000",
             "dipendentiImpresa": "8",
             "dipendentiUnita": "8",
-            "finanziamentiPrecedenti": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoProgetto",
+          "utente": "marco",
+          "dati": {
             "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
             "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoPunteggio",
+          "utente": "marco",
+          "dati": {
+            "nessunaSpesaNonAmmessa": true,
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoDichiarazioni",
+          "utente": "marco",
+          "dati": {
+            "finanziamentiPrecedenti": "Nessuno",
             "dichR02": true,
             "dichR03": true,
             "dichR05": true,
@@ -1916,17 +3003,14 @@
             "dichR16": true,
             "dichR17": true,
             "dichR18": true,
-            "nessunaSpesaNonAmmessa": true,
-            "asse": "2 Rischi infortunistici",
-            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
-            "aggiuntivo2": "Nessuno",
-            "tassoMedio": "60",
-            "partiSociali": "Ente bilaterale o Organismo paritetico",
-            "rls": true,
-            "certIso45001": true,
-            "speseProgetto": "100000",
-            "speseTecniche": "8000",
-            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "riepilogo",
+          "utente": "marco",
+          "dati": {
             "azione": "Registra la domanda",
             "confermaRegistrazione": true
           }
@@ -2012,7 +3096,7 @@
         },
         {
           "azione": "controlla",
-          "attivita": "Compila la domanda",
+          "attivita": "Controlla i dati dell'impresa",
           "eventi": [
             "ERRORE"
           ],
@@ -2022,37 +3106,7 @@
         },
         {
           "azione": "completa",
-          "attivita": "compila",
-          "utente": "marco",
-          "dati": {
-            "azione": "Annulla la bozza",
-            "confermaAnnullamento": true
-          }
-        }
-      ],
-      "atteso": {
-        "conclusa": true,
-        "fine": "fineAnnullata"
-      }
-    },
-    {
-      "nome": "Servizio di calcolo non disponibile",
-      "variante": {
-        "localhost:8095/calcola\"": "localhost:8095/calcola?simula=errore\"",
-        "localhost:8095/registra\"": "localhost:8095/registra?simula=errore\""
-      },
-      "passi": [
-        {
-          "azione": "avvia",
-          "utente": "marco",
-          "dati": {
-            "codiceFiscaleImpresa": "05566778899",
-            "titoloProgetto": "Prova con il calcolo spento"
-          }
-        },
-        {
-          "azione": "completa",
-          "attivita": "compila",
+          "attivita": "passoImpresa",
           "utente": "marco",
           "dati": {
             "ragioneSociale": "Carpenterie Rossi S.r.l.",
@@ -2067,9 +3121,156 @@
             "fatturato": "1500000",
             "dipendentiImpresa": "8",
             "dipendentiUnita": "8",
-            "finanziamentiPrecedenti": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoProgetto",
+          "utente": "marco",
+          "dati": {
+            "azione": "Annulla la bozza",
+            "confermaAnnullamento": true
+          }
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineAnnullata",
+        "passa": [
+          "passoProgettoAnnullata"
+        ]
+      }
+    },
+    {
+      "nome": "Servizio di calcolo non disponibile",
+      "variante": {
+        "localhost:8095/calcola\"": "localhost:8095/calcola?simula=errore\""
+      },
+      "passi": [
+        {
+          "azione": "avvia",
+          "utente": "marco",
+          "dati": {
+            "codiceFiscaleImpresa": "05566778899",
+            "titoloProgetto": "Prova con il calcolo spento"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoImpresa",
+          "utente": "marco",
+          "dati": {
+            "ragioneSociale": "Carpenterie Rossi S.r.l.",
+            "ateco": "25.11",
+            "tipoSoggetto": "Impresa",
+            "rapportoAssicurativo": "INAIL",
+            "dataIscrizioneCciaa": "2010-03-01",
+            "dataAssociazionePortale": "2026-01-10",
+            "pec": "carpenterierossi@pec.it",
+            "regione": "Toscana",
+            "ula": "8",
+            "fatturato": "1500000",
+            "dipendentiImpresa": "8",
+            "dipendentiUnita": "8",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Controlla i dati dell'impresa",
+          "passa": [
+            "calcolaAssiErrore"
+          ]
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoImpresa",
+          "utente": "marco",
+          "dati": {
+            "azione": "Annulla la bozza",
+            "confermaAnnullamento": true
+          }
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineAnnullata",
+        "passa": [
+          "passoImpresaAnnullata"
+        ]
+      }
+    },
+    {
+      "nome": "Registrazione non disponibile",
+      "descrizione": "Il servizio non risponde alla registrazione: la domanda torna al riepilogo, nulla è perso.",
+      "variante": {
+        "localhost:8095/registra\"": "localhost:8095/registra?simula=errore\""
+      },
+      "passi": [
+        {
+          "azione": "avvia",
+          "utente": "marco",
+          "dati": {
+            "codiceFiscaleImpresa": "06677889900",
+            "titoloProgetto": "Prova con la registrazione spenta"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoImpresa",
+          "utente": "marco",
+          "dati": {
+            "ragioneSociale": "Prova Registro S.r.l.",
+            "ateco": "25.11",
+            "tipoSoggetto": "Impresa",
+            "rapportoAssicurativo": "INAIL",
+            "dataIscrizioneCciaa": "2010-03-01",
+            "dataAssociazionePortale": "2026-01-10",
+            "pec": "carpenterierossi@pec.it",
+            "regione": "Toscana",
+            "ula": "8",
+            "fatturato": "1500000",
+            "dipendentiImpresa": "8",
+            "dipendentiUnita": "8",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoProgetto",
+          "utente": "marco",
+          "dati": {
             "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
             "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoPunteggio",
+          "utente": "marco",
+          "dati": {
+            "nessunaSpesaNonAmmessa": true,
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "passoDichiarazioni",
+          "utente": "marco",
+          "dati": {
+            "finanziamentiPrecedenti": "Nessuno",
             "dichR02": true,
             "dichR03": true,
             "dichR05": true,
@@ -2084,30 +3285,25 @@
             "dichR16": true,
             "dichR17": true,
             "dichR18": true,
-            "nessunaSpesaNonAmmessa": true,
-            "asse": "2 Rischi infortunistici",
-            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
-            "aggiuntivo2": "Nessuno",
-            "tassoMedio": "60",
-            "partiSociali": "Ente bilaterale o Organismo paritetico",
-            "rls": true,
-            "certIso45001": true,
-            "speseProgetto": "100000",
-            "speseTecniche": "8000",
-            "anticipo": true,
-            "azione": "Calcola e salva"
+            "azione": "Continua"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "riepilogo",
+          "utente": "marco",
+          "dati": {
+            "azione": "Registra la domanda",
+            "confermaRegistrazione": true
           }
         },
         {
           "azione": "controlla",
-          "attivita": "Compila la domanda",
-          "passa": [
-            "calcolaErrore"
-          ]
+          "attivita": "Rivedi e registra la domanda"
         },
         {
           "azione": "completa",
-          "attivita": "compila",
+          "attivita": "riepilogo",
           "utente": "marco",
           "dati": {
             "azione": "Annulla la bozza",
@@ -2117,7 +3313,10 @@
       ],
       "atteso": {
         "conclusa": true,
-        "fine": "fineAnnullata"
+        "fine": "fineAnnullata",
+        "passa": [
+          "registraErrore"
+        ]
       }
     }
   ]

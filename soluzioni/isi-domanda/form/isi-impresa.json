@@ -1,0 +1,256 @@
+{
+  "title": "Controlla i dati dell'impresa",
+  "description": "Dati arrivati dall'anagrafica INAIL: controllali e completa unità produttiva e dimensione. Con «Continua» il servizio ISI calcola gli assi a cui l'impresa può partecipare.",
+  "fields": [
+    {
+      "name": "avvisoAnagrafica",
+      "label": "Dati dell'impresa",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "erroriImpresa",
+      "label": "Da correggere in questo passo",
+      "type": "textarea",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "type": "sezione",
+      "label": "Dati dell'impresa",
+      "help": "Precompilati dall'anagrafica INAIL: controllali e correggili se serve."
+    },
+    {
+      "name": "ragioneSociale",
+      "label": "Ragione sociale",
+      "type": "text",
+      "maxLunghezza": 200,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "partitaIva",
+      "label": "Partita IVA",
+      "type": "text",
+      "formato": "partitaIva",
+      "help": "Facoltativa per gli Enti del Terzo settore."
+    },
+    {
+      "name": "formaGiuridica",
+      "label": "Forma giuridica",
+      "type": "select",
+      "options": [
+        "Impresa individuale",
+        "Società di persone",
+        "Società di capitali",
+        "Società cooperativa",
+        "Società agricola",
+        "Ente del Terzo settore",
+        "Altro"
+      ]
+    },
+    {
+      "name": "ateco",
+      "label": "Codice ATECO 2025",
+      "type": "text",
+      "formato": "espressione",
+      "espressione": "^[0-9]{2}(\\.[0-9]{1,2}){0,2}$",
+      "messaggioFormato": "Scrivi il codice nella forma 25.11 o 25.11.00",
+      "visibileAlleParti": true
+    },
+    {
+      "name": "dataCostituzione",
+      "label": "Data di costituzione",
+      "type": "date",
+      "max": "oggi"
+    },
+    {
+      "name": "dataIscrizioneCciaa",
+      "label": "Data di iscrizione alla CCIAA (o al RUNTS o all'Albo)",
+      "type": "date",
+      "max": "oggi"
+    },
+    {
+      "name": "sedeLegale",
+      "label": "Sede legale",
+      "type": "text",
+      "visibileAlleParti": true
+    },
+    {
+      "name": "codiceDitta",
+      "label": "Codice ditta INAIL",
+      "type": "text"
+    },
+    {
+      "name": "pec",
+      "label": "PEC dell'impresa",
+      "type": "text",
+      "formato": "email",
+      "help": "Tutte le comunicazioni del bando arrivano qui."
+    },
+    {
+      "name": "tipoSoggetto",
+      "label": "Tipo di soggetto",
+      "type": "select",
+      "options": [
+        "Impresa",
+        "ETS iscritto al RUNTS",
+        "ETS iscritto al Registro imprese",
+        "ONLUS"
+      ]
+    },
+    {
+      "name": "agricolaPrimaria",
+      "label": "Impresa agricola primaria",
+      "type": "checkbox"
+    },
+    {
+      "name": "iap",
+      "label": "Imprenditore agricolo professionale (IAP)",
+      "type": "checkbox"
+    },
+    {
+      "name": "associataCollegata",
+      "label": "Impresa associata o collegata",
+      "type": "checkbox",
+      "help": "In questo caso ULA e fatturato del passo 2 vanno scritti già sommati."
+    },
+    {
+      "name": "rapportoAssicurativo",
+      "label": "Rapporto assicurativo",
+      "type": "select",
+      "options": [
+        "INAIL",
+        "INPS gestione agricola",
+        "Nessuno"
+      ]
+    },
+    {
+      "name": "dataAssociazionePortale",
+      "label": "Data di associazione al portale INAIL",
+      "type": "date",
+      "help": "Almeno 5 giorni lavorativi prima della chiusura della compilazione (art. 12)."
+    },
+    {
+      "type": "sezione",
+      "label": "Unità produttiva e dimensione"
+    },
+    {
+      "name": "indirizzoUnita",
+      "label": "Indirizzo dell'unità produttiva",
+      "type": "text"
+    },
+    {
+      "name": "regione",
+      "label": "Regione dell'unità produttiva",
+      "type": "select",
+      "options": [
+        "Abruzzo",
+        "Basilicata",
+        "Calabria",
+        "Campania",
+        "Emilia-Romagna",
+        "Friuli-Venezia Giulia",
+        "Lazio",
+        "Liguria",
+        "Lombardia",
+        "Marche",
+        "Molise",
+        "Piemonte",
+        "Puglia",
+        "Sardegna",
+        "Sicilia",
+        "Toscana",
+        "Trentino-Alto Adige",
+        "Umbria",
+        "Valle d'Aosta",
+        "Veneto"
+      ],
+      "visibileAlleParti": true,
+      "help": "Decide lo stanziamento a cui concorre la domanda."
+    },
+    {
+      "name": "ula",
+      "label": "ULA dell'anno di riferimento",
+      "type": "number",
+      "min": 0,
+      "help": "Con un decimale: 10,44 diventa 10,4."
+    },
+    {
+      "name": "fatturato",
+      "label": "Fatturato annuo (€)",
+      "type": "number",
+      "min": 0
+    },
+    {
+      "name": "totaleBilancio",
+      "label": "Totale di bilancio (€)",
+      "type": "number",
+      "min": 0
+    },
+    {
+      "name": "dipendentiImpresa",
+      "label": "Dipendenti dell'impresa",
+      "type": "number",
+      "min": 0
+    },
+    {
+      "name": "dipendentiUnita",
+      "label": "Dipendenti dell'unità produttiva",
+      "type": "number",
+      "min": 0
+    },
+    {
+      "name": "attivitaStagionale",
+      "label": "Attività stagionale",
+      "type": "checkbox"
+    },
+    {
+      "name": "dataInizioAttivita",
+      "label": "Data di inizio dell'attività",
+      "type": "date",
+      "visibileSe": {
+        "campo": "attivitaStagionale",
+        "valori": [
+          "true"
+        ]
+      }
+    },
+    {
+      "name": "dittaSenzaDipendenti",
+      "label": "Ditta individuale senza dipendenti con titolare autonomo",
+      "type": "checkbox"
+    },
+    {
+      "type": "sezione",
+      "label": "Come vuoi proseguire",
+      "help": "I dati che hai scritto restano salvati anche se torni indietro."
+    },
+    {
+      "name": "azione",
+      "label": "Prossimo passo",
+      "type": "select",
+      "options": [
+        "Continua",
+        "Annulla la bozza"
+      ],
+      "required": true,
+      "default": "Continua",
+      "precompila": false
+    },
+    {
+      "name": "confermaAnnullamento",
+      "label": "Ho capito: la bozza annullata non si recupera",
+      "type": "checkbox",
+      "required": true,
+      "visibileSe": {
+        "campo": "azione",
+        "valori": [
+          "Annulla la bozza"
+        ]
+      },
+      "precompila": false
+    }
+  ],
+  "submitLabel": "Conferma"
+}

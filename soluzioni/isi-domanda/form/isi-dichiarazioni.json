@@ -1,0 +1,203 @@
+{
+  "title": "Firma le dichiarazioni",
+  "description": "Una casella per ogni requisito dell'Avviso: senza tutte la domanda non si registra. Con «Continua» il servizio ISI calcola punteggio e contributo e controlla tutta la domanda: se trova errori ti riporta al passo da correggere.",
+  "fields": [
+    {
+      "name": "riepilogo",
+      "label": "Punteggio e contributo",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "asse",
+      "label": "Asse scelto",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "erroriDichiarazioni",
+      "label": "Da correggere in questo passo",
+      "type": "textarea",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "type": "sezione",
+      "label": "Dichiarazioni",
+      "help": "Una casella per ogni requisito dell'Avviso: senza tutte non si registra."
+    },
+    {
+      "name": "dichR02",
+      "label": "Il progetto riguarda lavorazioni già attive alla data di pubblicazione, con rischio documentato nel DVR (art. 5)",
+      "type": "checkbox"
+    },
+    {
+      "name": "dichR03",
+      "label": "Il progetto non amplia la sede produttiva e non comprende beni usati (art. 5)",
+      "type": "checkbox"
+    },
+    {
+      "name": "dichR05",
+      "label": "Le macchine o i trattori da sostituire sono di piena proprietà da almeno 3 anni al 31/12/2025 (art. 5)",
+      "type": "checkbox",
+      "visibileSe": {
+        "campo": "asse",
+        "valori": [
+          "1.1 Rischi tecnopatici",
+          "2 Rischi infortunistici",
+          "4 Settori specifici (micro e piccole)",
+          "5.1 Agricoltura",
+          "5.2 Giovani agricoltori"
+        ]
+      }
+    },
+    {
+      "name": "dichR06",
+      "label": "Gli immobili sono nella disponibilità dell'impresa da almeno 3 anni al 31/12/2025 (art. 5)",
+      "type": "checkbox",
+      "visibileSe": {
+        "campo": "asse",
+        "valori": [
+          "3 Bonifica amianto"
+        ]
+      }
+    },
+    {
+      "name": "dichR07",
+      "label": "L'unità produttiva è attiva nella Regione dell'Avviso (art. 2)",
+      "type": "checkbox"
+    },
+    {
+      "name": "dichR08",
+      "label": "L'impresa è iscritta a registri o albi entro il 18/12/2025 (art. 2)",
+      "type": "checkbox"
+    },
+    {
+      "name": "dichR09",
+      "label": "L'impresa è iscritta alla gestione assicurativa e previdenziale ed è in regola con il DURC (art. 2)",
+      "type": "checkbox"
+    },
+    {
+      "name": "dichR10",
+      "label": "Nessuna procedura concorsuale o liquidazione in corso (art. 2)",
+      "type": "checkbox"
+    },
+    {
+      "name": "dichR11",
+      "label": "Nessuna condanna definitiva per omicidio o lesioni colpose legate alla sicurezza sul lavoro (art. 2)",
+      "type": "checkbox"
+    },
+    {
+      "name": "dichR12",
+      "label": "Nessun provvedimento interdittivo art. 9 c. 2 lett. d) d.lgs. 231/2001 (art. 2)",
+      "type": "checkbox"
+    },
+    {
+      "name": "dichR15",
+      "label": "Sono rispettate le regole sul cumulo di aiuti pubblici sugli stessi costi (art. 9)",
+      "type": "checkbox"
+    },
+    {
+      "name": "dichR16",
+      "label": "Nessun ordine di recupero pendente e impresa non in difficoltà (Reg. UE 2022/2472)",
+      "type": "checkbox",
+      "visibileSe": {
+        "campo": "asse",
+        "valori": [
+          "5.1 Agricoltura",
+          "5.2 Giovani agricoltori"
+        ]
+      }
+    },
+    {
+      "name": "dichR17",
+      "label": "L'impresa ha la polizza contro calamità naturali ed eventi catastrofali, dove obbligatoria (non richiesta alle imprese agricole art. 2135 c.c.)",
+      "type": "checkbox"
+    },
+    {
+      "name": "dichR18",
+      "label": "L'impresa sottoscrive il Patto di integrità (Modulo G)",
+      "type": "checkbox"
+    },
+    {
+      "name": "finanziamentiPrecedenti",
+      "label": "Finanziamenti ISI ottenuti nelle edizioni precedenti",
+      "type": "select",
+      "options": [
+        "Nessuno",
+        "ISI 2022",
+        "ISI 2023",
+        "ISI 2024"
+      ]
+    },
+    {
+      "name": "assePrecedente",
+      "label": "Asse del finanziamento precedente",
+      "type": "select",
+      "options": [
+        "1.1 Rischi tecnopatici",
+        "1.2 Modelli organizzativi",
+        "2 Rischi infortunistici",
+        "3 Bonifica amianto",
+        "4 Settori specifici (micro e piccole)",
+        "5.1 Agricoltura",
+        "5.2 Giovani agricoltori"
+      ],
+      "visibileSe": {
+        "campo": "finanziamentiPrecedenti",
+        "valori": [
+          "ISI 2022",
+          "ISI 2023",
+          "ISI 2024"
+        ]
+      }
+    },
+    {
+      "name": "rinunciaPec",
+      "label": "Ho rinunciato via PEC al finanziamento precedente entro il giorno prima dell'apertura (R-REQ-13)",
+      "type": "checkbox",
+      "visibileSe": {
+        "campo": "finanziamentiPrecedenti",
+        "valori": [
+          "ISI 2022",
+          "ISI 2023",
+          "ISI 2024"
+        ]
+      }
+    },
+    {
+      "type": "sezione",
+      "label": "Come vuoi proseguire",
+      "help": "I dati che hai scritto restano salvati anche se torni indietro."
+    },
+    {
+      "name": "azione",
+      "label": "Prossimo passo",
+      "type": "select",
+      "options": [
+        "Continua",
+        "Torna al passo precedente",
+        "Annulla la bozza"
+      ],
+      "required": true,
+      "default": "Continua",
+      "precompila": false
+    },
+    {
+      "name": "confermaAnnullamento",
+      "label": "Ho capito: la bozza annullata non si recupera",
+      "type": "checkbox",
+      "required": true,
+      "visibileSe": {
+        "campo": "azione",
+        "valori": [
+          "Annulla la bozza"
+        ]
+      },
+      "precompila": false
+    }
+  ],
+  "submitLabel": "Conferma"
+}

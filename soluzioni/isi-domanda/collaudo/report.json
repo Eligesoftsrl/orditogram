@@ -3,50 +3,70 @@
   "risultati": [
     {
       "scenario": "Asse 2 in posizione utile e ammessa (TC-01)",
-      "descrizione": "Percorso principale: dati letti da INAIL, calcolo (201 punti, 70.200 €), registrazione, codice, sportello, posizione utile, documenti e perizia del tecnico, istruttoria, ammissione.",
+      "descrizione": "Percorso principale: dati letti da INAIL, un passo per attività, calcolo (201 punti, 70.200 €), riepilogo, registrazione, codice, sportello, posizione utile, documenti e perizia, istruttoria.",
       "esito": "superato",
       "errore": null,
-      "pratica": "d6e035bf-e9bb-11f1-9114-02fc00000001",
-      "secondi": 12.7,
+      "pratica": "84797f21-e9ea-11f1-9864-02fc00000001",
+      "secondi": 14.2,
       "passi": [
         {
           "passo": "marco avvia la pratica \"Linea vita sul capannone\"",
-          "secondi": 0.4,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: attivita \"Compila la domanda\"; dati {\"ragioneSociale\": \"Carpenterie Rossi S.r.l.\", \"avvisoAnagrafica\": \"Dati letti dall'anagrafica INAIL\"}",
-          "secondi": 0.6,
-          "esito": "ok"
-        },
-        {
-          "passo": "marco completa \"Compila la domanda\"",
-          "secondi": 0.5,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: attivita \"Compila la domanda\"; dati {\"punteggio\": \"201\", \"contributoTotaleTesto\": \"70.200,00 €\", \"registrabile\": \"Sì\"}",
           "secondi": 0.3,
           "esito": "ok"
         },
         {
-          "passo": "marco completa \"Compila la domanda\"",
-          "secondi": 0.4,
+          "passo": "controllo: attivita \"Controlla i dati dell'impresa\"; dati {\"ragioneSociale\": \"Carpenterie Rossi S.r.l.\", \"avvisoAnagrafica\": \"Dati letti dall'anagrafica INAIL\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Controlla i dati dell'impresa\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Scegli asse e progetto\"; dati {\"assiAmmessi\": \"*\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Scegli asse e progetto\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Firma le dichiarazioni\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Rivedi e registra la domanda\"; dati {\"punteggio\": \"201\", \"contributoTotaleTesto\": \"70.200,00 €\", \"registrabile\": \"Sì\", \"passoDaCorreggere\": \"nessuno\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Rivedi e registra la domanda\"",
+          "secondi": 0.3,
           "esito": "ok"
         },
         {
           "passo": "controllo: dati {\"esitoRegistrazione\": \"REGISTRATA\", \"numeroDomanda\": \"*\"}",
-          "secondi": 0.3,
+          "secondi": 0.1,
           "esito": "ok"
         },
         {
           "passo": "scatta subito il timer \"attesaCodice\"",
-          "secondi": 1.0,
+          "secondi": 1.1,
           "esito": "ok"
         },
         {
           "passo": "marco completa \"Acquisisci il codice identificativo\"",
-          "secondi": 6.0,
+          "secondi": 8.3,
           "esito": "ok"
         },
         {
@@ -61,17 +81,17 @@
         },
         {
           "passo": "controllo: attivita []; dati {\"esitoInvio\": \"INVIATA\"}",
-          "secondi": 0.2,
+          "secondi": 0.1,
           "esito": "ok"
         },
         {
           "passo": "arriva il messaggio \"esitoElenco\"",
-          "secondi": 0.4,
+          "secondi": 0.3,
           "esito": "ok"
         },
         {
           "passo": "controllo: attivita [\"Carica i documenti\", \"Incarica il tecnico\"]",
-          "secondi": 0.2,
+          "secondi": 0.1,
           "esito": "ok"
         },
         {
@@ -81,7 +101,7 @@
         },
         {
           "passo": "collaudo-supporto-isi completa \"Abilita il tecnico sulla domanda\"",
-          "secondi": 0.2,
+          "secondi": 0.3,
           "esito": "ok"
         },
         {
@@ -96,7 +116,7 @@
         },
         {
           "passo": "controllo: attivita \"Svolgi l'istruttoria\"; dati {\"scadenzaIstruttoria\": \"*\"}",
-          "secondi": 0.2,
+          "secondi": 0.1,
           "esito": "ok"
         },
         {
@@ -111,12 +131,12 @@
       ]
     },
     {
-      "scenario": "Sotto soglia, poi bozza annullata (TC-02)",
-      "descrizione": "89 punti: REGISTRA non procede e la domanda torna in compilazione; l'impresa annulla la bozza.",
+      "scenario": "Sotto soglia: si torna al punteggio, poi indietro e bozza annullata (TC-02)",
+      "descrizione": "89 punti: il calcolo riporta l'impresa al passo del punteggio con il motivo; l'impresa torna all'asse e annulla la bozza.",
       "esito": "superato",
       "errore": null,
-      "pratica": "de7239b6-e9bb-11f1-9114-02fc00000001",
-      "secondi": 1.3,
+      "pratica": "8cf6f598-e9ea-11f1-9864-02fc00000001",
+      "secondi": 2.6,
       "passi": [
         {
           "passo": "marco avvia la pratica \"Silenziatori per le presse\"",
@@ -124,38 +144,335 @@
           "esito": "ok"
         },
         {
-          "passo": "controllo: dati {\"avvisoAnagrafica\": \"Impresa non trovata nell'anagrafica INAIL: compila i dati a mano\"}",
-          "secondi": 0.2,
-          "esito": "ok"
-        },
-        {
-          "passo": "marco completa \"Compila la domanda\"",
-          "secondi": 0.2,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: attivita \"Compila la domanda\"; dati {\"punteggio\": \"89\", \"registrabile\": \"No\"}",
+          "passo": "controllo: attivita \"Controlla i dati dell'impresa\"; dati {\"avvisoAnagrafica\": \"Impresa non trovata nell'anagrafica INAIL: compila i dati a mano\"}",
           "secondi": 0.1,
           "esito": "ok"
         },
         {
-          "passo": "marco completa \"Compila la domanda\"",
+          "passo": "marco completa \"Controlla i dati dell'impresa\"",
           "secondi": 0.2,
           "esito": "ok"
         },
         {
-          "passo": "controllo: conclusa true; fine \"fineAnnullata\"",
+          "passo": "marco completa \"Scegli asse e progetto\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Firma le dichiarazioni\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Criteri di punteggio e piano economico\"; dati {\"punteggio\": \"89\", \"registrabile\": \"No\", \"passoDaCorreggere\": \"punteggio\", \"erroriPunteggio\": \"*\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Scegli asse e progetto\"",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Scegli asse e progetto\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: conclusa true; fine \"fineAnnullata\"; passa [\"erroriGw\", \"passoPunteggioAnnullata\"]",
+          "esito": "ok"
+        }
+      ]
+    },
+    {
+      "scenario": "Impresa senza requisiti: si resta sui dati dell'impresa",
+      "descrizione": "Meno di 1 ULA: dopo il primo calcolo la domanda torna ai dati dell'impresa con il motivo; corretti i dati si passa all'asse, si torna indietro e si annulla dal primo passo.",
+      "esito": "superato",
+      "errore": null,
+      "pratica": "8e8696b3-e9ea-11f1-9864-02fc00000001",
+      "secondi": 1.9,
+      "passi": [
+        {
+          "passo": "marco avvia la pratica \"Prova con poche ULA\"",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Controlla i dati dell'impresa\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Controlla i dati dell'impresa\"; dati {\"passoDaCorreggere\": \"impresa\", \"erroriImpresa\": \"*\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Controlla i dati dell'impresa\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Scegli asse e progetto\"",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Scegli asse e progetto\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Controlla i dati dell'impresa\"",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Controlla i dati dell'impresa\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: conclusa true; fine \"fineAnnullata\"; passa [\"impresaGw\", \"passoProgettoGw\", \"passoImpresaAnnullata\"]",
+          "esito": "ok"
+        }
+      ]
+    },
+    {
+      "scenario": "Errori riportati al passo giusto: progetto e dichiarazioni",
+      "descrizione": "Manca la tipologia e una dichiarazione: il calcolo riporta prima al progetto, poi alle dichiarazioni; dalle dichiarazioni si torna al punteggio e infine si annulla.",
+      "esito": "superato",
+      "errore": null,
+      "pratica": "8fa3036b-e9ea-11f1-9864-02fc00000001",
+      "secondi": 3.4,
+      "passi": [
+        {
+          "passo": "marco avvia la pratica \"Domanda con errori\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Controlla i dati dell'impresa\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Scegli asse e progetto\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Firma le dichiarazioni\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Scegli asse e progetto\"; dati {\"passoDaCorreggere\": \"progetto\", \"erroriProgetto\": \"*\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Scegli asse e progetto\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Firma le dichiarazioni\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Firma le dichiarazioni\"; dati {\"passoDaCorreggere\": \"dichiarazioni\", \"erroriDichiarazioni\": \"*\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Firma le dichiarazioni\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Firma le dichiarazioni\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: conclusa true; fine \"fineAnnullata\"; passa [\"erroriGw\", \"passoDichiarazioniAnnullata\"]",
+          "esito": "ok"
+        }
+      ]
+    },
+    {
+      "scenario": "Modifiche dal riepilogo, poi bozza annullata",
+      "descrizione": "Dal riepilogo l'impresa torna all'asse, poi al punteggio e alle dichiarazioni, ogni volta ricalcolando; infine annulla dal riepilogo.",
+      "esito": "superato",
+      "errore": null,
+      "pratica": "91adc70e-e9ea-11f1-9864-02fc00000001",
+      "secondi": 5.7,
+      "passi": [
+        {
+          "passo": "marco avvia la pratica \"Domanda da rivedere\"",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Controlla i dati dell'impresa\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Scegli asse e progetto\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Firma le dichiarazioni\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Rivedi e registra la domanda\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Scegli asse e progetto\"",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Scegli asse e progetto\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Firma le dichiarazioni\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Rivedi e registra la domanda\"; dati {\"contributoTotaleTesto\": \"*\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Rivedi e registra la domanda\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Firma le dichiarazioni\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Rivedi e registra la domanda\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Firma le dichiarazioni\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Rivedi e registra la domanda\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Controlla i dati dell'impresa\"",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Controlla i dati dell'impresa\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Scegli asse e progetto\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Firma le dichiarazioni\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Rivedi e registra la domanda\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: conclusa true; fine \"fineAnnullata\"; passa [\"qualePassoGw\", \"riepilogoAnnullata\"]",
           "esito": "ok"
         }
       ]
     },
     {
       "scenario": "Seconda domanda della stessa impresa (TC-19) e chiusura della compilazione",
-      "descrizione": "L'impresa del primo scenario ha già registrato: la seconda bozza non si registra. Alla chiusura della compilazione la bozza resta non registrata.",
+      "descrizione": "L'impresa del primo scenario ha già registrato: la seconda bozza non si registra e torna al riepilogo con il motivo. Alla chiusura della compilazione l'impresa è avvisata.",
       "esito": "superato",
       "errore": null,
-      "pratica": "df327d5e-e9bb-11f1-9114-02fc00000001",
-      "secondi": 5.4,
+      "pratica": "950e56f4-e9ea-11f1-9864-02fc00000001",
+      "secondi": 3.8,
       "passi": [
         {
           "passo": "marco avvia la pratica \"Seconda ipotesi di progetto\"",
@@ -163,22 +480,61 @@
           "esito": "ok"
         },
         {
-          "passo": "marco completa \"Compila la domanda\"",
+          "passo": "marco completa \"Controlla i dati dell'impresa\"",
           "secondi": 0.3,
           "esito": "ok"
         },
         {
-          "passo": "controllo: attivita \"Compila la domanda\"; dati {\"esitoRegistrazione\": \"GIA_REGISTRATA\", \"messaggioRegistrazione\": \"L'impresa ha già registrato una domanda per questo Avviso\"}",
+          "passo": "marco completa \"Scegli asse e progetto\"",
           "secondi": 0.2,
           "esito": "ok"
         },
         {
-          "passo": "scatta subito il timer \"chiusuraCompilazioneTimer\"",
-          "secondi": 1.0,
+          "passo": "marco completa \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.2,
           "esito": "ok"
         },
         {
-          "passo": "controllo: conclusa true; fine \"fineNonRegistrata\"",
+          "passo": "marco completa \"Firma le dichiarazioni\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Rivedi e registra la domanda\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Rivedi e registra la domanda\"; dati {\"esitoRegistrazione\": \"GIA_REGISTRATA\", \"messaggioRegistrazione\": \"L'impresa ha già registrato una domanda per questo Avviso\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "scatta subito il timer \"chiusuraCompilazioneTimer\"",
+          "secondi": 1.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: conclusa true; fine \"fineNonRegistrata\"; passa [\"registrata\", \"avvisaChiusura\"]; eventi [\"NOTIFICA\"]",
+          "esito": "ok"
+        }
+      ]
+    },
+    {
+      "scenario": "Fuori dal periodo di compilazione",
+      "descrizione": "Il calendario dice che la compilazione è chiusa: l'impresa riceve una notifica con le date e la pratica finisce con il motivo, senza attività da fare.",
+      "esito": "superato",
+      "errore": null,
+      "pratica": "97691010-e9ea-11f1-9864-02fc00000001",
+      "secondi": 0.8,
+      "passi": [
+        {
+          "passo": "marco avvia la pratica \"Domanda fuori periodo\"",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: conclusa true; fine \"fineFuoriPeriodo\"; passa [\"avvisaFuoriPeriodo\"]; eventi [\"NOTIFICA\"]",
           "esito": "ok"
         }
       ]
@@ -188,8 +544,8 @@
       "descrizione": "Fuori dai fondi, subentra con la redistribuzione; senza perizia (Asse 1.2); i documenti non arrivano in tempo, l'istanza di revoca è accolta; in istruttoria integrazione e preavviso, poi ammessa parzialmente.",
       "esito": "superato",
       "errore": null,
-      "pratica": "e26f7fea-e9bb-11f1-9114-02fc00000001",
-      "secondi": 22.3,
+      "pratica": "97ccdb09-e9ea-11f1-9864-02fc00000001",
+      "secondi": 21.6,
       "passi": [
         {
           "passo": "marco avvia la pratica \"SGSL certificato\"",
@@ -197,23 +553,43 @@
           "esito": "ok"
         },
         {
-          "passo": "marco completa \"Compila la domanda\"",
+          "passo": "marco completa \"Controlla i dati dell'impresa\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Scegli asse e progetto\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Firma le dichiarazioni\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Rivedi e registra la domanda\"",
           "secondi": 0.3,
           "esito": "ok"
         },
         {
           "passo": "controllo: dati {\"esitoRegistrazione\": \"REGISTRATA\", \"numeroDomanda\": \"*\"}",
-          "secondi": 0.2,
+          "secondi": 0.1,
           "esito": "ok"
         },
         {
           "passo": "scatta subito il timer \"attesaCodice\"",
-          "secondi": 1.0,
+          "secondi": 1.1,
           "esito": "ok"
         },
         {
           "passo": "marco completa \"Acquisisci il codice identificativo\"",
-          "secondi": 8.2,
+          "secondi": 6.6,
           "esito": "ok"
         },
         {
@@ -228,12 +604,12 @@
         },
         {
           "passo": "controllo: attivita []; dati {\"esitoInvio\": \"INVIATA\"}",
-          "secondi": 0.2,
+          "secondi": 0.1,
           "esito": "ok"
         },
         {
           "passo": "arriva il messaggio \"esitoElenco\"",
-          "secondi": 0.3,
+          "secondi": 0.2,
           "esito": "ok"
         },
         {
@@ -258,7 +634,7 @@
         },
         {
           "passo": "marco completa \"Presenta l'istanza di revoca\"",
-          "secondi": 7.4,
+          "secondi": 7.5,
           "esito": "ok"
         },
         {
@@ -278,12 +654,12 @@
         },
         {
           "passo": "controllo: attivita \"Svolgi l'istruttoria\"; dati {\"giorniRimanenti\": \"*\"}",
-          "secondi": 0.2,
+          "secondi": 0.1,
           "esito": "ok"
         },
         {
           "passo": "collaudo-sede-toscana completa \"Svolgi l'istruttoria\"",
-          "secondi": 0.2,
+          "secondi": 0.3,
           "esito": "ok"
         },
         {
@@ -303,7 +679,7 @@
         },
         {
           "passo": "collaudo-sede-toscana completa \"Svolgi l'istruttoria\"",
-          "secondi": 0.2,
+          "secondi": 0.3,
           "esito": "ok"
         },
         {
@@ -317,8 +693,8 @@
       "descrizione": "Più tipologie (vale la c, 80 punti); fuori dai fondi negli elenchi provvisori e anche nei definitivi.",
       "esito": "superato",
       "errore": null,
-      "pratica": "efbad12a-e9bb-11f1-9114-02fc00000001",
-      "secondi": 8.7,
+      "pratica": "a4b3506f-e9ea-11f1-9864-02fc00000001",
+      "secondi": 9.1,
       "passi": [
         {
           "passo": "marco avvia la pratica \"Aspirazione delle polveri di legno\"",
@@ -326,8 +702,28 @@
           "esito": "ok"
         },
         {
-          "passo": "marco completa \"Compila la domanda\"",
-          "secondi": 0.3,
+          "passo": "marco completa \"Controlla i dati dell'impresa\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Scegli asse e progetto\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Firma le dichiarazioni\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Rivedi e registra la domanda\"",
+          "secondi": 0.2,
           "esito": "ok"
         },
         {
@@ -342,12 +738,12 @@
         },
         {
           "passo": "marco completa \"Acquisisci il codice identificativo\"",
-          "secondi": 5.8,
+          "secondi": 5.1,
           "esito": "ok"
         },
         {
           "passo": "controllo: attivita \"Invia il codice allo sportello\"; dati {\"codiceIdentificativo\": \"*\"}",
-          "secondi": 0.1,
+          "secondi": 0.2,
           "esito": "ok"
         },
         {
@@ -367,7 +763,7 @@
         },
         {
           "passo": "arriva il messaggio \"esitoElenco\"",
-          "secondi": 0.2,
+          "secondi": 0.3,
           "esito": "ok"
         },
         {
@@ -381,8 +777,8 @@
       "descrizione": "Elenco NCD prima dello sportello; il primo tecnico indicato è il legale rappresentante e viene rifiutato; i documenti non arrivano e l'istanza di revoca è respinta.",
       "esito": "superato",
       "errore": null,
-      "pratica": "f4e6d2f1-e9bb-11f1-9114-02fc00000001",
-      "secondi": 9.4,
+      "pratica": "aa1a5fa6-e9ea-11f1-9864-02fc00000001",
+      "secondi": 8.9,
       "passi": [
         {
           "passo": "marco avvia la pratica \"Ancoraggi per il magazzino\"",
@@ -390,7 +786,27 @@
           "esito": "ok"
         },
         {
-          "passo": "marco completa \"Compila la domanda\"",
+          "passo": "marco completa \"Controlla i dati dell'impresa\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Scegli asse e progetto\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Firma le dichiarazioni\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Rivedi e registra la domanda\"",
           "secondi": 0.2,
           "esito": "ok"
         },
@@ -421,7 +837,7 @@
         },
         {
           "passo": "marco completa \"Presenta l'istanza di revoca\"",
-          "secondi": 5.8,
+          "secondi": 4.2,
           "esito": "ok"
         },
         {
@@ -440,8 +856,8 @@
       "descrizione": "",
       "esito": "superato",
       "errore": null,
-      "pratica": "fa7b0baa-e9bb-11f1-9114-02fc00000001",
-      "secondi": 29.1,
+      "pratica": "af66b945-e9ea-11f1-9864-02fc00000001",
+      "secondi": 29.2,
       "passi": [
         {
           "passo": "marco avvia la pratica \"Linea vita bis\"",
@@ -449,8 +865,28 @@
           "esito": "ok"
         },
         {
-          "passo": "marco completa \"Compila la domanda\"",
+          "passo": "marco completa \"Controlla i dati dell'impresa\"",
           "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Scegli asse e progetto\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Firma le dichiarazioni\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Rivedi e registra la domanda\"",
+          "secondi": 0.3,
           "esito": "ok"
         },
         {
@@ -460,500 +896,12 @@
         },
         {
           "passo": "scatta subito il timer \"attesaCodice\"",
-          "secondi": 1.0,
+          "secondi": 1.1,
           "esito": "ok"
         },
         {
           "passo": "marco completa \"Acquisisci il codice identificativo\"",
-          "secondi": 8.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: attivita \"Invia il codice allo sportello\"; dati {\"codiceIdentificativo\": \"*\"}",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "marco completa \"Invia il codice allo sportello\"",
-          "secondi": 0.3,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: attivita []; dati {\"esitoInvio\": \"INVIATA\"}",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "arriva il messaggio \"esitoElenco\"",
-          "secondi": 0.2,
-          "esito": "ok"
-        },
-        {
-          "passo": "scatta subito il timer \"termineDocumentiTimer\"",
-          "secondi": 1.0,
-          "esito": "ok"
-        },
-        {
-          "passo": "scatta subito il timer \"termineRevoca\"",
-          "secondi": 8.5,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: conclusa true; fine \"fineDecaduta\"",
-          "esito": "ok"
-        }
-      ]
-    },
-    {
-      "scenario": "Codice non acquisito nei termini",
-      "descrizione": "",
-      "esito": "superato",
-      "errore": null,
-      "pratica": "0bdad41f-e9bc-11f1-9114-02fc00000001",
-      "secondi": 20.7,
-      "passi": [
-        {
-          "passo": "marco avvia la pratica \"Ancoraggi tetto\"",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "marco completa \"Compila la domanda\"",
-          "secondi": 0.2,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: dati {\"esitoRegistrazione\": \"REGISTRATA\", \"numeroDomanda\": \"*\"}",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "scatta subito il timer \"attesaCodice\"",
-          "secondi": 1.0,
-          "esito": "ok"
-        },
-        {
-          "passo": "scatta subito il timer \"chiusuraCodiceTimer\"",
-          "secondi": 9.9,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: conclusa true; fine \"fineSenzaEsito\"; passa [\"sFineSenzaCodice\"]",
-          "esito": "ok"
-        }
-      ]
-    },
-    {
-      "scenario": "Codice sbagliato, poi sportello chiuso (TC-21)",
-      "descrizione": "",
-      "esito": "superato",
-      "errore": null,
-      "pratica": "182b727e-e9bc-11f1-9114-02fc00000001",
-      "secondi": 19.4,
-      "passi": [
-        {
-          "passo": "marco avvia la pratica \"Ancoraggi\"",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "marco completa \"Compila la domanda\"",
-          "secondi": 0.2,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: dati {\"esitoRegistrazione\": \"REGISTRATA\", \"numeroDomanda\": \"*\"}",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "scatta subito il timer \"attesaCodice\"",
-          "secondi": 1.0,
-          "esito": "ok"
-        },
-        {
-          "passo": "marco completa \"Acquisisci il codice identificativo\"",
-          "secondi": 8.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: attivita \"Invia il codice allo sportello\"; dati {\"codiceIdentificativo\": \"*\"}",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "marco completa \"Invia il codice allo sportello\"",
-          "secondi": 0.2,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: attivita \"Invia il codice allo sportello\"; dati {\"esitoInvio\": \"RIFIUTATO\", \"messaggioInvio\": \"Codice non valido o già utilizzato\"}",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "scatta subito il timer \"chiusuraSportelloTimer\"",
-          "secondi": 1.0,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: conclusa true; fine \"fineSenzaEsito\"; passa [\"sFineNonInviata\"]",
-          "esito": "ok"
-        }
-      ]
-    },
-    {
-      "scenario": "Elenchi mai pubblicati",
-      "descrizione": "",
-      "esito": "superato",
-      "errore": null,
-      "pratica": "23be66f2-e9bc-11f1-9114-02fc00000001",
-      "secondi": 20.4,
-      "passi": [
-        {
-          "passo": "marco avvia la pratica \"Ancoraggi\"",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "marco completa \"Compila la domanda\"",
-          "secondi": 0.2,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: dati {\"esitoRegistrazione\": \"REGISTRATA\", \"numeroDomanda\": \"*\"}",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "scatta subito il timer \"attesaCodice\"",
-          "secondi": 1.0,
-          "esito": "ok"
-        },
-        {
-          "passo": "marco completa \"Acquisisci il codice identificativo\"",
-          "secondi": 8.9,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: attivita \"Invia il codice allo sportello\"; dati {\"codiceIdentificativo\": \"*\"}",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "marco completa \"Invia il codice allo sportello\"",
-          "secondi": 0.3,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: attivita []; dati {\"esitoInvio\": \"INVIATA\"}",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "scatta subito il timer \"attesaElenchi\"",
-          "secondi": 1.0,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: conclusa true; fine \"fineSenzaEsito\"; passa [\"sFineSenzaElenchi\"]",
-          "esito": "ok"
-        }
-      ]
-    },
-    {
-      "scenario": "Respinta, con termini scaduti e avvisi dell'istruttoria",
-      "descrizione": "Integrazione senza risposta in 30 giorni, osservazioni non presentate in 10 giorni, avviso a 100 giorni e termine di 120 giorni segnalati, poi rigetto.",
-      "esito": "superato",
-      "errore": null,
-      "pratica": "2fe18c19-e9bc-11f1-9114-02fc00000001",
-      "secondi": 50.5,
-      "passi": [
-        {
-          "passo": "marco avvia la pratica \"Ancoraggi\"",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "marco completa \"Compila la domanda\"",
-          "secondi": 0.2,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: dati {\"esitoRegistrazione\": \"REGISTRATA\", \"numeroDomanda\": \"*\"}",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "scatta subito il timer \"attesaCodice\"",
-          "secondi": 1.0,
-          "esito": "ok"
-        },
-        {
-          "passo": "marco completa \"Acquisisci il codice identificativo\"",
-          "secondi": 8.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: attivita \"Invia il codice allo sportello\"; dati {\"codiceIdentificativo\": \"*\"}",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "marco completa \"Invia il codice allo sportello\"",
-          "secondi": 0.3,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: attivita []; dati {\"esitoInvio\": \"INVIATA\"}",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "arriva il messaggio \"esitoElenco\"",
-          "secondi": 0.2,
-          "esito": "ok"
-        },
-        {
-          "passo": "marco completa \"Incarica il tecnico\"",
-          "secondi": 0.2,
-          "esito": "ok"
-        },
-        {
-          "passo": "collaudo-supporto-isi completa \"Abilita il tecnico sulla domanda\"",
-          "secondi": 0.2,
-          "esito": "ok"
-        },
-        {
-          "passo": "elena completa \"Compila e firma la perizia\"",
-          "secondi": 0.2,
-          "esito": "ok"
-        },
-        {
-          "passo": "marco completa \"Carica i documenti\"",
-          "secondi": 0.2,
-          "esito": "ok"
-        },
-        {
-          "passo": "collaudo-sede-toscana completa \"Svolgi l'istruttoria\"",
-          "secondi": 0.2,
-          "esito": "ok"
-        },
-        {
-          "passo": "scatta subito il timer \"termineIntegrazione\"",
-          "secondi": 1.0,
-          "esito": "ok"
-        },
-        {
-          "passo": "collaudo-sede-toscana completa \"Svolgi l'istruttoria\"",
-          "secondi": 7.2,
-          "esito": "ok"
-        },
-        {
-          "passo": "scatta subito il timer \"termineOsservazioni\"",
-          "secondi": 1.0,
-          "esito": "ok"
-        },
-        {
-          "passo": "scatta subito il timer \"avviso100\"",
-          "secondi": 9.9,
-          "esito": "ok"
-        },
-        {
-          "passo": "scatta subito il timer \"termine120\"",
-          "secondi": 1.0,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: attivita \"Svolgi l'istruttoria\"; eventi [\"NOTIFICA\", \"SCADENZA\"]",
-          "secondi": 18.0,
-          "esito": "ok"
-        },
-        {
-          "passo": "collaudo-sede-toscana completa \"Svolgi l'istruttoria\"",
-          "secondi": 0.3,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: attivita \"Svolgi l'istruttoria\"; dati {\"registrabile\": \"No\"}",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "collaudo-sede-toscana completa \"Svolgi l'istruttoria\"",
-          "secondi": 0.2,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: conclusa true; fine \"fineRespinta\"",
-          "esito": "ok"
-        }
-      ]
-    },
-    {
-      "scenario": "Rinuncia durante l'istruttoria",
-      "descrizione": "",
-      "esito": "superato",
-      "errore": null,
-      "pratica": "4df65ac5-e9bc-11f1-9114-02fc00000001",
-      "secondi": 11.9,
-      "passi": [
-        {
-          "passo": "marco avvia la pratica \"Ancoraggi\"",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "marco completa \"Compila la domanda\"",
-          "secondi": 0.2,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: dati {\"esitoRegistrazione\": \"REGISTRATA\", \"numeroDomanda\": \"*\"}",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "scatta subito il timer \"attesaCodice\"",
-          "secondi": 1.0,
-          "esito": "ok"
-        },
-        {
-          "passo": "marco completa \"Acquisisci il codice identificativo\"",
-          "secondi": 8.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: attivita \"Invia il codice allo sportello\"; dati {\"codiceIdentificativo\": \"*\"}",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "marco completa \"Invia il codice allo sportello\"",
-          "secondi": 0.3,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: attivita []; dati {\"esitoInvio\": \"INVIATA\"}",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "arriva il messaggio \"esitoElenco\"",
-          "secondi": 0.3,
-          "esito": "ok"
-        },
-        {
-          "passo": "marco completa \"Incarica il tecnico\"",
-          "secondi": 0.3,
-          "esito": "ok"
-        },
-        {
-          "passo": "collaudo-supporto-isi completa \"Abilita il tecnico sulla domanda\"",
-          "secondi": 0.2,
-          "esito": "ok"
-        },
-        {
-          "passo": "elena completa \"Compila e firma la perizia\"",
-          "secondi": 0.2,
-          "esito": "ok"
-        },
-        {
-          "passo": "marco completa \"Carica i documenti\"",
-          "secondi": 0.3,
-          "esito": "ok"
-        },
-        {
-          "passo": "arriva il messaggio \"rinunciaImpresa\"",
-          "secondi": 0.2,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: conclusa true; fine \"fineRinuncia\"",
-          "esito": "ok"
-        }
-      ]
-    },
-    {
-      "scenario": "Rinuncia prima dello sportello",
-      "descrizione": "",
-      "esito": "superato",
-      "errore": null,
-      "pratica": "55094449-e9bc-11f1-9114-02fc00000001",
-      "secondi": 7.7,
-      "passi": [
-        {
-          "passo": "marco avvia la pratica \"Ancoraggi\"",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "marco completa \"Compila la domanda\"",
-          "secondi": 0.2,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: dati {\"esitoRegistrazione\": \"REGISTRATA\", \"numeroDomanda\": \"*\"}",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "scatta subito il timer \"attesaCodice\"",
-          "secondi": 1.0,
-          "esito": "ok"
-        },
-        {
-          "passo": "marco completa \"Acquisisci il codice identificativo\"",
-          "secondi": 5.7,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: attivita \"Invia il codice allo sportello\"; dati {\"codiceIdentificativo\": \"*\"}",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "arriva il messaggio \"rinunciaImpresa\"",
-          "secondi": 0.2,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: conclusa true; fine \"fineRinuncia\"",
-          "esito": "ok"
-        }
-      ]
-    },
-    {
-      "scenario": "Rinuncia durante il caricamento dei documenti",
-      "descrizione": "",
-      "esito": "superato",
-      "errore": null,
-      "pratica": "59a512f7-e9bc-11f1-9114-02fc00000001",
-      "secondi": 10.9,
-      "passi": [
-        {
-          "passo": "marco avvia la pratica \"Ancoraggi\"",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "marco completa \"Compila la domanda\"",
-          "secondi": 0.2,
-          "esito": "ok"
-        },
-        {
-          "passo": "controllo: dati {\"esitoRegistrazione\": \"REGISTRATA\", \"numeroDomanda\": \"*\"}",
-          "secondi": 0.1,
-          "esito": "ok"
-        },
-        {
-          "passo": "scatta subito il timer \"attesaCodice\"",
-          "secondi": 1.0,
-          "esito": "ok"
-        },
-        {
-          "passo": "marco completa \"Acquisisci il codice identificativo\"",
-          "secondi": 8.1,
+          "secondi": 6.7,
           "esito": "ok"
         },
         {
@@ -977,8 +925,636 @@
           "esito": "ok"
         },
         {
-          "passo": "arriva il messaggio \"rinunciaImpresa\"",
+          "passo": "scatta subito il timer \"termineDocumentiTimer\"",
+          "secondi": 1.0,
+          "esito": "ok"
+        },
+        {
+          "passo": "scatta subito il timer \"termineRevoca\"",
+          "secondi": 9.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: conclusa true; fine \"fineDecaduta\"",
+          "esito": "ok"
+        }
+      ]
+    },
+    {
+      "scenario": "Codice non acquisito nei termini",
+      "descrizione": "",
+      "esito": "superato",
+      "errore": null,
+      "pratica": "c0cfa9d0-e9ea-11f1-9864-02fc00000001",
+      "secondi": 20.6,
+      "passi": [
+        {
+          "passo": "marco avvia la pratica \"Ancoraggi tetto\"",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Controlla i dati dell'impresa\"",
           "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Scegli asse e progetto\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Firma le dichiarazioni\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Rivedi e registra la domanda\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: dati {\"esitoRegistrazione\": \"REGISTRATA\", \"numeroDomanda\": \"*\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "scatta subito il timer \"attesaCodice\"",
+          "secondi": 1.0,
+          "esito": "ok"
+        },
+        {
+          "passo": "scatta subito il timer \"chiusuraCodiceTimer\"",
+          "secondi": 8.5,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: conclusa true; fine \"fineSenzaEsito\"; passa [\"sFineSenzaCodice\"]",
+          "esito": "ok"
+        }
+      ]
+    },
+    {
+      "scenario": "Codice sbagliato, poi sportello chiuso (TC-21)",
+      "descrizione": "",
+      "esito": "superato",
+      "errore": null,
+      "pratica": "cd1b6669-e9ea-11f1-9864-02fc00000001",
+      "secondi": 19.6,
+      "passi": [
+        {
+          "passo": "marco avvia la pratica \"Ancoraggi\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Controlla i dati dell'impresa\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Scegli asse e progetto\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Firma le dichiarazioni\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Rivedi e registra la domanda\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: dati {\"esitoRegistrazione\": \"REGISTRATA\", \"numeroDomanda\": \"*\"}",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "scatta subito il timer \"attesaCodice\"",
+          "secondi": 1.0,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Acquisisci il codice identificativo\"",
+          "secondi": 6.7,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Invia il codice allo sportello\"; dati {\"codiceIdentificativo\": \"*\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Invia il codice allo sportello\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Invia il codice allo sportello\"; dati {\"esitoInvio\": \"RIFIUTATO\", \"messaggioInvio\": \"Codice non valido o già utilizzato\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "scatta subito il timer \"chiusuraSportelloTimer\"",
+          "secondi": 1.0,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: conclusa true; fine \"fineSenzaEsito\"; passa [\"sFineNonInviata\"]",
+          "esito": "ok"
+        }
+      ]
+    },
+    {
+      "scenario": "Elenchi mai pubblicati",
+      "descrizione": "",
+      "esito": "superato",
+      "errore": null,
+      "pratica": "d8c6c425-e9ea-11f1-9864-02fc00000001",
+      "secondi": 20.5,
+      "passi": [
+        {
+          "passo": "marco avvia la pratica \"Ancoraggi\"",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Controlla i dati dell'impresa\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Scegli asse e progetto\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Firma le dichiarazioni\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Rivedi e registra la domanda\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: dati {\"esitoRegistrazione\": \"REGISTRATA\", \"numeroDomanda\": \"*\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "scatta subito il timer \"attesaCodice\"",
+          "secondi": 1.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Acquisisci il codice identificativo\"",
+          "secondi": 7.4,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Invia il codice allo sportello\"; dati {\"codiceIdentificativo\": \"*\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Invia il codice allo sportello\"",
+          "secondi": 0.4,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita []; dati {\"esitoInvio\": \"INVIATA\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "scatta subito il timer \"attesaElenchi\"",
+          "secondi": 1.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: conclusa true; fine \"fineSenzaEsito\"; passa [\"sFineSenzaElenchi\"]",
+          "esito": "ok"
+        }
+      ]
+    },
+    {
+      "scenario": "Respinta, con termini scaduti e avvisi dell'istruttoria",
+      "descrizione": "Integrazione senza risposta in 30 giorni, osservazioni non presentate in 10 giorni, avviso a 100 giorni e termine di 120 giorni segnalati, poi rigetto.",
+      "esito": "superato",
+      "errore": null,
+      "pratica": "e50057bd-e9ea-11f1-9864-02fc00000001",
+      "secondi": 49.7,
+      "passi": [
+        {
+          "passo": "marco avvia la pratica \"Ancoraggi\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Controlla i dati dell'impresa\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Scegli asse e progetto\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Firma le dichiarazioni\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Rivedi e registra la domanda\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: dati {\"esitoRegistrazione\": \"REGISTRATA\", \"numeroDomanda\": \"*\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "scatta subito il timer \"attesaCodice\"",
+          "secondi": 1.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Acquisisci il codice identificativo\"",
+          "secondi": 6.7,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Invia il codice allo sportello\"; dati {\"codiceIdentificativo\": \"*\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Invia il codice allo sportello\"",
+          "secondi": 0.4,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita []; dati {\"esitoInvio\": \"INVIATA\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "arriva il messaggio \"esitoElenco\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Incarica il tecnico\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "collaudo-supporto-isi completa \"Abilita il tecnico sulla domanda\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "elena completa \"Compila e firma la perizia\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Carica i documenti\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "collaudo-sede-toscana completa \"Svolgi l'istruttoria\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "scatta subito il timer \"termineIntegrazione\"",
+          "secondi": 1.0,
+          "esito": "ok"
+        },
+        {
+          "passo": "collaudo-sede-toscana completa \"Svolgi l'istruttoria\"",
+          "secondi": 7.4,
+          "esito": "ok"
+        },
+        {
+          "passo": "scatta subito il timer \"termineOsservazioni\"",
+          "secondi": 1.0,
+          "esito": "ok"
+        },
+        {
+          "passo": "scatta subito il timer \"avviso100\"",
+          "secondi": 9.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "scatta subito il timer \"termine120\"",
+          "secondi": 1.0,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Svolgi l'istruttoria\"; eventi [\"NOTIFICA\", \"SCADENZA\"]",
+          "secondi": 17.7,
+          "esito": "ok"
+        },
+        {
+          "passo": "collaudo-sede-toscana completa \"Svolgi l'istruttoria\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Svolgi l'istruttoria\"; dati {\"registrabile\": \"No\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "collaudo-sede-toscana completa \"Svolgi l'istruttoria\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: conclusa true; fine \"fineRespinta\"",
+          "esito": "ok"
+        }
+      ]
+    },
+    {
+      "scenario": "Rinuncia durante l'istruttoria",
+      "descrizione": "",
+      "esito": "superato",
+      "errore": null,
+      "pratica": "029dd310-e9eb-11f1-9864-02fc00000001",
+      "secondi": 12.5,
+      "passi": [
+        {
+          "passo": "marco avvia la pratica \"Ancoraggi\"",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Controlla i dati dell'impresa\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Scegli asse e progetto\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Firma le dichiarazioni\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Rivedi e registra la domanda\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: dati {\"esitoRegistrazione\": \"REGISTRATA\", \"numeroDomanda\": \"*\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "scatta subito il timer \"attesaCodice\"",
+          "secondi": 1.0,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Acquisisci il codice identificativo\"",
+          "secondi": 7.4,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Invia il codice allo sportello\"; dati {\"codiceIdentificativo\": \"*\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Invia il codice allo sportello\"",
+          "secondi": 0.4,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita []; dati {\"esitoInvio\": \"INVIATA\"}",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "arriva il messaggio \"esitoElenco\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Incarica il tecnico\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "collaudo-supporto-isi completa \"Abilita il tecnico sulla domanda\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "elena completa \"Compila e firma la perizia\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Carica i documenti\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "arriva il messaggio \"rinunciaImpresa\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: conclusa true; fine \"fineRinuncia\"",
+          "esito": "ok"
+        }
+      ]
+    },
+    {
+      "scenario": "Rinuncia prima dello sportello",
+      "descrizione": "",
+      "esito": "superato",
+      "errore": null,
+      "pratica": "0a10de58-e9eb-11f1-9864-02fc00000001",
+      "secondi": 8.2,
+      "passi": [
+        {
+          "passo": "marco avvia la pratica \"Ancoraggi\"",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Controlla i dati dell'impresa\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Scegli asse e progetto\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Firma le dichiarazioni\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Rivedi e registra la domanda\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: dati {\"esitoRegistrazione\": \"REGISTRATA\", \"numeroDomanda\": \"*\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "scatta subito il timer \"attesaCodice\"",
+          "secondi": 1.0,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Acquisisci il codice identificativo\"",
+          "secondi": 5.0,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Invia il codice allo sportello\"; dati {\"codiceIdentificativo\": \"*\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "arriva il messaggio \"rinunciaImpresa\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: conclusa true; fine \"fineRinuncia\"",
+          "esito": "ok"
+        }
+      ]
+    },
+    {
+      "scenario": "Rinuncia durante il caricamento dei documenti",
+      "descrizione": "",
+      "esito": "superato",
+      "errore": null,
+      "pratica": "0efa0af7-e9eb-11f1-9864-02fc00000001",
+      "secondi": 10.7,
+      "passi": [
+        {
+          "passo": "marco avvia la pratica \"Ancoraggi\"",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Controlla i dati dell'impresa\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Scegli asse e progetto\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Firma le dichiarazioni\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Rivedi e registra la domanda\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: dati {\"esitoRegistrazione\": \"REGISTRATA\", \"numeroDomanda\": \"*\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "scatta subito il timer \"attesaCodice\"",
+          "secondi": 1.0,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Acquisisci il codice identificativo\"",
+          "secondi": 6.7,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Invia il codice allo sportello\"; dati {\"codiceIdentificativo\": \"*\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Invia il codice allo sportello\"",
+          "secondi": 0.4,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita []; dati {\"esitoInvio\": \"INVIATA\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "arriva il messaggio \"esitoElenco\"",
+          "secondi": 0.3,
+          "esito": "ok"
+        },
+        {
+          "passo": "arriva il messaggio \"rinunciaImpresa\"",
+          "secondi": 0.3,
           "esito": "ok"
         },
         {
@@ -992,8 +1568,8 @@
       "descrizione": "",
       "esito": "superato",
       "errore": null,
-      "pratica": "6041947f-e9bc-11f1-9114-02fc00000001",
-      "secondi": 1.1,
+      "pratica": "1576f5de-e9eb-11f1-9864-02fc00000001",
+      "secondi": 1.6,
       "passi": [
         {
           "passo": "marco avvia la pratica \"Prova con INAIL spento\"",
@@ -1001,17 +1577,22 @@
           "esito": "ok"
         },
         {
-          "passo": "controllo: attivita \"Compila la domanda\"; passa [\"leggiAnagraficaErrore\"]; eventi [\"ERRORE\"]",
+          "passo": "controllo: attivita \"Controlla i dati dell'impresa\"; passa [\"leggiAnagraficaErrore\"]; eventi [\"ERRORE\"]",
           "secondi": 0.2,
           "esito": "ok"
         },
         {
-          "passo": "marco completa \"Compila la domanda\"",
+          "passo": "marco completa \"Controlla i dati dell'impresa\"",
           "secondi": 0.2,
           "esito": "ok"
         },
         {
-          "passo": "controllo: conclusa true; fine \"fineAnnullata\"",
+          "passo": "marco completa \"Scegli asse e progetto\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: conclusa true; fine \"fineAnnullata\"; passa [\"passoProgettoAnnullata\"]",
           "esito": "ok"
         }
       ]
@@ -1021,8 +1602,8 @@
       "descrizione": "",
       "esito": "superato",
       "errore": null,
-      "pratica": "60e01ead-e9bc-11f1-9114-02fc00000001",
-      "secondi": 1.2,
+      "pratica": "165631fb-e9eb-11f1-9864-02fc00000001",
+      "secondi": 1.4,
       "passi": [
         {
           "passo": "marco avvia la pratica \"Prova con il calcolo spento\"",
@@ -1030,31 +1611,85 @@
           "esito": "ok"
         },
         {
-          "passo": "marco completa \"Compila la domanda\"",
+          "passo": "marco completa \"Controlla i dati dell'impresa\"",
           "secondi": 0.2,
           "esito": "ok"
         },
         {
-          "passo": "controllo: attivita \"Compila la domanda\"; passa [\"calcolaErrore\"]",
+          "passo": "controllo: attivita \"Controlla i dati dell'impresa\"; passa [\"calcolaAssiErrore\"]",
           "secondi": 0.2,
           "esito": "ok"
         },
         {
-          "passo": "marco completa \"Compila la domanda\"",
+          "passo": "marco completa \"Controlla i dati dell'impresa\"",
           "secondi": 0.2,
           "esito": "ok"
         },
         {
-          "passo": "controllo: conclusa true; fine \"fineAnnullata\"",
+          "passo": "controllo: conclusa true; fine \"fineAnnullata\"; passa [\"passoImpresaAnnullata\"]",
+          "esito": "ok"
+        }
+      ]
+    },
+    {
+      "scenario": "Registrazione non disponibile",
+      "descrizione": "Il servizio non risponde alla registrazione: la domanda torna al riepilogo, nulla è perso.",
+      "esito": "superato",
+      "errore": null,
+      "pratica": "172ce37e-e9eb-11f1-9864-02fc00000001",
+      "secondi": 2.3,
+      "passi": [
+        {
+          "passo": "marco avvia la pratica \"Prova con la registrazione spenta\"",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Controlla i dati dell'impresa\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Scegli asse e progetto\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Criteri di punteggio e piano economico\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Firma le dichiarazioni\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Rivedi e registra la domanda\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Rivedi e registra la domanda\"",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "marco completa \"Rivedi e registra la domanda\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: conclusa true; fine \"fineAnnullata\"; passa [\"registraErrore\"]",
           "esito": "ok"
         }
       ]
     }
   ],
   "copertura": {
-    "totale": 97,
+    "totale": 117,
     "maiPercorsi": [
-      "registraErrore",
+      "calcolaErrore",
       "generaCodiceErrore",
       "registraInvioErrore",
       "verificaIncaricoErrore",

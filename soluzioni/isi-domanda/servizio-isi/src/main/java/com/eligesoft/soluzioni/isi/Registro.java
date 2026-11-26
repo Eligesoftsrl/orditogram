@@ -60,7 +60,7 @@ public class Registro {
         this.db = db;
         this.regole = regole;
         this.orologio = orologio;
-        this.calendarioLibero = impostazioni.calendarioLibero(); // solo sviluppo e collaudo: sportello sempre aperto
+        this.calendarioLibero = impostazioni.sportelloLibero(); // solo sviluppo e collaudo: sportello sempre aperto
     }
 
     /** Una domanda registrata, come sta nel registro. */

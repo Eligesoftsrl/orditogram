@@ -64,6 +64,13 @@ public final class Testi {
     }
 
     /** "2 Rischi infortunistici" → "2"; "1.1" → "1.1". */
+    /** Data e ora di un istante del calendario per le persone: {@code 31/03/2027 alle 18:00}. */
+    public static String dataOra(String istante) {
+        if (istante == null || istante.isBlank()) return "";
+        return java.time.OffsetDateTime.parse(istante)
+                .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy 'alle' HH:mm"));
+    }
+
     public static String codiceAsse(Object v) {
         String s = testo(v).split(" ")[0];
         return ASSI.contains(s) ? s : "";

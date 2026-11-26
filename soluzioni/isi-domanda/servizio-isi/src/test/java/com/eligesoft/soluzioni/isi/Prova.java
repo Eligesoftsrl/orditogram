@@ -46,7 +46,7 @@ final class Prova {
     }
 
     static Impostazioni impostazioni(boolean calendarioLibero) {
-        return new Impostazioni(null, "2025", "configurazione", "dati-prova", calendarioLibero, null, null, null);
+        return new Impostazioni(null, "2025", "configurazione", "dati-prova", calendarioLibero, null, null, null, false);
     }
 
     /** Un registro su un database H2 in memoria nuovo, con lo schema delle migrazioni. */

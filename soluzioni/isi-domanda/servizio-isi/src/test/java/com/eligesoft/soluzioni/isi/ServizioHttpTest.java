@@ -45,6 +45,10 @@ class ServizioHttpTest {
         assertThat(r.getStatusCode().value()).isEqualTo(401);
         assertThat((Map<String, Object>) r.getBody().get("errore")).containsEntry("codice", "NON_AUTORIZZATO");
 
+        r = chiama(HttpMethod.GET, "/calendario", null, "segreto-di-prova");
+        assertThat(r.getBody().get("compilazioneAperta")).isEqualTo("No");
+        assertThat((String) r.getBody().get("messaggioCalendario")).contains("oggi non si possono creare domande");
+
         assertThat(chiama(HttpMethod.GET, "/salute", null, null).getStatusCode().value()).isEqualTo(200);
         assertThat(chiama(HttpMethod.POST, "/calcola?simula=errore", d, "segreto-di-prova").getStatusCode().value()).isEqualTo(503);
         r = chiama(HttpMethod.POST, "/codice", Map.of("numeroDomanda", "nessuna"), "segreto-di-prova");

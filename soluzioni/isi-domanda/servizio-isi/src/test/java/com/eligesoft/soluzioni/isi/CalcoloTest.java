@@ -202,7 +202,7 @@ class CalcoloTest {
     void dichiarazioneMancante() {
         Map<String, Object> d = domanda("asse", "2", "tipologia2", "a", "speseProgetto", "100000");
         d.remove("dichR18");
-        assertThat(calcola(d).errori).contains("Manca la dichiarazione R-REQ-18 (passo 7)");
+        assertThat(calcola(d).errori).contains("Manca la dichiarazione R-REQ-18 (Firma le dichiarazioni)");
     }
 
     @Test
@@ -227,5 +227,48 @@ class CalcoloTest {
                 "speseTecniche", "8000")).inTesto(REGOLE);
         assertThat(t.get("contributoTotaleTesto")).isEqualTo("70.200,00 €");
         assertThat(t.get("registrabile")).isEqualTo("Sì");
+    }
+
+    @Test
+    void erroriDivisiPerPasso() {
+        // senza asse: il problema è nel passo del progetto, l'impresa è a posto
+        Risultato r = calcola(domanda());
+        assertThat(r.passoDaCorreggere()).isEqualTo(Risultato.PROGETTO);
+        assertThat(r.erroriPerPasso.get(Risultato.IMPRESA)).isEmpty();
+
+        // forza lavoro sotto 1 ULA: si torna ai dati dell'impresa, anche prima di scegliere l'asse
+        r = calcola(domanda("ula", "0.5", "asse", ""));
+        assertThat(r.passoDaCorreggere()).isEqualTo(Risultato.IMPRESA);
+        assertThat(r.erroriPerPasso.get(Risultato.IMPRESA)).contains("Forza lavoro inferiore a 1 ULA (R-REQ-01)");
+
+        // solo una dichiarazione mancante: si va alle dichiarazioni
+        Map<String, Object> d = domanda("asse", "2", "tipologia2", "a", "tassoMedio", "60", "speseProgetto", "100000",
+                "speseTecniche", "8000");
+        d.remove("dichR18");
+        r = calcola(d);
+        assertThat(r.passoDaCorreggere()).isEqualTo(Risultato.DICHIARAZIONI);
+        Map<String, String> t = r.inTesto(REGOLE);
+        assertThat(t.get("erroriDichiarazioni")).contains("R-REQ-18");
+        assertThat(t.get("erroriPunteggio")).isEmpty();
+
+        d.put("dichR18", "true");
+        assertThat(calcola(d).inTesto(REGOLE).get("passoDaCorreggere")).isEqualTo("nessuno");
+    }
+
+    @Test
+    void sottoSogliaNelPassoDelPunteggio() {
+        Risultato r = calcola(domanda("asse", "2", "tipologia2", "a", "speseProgetto", "100000", "ula", "200",
+                "fatturato", "60000000", "tassoMedio", "5"));
+        assertThat(r.erroriPerPasso.get(Risultato.PUNTEGGIO).get(0)).startsWith("Punteggio");
+    }
+
+    @Test
+    void calendarioDellaDemoSempreAperto() {
+        Prova.Orologio o = new Prova.Orologio();
+        Regole demo = Regole.conCalendario(java.nio.file.Path.of("configurazione"), "2025", Regole.calendarioDemo(o));
+        assertThat(demo.compilazioneAperta(java.time.OffsetDateTime.now(o))).isTrue();
+        assertThat(demo.compilazioneAperta(java.time.OffsetDateTime.now(o).plusDays(70))).isFalse();
+        // con il calendario vero del 2025 a novembre 2026 la compilazione è chiusa
+        assertThat(REGOLE.compilazioneAperta(java.time.OffsetDateTime.now(o))).isFalse();
     }
 }

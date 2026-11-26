@@ -24,9 +24,38 @@ public class Risultato {
     public List<String> dettaglioImporti = new ArrayList<>();
     public List<String> avvisi = new ArrayList<>();
     public List<String> errori = new ArrayList<>();
+    /** Errori divisi per passo della compilazione, nell'ordine dei passi: il processo torna al primo che ne ha. */
+    public Map<String, List<String>> erroriPerPasso = new LinkedHashMap<>();
     public List<String> documenti = new ArrayList<>();
     /** Beni dell'Asse 5 letti dalla domanda (servono anche agli importi e ai controlli). */
     List<Calcolo.Bene> beni = new ArrayList<>();
+
+    /** Passi della compilazione, nell'ordine del processo (valori di {@code passoDaCorreggere}). */
+    public static final String IMPRESA = "impresa";
+    public static final String PROGETTO = "progetto";
+    public static final String PUNTEGGIO = "punteggio";
+    public static final String DICHIARAZIONI = "dichiarazioni";
+    public static final List<String> PASSI = List.of(IMPRESA, PROGETTO, PUNTEGGIO, DICHIARAZIONI);
+
+    public Risultato() {
+        PASSI.forEach(p -> erroriPerPasso.put(p, new ArrayList<>()));
+    }
+
+    public void errore(String passo, String testo) {
+        errori.add(testo);
+        erroriPerPasso.get(passo).add(testo);
+    }
+
+    /** Errore che va in cima all'elenco (la soglia del punteggio). */
+    public void errorePrimo(String passo, String testo) {
+        errori.add(0, testo);
+        erroriPerPasso.get(passo).add(0, testo);
+    }
+
+    /** Primo passo con errori, o {@code nessuno}. */
+    public String passoDaCorreggere() {
+        return PASSI.stream().filter(p -> !erroriPerPasso.get(p).isEmpty()).findFirst().orElse("nessuno");
+    }
 
     public boolean registrabile() {
         return errori.isEmpty();
@@ -63,6 +92,12 @@ public class Risultato {
         t.put("dettaglioPunteggio", String.join("\n", dettaglioPunteggio));
         t.put("dettaglioImporti", String.join("\n", dettaglioImporti));
         t.put("avvisiCalcolo", avvisi.isEmpty() ? "Nessun avviso" : String.join("\n", avvisi));
+        t.put("passoDaCorreggere", passoDaCorreggere());
+        for (String p : PASSI) {
+            List<String> e = erroriPerPasso.get(p);
+            t.put("errori" + Character.toUpperCase(p.charAt(0)) + p.substring(1),
+                    String.join("\n", e)); // vuoto: il form non lo mostra
+        }
         t.put("erroriBloccanti", errori.isEmpty() ? "Nessun errore bloccante" : String.join("\n", errori));
         t.put("documentiRichiesti", documenti.stream().map(x -> "• " + x).collect(Collectors.joining("\n")));
         return t;

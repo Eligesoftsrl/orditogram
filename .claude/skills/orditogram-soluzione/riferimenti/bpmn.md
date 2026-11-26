@@ -54,6 +54,45 @@ escalation, inizi con timer o messaggio, multi-istanza, pool/lane multipli (le l
 Sostituzioni tipiche: gateway inclusivo → paralleli + decisioni dentro i rami; event-based (aspetto A o B) →
 attività con un messaggio e un timer sul bordo; avvio a orario → processo avviato da un sistema esterno con l'API.
 
+## Processi di livello: un'attività per passo
+
+Il BPMN che consegni è un flusso **enterprise**, non il compitino. Chi apre il diagramma deve vedere il lavoro vero:
+chi fa cosa, in che ordine, cosa calcolano i sistemi, dove si decide, dove si torna indietro, cosa succede alla
+scadenza. Se il diagramma si riduce a "apri → compila → chiudi", il motore non serve e il cliente se ne accorge subito.
+
+**Regole**
+- **Un'attività per passo**: ogni passo che la specifica descrive (o che una persona farebbe in una sessione di
+  lavoro) è una `userTask` con il suo form. Un form ha poche sezioni e pochi campi sempre visibili: `verifica.py`
+  avvisa oltre 30 campi o 6 sezioni sempre visibili e quando il processo ha una sola attività con un form lungo.
+- **I calcoli e i controlli sono attività automatiche** tra i passi (`apiConnector` verso il servizio della
+  soluzione), con la strada di errore che torna al passo che le ha chiamate.
+- **Decisioni esplicite dopo ogni passo**: "Come prosegue?" (Continua / Torna al passo precedente / Annulla),
+  "Ci sono errori?" che riporta **al passo che contiene l'errore** (il servizio restituisce il passo da
+  correggere e i messaggi di quel passo, mostrati in cima al form), "Quale passo modificare?" dal riepilogo.
+- **Riepilogo e conferma** prima di ogni azione che non si annulla (registrazione, invio, firma): un'attività di
+  riepilogo con una casella di conferma obbligatoria, visibile solo con quella scelta (`visibileSe`).
+- **Fasi come sottoprocessi** con le loro scadenze (timer sul bordo) e i messaggi in arrivo; ogni scadenza porta a
+  una notifica o a un'email che spiega cosa è successo, **mai una fine silenziosa**.
+- **Calendari e periodi**: se il processo vale solo in un periodo (bandi, campagne), il primo passo legge il
+  calendario e decide "Periodo aperto?"; fuori periodo avvisa chi ha avviato con le date e finisce con un nome
+  chiaro ("Fuori dal periodo di compilazione"). Il servizio della soluzione ha una modalità demo con tutti i
+  periodi aperti, così le dimostrazioni funzionano in qualsiasi giorno.
+- **Fini con nomi diversi** per ogni esito (registrata, annullata, fuori periodo, decaduta…), una fine
+  "annullata" accanto a ogni passo invece di una sola lontana: il disegno resta leggibile.
+- Nel generatore scrivi **per prima** la freccia della strada principale di ogni decisione: `disposizione.py`
+  la tiene sulla riga del passo e manda le altre sotto.
+
+**Da evitare** (esempi veri, già bocciati)
+- Una sola attività "Compila la domanda" con 8 sezioni e una scelta "Calcola e salva / Registra / Annulla" in
+  fondo: il BPMN mostra due passi, il lavoro è tutto nascosto nel form. Giusto: cinque attività (dati dell'impresa,
+  asse e progetto, punteggio e spese, dichiarazioni, riepilogo), due calcoli automatici, "Ci sono errori?" che
+  riporta al passo giusto, registrazione con il ritorno al riepilogo se non riesce.
+- Un timer di chiusura su una data già passata che chiude la pratica appena creata senza dire niente: controlla
+  il periodo prima di entrare nella fase e avvisa.
+- Una sola fine "Conclusa" per esiti diversi; decisioni senza "altrimenti"; servizi senza strada di errore.
+- Un processo che in collaudo passa dalle API ma che dall'interfaccia non si può percorrere (passi senza form,
+  scelte non presenti nei `select`).
+
 ## Attività di persone
 
 ```xml

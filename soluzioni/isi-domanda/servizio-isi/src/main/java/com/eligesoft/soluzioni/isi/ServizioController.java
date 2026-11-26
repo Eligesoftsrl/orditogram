@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Clock;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -31,9 +33,11 @@ public class ServizioController {
     private final Registro registro;
     private final ServiziFinti finti;
     private final AvvisoOrditogram avviso;
+    private final Clock orologio;
 
-    public ServizioController(Regole regole, Registro registro, ServiziFinti finti, AvvisoOrditogram avviso) {
+    public ServizioController(Regole regole, Registro registro, ServiziFinti finti, AvvisoOrditogram avviso, Clock orologio) {
         this.regole = regole;
+        this.orologio = orologio;
         this.registro = registro;
         this.finti = finti;
         this.avviso = avviso;
@@ -45,9 +49,15 @@ public class ServizioController {
     }
 
     @GetMapping("/calendario")
-    public Map<String, String> calendario() {
+    public Map<String, String> calendario(@RequestParam(defaultValue = "") String simula) {
         Map<String, String> c = new LinkedHashMap<>();
         regole.nodo("calendario").fields().forEachRemaining(e -> c.put(e.getKey(), e.getValue().asText()));
+        // ?simula=chiuso: per il collaudo della strada "fuori dal periodo", come ?simula=errore
+        boolean aperta = !"chiuso".equals(simula) && regole.compilazioneAperta(OffsetDateTime.now(orologio));
+        c.put("compilazioneAperta", aperta ? "Sì" : "No");
+        c.put("messaggioCalendario", aperta ? "Compilazione aperta fino al " + Testi.dataOra(c.get("chiusuraCompilazione"))
+                : "La compilazione del bando è aperta dal " + Testi.dataOra(c.get("aperturaCompilazione"))
+                + " al " + Testi.dataOra(c.get("chiusuraCompilazione")) + ": oggi non si possono creare domande.");
         return c;
     }
 
