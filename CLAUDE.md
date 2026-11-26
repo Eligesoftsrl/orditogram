@@ -189,11 +189,12 @@ il riferimento in `riferimenti/`, la regola in `script/verifica.py` (stesso mess
 - Codice su GitHub (`Eligesoftsrl/orditogram`), CI verde: 76 test del backend, compreso `ApiPubblicaIntegrationTest`;
   analisi del codice (SonarQube, Semgrep, SpotBugs, OSV, npm audit) con soglie bloccanti, falsi positivi motivati
   in `strumenti/analisi/`.
-- **Prossime fasi**: 3) form avanzati (sezioni, campi condizionali, tabelle di righe, validazioni);
+- **Prossime fasi**: 3) form avanzati (fatto nella 0.12);
   4) documenti da modello (lettere, provvedimenti); 5) tabelle decisionali DMN; 6) multi-ente / white label;
   7) versioni dei form e ruolo "analista del cliente"; 8) cruscotti; 9) libreria di modelli di processo;
   10) documentazione automatica del processo; 11) assistente IA per analisti.
-- **0.12** (in preparazione): form con sezioni e campi condizionali; processi richiamati (call activity).
+- **0.12** (novembre 2026): form avanzati (sezioni, campi condizionali, regole, tabelle di righe), processi richiamati,
+  ruoli e permessi granulari, utenti esterni e referenti, anagrafiche configurabili, grafica "bento a colori".
 
 ## Obiettivo: piattaforma enterprise
 
