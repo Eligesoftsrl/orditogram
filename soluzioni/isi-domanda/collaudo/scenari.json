@@ -1,0 +1,2124 @@
+{
+  "password": "password",
+  "utenti": {
+    "${gruppoSede}": "collaudo-sede-toscana",
+    "esterni": "marco",
+    "avvio": "marco"
+  },
+  "gruppiExtra": [
+    "sede-toscana",
+    "sede-campania",
+    "sede-lombardia",
+    "supporto-isi",
+    "direzione-isi"
+  ],
+  "scenari": [
+    {
+      "nome": "Asse 2 in posizione utile e ammessa (TC-01)",
+      "descrizione": "Percorso principale: dati letti da INAIL, calcolo (201 punti, 70.200 €), registrazione, codice, sportello, posizione utile, documenti e perizia del tecnico, istruttoria, ammissione.",
+      "passi": [
+        {
+          "azione": "avvia",
+          "utente": "marco",
+          "dati": {
+            "codiceFiscaleImpresa": "01234560789",
+            "titoloProgetto": "Linea vita sul capannone"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Compila la domanda",
+          "dati": {
+            "ragioneSociale": "Carpenterie Rossi S.r.l.",
+            "avvisoAnagrafica": "Dati letti dall'anagrafica INAIL"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "compila",
+          "utente": "marco",
+          "dati": {
+            "ragioneSociale": "Carpenterie Rossi S.r.l.",
+            "ateco": "25.11",
+            "tipoSoggetto": "Impresa",
+            "rapportoAssicurativo": "INAIL",
+            "dataIscrizioneCciaa": "2010-03-01",
+            "dataAssociazionePortale": "2026-01-10",
+            "pec": "carpenterierossi@pec.it",
+            "regione": "Toscana",
+            "ula": "8",
+            "fatturato": "1500000",
+            "dipendentiImpresa": "8",
+            "dipendentiUnita": "8",
+            "finanziamentiPrecedenti": "Nessuno",
+            "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
+            "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "dichR02": true,
+            "dichR03": true,
+            "dichR05": true,
+            "dichR06": true,
+            "dichR07": true,
+            "dichR08": true,
+            "dichR09": true,
+            "dichR10": true,
+            "dichR11": true,
+            "dichR12": true,
+            "dichR15": true,
+            "dichR16": true,
+            "dichR17": true,
+            "dichR18": true,
+            "nessunaSpesaNonAmmessa": true,
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Calcola e salva"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Compila la domanda",
+          "dati": {
+            "punteggio": "201",
+            "contributoTotaleTesto": "70.200,00 €",
+            "registrabile": "Sì"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "compila",
+          "utente": "marco",
+          "dati": {
+            "ragioneSociale": "Carpenterie Rossi S.r.l.",
+            "ateco": "25.11",
+            "tipoSoggetto": "Impresa",
+            "rapportoAssicurativo": "INAIL",
+            "dataIscrizioneCciaa": "2010-03-01",
+            "dataAssociazionePortale": "2026-01-10",
+            "pec": "carpenterierossi@pec.it",
+            "regione": "Toscana",
+            "ula": "8",
+            "fatturato": "1500000",
+            "dipendentiImpresa": "8",
+            "dipendentiUnita": "8",
+            "finanziamentiPrecedenti": "Nessuno",
+            "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
+            "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "dichR02": true,
+            "dichR03": true,
+            "dichR05": true,
+            "dichR06": true,
+            "dichR07": true,
+            "dichR08": true,
+            "dichR09": true,
+            "dichR10": true,
+            "dichR11": true,
+            "dichR12": true,
+            "dichR15": true,
+            "dichR16": true,
+            "dichR17": true,
+            "dichR18": true,
+            "nessunaSpesaNonAmmessa": true,
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Registra la domanda",
+            "confermaRegistrazione": true
+          }
+        },
+        {
+          "azione": "controlla",
+          "dati": {
+            "esitoRegistrazione": "REGISTRATA",
+            "numeroDomanda": "*"
+          }
+        },
+        {
+          "azione": "timer",
+          "elemento": "attesaCodice"
+        },
+        {
+          "azione": "completa",
+          "attivita": "acquisisciCodice",
+          "utente": "marco",
+          "dati": {
+            "confermaCodice": true
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Invia il codice allo sportello",
+          "dati": {
+            "codiceIdentificativo": "*"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "inviaSportello",
+          "utente": "marco",
+          "dati": {
+            "codiceInviato": "@dato:codiceIdentificativo"
+          }
+        },
+        {
+          "azione": "controlla",
+          "dati": {
+            "esitoInvio": "INVIATA"
+          },
+          "attivita": []
+        },
+        {
+          "azione": "messaggio",
+          "nome": "esitoElenco",
+          "utente": "admin",
+          "dati": {
+            "esitoElenco": "IN_POSIZIONE_UTILE",
+            "posizioneElenco": "1",
+            "termineDocumenti": "2027-06-30T18:00:00+02:00"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": [
+            "Carica i documenti",
+            "Incarica il tecnico"
+          ]
+        },
+        {
+          "azione": "completa",
+          "attivita": "incaricaTecnico",
+          "utente": "marco",
+          "dati": {
+            "cfTecnico": "VRDLGU75B02H501X",
+            "nomeTecnico": "Luigi Verdi",
+            "ordineTecnico": "Ingegneri di Firenze",
+            "numeroIscrizioneTecnico": "A1234",
+            "emailTecnico": "luigi.verdi@ingpec.eu",
+            "cfLegaleRappresentante": "RSSMRA70A01D612W",
+            "cfSoci": ""
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "abilitaTecnico",
+          "dati": {
+            "studioTecnico": "1"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "compilaPerizia",
+          "utente": "elena",
+          "dati": {
+            "situazioneAnte": "Copertura senza ancoraggi",
+            "situazionePost": "Linea vita certificata",
+            "dataCertaDvr": "2025-09-01",
+            "conformitaPreventivi": true,
+            "confrontoBeni": "Non ci sono macchine",
+            "periziaFirmata": true
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "caricaDocumenti",
+          "utente": "marco",
+          "dati": {
+            "scadenzaDocumentoIdentita": "2030-01-01",
+            "documentiCompleti": true
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Svolgi l'istruttoria",
+          "dati": {
+            "scadenzaIstruttoria": "*"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "svolgiIstruttoria",
+          "dati": {
+            "esitoIstruttoria": "Ammetti",
+            "verificaRequisiti": true,
+            "verificaDocumenti": true,
+            "verificaPerizia": true
+          }
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineAmmessa",
+        "eventi": [
+          "EMAIL",
+          "CHIAMATA_API",
+          "PARTE",
+          "MESSAGGIO"
+        ]
+      }
+    },
+    {
+      "nome": "Sotto soglia, poi bozza annullata (TC-02)",
+      "descrizione": "89 punti: REGISTRA non procede e la domanda torna in compilazione; l'impresa annulla la bozza.",
+      "passi": [
+        {
+          "azione": "avvia",
+          "utente": "marco",
+          "dati": {
+            "codiceFiscaleImpresa": "09876543210",
+            "titoloProgetto": "Silenziatori per le presse"
+          }
+        },
+        {
+          "azione": "controlla",
+          "dati": {
+            "avvisoAnagrafica": "Impresa non trovata nell'anagrafica INAIL: compila i dati a mano"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "compila",
+          "utente": "marco",
+          "dati": {
+            "ragioneSociale": "Presse Gialli S.p.a.",
+            "ateco": "25.11",
+            "tipoSoggetto": "Impresa",
+            "rapportoAssicurativo": "INAIL",
+            "dataIscrizioneCciaa": "2005-01-01",
+            "dataAssociazionePortale": "2026-01-10",
+            "pec": "carpenterierossi@pec.it",
+            "regione": "Toscana",
+            "ula": "60",
+            "fatturato": "40000000",
+            "dipendentiImpresa": "60",
+            "dipendentiUnita": "8",
+            "finanziamentiPrecedenti": "Nessuno",
+            "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
+            "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "dichR02": true,
+            "dichR03": true,
+            "dichR05": true,
+            "dichR06": true,
+            "dichR07": true,
+            "dichR08": true,
+            "dichR09": true,
+            "dichR10": true,
+            "dichR11": true,
+            "dichR12": true,
+            "dichR15": true,
+            "dichR16": true,
+            "dichR17": true,
+            "dichR18": true,
+            "nessunaSpesaNonAmmessa": true,
+            "tassoMedio": "10",
+            "asse": "1.1 Rischi tecnopatici",
+            "tipologia11": "b) Riduzione del rischio rumore (sostituzione di macchine)",
+            "aggiuntivo11": "Nessuno",
+            "partiSociali": "Nessuna",
+            "speseProgetto": "100000",
+            "azione": "Registra la domanda",
+            "confermaRegistrazione": true
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Compila la domanda",
+          "dati": {
+            "punteggio": "89",
+            "registrabile": "No"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "compila",
+          "utente": "marco",
+          "dati": {
+            "azione": "Annulla la bozza",
+            "confermaAnnullamento": true
+          }
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineAnnullata"
+      }
+    },
+    {
+      "nome": "Seconda domanda della stessa impresa (TC-19) e chiusura della compilazione",
+      "descrizione": "L'impresa del primo scenario ha già registrato: la seconda bozza non si registra. Alla chiusura della compilazione la bozza resta non registrata.",
+      "passi": [
+        {
+          "azione": "avvia",
+          "utente": "marco",
+          "dati": {
+            "codiceFiscaleImpresa": "01234560789",
+            "titoloProgetto": "Seconda ipotesi di progetto"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "compila",
+          "utente": "marco",
+          "dati": {
+            "ragioneSociale": "Carpenterie Rossi S.r.l.",
+            "ateco": "25.11",
+            "tipoSoggetto": "Impresa",
+            "rapportoAssicurativo": "INAIL",
+            "dataIscrizioneCciaa": "2010-03-01",
+            "dataAssociazionePortale": "2026-01-10",
+            "pec": "carpenterierossi@pec.it",
+            "regione": "Toscana",
+            "ula": "8",
+            "fatturato": "1500000",
+            "dipendentiImpresa": "8",
+            "dipendentiUnita": "8",
+            "finanziamentiPrecedenti": "Nessuno",
+            "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
+            "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "dichR02": true,
+            "dichR03": true,
+            "dichR05": true,
+            "dichR06": true,
+            "dichR07": true,
+            "dichR08": true,
+            "dichR09": true,
+            "dichR10": true,
+            "dichR11": true,
+            "dichR12": true,
+            "dichR15": true,
+            "dichR16": true,
+            "dichR17": true,
+            "dichR18": true,
+            "nessunaSpesaNonAmmessa": true,
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "120000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Registra la domanda",
+            "confermaRegistrazione": true
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Compila la domanda",
+          "dati": {
+            "esitoRegistrazione": "GIA_REGISTRATA",
+            "messaggioRegistrazione": "L'impresa ha già registrato una domanda per questo Avviso"
+          }
+        },
+        {
+          "azione": "timer",
+          "elemento": "chiusuraCompilazioneTimer"
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineNonRegistrata"
+      }
+    },
+    {
+      "nome": "Asse 1.2 subentrata, decaduta, revoca accolta, integrazione e preavviso (TC-05)",
+      "descrizione": "Fuori dai fondi, subentra con la redistribuzione; senza perizia (Asse 1.2); i documenti non arrivano in tempo, l'istanza di revoca è accolta; in istruttoria integrazione e preavviso, poi ammessa parzialmente.",
+      "passi": [
+        {
+          "azione": "avvia",
+          "utente": "marco",
+          "dati": {
+            "codiceFiscaleImpresa": "04567890123",
+            "titoloProgetto": "SGSL certificato"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "compila",
+          "utente": "marco",
+          "dati": {
+            "ragioneSociale": "Commercio Neri S.p.a.",
+            "ateco": "47.11",
+            "tipoSoggetto": "Impresa",
+            "rapportoAssicurativo": "INAIL",
+            "dataIscrizioneCciaa": "2010-03-01",
+            "dataAssociazionePortale": "2026-01-10",
+            "pec": "commercioneri@pec.it",
+            "regione": "Toscana",
+            "ula": "20",
+            "fatturato": "1500000",
+            "dipendentiImpresa": "20",
+            "dipendentiUnita": "20",
+            "finanziamentiPrecedenti": "Nessuno",
+            "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
+            "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "dichR02": true,
+            "dichR03": true,
+            "dichR05": true,
+            "dichR06": true,
+            "dichR07": true,
+            "dichR08": true,
+            "dichR09": true,
+            "dichR10": true,
+            "dichR11": true,
+            "dichR12": true,
+            "dichR15": true,
+            "dichR16": true,
+            "dichR17": true,
+            "dichR18": true,
+            "nessunaSpesaNonAmmessa": true,
+            "asse": "1.2 Modelli organizzativi",
+            "tipologia12": "a) SGSL certificato ISO 45001",
+            "tassoMedio": "100",
+            "rls": true,
+            "partiSociali": "Due o più parti sociali",
+            "speseProgetto": "5000",
+            "azione": "Registra la domanda",
+            "confermaRegistrazione": true
+          }
+        },
+        {
+          "azione": "controlla",
+          "dati": {
+            "esitoRegistrazione": "REGISTRATA",
+            "numeroDomanda": "*"
+          }
+        },
+        {
+          "azione": "timer",
+          "elemento": "attesaCodice"
+        },
+        {
+          "azione": "completa",
+          "attivita": "acquisisciCodice",
+          "utente": "marco",
+          "dati": {
+            "confermaCodice": true
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Invia il codice allo sportello",
+          "dati": {
+            "codiceIdentificativo": "*"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "inviaSportello",
+          "utente": "marco",
+          "dati": {
+            "codiceInviato": "@dato:codiceIdentificativo"
+          }
+        },
+        {
+          "azione": "controlla",
+          "dati": {
+            "esitoInvio": "INVIATA"
+          },
+          "attivita": []
+        },
+        {
+          "azione": "messaggio",
+          "nome": "esitoElenco",
+          "utente": "admin",
+          "dati": {
+            "esitoElenco": "NON_AMMISSIBILE_FONDI",
+            "posizioneElenco": "7",
+            "termineDocumenti": "2027-06-30T18:00:00+02:00"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": [],
+          "passa": [
+            "attesaRedistribuzione"
+          ]
+        },
+        {
+          "azione": "messaggio",
+          "nome": "esitoElenco",
+          "utente": "admin",
+          "dati": {
+            "esitoElenco": "SUBENTRATA",
+            "posizioneElenco": "7",
+            "termineDocumenti": "2027-06-30T18:00:00+02:00"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Carica i documenti",
+          "passa": [
+            "serveperizia"
+          ]
+        },
+        {
+          "azione": "timer",
+          "elemento": "termineDocumentiTimer"
+        },
+        {
+          "azione": "completa",
+          "attivita": "istanzaRevoca",
+          "utente": "marco",
+          "dati": {
+            "motivazioneRevoca": "Il server era irraggiungibile l'ultimo giorno"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "valutaRevoca",
+          "dati": {
+            "esitoRevoca": "Accolta",
+            "noteRevoca": "Disservizio documentato"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "svolgiIstruttoria",
+          "dati": {
+            "esitoIstruttoria": "Richiedi integrazione",
+            "verificaRequisiti": true,
+            "verificaDocumenti": true,
+            "verificaPerizia": true,
+            "richiestaIstruttoria": "Inviate il DVR con data certa"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "rispondiIntegrazione",
+          "utente": "marco",
+          "dati": {
+            "rispostaIntegrazione": "DVR allegato"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Svolgi l'istruttoria",
+          "dati": {
+            "giorniRimanenti": "*"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "svolgiIstruttoria",
+          "dati": {
+            "esitoIstruttoria": "Preavviso di rigetto",
+            "verificaRequisiti": true,
+            "verificaDocumenti": true,
+            "verificaPerizia": true,
+            "richiestaIstruttoria": "Il DVR non attesta il rischio"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "presentaOsservazioni",
+          "utente": "marco",
+          "dati": {
+            "osservazioni": "Il rischio è a pagina 12 del DVR"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "svolgiIstruttoria",
+          "dati": {
+            "esitoIstruttoria": "Ricalcola",
+            "verificaRequisiti": true,
+            "verificaDocumenti": true,
+            "verificaPerizia": true,
+            "tassoMedio": "60"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Svolgi l'istruttoria",
+          "dati": {
+            "punteggio": "*"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "svolgiIstruttoria",
+          "dati": {
+            "esitoIstruttoria": "Ammetti parzialmente",
+            "verificaRequisiti": true,
+            "verificaDocumenti": true,
+            "verificaPerizia": true,
+            "importoAmmesso": "3500",
+            "motivazioneIstruttoria": "Spesa di certificazione ridotta"
+          }
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineAmmessaParz",
+        "passa": [
+          "comunicaDecadenza",
+          "riprendiIstruttoria",
+          "comunicaPreavviso"
+        ]
+      }
+    },
+    {
+      "nome": "Asse 4 fuori dai fondi e senza subentro (TC-13)",
+      "descrizione": "Più tipologie (vale la c, 80 punti); fuori dai fondi negli elenchi provvisori e anche nei definitivi.",
+      "passi": [
+        {
+          "azione": "avvia",
+          "utente": "marco",
+          "dati": {
+            "codiceFiscaleImpresa": "03456780901",
+            "titoloProgetto": "Aspirazione delle polveri di legno"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "compila",
+          "utente": "marco",
+          "dati": {
+            "ragioneSociale": "Falegnameria Bianchi S.n.c.",
+            "ateco": "16.23",
+            "tipoSoggetto": "Impresa",
+            "rapportoAssicurativo": "INAIL",
+            "dataIscrizioneCciaa": "2010-03-01",
+            "dataAssociazionePortale": "2026-01-10",
+            "pec": "falegnameriabianchi@pec.it",
+            "regione": "Lombardia",
+            "ula": "8",
+            "fatturato": "1500000",
+            "dipendentiImpresa": "8",
+            "dipendentiUnita": "8",
+            "finanziamentiPrecedenti": "Nessuno",
+            "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
+            "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "dichR02": true,
+            "dichR03": true,
+            "dichR05": true,
+            "dichR06": true,
+            "dichR07": true,
+            "dichR08": true,
+            "dichR09": true,
+            "dichR10": true,
+            "dichR11": true,
+            "dichR12": true,
+            "dichR15": true,
+            "dichR16": true,
+            "dichR17": true,
+            "dichR18": true,
+            "nessunaSpesaNonAmmessa": true,
+            "asse": "4 Settori specifici (micro e piccole)",
+            "tipologia4a": true,
+            "tipologia4c": true,
+            "aggiuntivo4": "Nessuno",
+            "partiSociali": "Due o più parti sociali",
+            "rls": true,
+            "speseProgetto": "80000",
+            "speseTecniche": "5000",
+            "azione": "Registra la domanda",
+            "confermaRegistrazione": true
+          }
+        },
+        {
+          "azione": "controlla",
+          "dati": {
+            "esitoRegistrazione": "REGISTRATA",
+            "numeroDomanda": "*"
+          }
+        },
+        {
+          "azione": "timer",
+          "elemento": "attesaCodice"
+        },
+        {
+          "azione": "completa",
+          "attivita": "acquisisciCodice",
+          "utente": "marco",
+          "dati": {
+            "confermaCodice": true
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Invia il codice allo sportello",
+          "dati": {
+            "codiceIdentificativo": "*"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "inviaSportello",
+          "utente": "marco",
+          "dati": {
+            "codiceInviato": "@dato:codiceIdentificativo"
+          }
+        },
+        {
+          "azione": "controlla",
+          "dati": {
+            "esitoInvio": "INVIATA"
+          },
+          "attivita": []
+        },
+        {
+          "azione": "messaggio",
+          "nome": "esitoElenco",
+          "utente": "admin",
+          "dati": {
+            "esitoElenco": "NON_AMMISSIBILE_FONDI",
+            "posizioneElenco": "40",
+            "termineDocumenti": "2027-06-30T18:00:00+02:00"
+          }
+        },
+        {
+          "azione": "messaggio",
+          "nome": "esitoElenco",
+          "utente": "admin",
+          "dati": {
+            "esitoElenco": "NON_AMMISSIBILE_FONDI",
+            "posizioneElenco": "40",
+            "termineDocumenti": "2027-06-30T18:00:00+02:00"
+          }
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineFuoriFondi"
+      }
+    },
+    {
+      "nome": "NCD, tecnico non ammesso, revoca respinta",
+      "descrizione": "Elenco NCD prima dello sportello; il primo tecnico indicato è il legale rappresentante e viene rifiutato; i documenti non arrivano e l'istanza di revoca è respinta.",
+      "passi": [
+        {
+          "azione": "avvia",
+          "utente": "marco",
+          "dati": {
+            "codiceFiscaleImpresa": "05678901234",
+            "titoloProgetto": "Ancoraggi per il magazzino"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "compila",
+          "utente": "marco",
+          "dati": {
+            "ragioneSociale": "Logistica Viola S.r.l.",
+            "ateco": "25.11",
+            "tipoSoggetto": "Impresa",
+            "rapportoAssicurativo": "INAIL",
+            "dataIscrizioneCciaa": "2010-03-01",
+            "dataAssociazionePortale": "2026-01-10",
+            "pec": "logisticaviola@pec.it",
+            "regione": "Toscana",
+            "ula": "8",
+            "fatturato": "1500000",
+            "dipendentiImpresa": "8",
+            "dipendentiUnita": "8",
+            "finanziamentiPrecedenti": "Nessuno",
+            "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
+            "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "dichR02": true,
+            "dichR03": true,
+            "dichR05": true,
+            "dichR06": true,
+            "dichR07": true,
+            "dichR08": true,
+            "dichR09": true,
+            "dichR10": true,
+            "dichR11": true,
+            "dichR12": true,
+            "dichR15": true,
+            "dichR16": true,
+            "dichR17": true,
+            "dichR18": true,
+            "nessunaSpesaNonAmmessa": true,
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Registra la domanda",
+            "confermaRegistrazione": true
+          }
+        },
+        {
+          "azione": "timer",
+          "elemento": "attesaCodice"
+        },
+        {
+          "azione": "messaggio",
+          "nome": "esitoElenco",
+          "utente": "admin",
+          "dati": {
+            "esitoElenco": "NCD",
+            "posizioneElenco": "3",
+            "termineDocumenti": "2027-06-30T18:00:00+02:00"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "incaricaTecnico",
+          "utente": "marco",
+          "dati": {
+            "cfTecnico": "RSSMRA70A01D612W",
+            "nomeTecnico": "Luigi Verdi",
+            "ordineTecnico": "Ingegneri di Firenze",
+            "numeroIscrizioneTecnico": "A1234",
+            "emailTecnico": "luigi.verdi@ingpec.eu",
+            "cfLegaleRappresentante": "RSSMRA70A01D612W",
+            "cfSoci": ""
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": [
+            "Carica i documenti",
+            "Incarica il tecnico"
+          ],
+          "dati": {
+            "incaricoAmmesso": "No"
+          }
+        },
+        {
+          "azione": "timer",
+          "elemento": "termineDocumentiTimer"
+        },
+        {
+          "azione": "completa",
+          "attivita": "istanzaRevoca",
+          "utente": "marco",
+          "dati": {
+            "motivazioneRevoca": "Dimenticanza"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "valutaRevoca",
+          "dati": {
+            "esitoRevoca": "Respinta",
+            "noteRevoca": "La dimenticanza non è un motivo valido"
+          }
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineDecaduta",
+        "eventi": [
+          "EMAIL"
+        ]
+      }
+    },
+    {
+      "nome": "Istanza di revoca non presentata",
+      "passi": [
+        {
+          "azione": "avvia",
+          "utente": "marco",
+          "dati": {
+            "codiceFiscaleImpresa": "06789012345",
+            "titoloProgetto": "Linea vita bis"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "compila",
+          "utente": "marco",
+          "dati": {
+            "ragioneSociale": "Edile Blu S.r.l.",
+            "ateco": "25.11",
+            "tipoSoggetto": "Impresa",
+            "rapportoAssicurativo": "INAIL",
+            "dataIscrizioneCciaa": "2010-03-01",
+            "dataAssociazionePortale": "2026-01-10",
+            "pec": "carpenterierossi@pec.it",
+            "regione": "Toscana",
+            "ula": "8",
+            "fatturato": "1500000",
+            "dipendentiImpresa": "8",
+            "dipendentiUnita": "8",
+            "finanziamentiPrecedenti": "Nessuno",
+            "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
+            "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "dichR02": true,
+            "dichR03": true,
+            "dichR05": true,
+            "dichR06": true,
+            "dichR07": true,
+            "dichR08": true,
+            "dichR09": true,
+            "dichR10": true,
+            "dichR11": true,
+            "dichR12": true,
+            "dichR15": true,
+            "dichR16": true,
+            "dichR17": true,
+            "dichR18": true,
+            "nessunaSpesaNonAmmessa": true,
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Registra la domanda",
+            "confermaRegistrazione": true
+          }
+        },
+        {
+          "azione": "controlla",
+          "dati": {
+            "esitoRegistrazione": "REGISTRATA",
+            "numeroDomanda": "*"
+          }
+        },
+        {
+          "azione": "timer",
+          "elemento": "attesaCodice"
+        },
+        {
+          "azione": "completa",
+          "attivita": "acquisisciCodice",
+          "utente": "marco",
+          "dati": {
+            "confermaCodice": true
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Invia il codice allo sportello",
+          "dati": {
+            "codiceIdentificativo": "*"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "inviaSportello",
+          "utente": "marco",
+          "dati": {
+            "codiceInviato": "@dato:codiceIdentificativo"
+          }
+        },
+        {
+          "azione": "controlla",
+          "dati": {
+            "esitoInvio": "INVIATA"
+          },
+          "attivita": []
+        },
+        {
+          "azione": "messaggio",
+          "nome": "esitoElenco",
+          "utente": "admin",
+          "dati": {
+            "esitoElenco": "IN_POSIZIONE_UTILE",
+            "posizioneElenco": "1",
+            "termineDocumenti": "2027-06-30T18:00:00+02:00"
+          }
+        },
+        {
+          "azione": "timer",
+          "elemento": "termineDocumentiTimer"
+        },
+        {
+          "azione": "timer",
+          "elemento": "termineRevoca"
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineDecaduta"
+      }
+    },
+    {
+      "nome": "Codice non acquisito nei termini",
+      "passi": [
+        {
+          "azione": "avvia",
+          "utente": "marco",
+          "dati": {
+            "codiceFiscaleImpresa": "07890123456",
+            "titoloProgetto": "Ancoraggi tetto"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "compila",
+          "utente": "marco",
+          "dati": {
+            "ragioneSociale": "Tetti Arancio S.r.l.",
+            "ateco": "25.11",
+            "tipoSoggetto": "Impresa",
+            "rapportoAssicurativo": "INAIL",
+            "dataIscrizioneCciaa": "2010-03-01",
+            "dataAssociazionePortale": "2026-01-10",
+            "pec": "carpenterierossi@pec.it",
+            "regione": "Toscana",
+            "ula": "8",
+            "fatturato": "1500000",
+            "dipendentiImpresa": "8",
+            "dipendentiUnita": "8",
+            "finanziamentiPrecedenti": "Nessuno",
+            "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
+            "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "dichR02": true,
+            "dichR03": true,
+            "dichR05": true,
+            "dichR06": true,
+            "dichR07": true,
+            "dichR08": true,
+            "dichR09": true,
+            "dichR10": true,
+            "dichR11": true,
+            "dichR12": true,
+            "dichR15": true,
+            "dichR16": true,
+            "dichR17": true,
+            "dichR18": true,
+            "nessunaSpesaNonAmmessa": true,
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Registra la domanda",
+            "confermaRegistrazione": true
+          }
+        },
+        {
+          "azione": "controlla",
+          "dati": {
+            "esitoRegistrazione": "REGISTRATA",
+            "numeroDomanda": "*"
+          }
+        },
+        {
+          "azione": "timer",
+          "elemento": "attesaCodice"
+        },
+        {
+          "azione": "timer",
+          "elemento": "chiusuraCodiceTimer"
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineSenzaEsito",
+        "passa": [
+          "sFineSenzaCodice"
+        ]
+      }
+    },
+    {
+      "nome": "Codice sbagliato, poi sportello chiuso (TC-21)",
+      "passi": [
+        {
+          "azione": "avvia",
+          "utente": "marco",
+          "dati": {
+            "codiceFiscaleImpresa": "08901234567",
+            "titoloProgetto": "Ancoraggi"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "compila",
+          "utente": "marco",
+          "dati": {
+            "ragioneSociale": "Coperture Rosa S.r.l.",
+            "ateco": "25.11",
+            "tipoSoggetto": "Impresa",
+            "rapportoAssicurativo": "INAIL",
+            "dataIscrizioneCciaa": "2010-03-01",
+            "dataAssociazionePortale": "2026-01-10",
+            "pec": "carpenterierossi@pec.it",
+            "regione": "Toscana",
+            "ula": "8",
+            "fatturato": "1500000",
+            "dipendentiImpresa": "8",
+            "dipendentiUnita": "8",
+            "finanziamentiPrecedenti": "Nessuno",
+            "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
+            "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "dichR02": true,
+            "dichR03": true,
+            "dichR05": true,
+            "dichR06": true,
+            "dichR07": true,
+            "dichR08": true,
+            "dichR09": true,
+            "dichR10": true,
+            "dichR11": true,
+            "dichR12": true,
+            "dichR15": true,
+            "dichR16": true,
+            "dichR17": true,
+            "dichR18": true,
+            "nessunaSpesaNonAmmessa": true,
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Registra la domanda",
+            "confermaRegistrazione": true
+          }
+        },
+        {
+          "azione": "controlla",
+          "dati": {
+            "esitoRegistrazione": "REGISTRATA",
+            "numeroDomanda": "*"
+          }
+        },
+        {
+          "azione": "timer",
+          "elemento": "attesaCodice"
+        },
+        {
+          "azione": "completa",
+          "attivita": "acquisisciCodice",
+          "utente": "marco",
+          "dati": {
+            "confermaCodice": true
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Invia il codice allo sportello",
+          "dati": {
+            "codiceIdentificativo": "*"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "inviaSportello",
+          "utente": "marco",
+          "dati": {
+            "codiceInviato": "ZZZZZZZZZZZZ"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Invia il codice allo sportello",
+          "dati": {
+            "esitoInvio": "RIFIUTATO",
+            "messaggioInvio": "Codice non valido o già utilizzato"
+          }
+        },
+        {
+          "azione": "timer",
+          "elemento": "chiusuraSportelloTimer"
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineSenzaEsito",
+        "passa": [
+          "sFineNonInviata"
+        ]
+      }
+    },
+    {
+      "nome": "Elenchi mai pubblicati",
+      "passi": [
+        {
+          "azione": "avvia",
+          "utente": "marco",
+          "dati": {
+            "codiceFiscaleImpresa": "09012345678",
+            "titoloProgetto": "Ancoraggi"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "compila",
+          "utente": "marco",
+          "dati": {
+            "ragioneSociale": "Ponti Grigi S.r.l.",
+            "ateco": "25.11",
+            "tipoSoggetto": "Impresa",
+            "rapportoAssicurativo": "INAIL",
+            "dataIscrizioneCciaa": "2010-03-01",
+            "dataAssociazionePortale": "2026-01-10",
+            "pec": "carpenterierossi@pec.it",
+            "regione": "Toscana",
+            "ula": "8",
+            "fatturato": "1500000",
+            "dipendentiImpresa": "8",
+            "dipendentiUnita": "8",
+            "finanziamentiPrecedenti": "Nessuno",
+            "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
+            "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "dichR02": true,
+            "dichR03": true,
+            "dichR05": true,
+            "dichR06": true,
+            "dichR07": true,
+            "dichR08": true,
+            "dichR09": true,
+            "dichR10": true,
+            "dichR11": true,
+            "dichR12": true,
+            "dichR15": true,
+            "dichR16": true,
+            "dichR17": true,
+            "dichR18": true,
+            "nessunaSpesaNonAmmessa": true,
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Registra la domanda",
+            "confermaRegistrazione": true
+          }
+        },
+        {
+          "azione": "controlla",
+          "dati": {
+            "esitoRegistrazione": "REGISTRATA",
+            "numeroDomanda": "*"
+          }
+        },
+        {
+          "azione": "timer",
+          "elemento": "attesaCodice"
+        },
+        {
+          "azione": "completa",
+          "attivita": "acquisisciCodice",
+          "utente": "marco",
+          "dati": {
+            "confermaCodice": true
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Invia il codice allo sportello",
+          "dati": {
+            "codiceIdentificativo": "*"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "inviaSportello",
+          "utente": "marco",
+          "dati": {
+            "codiceInviato": "@dato:codiceIdentificativo"
+          }
+        },
+        {
+          "azione": "controlla",
+          "dati": {
+            "esitoInvio": "INVIATA"
+          },
+          "attivita": []
+        },
+        {
+          "azione": "timer",
+          "elemento": "attesaElenchi"
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineSenzaEsito",
+        "passa": [
+          "sFineSenzaElenchi"
+        ]
+      }
+    },
+    {
+      "nome": "Respinta, con termini scaduti e avvisi dell'istruttoria",
+      "descrizione": "Integrazione senza risposta in 30 giorni, osservazioni non presentate in 10 giorni, avviso a 100 giorni e termine di 120 giorni segnalati, poi rigetto.",
+      "passi": [
+        {
+          "azione": "avvia",
+          "utente": "marco",
+          "dati": {
+            "codiceFiscaleImpresa": "01122334455",
+            "titoloProgetto": "Ancoraggi"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "compila",
+          "utente": "marco",
+          "dati": {
+            "ragioneSociale": "Strutture Ocra S.r.l.",
+            "ateco": "25.11",
+            "tipoSoggetto": "Impresa",
+            "rapportoAssicurativo": "INAIL",
+            "dataIscrizioneCciaa": "2010-03-01",
+            "dataAssociazionePortale": "2026-01-10",
+            "pec": "carpenterierossi@pec.it",
+            "regione": "Toscana",
+            "ula": "25",
+            "fatturato": "1500000",
+            "dipendentiImpresa": "25",
+            "dipendentiUnita": "25",
+            "finanziamentiPrecedenti": "Nessuno",
+            "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
+            "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "dichR02": true,
+            "dichR03": true,
+            "dichR05": true,
+            "dichR06": true,
+            "dichR07": true,
+            "dichR08": true,
+            "dichR09": true,
+            "dichR10": true,
+            "dichR11": true,
+            "dichR12": true,
+            "dichR15": true,
+            "dichR16": true,
+            "dichR17": true,
+            "dichR18": true,
+            "nessunaSpesaNonAmmessa": true,
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Registra la domanda",
+            "confermaRegistrazione": true
+          }
+        },
+        {
+          "azione": "controlla",
+          "dati": {
+            "esitoRegistrazione": "REGISTRATA",
+            "numeroDomanda": "*"
+          }
+        },
+        {
+          "azione": "timer",
+          "elemento": "attesaCodice"
+        },
+        {
+          "azione": "completa",
+          "attivita": "acquisisciCodice",
+          "utente": "marco",
+          "dati": {
+            "confermaCodice": true
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Invia il codice allo sportello",
+          "dati": {
+            "codiceIdentificativo": "*"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "inviaSportello",
+          "utente": "marco",
+          "dati": {
+            "codiceInviato": "@dato:codiceIdentificativo"
+          }
+        },
+        {
+          "azione": "controlla",
+          "dati": {
+            "esitoInvio": "INVIATA"
+          },
+          "attivita": []
+        },
+        {
+          "azione": "messaggio",
+          "nome": "esitoElenco",
+          "utente": "admin",
+          "dati": {
+            "esitoElenco": "IN_POSIZIONE_UTILE",
+            "posizioneElenco": "1",
+            "termineDocumenti": "2027-06-30T18:00:00+02:00"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "incaricaTecnico",
+          "utente": "marco",
+          "dati": {
+            "cfTecnico": "VRDLGU75B02H501X",
+            "nomeTecnico": "Luigi Verdi",
+            "ordineTecnico": "Ingegneri di Firenze",
+            "numeroIscrizioneTecnico": "A1234",
+            "emailTecnico": "luigi.verdi@ingpec.eu",
+            "cfLegaleRappresentante": "RSSMRA70A01D612W",
+            "cfSoci": ""
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "abilitaTecnico",
+          "dati": {
+            "studioTecnico": "1"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "compilaPerizia",
+          "utente": "elena",
+          "dati": {
+            "situazioneAnte": "Copertura senza ancoraggi",
+            "situazionePost": "Linea vita certificata",
+            "dataCertaDvr": "2025-09-01",
+            "conformitaPreventivi": true,
+            "confrontoBeni": "Non ci sono macchine",
+            "periziaFirmata": true
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "caricaDocumenti",
+          "utente": "marco",
+          "dati": {
+            "scadenzaDocumentoIdentita": "2030-01-01",
+            "documentiCompleti": true
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "svolgiIstruttoria",
+          "dati": {
+            "esitoIstruttoria": "Richiedi integrazione",
+            "verificaRequisiti": true,
+            "verificaDocumenti": true,
+            "verificaPerizia": true,
+            "richiestaIstruttoria": "Manca il Modulo E1"
+          }
+        },
+        {
+          "azione": "timer",
+          "elemento": "termineIntegrazione"
+        },
+        {
+          "azione": "completa",
+          "attivita": "svolgiIstruttoria",
+          "dati": {
+            "esitoIstruttoria": "Preavviso di rigetto",
+            "verificaRequisiti": true,
+            "verificaDocumenti": true,
+            "verificaPerizia": true,
+            "richiestaIstruttoria": "Modulo E1 mai arrivato"
+          }
+        },
+        {
+          "azione": "timer",
+          "elemento": "termineOsservazioni"
+        },
+        {
+          "azione": "timer",
+          "elemento": "avviso100"
+        },
+        {
+          "azione": "timer",
+          "elemento": "termine120"
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Svolgi l'istruttoria",
+          "eventi": [
+            "NOTIFICA",
+            "SCADENZA"
+          ]
+        },
+        {
+          "azione": "completa",
+          "attivita": "svolgiIstruttoria",
+          "dati": {
+            "esitoIstruttoria": "Ammetti",
+            "verificaRequisiti": true,
+            "verificaDocumenti": true,
+            "verificaPerizia": true,
+            "partiSociali": "Nessuna",
+            "rls": false,
+            "certIso45001": false,
+            "tassoMedio": "5"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Svolgi l'istruttoria",
+          "dati": {
+            "registrabile": "No"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "svolgiIstruttoria",
+          "dati": {
+            "esitoIstruttoria": "Respingi",
+            "verificaRequisiti": true,
+            "verificaDocumenti": true,
+            "verificaPerizia": true,
+            "motivazioneIstruttoria": "Punteggio sotto la soglia dopo le verifiche"
+          }
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineRespinta"
+      }
+    },
+    {
+      "nome": "Rinuncia durante l'istruttoria",
+      "passi": [
+        {
+          "azione": "avvia",
+          "utente": "marco",
+          "dati": {
+            "codiceFiscaleImpresa": "02233445566",
+            "titoloProgetto": "Ancoraggi"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "compila",
+          "utente": "marco",
+          "dati": {
+            "ragioneSociale": "Capannoni Lilla S.r.l.",
+            "ateco": "25.11",
+            "tipoSoggetto": "Impresa",
+            "rapportoAssicurativo": "INAIL",
+            "dataIscrizioneCciaa": "2010-03-01",
+            "dataAssociazionePortale": "2026-01-10",
+            "pec": "carpenterierossi@pec.it",
+            "regione": "Toscana",
+            "ula": "8",
+            "fatturato": "1500000",
+            "dipendentiImpresa": "8",
+            "dipendentiUnita": "8",
+            "finanziamentiPrecedenti": "Nessuno",
+            "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
+            "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "dichR02": true,
+            "dichR03": true,
+            "dichR05": true,
+            "dichR06": true,
+            "dichR07": true,
+            "dichR08": true,
+            "dichR09": true,
+            "dichR10": true,
+            "dichR11": true,
+            "dichR12": true,
+            "dichR15": true,
+            "dichR16": true,
+            "dichR17": true,
+            "dichR18": true,
+            "nessunaSpesaNonAmmessa": true,
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Registra la domanda",
+            "confermaRegistrazione": true
+          }
+        },
+        {
+          "azione": "controlla",
+          "dati": {
+            "esitoRegistrazione": "REGISTRATA",
+            "numeroDomanda": "*"
+          }
+        },
+        {
+          "azione": "timer",
+          "elemento": "attesaCodice"
+        },
+        {
+          "azione": "completa",
+          "attivita": "acquisisciCodice",
+          "utente": "marco",
+          "dati": {
+            "confermaCodice": true
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Invia il codice allo sportello",
+          "dati": {
+            "codiceIdentificativo": "*"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "inviaSportello",
+          "utente": "marco",
+          "dati": {
+            "codiceInviato": "@dato:codiceIdentificativo"
+          }
+        },
+        {
+          "azione": "controlla",
+          "dati": {
+            "esitoInvio": "INVIATA"
+          },
+          "attivita": []
+        },
+        {
+          "azione": "messaggio",
+          "nome": "esitoElenco",
+          "utente": "admin",
+          "dati": {
+            "esitoElenco": "IN_POSIZIONE_UTILE",
+            "posizioneElenco": "1",
+            "termineDocumenti": "2027-06-30T18:00:00+02:00"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "incaricaTecnico",
+          "utente": "marco",
+          "dati": {
+            "cfTecnico": "VRDLGU75B02H501X",
+            "nomeTecnico": "Luigi Verdi",
+            "ordineTecnico": "Ingegneri di Firenze",
+            "numeroIscrizioneTecnico": "A1234",
+            "emailTecnico": "luigi.verdi@ingpec.eu",
+            "cfLegaleRappresentante": "RSSMRA70A01D612W",
+            "cfSoci": ""
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "abilitaTecnico",
+          "dati": {
+            "studioTecnico": "1"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "compilaPerizia",
+          "utente": "elena",
+          "dati": {
+            "situazioneAnte": "Copertura senza ancoraggi",
+            "situazionePost": "Linea vita certificata",
+            "dataCertaDvr": "2025-09-01",
+            "conformitaPreventivi": true,
+            "confrontoBeni": "Non ci sono macchine",
+            "periziaFirmata": true
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "caricaDocumenti",
+          "utente": "marco",
+          "dati": {
+            "scadenzaDocumentoIdentita": "2030-01-01",
+            "documentiCompleti": true
+          }
+        },
+        {
+          "azione": "messaggio",
+          "nome": "rinunciaImpresa",
+          "utente": "admin",
+          "dati": {
+            "motivoRinuncia": "Progetto finanziato con fondi propri"
+          }
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineRinuncia"
+      }
+    },
+    {
+      "nome": "Rinuncia prima dello sportello",
+      "passi": [
+        {
+          "azione": "avvia",
+          "utente": "marco",
+          "dati": {
+            "codiceFiscaleImpresa": "03344556677",
+            "titoloProgetto": "Ancoraggi"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "compila",
+          "utente": "marco",
+          "dati": {
+            "ragioneSociale": "Officine Sabbia S.r.l.",
+            "ateco": "25.11",
+            "tipoSoggetto": "Impresa",
+            "rapportoAssicurativo": "INAIL",
+            "dataIscrizioneCciaa": "2010-03-01",
+            "dataAssociazionePortale": "2026-01-10",
+            "pec": "carpenterierossi@pec.it",
+            "regione": "Toscana",
+            "ula": "8",
+            "fatturato": "1500000",
+            "dipendentiImpresa": "8",
+            "dipendentiUnita": "8",
+            "finanziamentiPrecedenti": "Nessuno",
+            "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
+            "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "dichR02": true,
+            "dichR03": true,
+            "dichR05": true,
+            "dichR06": true,
+            "dichR07": true,
+            "dichR08": true,
+            "dichR09": true,
+            "dichR10": true,
+            "dichR11": true,
+            "dichR12": true,
+            "dichR15": true,
+            "dichR16": true,
+            "dichR17": true,
+            "dichR18": true,
+            "nessunaSpesaNonAmmessa": true,
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Registra la domanda",
+            "confermaRegistrazione": true
+          }
+        },
+        {
+          "azione": "controlla",
+          "dati": {
+            "esitoRegistrazione": "REGISTRATA",
+            "numeroDomanda": "*"
+          }
+        },
+        {
+          "azione": "timer",
+          "elemento": "attesaCodice"
+        },
+        {
+          "azione": "completa",
+          "attivita": "acquisisciCodice",
+          "utente": "marco",
+          "dati": {
+            "confermaCodice": true
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Invia il codice allo sportello",
+          "dati": {
+            "codiceIdentificativo": "*"
+          }
+        },
+        {
+          "azione": "messaggio",
+          "nome": "rinunciaImpresa",
+          "utente": "admin",
+          "dati": {
+            "motivoRinuncia": "Cessata attività"
+          }
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineRinuncia"
+      }
+    },
+    {
+      "nome": "Rinuncia durante il caricamento dei documenti",
+      "passi": [
+        {
+          "azione": "avvia",
+          "utente": "marco",
+          "dati": {
+            "codiceFiscaleImpresa": "04455667788",
+            "titoloProgetto": "Ancoraggi"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "compila",
+          "utente": "marco",
+          "dati": {
+            "ragioneSociale": "Ferro Celeste S.r.l.",
+            "ateco": "25.11",
+            "tipoSoggetto": "Impresa",
+            "rapportoAssicurativo": "INAIL",
+            "dataIscrizioneCciaa": "2010-03-01",
+            "dataAssociazionePortale": "2026-01-10",
+            "pec": "carpenterierossi@pec.it",
+            "regione": "Toscana",
+            "ula": "8",
+            "fatturato": "1500000",
+            "dipendentiImpresa": "8",
+            "dipendentiUnita": "8",
+            "finanziamentiPrecedenti": "Nessuno",
+            "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
+            "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "dichR02": true,
+            "dichR03": true,
+            "dichR05": true,
+            "dichR06": true,
+            "dichR07": true,
+            "dichR08": true,
+            "dichR09": true,
+            "dichR10": true,
+            "dichR11": true,
+            "dichR12": true,
+            "dichR15": true,
+            "dichR16": true,
+            "dichR17": true,
+            "dichR18": true,
+            "nessunaSpesaNonAmmessa": true,
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Registra la domanda",
+            "confermaRegistrazione": true
+          }
+        },
+        {
+          "azione": "controlla",
+          "dati": {
+            "esitoRegistrazione": "REGISTRATA",
+            "numeroDomanda": "*"
+          }
+        },
+        {
+          "azione": "timer",
+          "elemento": "attesaCodice"
+        },
+        {
+          "azione": "completa",
+          "attivita": "acquisisciCodice",
+          "utente": "marco",
+          "dati": {
+            "confermaCodice": true
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Invia il codice allo sportello",
+          "dati": {
+            "codiceIdentificativo": "*"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "inviaSportello",
+          "utente": "marco",
+          "dati": {
+            "codiceInviato": "@dato:codiceIdentificativo"
+          }
+        },
+        {
+          "azione": "controlla",
+          "dati": {
+            "esitoInvio": "INVIATA"
+          },
+          "attivita": []
+        },
+        {
+          "azione": "messaggio",
+          "nome": "esitoElenco",
+          "utente": "admin",
+          "dati": {
+            "esitoElenco": "IN_POSIZIONE_UTILE",
+            "posizioneElenco": "1",
+            "termineDocumenti": "2027-06-30T18:00:00+02:00"
+          }
+        },
+        {
+          "azione": "messaggio",
+          "nome": "rinunciaImpresa",
+          "utente": "admin",
+          "dati": {
+            "motivoRinuncia": "Altro bando"
+          }
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineRinuncia"
+      }
+    },
+    {
+      "nome": "Anagrafica INAIL non disponibile",
+      "variante": {
+        "/impresa?codiceFiscale=": "/impresa?simula=errore&amp;codiceFiscale="
+      },
+      "passi": [
+        {
+          "azione": "avvia",
+          "utente": "marco",
+          "dati": {
+            "codiceFiscaleImpresa": "01234560789",
+            "titoloProgetto": "Prova con INAIL spento"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Compila la domanda",
+          "eventi": [
+            "ERRORE"
+          ],
+          "passa": [
+            "leggiAnagraficaErrore"
+          ]
+        },
+        {
+          "azione": "completa",
+          "attivita": "compila",
+          "utente": "marco",
+          "dati": {
+            "azione": "Annulla la bozza",
+            "confermaAnnullamento": true
+          }
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineAnnullata"
+      }
+    },
+    {
+      "nome": "Servizio di calcolo non disponibile",
+      "variante": {
+        "localhost:8095/calcola\"": "localhost:8095/calcola?simula=errore\"",
+        "localhost:8095/registra\"": "localhost:8095/registra?simula=errore\""
+      },
+      "passi": [
+        {
+          "azione": "avvia",
+          "utente": "marco",
+          "dati": {
+            "codiceFiscaleImpresa": "05566778899",
+            "titoloProgetto": "Prova con il calcolo spento"
+          }
+        },
+        {
+          "azione": "completa",
+          "attivita": "compila",
+          "utente": "marco",
+          "dati": {
+            "ragioneSociale": "Carpenterie Rossi S.r.l.",
+            "ateco": "25.11",
+            "tipoSoggetto": "Impresa",
+            "rapportoAssicurativo": "INAIL",
+            "dataIscrizioneCciaa": "2010-03-01",
+            "dataAssociazionePortale": "2026-01-10",
+            "pec": "carpenterierossi@pec.it",
+            "regione": "Toscana",
+            "ula": "8",
+            "fatturato": "1500000",
+            "dipendentiImpresa": "8",
+            "dipendentiUnita": "8",
+            "finanziamentiPrecedenti": "Nessuno",
+            "descrizioneProgetto": "Ancoraggi permanenti sulla copertura del capannone",
+            "lavorazioneRischio": "Manutenzione delle coperture: caduta dall'alto",
+            "dichR02": true,
+            "dichR03": true,
+            "dichR05": true,
+            "dichR06": true,
+            "dichR07": true,
+            "dichR08": true,
+            "dichR09": true,
+            "dichR10": true,
+            "dichR11": true,
+            "dichR12": true,
+            "dichR15": true,
+            "dichR16": true,
+            "dichR17": true,
+            "dichR18": true,
+            "nessunaSpesaNonAmmessa": true,
+            "asse": "2 Rischi infortunistici",
+            "tipologia2": "a) Caduta dall'alto: ancoraggi permanenti",
+            "aggiuntivo2": "Nessuno",
+            "tassoMedio": "60",
+            "partiSociali": "Ente bilaterale o Organismo paritetico",
+            "rls": true,
+            "certIso45001": true,
+            "speseProgetto": "100000",
+            "speseTecniche": "8000",
+            "anticipo": true,
+            "azione": "Calcola e salva"
+          }
+        },
+        {
+          "azione": "controlla",
+          "attivita": "Compila la domanda",
+          "passa": [
+            "calcolaErrore"
+          ]
+        },
+        {
+          "azione": "completa",
+          "attivita": "compila",
+          "utente": "marco",
+          "dati": {
+            "azione": "Annulla la bozza",
+            "confermaAnnullamento": true
+          }
+        }
+      ],
+      "atteso": {
+        "conclusa": true,
+        "fine": "fineAnnullata"
+      }
+    }
+  ]
+}

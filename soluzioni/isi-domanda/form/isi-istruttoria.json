@@ -1,0 +1,219 @@
+{
+  "title": "Svolgi l'istruttoria",
+  "description": "Verifica requisiti, documenti e perizia. Puoi correggere i criteri di punteggio: con «Ricalcola» il sistema aggiorna punteggio e contributo con le regole dell'annualità.",
+  "fields": [
+    {
+      "name": "numeroDomanda",
+      "label": "Numero della domanda",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "ragioneSociale",
+      "label": "Impresa",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "asse",
+      "label": "Asse",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "titoloProgetto",
+      "label": "Progetto",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "riepilogo",
+      "label": "Punteggio e contributo",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "regione",
+      "label": "Regione",
+      "type": "text",
+      "readonly": true
+    },
+    {
+      "name": "scadenzaIstruttoria",
+      "label": "Termine dell'istruttoria",
+      "type": "text",
+      "readonly": true
+    },
+    {
+      "name": "giorniRimanenti",
+      "label": "Giorni rimanenti",
+      "type": "text",
+      "readonly": true
+    },
+    {
+      "name": "dettaglioPunteggio",
+      "label": "Punteggio per criterio",
+      "type": "textarea",
+      "readonly": true
+    },
+    {
+      "name": "dettaglioImporti",
+      "label": "Importi",
+      "type": "textarea",
+      "readonly": true
+    },
+    {
+      "name": "erroriBloccanti",
+      "label": "Controlli del calcolo",
+      "type": "textarea",
+      "readonly": true
+    },
+    {
+      "type": "sezione",
+      "label": "Verifiche"
+    },
+    {
+      "name": "verificaRequisiti",
+      "label": "Requisiti dichiarati verificati",
+      "type": "checkbox"
+    },
+    {
+      "name": "verificaDocumenti",
+      "label": "Documenti verificati",
+      "type": "checkbox"
+    },
+    {
+      "name": "verificaPerizia",
+      "label": "Perizia o dichiarazione B1.2 verificata",
+      "type": "checkbox"
+    },
+    {
+      "type": "sezione",
+      "label": "Criteri di punteggio",
+      "help": "Correggi solo i valori non confermati dai documenti."
+    },
+    {
+      "name": "tassoMedio",
+      "label": "Tasso medio di tariffa INAIL (‰)",
+      "type": "number",
+      "min": 0,
+      "max": 1000
+    },
+    {
+      "name": "partiSociali",
+      "label": "Condivisione con le parti sociali",
+      "type": "select",
+      "options": [
+        "Nessuna",
+        "Ente bilaterale o Organismo paritetico",
+        "Due o più parti sociali"
+      ]
+    },
+    {
+      "name": "rls",
+      "label": "Informativa o condivisione con RLS/RLST",
+      "type": "checkbox"
+    },
+    {
+      "name": "certIso45001",
+      "label": "Certificazione ISO 45001",
+      "type": "checkbox"
+    },
+    {
+      "name": "certIso14001",
+      "label": "Certificazione ISO 14001",
+      "type": "checkbox"
+    },
+    {
+      "name": "certEmas",
+      "label": "Registrazione EMAS",
+      "type": "checkbox"
+    },
+    {
+      "name": "certIso39001",
+      "label": "Certificazione ISO 39001",
+      "type": "checkbox"
+    },
+    {
+      "name": "certMog",
+      "label": "MOG asseverato",
+      "type": "checkbox"
+    },
+    {
+      "name": "certRlaq",
+      "label": "Iscrizione RLAQ",
+      "type": "checkbox"
+    },
+    {
+      "type": "sezione",
+      "label": "Esito"
+    },
+    {
+      "name": "esitoIstruttoria",
+      "label": "Cosa fai",
+      "type": "select",
+      "options": [
+        "Ricalcola",
+        "Ammetti",
+        "Ammetti parzialmente",
+        "Richiedi integrazione",
+        "Preavviso di rigetto",
+        "Respingi"
+      ],
+      "required": true,
+      "precompila": false,
+      "visibileAlleParti": true,
+      "help": "Se il punteggio ricalcolato è sotto 130 non si può ammettere: usa il preavviso di rigetto."
+    },
+    {
+      "name": "importoAmmesso",
+      "label": "Contributo ammesso (€)",
+      "type": "number",
+      "min": 0,
+      "required": true,
+      "visibileAlleParti": true,
+      "visibileSe": {
+        "campo": "esitoIstruttoria",
+        "valori": [
+          "Ammetti parzialmente"
+        ]
+      }
+    },
+    {
+      "name": "richiestaIstruttoria",
+      "label": "Cosa chiedi all'impresa",
+      "type": "textarea",
+      "required": true,
+      "visibileAlleParti": true,
+      "precompila": false,
+      "visibileSe": {
+        "campo": "esitoIstruttoria",
+        "valori": [
+          "Richiedi integrazione",
+          "Preavviso di rigetto"
+        ]
+      }
+    },
+    {
+      "name": "motivazioneIstruttoria",
+      "label": "Motivazione",
+      "type": "textarea",
+      "required": true,
+      "visibileAlleParti": true,
+      "visibileSe": {
+        "campo": "esitoIstruttoria",
+        "valori": [
+          "Ammetti parzialmente",
+          "Respingi"
+        ]
+      }
+    }
+  ],
+  "documenti": "lettura",
+  "submitLabel": "Conferma"
+}

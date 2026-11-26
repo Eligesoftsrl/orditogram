@@ -1,0 +1,85 @@
+{
+  "title": "Carica i documenti della domanda",
+  "description": "Allega tutti i documenti dell'elenco in PDF o P7M (massimo 10 MB ciascuno). Il Modulo A va firmato digitalmente dal legale rappresentante. La perizia non si carica qui: la firma il tecnico.",
+  "fields": [
+    {
+      "name": "numeroDomanda",
+      "label": "Numero della domanda",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "ragioneSociale",
+      "label": "Impresa",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "asse",
+      "label": "Asse",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "titoloProgetto",
+      "label": "Progetto",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "riepilogo",
+      "label": "Punteggio e contributo",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "esitoElenco",
+      "label": "Esito negli elenchi",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "termineDocumenti",
+      "label": "Termine per il caricamento",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "documentiRichiesti",
+      "label": "Documenti richiesti",
+      "type": "textarea",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "type": "sezione",
+      "label": "Conferma"
+    },
+    {
+      "name": "scadenzaDocumentoIdentita",
+      "label": "Scadenza del documento di identità del legale rappresentante",
+      "type": "date",
+      "required": true,
+      "min": "oggi",
+      "visibileAlleParti": true
+    },
+    {
+      "name": "documentiCompleti",
+      "label": "Ho caricato tutti i documenti dell'elenco",
+      "type": "checkbox",
+      "required": true,
+      "visibileAlleParti": true
+    }
+  ],
+  "documenti": "carica",
+  "documentiObbligatori": true,
+  "documentiVisibilita": "parti",
+  "submitLabel": "Conferma l'invio"
+}

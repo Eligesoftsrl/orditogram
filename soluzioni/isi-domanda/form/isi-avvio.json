@@ -1,0 +1,27 @@
+{
+  "title": "Nuova domanda ISI",
+  "description": "Indica l'impresa e il titolo del progetto: i dati dell'impresa arrivano dall'anagrafica INAIL e la domanda si compila nel passo successivo. Puoi avere più bozze, ma registrarne una sola.",
+  "fields": [
+    {
+      "name": "codiceFiscaleImpresa",
+      "label": "Codice fiscale dell'impresa",
+      "type": "text",
+      "required": true,
+      "formato": "espressione",
+      "espressione": "^([0-9]{11}|[A-Za-z0-9]{16})$",
+      "messaggioFormato": "Scrivi 11 cifre o 16 caratteri",
+      "visibileAlleParti": true
+    },
+    {
+      "name": "titoloProgetto",
+      "label": "Titolo del progetto",
+      "type": "text",
+      "required": true,
+      "titolo": true,
+      "maxLunghezza": 200,
+      "visibileAlleParti": true,
+      "help": "Al massimo 200 caratteri. Si può cambiare durante la compilazione."
+    }
+  ],
+  "submitLabel": "Crea la bozza"
+}

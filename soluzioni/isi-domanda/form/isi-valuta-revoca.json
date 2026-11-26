@@ -1,0 +1,67 @@
+{
+  "title": "Valuta l'istanza di revoca della decadenza",
+  "fields": [
+    {
+      "name": "numeroDomanda",
+      "label": "Numero della domanda",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "ragioneSociale",
+      "label": "Impresa",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "asse",
+      "label": "Asse",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "titoloProgetto",
+      "label": "Progetto",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "riepilogo",
+      "label": "Punteggio e contributo",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "motivazioneRevoca",
+      "label": "Motivi dell'impresa",
+      "type": "textarea",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "esitoRevoca",
+      "label": "Esito",
+      "type": "select",
+      "options": [
+        "Accolta",
+        "Respinta"
+      ],
+      "required": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "noteRevoca",
+      "label": "Motivazione",
+      "type": "textarea",
+      "required": true,
+      "visibileAlleParti": true
+    }
+  ],
+  "documenti": "lettura",
+  "submitLabel": "Registra l'esito"
+}

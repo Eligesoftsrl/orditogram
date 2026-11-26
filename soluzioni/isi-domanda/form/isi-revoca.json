@@ -1,0 +1,51 @@
+{
+  "title": "Presenta l'istanza di revoca della decadenza",
+  "description": "Hai 5 giorni dalla comunicazione di decadenza. Spiega perché e allega i documenti.",
+  "fields": [
+    {
+      "name": "numeroDomanda",
+      "label": "Numero della domanda",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "ragioneSociale",
+      "label": "Impresa",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "asse",
+      "label": "Asse",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "titoloProgetto",
+      "label": "Progetto",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "riepilogo",
+      "label": "Punteggio e contributo",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "motivazioneRevoca",
+      "label": "Motivi dell'istanza",
+      "type": "textarea",
+      "required": true,
+      "visibileAlleParti": true
+    }
+  ],
+  "documenti": "carica",
+  "documentiVisibilita": "parti",
+  "submitLabel": "Presenta l'istanza"
+}

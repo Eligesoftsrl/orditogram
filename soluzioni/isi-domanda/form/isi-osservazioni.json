@@ -1,0 +1,59 @@
+{
+  "title": "Presenta le osservazioni al preavviso di rigetto",
+  "description": "Hai 10 giorni per presentare osservazioni e documenti (art. 10-bis L. 241/1990).",
+  "fields": [
+    {
+      "name": "numeroDomanda",
+      "label": "Numero della domanda",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "ragioneSociale",
+      "label": "Impresa",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "asse",
+      "label": "Asse",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "titoloProgetto",
+      "label": "Progetto",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "riepilogo",
+      "label": "Punteggio e contributo",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "richiestaIstruttoria",
+      "label": "Motivi del preavviso",
+      "type": "textarea",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "osservazioni",
+      "label": "Le tue osservazioni",
+      "type": "textarea",
+      "required": true,
+      "precompila": false,
+      "visibileAlleParti": true
+    }
+  ],
+  "documenti": "carica",
+  "documentiVisibilita": "parti",
+  "submitLabel": "Invia le osservazioni"
+}

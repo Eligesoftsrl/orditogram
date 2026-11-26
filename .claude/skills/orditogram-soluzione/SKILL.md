@@ -127,6 +127,11 @@ domande aperte, richieste di sviluppo per Orditogram, dove sono pacchetto, check
 - Attività senza `candidateGroups`, o gruppo scritto diversamente da quello degli utenti.
 - Campo `anagrafica` senza permesso SCEGLIE per chi compila: il campo resta vuoto per l'operatore.
 - Frecce che attraversano il bordo di un sottoprocesso.
+- Gateway parallelo di riunione con più frecce in ingresso dei rami aperti: aspetta un arrivo per **ogni** freccia.
+  Se un ramo ha due strade (es. "serve la perizia?" sì/no), riuniscile prima con una decisione di raccordo.
+- Caselle nei dati degli scenari scritte `"true"`: il backend vuole `true` (booleano).
+- Date dei form nei testi dei connettori (`${data}`): escono nel formato di Java (`Mon Mar 01 00:00:00 UTC 2010`),
+  non `AAAA-MM-GG`. Un servizio che le riceve deve saperle leggere (richiesta di sviluppo aperta).
 - BPMN senza disegno: lo Studio mostra una tela vuota.
 
 ## Tenere aggiornata questa skill

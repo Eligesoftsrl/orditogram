@@ -1,0 +1,10 @@
+{
+  "title": "Calcola un elenco del Bando ISI",
+  "description": "Il servizio ISI calcola l'elenco su tutte le domande registrate; prima della pubblicazione vedi l'anteprima.",
+  "fields": [
+    { "name": "tipoElenco", "label": "Elenco", "type": "select", "required": true, "titolo": true,
+      "options": ["NCD", "PROVVISORIO", "DEFINITIVO"],
+      "help": "NCD alla chiusura della registrazione; PROVVISORIO dopo lo sportello; DEFINITIVO dopo il caricamento dei documenti (redistribuzione)." }
+  ],
+  "submitLabel": "Calcola l'anteprima"
+}

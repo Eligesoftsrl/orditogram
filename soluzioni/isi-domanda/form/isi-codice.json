@@ -1,0 +1,56 @@
+{
+  "title": "Acquisisci il codice identificativo",
+  "description": "Il codice serve il giorno dello sportello informatico. Conservalo: si potrà rivedere finché non lo usi.",
+  "fields": [
+    {
+      "name": "numeroDomanda",
+      "label": "Numero della domanda",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "ragioneSociale",
+      "label": "Impresa",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "asse",
+      "label": "Asse",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "titoloProgetto",
+      "label": "Progetto",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "riepilogo",
+      "label": "Punteggio e contributo",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "dataOraRegistrazione",
+      "label": "Registrata il",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "confermaCodice",
+      "label": "Acquisisci ora il codice identificativo",
+      "type": "checkbox",
+      "required": true,
+      "precompila": false
+    }
+  ],
+  "submitLabel": "Acquisisci il codice"
+}
