@@ -159,6 +159,7 @@ psql postgres -c "CREATE DATABASE orditogram OWNER orditogram;"
 cd backend && ./mvnw verify            # compila + test unitari e di integrazione (H2)
 cd backend && ./mvnw spring-boot:run   # http://localhost:8080
 cd frontend && npm install && npm test && npm run dev   # http://localhost:5173
+cd frontend && npm run e2e             # Playwright nel browser, avvia backend (H2) e frontend da solo
 docker compose up -d                   # tutto insieme, http://localhost:8081
 ```
 
@@ -195,6 +196,8 @@ il riferimento in `riferimenti/`, la regola in `script/verifica.py` (stesso mess
 - Activiti: i dati dei messaggi vanno impostati con `setVariables` prima di `messageEventReceived`;
   le espressioni `${...}` negli output dei mapping sono rifiutate; il clock del motore si legge pigramente.
 - Le email partono dopo il commit (`TransactionSynchronization`); senza `spring.mail.host` restano "non inviate".
+- **Test e2e**: l'app usa indirizzi con `#` (`/#/pratiche/...`); `spring-boot:run` con `useTestClasspath` porta il
+  driver H2 ma non le classi di test, per questo la configurazione è in `frontend/e2e/backend.yml`.
 - bpmn-js: estensioni moddle `activiti` e `orditogram`; la simulazione usa `bpmn-js-token-simulation` 1.x.
 
 ## Stato e roadmap
@@ -254,7 +257,7 @@ In ordine di priorità proposto:
 ### Fase qualità e sicurezza (richiesta di Filippo, dopo la prima versione completa)
 Obiettivo: "a prova di bomba" prima di proporlo ai clienti.
 - **Test estesi**: copertura misurata (JaCoCo, Vitest coverage) con soglie in CI; test end-to-end dell'interfaccia
-  con Playwright sui percorsi principali (Studio → pubblicazione → scrivania → pratica); test di carico.
+  con Playwright sui percorsi principali (Studio → pubblicazione → scrivania → pratica: fatto, `frontend/e2e/`); test di carico.
 - **Security by design**: threat modeling per ogni funzione nuova (STRIDE sui flussi di dati: Studio, motore,
   API, connettori, documenti), requisiti di sicurezza scritti prima dello sviluppo, revisione sicura del codice
   su ogni PR, impostazioni sicure per default, registro delle decisioni di sicurezza.

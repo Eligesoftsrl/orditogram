@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:activiti="http://activiti.org/bpmn"
+             targetNamespace="http://orditogram.it/e2e">
+  <process id="e2eSegnalazione" name="Segnalazione di prova" isExecutable="true" activiti:candidateStarterGroups="operatori">
+    <startEvent id="inizio" activiti:formKey="e2e-segnalazione"/>
+    <sequenceFlow id="f1" sourceRef="inizio" targetRef="esame"/>
+    <userTask id="esame" name="Esamina la segnalazione" activiti:candidateGroups="operatori" activiti:formKey="e2e-esame"/>
+    <sequenceFlow id="f2" sourceRef="esame" targetRef="fine"/>
+    <endEvent id="fine"/>
+  </process>
+</definitions>

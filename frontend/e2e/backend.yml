@@ -1,0 +1,17 @@
+# Backend per i test end-to-end: database H2 in memoria (si svuota a ogni avvio), utenti e servizi di prova.
+# Lo usa playwright.config.js con spring-boot:run; il driver H2 arriva dalle dipendenze di test.
+spring:
+  datasource:
+    url: jdbc:h2:mem:e2e;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+app:
+  documenti:
+    dir: target/e2e-documenti
+  demo:
+    utenti: true
+    servizi: true
+  sicurezza:
+    chiave-cifratura: chiave-solo-per-i-test-end-to-end
+  api:
+    richieste-al-minuto: 0

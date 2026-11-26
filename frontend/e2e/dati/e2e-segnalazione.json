@@ -1,0 +1,8 @@
+{
+  "title": "Nuova segnalazione",
+  "submitLabel": "Invia la segnalazione",
+  "fields": [
+    { "name": "oggetto", "label": "Oggetto", "type": "text", "required": true, "titolo": true },
+    { "name": "descrizione", "label": "Descrizione", "type": "textarea" }
+  ]
+}
