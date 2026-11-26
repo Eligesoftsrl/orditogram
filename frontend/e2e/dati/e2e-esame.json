@@ -1,0 +1,8 @@
+{
+  "title": "Esame della segnalazione",
+  "fields": [
+    { "name": "oggetto", "label": "Oggetto", "type": "text", "readonly": true },
+    { "name": "esito", "label": "Esito", "type": "select", "required": true, "options": ["Accolta", "Respinta"] },
+    { "name": "note", "label": "Note", "type": "textarea" }
+  ]
+}

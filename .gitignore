@@ -7,3 +7,6 @@ frontend/dist/
 .idea/
 .DS_Store
 __pycache__/
+frontend/test-results/
+frontend/playwright-report/
+frontend/blob-report/

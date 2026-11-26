@@ -94,11 +94,25 @@ vengono creati gli utenti di prova (password `password`, tranne `admin` / `admin
 ```
 cd backend && mvn verify      # unitari e integrazione: applicazione e motore veri, database H2 in memoria
 cd frontend && npm test       # Vitest
+cd frontend && npm run e2e    # nel browser (Playwright): avvia da solo backend e frontend
 ```
 
 Il test di integrazione esegue il processo "Accesso agli atti" da capo a fondo con utenti diversi: protocollo via API,
 strada di errore, termine di 30 giorni, rinuncia via messaggio, ricerca, registro. Lo stesso gira a ogni modifica su
 GitHub Actions (`.github/workflows/ci.yml`), che con un tag `v1.2.3` pubblica anche le immagini Docker.
+
+### Test nel browser (end-to-end)
+
+`frontend/e2e/` contiene test che usano l'applicazione come una persona, in Chromium con Playwright:
+l'amministratore carica un BPMN con i suoi form dallo Studio e lo pubblica, l'operatore avvia una pratica dal form
+iniziale, la ritrova sulla scrivania, la apre, lavora l'attività e la pratica risulta conclusa con i dati inseriti.
+Altri due controllano che un operatore non entri nello Studio e che una password sbagliata non dia accesso.
+
+`npm run e2e` avvia il backend con un database H2 in memoria (`frontend/e2e/backend.yml`, utenti di prova) e il
+frontend di Vite, poi esegue i test; se sono già avviati, li riusa. La prima volta serve il browser:
+`npx playwright install chromium`. In CI gira nel job `e2e`, che blocca la pubblicazione delle immagini; se fallisce,
+il rapporto con schermate e tracce è tra gli artefatti (`rapporto-e2e`, si apre con `npx playwright show-trace`).
+Un test nuovo va in un file `frontend/e2e/*.e2e.js`; i file del processo di prova sono in `frontend/e2e/dati/`.
 
 ### Analisi del codice
 

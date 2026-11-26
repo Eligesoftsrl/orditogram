@@ -7,6 +7,9 @@ la MAGGIORE quando un aggiornamento richiede interventi (indicati qui sotto).
 
 Verso un Orditogram per ogni settore: il nucleo non parla più solo la lingua della PA.
 
+- **Test nel browser** (Playwright, `npm run e2e`): il percorso principale Studio → pubblicazione → scrivania →
+  pratica conclusa, più accesso negato allo Studio e password sbagliata, su backend con H2 in memoria. Gira in CI
+  nel job `e2e`, che ora serve anche per costruire le immagini Docker.
 - **Glossario** (Studio → Glossario, solo amministratore): le parole con cui l'installazione chiama chi la usa
   (*ente*: azienda, studio, comune...), il personale visto da fuori (*Ufficio*: Assistenza, Segreteria...) e chi
   entra da fuori (*cittadino*: cliente, fornitore, socio...), con singolare, plurale e genere. L'interfaccia mette da
