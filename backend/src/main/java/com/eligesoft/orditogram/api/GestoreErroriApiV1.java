@@ -1,8 +1,6 @@
 package com.eligesoft.orditogram.api;
 
 import com.eligesoft.orditogram.api.ErroriApi.ErroreApi;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +23,11 @@ import java.util.Map;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class GestoreErroriApiV1 {
 
-    private static final Logger log = LoggerFactory.getLogger(GestoreErroriApiV1.class);
+    private final com.eligesoft.orditogram.registro.RegistroErrori errori;
+
+    public GestoreErroriApiV1(com.eligesoft.orditogram.registro.RegistroErrori errori) {
+        this.errori = errori;
+    }
 
     @ExceptionHandler(ErroreApi.class)
     public ResponseEntity<Map<String, Object>> api(ErroreApi e) {
@@ -80,11 +82,13 @@ public class GestoreErroriApiV1 {
     }
 
     @ExceptionHandler(org.activiti.engine.ActivitiException.class)
-    public ResponseEntity<Map<String, Object>> motore(org.activiti.engine.ActivitiException e) {
+    public ResponseEntity<Map<String, Object>> motore(org.activiti.engine.ActivitiException e,
+                                                      jakarta.servlet.http.HttpServletRequest req) {
         RuntimeException causa = com.eligesoft.orditogram.ApiExceptionHandler.causaApplicativa(e);
         if (causa != null) return risposta(409, "conflitto", causa.getMessage(), List.of());
-        log.warn("Errore del motore nell'API pubblica", e);
-        return risposta(500, "errore_processo", "Errore nell'esecuzione del processo: " + e.getMessage(), List.of());
+        String codice = errori.registra(com.eligesoft.orditogram.registro.RegistroErrore.RICHIESTA, e,
+            req.getMethod() + " " + req.getRequestURI());
+        return risposta(500, "errore_processo", "Errore nell'esecuzione del processo (codice " + codice + "): " + e.getMessage(), List.of());
     }
 
     @ExceptionHandler({IllegalStateException.class, IllegalArgumentException.class})

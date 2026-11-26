@@ -121,6 +121,13 @@ app:
     timeout-secondi: 10               # attesa massima della risposta del destinatario
     conservazione-giorni: 30          # le consegne concluse più vecchie si eliminano ogni notte
 
+  # Registro: letture (chi apre pratiche, documenti, schede), accessi con password ed errori imprevisti.
+  registro:
+    letture-giorni: 365               # le letture più vecchie si eliminano ogni notte (0 = conserva per sempre)
+    errori-giorni: 90                 # lo stesso per gli errori imprevisti
+    accesso-ogni-minuti: 30           # un accesso con utente e password registrato al massimo una volta in questa finestra
+    pulizia: "0 30 3 * * *"           # quando gira la pulizia
+
   # Chiave per cifrare i segreti conservati nel database (es. quelli dei webhook). Impostala in produzione
   # e non cambiarla: con un'altra chiave i segreti salvati non si leggono più.
   sicurezza:

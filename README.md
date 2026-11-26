@@ -393,11 +393,42 @@ che collegano), in `anagrafiche/<codice>.json`, senza schede né permessi. All'i
 su un'installazione tradizionale); `strumenti/ripristino.sh <cartella>` li rimette al loro posto dopo una conferma.
 Conserva i backup fuori dal server.
 
-## Registro delle azioni
+## Registro delle azioni, delle letture e degli errori
 
-Studio, Registro: pubblicazioni di processi, form salvati ed eliminati, utenti e ruoli creati, modificati ed eliminati,
-pacchetti importati ed esportati, accessi negati e accessi con il provider, con utente, ora e indirizzo.
-Le stesse righe vanno anche nel log dell'applicazione (`orditogram.registro`) per chi usa un SIEM.
+Studio, Registro, tre schede (permesso `registro.leggi`):
+
+- **Azioni**: pubblicazioni di processi, form salvati ed eliminati, utenti e ruoli creati, modificati ed eliminati,
+  pacchetti importati ed esportati, accessi con utente e password (`ACCESSO`, al massimo uno ogni 30 minuti per
+  utente), accessi con il provider, uscite e accessi negati, con utente, ora e indirizzo.
+- **Letture**: chi ha aperto una pratica, un'attività, una scheda di anagrafica, chi ha scaricato un documento o ne
+  ha letto il testo, dall'interfaccia o dall'API pubblica. Anche le letture **negate** (403 o 404): così si vede chi
+  ha provato ad aprire una pratica che non poteva vedere. Filtri per utente, identificativo, tipo, esito e periodo;
+  esportazione in CSV o Excel.
+- **Errori**: ogni errore imprevisto riceve un codice (`E-1A2B3C4D`). Chi usa l'applicazione vede solo il messaggio
+  "Errore imprevisto, codice E-…", senza dettagli tecnici; l'API pubblica risponde
+  `{"errore": {"codice": "errore_interno", "riferimento": "E-…"}}`. Nel registro ci sono utente, richiesta, tipo,
+  messaggio e traccia: basta cercare il codice che la persona comunica all'assistenza. Ci finiscono anche i job del
+  motore dei processi che falliscono (timer, attività asincrone).
+
+Le righe vanno anche nei log dell'applicazione (`orditogram.registro`, `orditogram.letture`, `orditogram.errori`)
+per chi usa un SIEM. Conservazione: le letture per 365 giorni, gli errori per 90, poi una pulizia notturna le
+toglie; le azioni non scadono. Si cambia in `application.yml`:
+
+```yaml
+app:
+  registro:
+    letture-giorni: 365        # 0 = conserva per sempre
+    errori-giorni: 90
+    accesso-ogni-minuti: 30
+```
+
+Per chi sviluppa: una lettura nuova si registra con un'annotazione sul metodo del controller, senza altro codice.
+L'aspetto `AspettoLetture` registra l'esito, consentita o negata:
+
+```java
+@RegistraLettura(value = "PRATICA_APERTA", oggetto = "pi")
+public Map<String, Object> dettaglio(@PathVariable String pi) { ... }
+```
 
 ## Ripartire da zero con le pratiche
 

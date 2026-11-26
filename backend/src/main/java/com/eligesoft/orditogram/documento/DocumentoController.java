@@ -82,6 +82,7 @@ public class DocumentoController {
     }
 
     /** Il file così come è stato caricato (per un .p7m: la busta firmata). */
+    @com.eligesoft.orditogram.registro.RegistraLettura(value = "DOCUMENTO_SCARICATO", oggetto = "id")
     @GetMapping("/documenti/versioni/{id}/file")
     public ResponseEntity<byte[]> file(@PathVariable Long id) {
         DocumentoVersione v = documenti.versione(id);
@@ -91,6 +92,7 @@ public class DocumentoController {
     }
 
     /** Il documento originale estratto da una busta CAdES (.p7m), es. il PDF da leggere. */
+    @com.eligesoft.orditogram.registro.RegistraLettura(value = "DOCUMENTO_ESTRATTO", oggetto = "id")
     @GetMapping("/documenti/versioni/{id}/contenuto")
     public ResponseEntity<byte[]> contenuto(@PathVariable Long id) {
         DocumentoVersione v = documenti.versione(id);

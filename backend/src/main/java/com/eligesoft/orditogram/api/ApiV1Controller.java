@@ -335,6 +335,7 @@ public class ApiV1Controller {
         return m;
     }
 
+    @com.eligesoft.orditogram.registro.RegistraLettura(value = "PRATICA_APERTA", oggetto = "id")
     @GetMapping("/pratiche/{id}")
     public Map<String, Object> dettaglio(@PathVariable String id) {
         richiedi(Ambiti.PRATICHE_LEGGI);
@@ -357,6 +358,7 @@ public class ApiV1Controller {
         return documenti.elenco(id);
     }
 
+    @com.eligesoft.orditogram.registro.RegistraLettura(value = "DOCUMENTO_SCARICATO", oggetto = "versione", dettagli = "id")
     @GetMapping("/pratiche/{id}/documenti/versioni/{versione}")
     public ResponseEntity<byte[]> scarica(@PathVariable String id, @PathVariable Long versione) {
         richiedi(Ambiti.DOCUMENTI_LEGGI);

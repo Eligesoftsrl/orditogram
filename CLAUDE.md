@@ -43,7 +43,7 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
 | `anagrafica` | anagrafiche configurabili: tipi definiti dall'analista (`DefinizioneAnagrafica`, formato dei form + chiave, cercabile, relazioni), schede con indice, versioni e cessazione, permessi per tipo (`AccessoAnagrafiche`, unico punto di controllo) |
 | `modulo` | moduli di settore accendibili (`Modulo`: italia, firma-digitale, pa; `ModuliService`, tabella `modulo_spento`) |
 | `glossario` | parole dell'installazione per ente, ufficio, utenti esterni e pratica (`Termine`, `GlossarioService`); predefiniti della PA |
-| `registro` | registro delle azioni di amministrazione e accessi negati |
+| `registro` | registro delle azioni di amministrazione, degli accessi (`EventiSicurezza`), delle letture (`@RegistraLettura` + `AspettoLetture`, anche negate) e degli errori imprevisti con codice `E-…` (`RegistroErrori`, `GestoreErroriImprevisti`, `AscoltatoreErroriMotore`); pulizia notturna |
 | `api` | **API pubblica `/api/v1`** con chiavi, OpenAPI generata dai processi, Studio → Integrazioni |
 | `webhook` | avvisi firmati verso sistemi esterni: coda nel DB, invio con ripetizioni |
 | `config` | cifratura dei segreti, pianificazione, `ControlloProduzione` (profilo `produzione`: niente avvio con impostazioni insicure) |
@@ -169,7 +169,9 @@ laura, paolo, chiara, giulia: password `password`.
 - Nomi di classi, metodi, variabili, messaggi e commenti **in italiano**; termini tecnici standard restano in inglese.
 - Testi dell'interfaccia brevi e concreti, rivolti a persone non tecniche (operatori, analisti).
 - Ogni nuova funzione: test (JUnit 5 nel backend, Vitest nel frontend), voce nel `CHANGELOG.md`, sezione nel `README.md`.
-- Le azioni di amministrazione vanno nel registro (`RegistroService.registra`).
+- Le azioni di amministrazione vanno nel registro (`RegistroService.registra`). Un endpoint nuovo che apre una
+  pratica, un documento o una scheda ha `@RegistraLettura(value, oggetto)`. Gli errori imprevisti non mostrano
+  dettagli: passano da `RegistroErrori.registra` e la risposta porta solo il codice.
 - Errori dell'API pubblica sempre `{"errore": {"codice", "messaggio", "campi"}}`, codici stabili.
 - Gli stati salvati nel DB come testo, non enum Hibernate (i vincoli CHECK non si aggiornano: vedi la migrazione V2).
 - Schema del DB solo con migrazioni Flyway (`backend/src/main/resources/db/migration`, `V<n>__descrizione.sql`), SQL

@@ -21,6 +21,13 @@ Verso un Orditogram per ogni settore: il nucleo non parla più solo la lingua de
   ("il ticket concluso", "la richiesta conclusa"). Anche i messaggi del server per le persone (non trovata, accesso
   negato, termine scaduto, titolo predefinito delle notifiche). Restano invariati i percorsi e i nomi tecnici
   dell'API (`/api/pratiche`, `pratica.avviata`, `pratiche:avvia`).
+- **Registro delle letture, degli accessi e degli errori** (Studio → Registro, schede *Azioni*, *Letture*,
+  *Errori*): chi apre pratiche, attività, schede di anagrafica e documenti, anche quando l'accesso è negato, dall'
+  interfaccia e dall'API pubblica; gli accessi con utente e password (uno ogni 30 minuti per utente) e le uscite.
+  Ogni errore imprevisto riceve un codice `E-…` da comunicare all'assistenza: la persona non vede più dettagli
+  tecnici, che restano nel registro con la traccia, insieme ai job del motore falliti. Letture conservate 365
+  giorni, errori 90 (`app.registro.*`). Le letture si registrano con l'annotazione `@RegistraLettura` (un aspetto
+  Spring AOP). API `GET /api/admin/registro/letture` e `/errori`, migrazione `V14`.
 - **Moduli** (Studio → Moduli, solo amministratore): le funzioni legate all'Italia e alla PA diventano pacchetti
   che si spengono per le installazioni di altri settori. *Italia*: festività nazionali nel calendario lavorativo e
   formati `codiceFiscale`, `partitaIva`, `cap`, `telefono` nei form (spento, i form nuovi o modificati che li usano

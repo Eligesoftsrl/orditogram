@@ -12,6 +12,12 @@ import java.util.Map;
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
+    private final com.eligesoft.orditogram.registro.RegistroErrori errori;
+
+    public ApiExceptionHandler(com.eligesoft.orditogram.registro.RegistroErrori errori) {
+        this.errori = errori;
+    }
+
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<Map<String, String>> notFound(NotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -42,10 +48,14 @@ public class ApiExceptionHandler {
     }
 
     @ExceptionHandler(org.activiti.engine.ActivitiException.class)
-    public ResponseEntity<Map<String, String>> motore(org.activiti.engine.ActivitiException e) {
+    public ResponseEntity<Map<String, String>> motore(org.activiti.engine.ActivitiException e,
+                                                      jakarta.servlet.http.HttpServletRequest req) {
         RuntimeException causa = causaApplicativa(e);
         if (causa != null) return conflict(causa);
+        String codice = errori.registra(com.eligesoft.orditogram.registro.RegistroErrore.RICHIESTA, e,
+            req.getMethod() + " " + req.getRequestURI());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(Map.of("message", "Errore nell'esecuzione del processo: " + e.getMessage()));
+            .body(Map.of("message", "Errore nell'esecuzione del processo (codice " + codice + "): " + e.getMessage(),
+                "codice", codice));
     }
 }

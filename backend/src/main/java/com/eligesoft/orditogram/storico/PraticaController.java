@@ -173,6 +173,7 @@ public class PraticaController {
         return m;
     }
 
+    @com.eligesoft.orditogram.registro.RegistraLettura(value = "PRATICA_APERTA", oggetto = "pi")
     @GetMapping("/{pi}")
     public Map<String, Object> dettaglio(@PathVariable String pi) {
         access.checkView(pi);

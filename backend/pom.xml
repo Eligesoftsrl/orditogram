@@ -111,6 +111,11 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
+    <!-- AspectJ: il registro delle letture (registro/AspettoLetture) si aggancia ai metodi annotati @RegistraLettura -->
+    <dependency>
+      <groupId>org.aspectj</groupId>
+      <artifactId>aspectjweaver</artifactId>
+    </dependency>
     <!-- Accesso con Keycloak / Microsoft Entra ID (OIDC): si attiva solo se configurato in application.yml -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
