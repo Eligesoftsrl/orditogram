@@ -56,6 +56,7 @@ public class PraticaController {
     private final com.eligesoft.orditogram.accesso.PartiService parti;
     private final AnagraficheNellePratiche anagrafiche;
     private final CampiVisibili campiVisibili;
+    private final com.eligesoft.orditogram.glossario.GlossarioService glossario;
 
     /** Chi guarda la pratica: gli utenti esterni ne vedono una versione ridotta (vedi CampiVisibili). */
     private record Vista(com.eligesoft.orditogram.user.AppUser utente) {
@@ -73,7 +74,9 @@ public class PraticaController {
                              com.eligesoft.orditogram.accesso.PraticaStrutturaRepository praticaStruttura,
                              com.eligesoft.orditogram.accesso.OrganizzazioneRepository organizzazioni,
                              com.eligesoft.orditogram.accesso.PartiService parti, CampiVisibili campiVisibili,
-                             AnagraficheNellePratiche anagrafiche) {
+                             AnagraficheNellePratiche anagrafiche,
+                             com.eligesoft.orditogram.glossario.GlossarioService glossario) {
+        this.glossario = glossario;
         this.anagrafiche = anagrafiche;
         this.parti = parti;
         this.campiVisibili = campiVisibili;
@@ -298,15 +301,16 @@ public class PraticaController {
 
     /**
      * Lo storico come lo vede l'utente. Senza i valori dei campi che non vede; per un utente esterno, delle azioni
-     * altrui restano solo avvio, attività completate e parti, a nome dell'"Ufficio" e senza dettagli.
+     * altrui restano solo avvio, attività completate e parti, a nome dell'"Ufficio" (parola del glossario) e senza dettagli.
      */
     private List<Map<String, Object>> eventiPer(String pi, Vista vista, Set<String> etichetteNascoste) {
         List<Map<String, Object>> out = new ArrayList<>();
+        String ufficio = vista.esterno() ? glossario.singolare(com.eligesoft.orditogram.glossario.Termine.UFFICIO) : null;
         for (Map<String, Object> e : storico.eventi(pi)) {
             if (vista.esterno() && !vista.io(e.get("utente"))) {
                 if (!Set.of("AVVIO", "COMPLETAMENTO", "PARTE").contains(e.get("tipo"))) continue;
                 e.put("utente", null);
-                e.put("utenteNome", "Ufficio");
+                e.put("utenteNome", ufficio);
                 e.put("dettagli", List.of());
             } else if (!etichetteNascoste.isEmpty() && e.get("dettagli") instanceof List<?> d) {
                 e.put("dettagli", d.stream()

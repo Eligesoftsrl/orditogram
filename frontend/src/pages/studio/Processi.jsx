@@ -196,7 +196,7 @@ function NuovoProcesso({ aperto, onClose, esistenti, onCrea }) {
       <form className="space-y-4" onSubmit={e => { e.preventDefault(); if (valida && !occupata && nome.trim()) onCrea(chiave, nome.trim()) }}>
         <div>
           <label className="etichetta" htmlFor="np-nome">Nome del processo</label>
-          <input id="np-nome" className="campo" autoFocus value={nome} placeholder="Es. Richiesta di accesso agli atti"
+          <input id="np-nome" className="campo" autoFocus value={nome} placeholder="Es. Richiesta d'acquisto"
                  onChange={e => { setNome(e.target.value); if (!manuale) setChiave(chiaveDaNome(e.target.value)) }} />
         </div>
         <div>

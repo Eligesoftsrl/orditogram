@@ -99,6 +99,22 @@ alle tabelle, Orditogram non parte e il log dice quale colonna manca, invece di 
 - Un database creato da Orditogram 0.12 (o precedente, aggiornato prima alla 0.12) si aggiorna da solo: la prima
   migrazione trova le tabelle già presenti e non le tocca.
 
+## Glossario (Studio → Glossario)
+
+Orditogram serve aziende, enti pubblici e studi: ognuno chiama le cose a modo suo. L'amministratore sceglie in
+Studio → *Glossario* le parole per tre concetti, con singolare, plurale e genere (maschile o femminile):
+
+| Termine | Predefinito | Esempi |
+|---|---|---|
+| Chi usa Orditogram | ente | azienda, società, studio, comune |
+| Il personale visto da fuori | Ufficio | Assistenza, Segreteria, Servizio clienti |
+| Chi entra da fuori | cittadino | cliente, fornitore, socio |
+
+L'interfaccia compone da sola gli articoli ("Entra con l'account dell'azienda", "della società", "dello studio").
+Le parole valgono subito, anche nella pagina di accesso (`GET /api/info` → `glossario`), e gli utenti esterni
+leggono quella scelta al posto di "Ufficio" nello storico e nei documenti. Le modifiche vanno nel registro.
+Svuotando un termine si torna al predefinito.
+
 ## Ruoli e permessi (Studio → Ruoli)
 
 Chi può fare che cosa nello Studio e nell'amministrazione si decide con i **ruoli**, insiemi di permessi:

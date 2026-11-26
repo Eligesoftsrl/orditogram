@@ -4,6 +4,7 @@ import { api } from '../../api.js'
 import { cx } from '../../lib/format.js'
 import { codiceDa } from '../../lib/permessi.js'
 import { Badge, Button, Caricamento, Errore, Pannello, Vuoto, useToast } from '../../components/ui.jsx'
+import { useGlossario } from '../../lib/useGlossario.jsx'
 
 const VUOTA = { id: null, codice: '', nome: '', codiceFiscale: '', attiva: true }
 
@@ -181,6 +182,7 @@ export default function Organizzazioni() {
  * (La mia organizzazione); resta un utente esterno, senza ruoli né permessi.
  */
 function PersoneReferenti({ org, onCambio }) {
+  const g = useGlossario()
   const toast = useToast()
   const [persone, setPersone] = useState(null)
   const [scelti, setScelti] = useState(new Set())
@@ -202,7 +204,7 @@ function PersoneReferenti({ org, onCambio }) {
     <section className="mt-6 border-t border-linea pt-5" aria-labelledby={`ref-${org.id}`}>
       <h3 id={`ref-${org.id}`} className="font-semibold">Persone e referenti</h3>
       <p className="mt-1 text-sm text-grafite">
-        Il referente aggiunge, disattiva e toglie le persone della sua organizzazione dal portale, senza passare dall'ufficio.
+        Il referente aggiunge, disattiva e toglie le persone della sua organizzazione dal portale, senza passare {g('ente', 'dal')}.
       </p>
       {!persone ? (errore ? <Errore>{errore}</Errore> : <Caricamento />) : persone.length === 0 ? (
         <p className="mt-3 text-sm text-grafite">Nessuna persona: aggiungi prima un utente esterno dalla pagina Utenti.</p>

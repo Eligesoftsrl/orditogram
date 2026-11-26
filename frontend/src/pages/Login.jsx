@@ -4,6 +4,7 @@ import { api } from '../api.js'
 import { useAuth } from '../lib/auth.jsx'
 import Logo from '../components/Logo.jsx'
 import { Button, Errore } from '../components/ui.jsx'
+import { useGlossario } from '../lib/useGlossario.jsx'
 
 const FERMATE = ['Avvio', 'Verifica', 'Revisione', 'Accettata']
 
@@ -15,6 +16,7 @@ const PROVA = [
 ]
 
 export default function Login() {
+  const g = useGlossario()
   const { login } = useAuth()
   const [user, setUser] = useState('')
   const [pass, setPass] = useState('')
@@ -79,7 +81,7 @@ export default function Login() {
           <div className="mb-10 lg:hidden"><Logo chiaro={false} /></div>
           <h2 className="text-3xl font-semibold">Accedi</h2>
           <p className="mt-1.5 text-grafite">
-            {metodi.oidc.length && !metodi.locale ? 'Entra con l\'account dell\'ente.' : metodi.oidc.length ? 'Entra con l\'account dell\'ente oppure con le credenziali di Orditogram.' : 'Entra con le credenziali che ti ha dato l\'amministratore.'}
+            {metodi.oidc.length && !metodi.locale ? `Entra con l'account ${g('ente', 'del')}.` : metodi.oidc.length ? `Entra con l'account ${g('ente', 'del')} oppure con le credenziali di Orditogram.` : 'Entra con le credenziali che ti ha dato l\'amministratore.'}
           </p>
 
           {metodi.oidc.length > 0 && (

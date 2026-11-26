@@ -7,6 +7,7 @@ import { Avatar, Badge, Button, Caricamento, Errore, Pannello, Vuoto, useToast }
 import Esporta from '../../components/Esporta.jsx'
 import Gruppi from '../../components/Gruppi.jsx'
 import { alberoStrutture } from '../../lib/permessi.js'
+import { useGlossario } from '../../lib/useGlossario.jsx'
 
 const VUOTO = { id: null, username: '', firstName: '', lastName: '', email: '', enabled: true, tipo: 'INTERNO', ruoli: [], groups: [], organizzazioni: [], password: '' }
 
@@ -15,6 +16,7 @@ const VUOTO = { id: null, username: '', firstName: '', lastName: '', email: '', 
  * i ruoli danno i permessi dello Studio e dell'amministrazione (vedi Ruoli.jsx).
  */
 export default function Utenti() {
+  const g = useGlossario()
   const uid = useId()
   const { me } = useAuth()
   const toast = useToast()
@@ -137,8 +139,8 @@ export default function Utenti() {
                 <fieldset>
                   <legend className="etichetta">Tipo di utente</legend>
                   <div className="grid gap-2 sm:grid-cols-2">
-                    {[['INTERNO', 'Personale', 'Lavora le pratiche dell\'ente o dell\'azienda'],
-                      ['ESTERNO', 'Esterno', 'Cittadino, cliente o referente di un\'organizzazione: vede solo le sue pratiche']].map(([v, t, d]) => (
+                    {[['INTERNO', 'Personale', `Lavora le pratiche ${g('ente', 'del')}`],
+                      ['ESTERNO', 'Esterno', `${g('esterno', 'Nome')} o referente di un'organizzazione: vede solo le sue pratiche`]].map(([v, t, d]) => (
                       <label key={v} className={cx('flex cursor-pointer items-start gap-2 rounded-campo border px-3 py-2.5',
                         (edit.tipo || 'INTERNO') === v ? 'border-verde-500 bg-verde-50/60' : 'border-linea')}>
                         <input type="radio" name={`${uid}-tipo`} className="mt-1 accent-verde-600" checked={(edit.tipo || 'INTERNO') === v}
@@ -227,12 +229,13 @@ function SceltaStrutture({ strutture, scelte, onChange }) {
 
 /** Organizzazioni esterne dell'utente esterno: vede le pratiche in cui sono parte e ne lavora le attività. */
 function SceltaOrganizzazioni({ organizzazioni, scelte, onChange }) {
+  const g = useGlossario()
   const cambia = (id, si) => onChange(si ? [...scelte, id] : scelte.filter(x => x !== id))
   return (
     <fieldset>
       <legend className="etichetta">Organizzazioni</legend>
       {organizzazioni.length === 0 ? (
-        <p className="text-sm text-grafite">Nessuna organizzazione esterna: creale nella pagina Organizzazioni. Un cittadino può anche non averne.</p>
+        <p className="text-sm text-grafite">Nessuna organizzazione esterna: creale nella pagina Organizzazioni. Un {g('esterno')} può anche non averne.</p>
       ) : (
         <div className="max-h-56 space-y-1 overflow-y-auto rounded-campo bg-carta px-3.5 py-3">
           {organizzazioni.map(o => (

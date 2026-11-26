@@ -192,6 +192,8 @@ export const api = {
   credenziali: () => call('GET', '/api/admin/credenziali'),
   registraMessaggio: (pi, nome, dati = {}) => call('POST', `/api/pratiche/${pi}/messaggi/${encodeURIComponent(nome)}`, dati),
   info: () => call('GET', '/api/info'),
+  glossario: () => call('GET', '/api/admin/glossario'),
+  salvaGlossario: (termini) => call('PUT', '/api/admin/glossario', termini),
 
   // integrazioni (Studio): chiavi dell'API pubblica, webhook, documentazione
   integrazioni: () => call('GET', '/api/admin/integrazioni/panoramica'),

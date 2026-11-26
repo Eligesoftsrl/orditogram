@@ -3,6 +3,21 @@
 Le versioni seguono il formato MAGGIORE.MINORE.CORREZIONE: cambia la MINORE per funzioni nuove compatibili,
 la MAGGIORE quando un aggiornamento richiede interventi (indicati qui sotto).
 
+## 0.13.0 (in preparazione)
+
+Verso un Orditogram per ogni settore: il nucleo non parla più solo la lingua della PA.
+
+- **Glossario** (Studio → Glossario, solo amministratore): le parole con cui l'installazione chiama chi la usa
+  (*ente*: azienda, studio, comune...), il personale visto da fuori (*Ufficio*: Assistenza, Segreteria...) e chi
+  entra da fuori (*cittadino*: cliente, fornitore, socio...), con singolare, plurale e genere. L'interfaccia mette da
+  sola gli articoli giusti ("dell'azienda", "della società", "dello studio") e mostra un'anteprima prima di salvare.
+  Vale subito per tutti, anche nella pagina di accesso (`GET /api/info` restituisce `glossario`); gli utenti
+  esterni vedono la parola scelta al posto di "Ufficio" nello storico e nei documenti. Predefiniti invariati
+  (quelli della PA). Ogni modifica va nel registro (`GLOSSARIO_MODIFICATO`). API `GET`/`PUT /api/admin/glossario`,
+  migrazione `V11`.
+- Esempi nei campi dello Studio senza riferimenti alla PA ("Richiesta d'acquisto", "portale-clienti",
+  `numeroRegistrazione`).
+
 ## 0.12.0 (novembre 2026)
 
 **Aggiornamento**: chi era amministratore riceve il ruolo Amministratore (migrazione `V3`); gli altri utenti non

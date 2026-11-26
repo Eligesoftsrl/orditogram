@@ -43,7 +43,7 @@ public class PasswordController {
     @PostMapping("/api/me/password")
     @Transactional
     public void cambia(@RequestBody CambioPassword cambio) {
-        if (!loginLocale) throw bad("La password si cambia sul sistema di accesso dell'ente");
+        if (!loginLocale) throw bad("La password si cambia sul sistema di accesso centrale (il provider con cui entri)");
         AppUser u = currentUser.current();
         if (u.getOidcSoggetto() != null && !u.isPasswordTemporanea()) throw bad("Entri con il provider: la password si cambia lì");
         String attuale = cambio.attuale() == null ? "" : cambio.attuale();

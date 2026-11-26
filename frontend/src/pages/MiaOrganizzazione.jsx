@@ -4,6 +4,7 @@ import { api } from '../api.js'
 import { fa } from '../lib/format.js'
 import { azioniPersona, statoPersona } from '../lib/referente.js'
 import { Badge, Button, Caricamento, Dialogo, Errore, Pannello, Vuoto, useToast } from '../components/ui.jsx'
+import { useGlossario } from '../lib/useGlossario.jsx'
 
 const VUOTA = { nome: '', cognome: '', email: '' }
 
@@ -12,6 +13,7 @@ const VUOTA = { nome: '', cognome: '', email: '' }
  * le disattiva, le riattiva o le toglie. Chi vede quali pratiche non cambia: lo decide l'organizzazione.
  */
 export default function MiaOrganizzazione() {
+  const g = useGlossario()
   const [lista, setLista] = useState(null)
   const [errore, setErrore] = useState('')
   const carica = () => api.mieOrganizzazioni().then(setLista).catch(e => setErrore(e.message))
@@ -28,7 +30,7 @@ export default function MiaOrganizzazione() {
         </p>
       </header>
       {lista.length === 0
-        ? <Pannello><Vuoto icona={Briefcase} titolo="Non sei referente di nessuna organizzazione">Se pensi sia un errore, contatta l'ufficio.</Vuoto></Pannello>
+        ? <Pannello><Vuoto icona={Briefcase} titolo="Non sei referente di nessuna organizzazione">Se pensi sia un errore, contatta {g('ente', 'il')}.</Vuoto></Pannello>
         : lista.map(o => <Organizzazione key={o.id} org={o} onCambio={carica} />)}
     </div>
   )
@@ -127,6 +129,7 @@ function NuovaPersona({ org, dati, onClose, onCreata }) {
 }
 
 function PasswordCreata({ esito, onClose }) {
+  const g = useGlossario()
   const toast = useToast()
   if (!esito) return null
   const c = esito.collega
@@ -147,7 +150,7 @@ function PasswordCreata({ esito, onClose }) {
             </dd>
           </dl>
         </>) : (
-          <p>{c.nome} entra con l'accesso dell'ente usando l'indirizzo {c.email}: al primo accesso sarà già nella tua organizzazione.</p>
+          <p>{c.nome} entra con l'accesso {g('ente', 'del')} usando l'indirizzo {c.email}: al primo accesso sarà già nella tua organizzazione.</p>
         )}
         <div className="flex justify-end"><Button variante="primario" onClick={onClose}>Fatto</Button></div>
       </div>
