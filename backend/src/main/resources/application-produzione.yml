@@ -1,0 +1,14 @@
+# Profilo di produzione: SPRING_PROFILES_ACTIVE=produzione (con Docker: ORDITOGRAM_PROFILO=produzione nel .env).
+# Si aggiunge ad application.yml. All'avvio ControlloProduzione rifiuta le impostazioni di sviluppo e demo:
+# vedi il README, sezione "Installazione in produzione".
+server:
+  servlet:
+    session:
+      cookie:
+        secure: true                  # il cookie di sessione viaggia solo su HTTPS: in produzione serve TLS
+        http-only: true
+
+app:
+  demo:
+    utenti: false                     # niente utenti di prova con password nota
+    servizi: false                    # niente servizi dimostrativi (/api/demo/**)

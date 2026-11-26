@@ -11,7 +11,7 @@ services:
       POSTGRES_USER: ${DB_UTENTE:-orditogram}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-orditogram}
     ports:
-      - "${DB_PORTA:-5432}:5432"            # togli in produzione: il database non serve fuori da Docker
+      - "127.0.0.1:${DB_PORTA:-5432}:5432"  # solo dal server stesso: il database non va esposto in rete
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -27,6 +27,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
+      SPRING_PROFILES_ACTIVE: ${ORDITOGRAM_PROFILO:-}   # "produzione" da un cliente: vedi README
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NOME:-orditogram}
       SPRING_DATASOURCE_USERNAME: ${DB_UTENTE:-orditogram}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-orditogram}

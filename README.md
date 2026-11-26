@@ -14,7 +14,9 @@ docker compose up -d
 ```
 
 Orditogram risponde su http://localhost:8081 (utente `admin`, password `ADMIN_PASSWORD_INIZIALE` del file `.env`).
-Per i dati di prova metti `UTENTI_DI_PROVA=true` e `SERVIZI_DI_PROVA=true`. Con `--profile keycloak` parte anche un
+Il `.env` d'esempio attiva il profilo di produzione, che non parte con le password d'esempio (vedi "Installazione in
+produzione"). Per una demo in locale svuota `ORDITOGRAM_PROFILO` e metti `UTENTI_DI_PROVA=true` e
+`SERVIZI_DI_PROVA=true`. Con `--profile keycloak` parte anche un
 Keycloak di prova su http://localhost:8180.
 
 In produzione imposta `ORDITOGRAM_INDIRIZZO` con il nome con cui gli utenti aprono Orditogram (es.
@@ -24,6 +26,41 @@ dell'accesso con Keycloak o Entra ID, invece dell'intestazione `Host` mandata da
 Tutte le impostazioni di `application.yml` si possono dare come variabili d'ambiente (es. `app.calendario.zona`
 diventa `APP_CALENDARIO_ZONA`, `spring.mail.host` diventa `SPRING_MAIL_HOST`). Il backend espone
 `/actuator/health/liveness` e `/actuator/health/readiness` per Docker e Kubernetes.
+
+## Installazione in produzione
+
+Le impostazioni predefinite servono per provare Orditogram (utenti di prova, `admin` / `admin`). Da un cliente si
+usa il **profilo di produzione**: `ORDITOGRAM_PROFILO=produzione` nel `.env` (fuori da Docker
+`SPRING_PROFILES_ACTIVE=produzione`). Con questo profilo Orditogram spegne utenti e servizi di prova, manda il cookie
+di sessione solo su HTTPS e **si rifiuta di partire** finché trova impostazioni insicure, elencandole tutte nel log:
+
+| Controllo all'avvio | Cosa impostare |
+|---|---|
+| Utenti o servizi di prova accesi | `UTENTI_DI_PROVA=false`, `SERVIZI_DI_PROVA=false` |
+| Password del database predefinita o sotto i 12 caratteri | `DB_PASSWORD` |
+| Chiave di cifratura dei segreti assente o sotto i 32 caratteri | `ORDITOGRAM_CHIAVE_CIFRATURA` (`openssl rand -base64 32`, poi non cambiarla più) |
+| Primo avvio con password dell'amministratore predefinita o sotto i 12 caratteri | `ADMIN_PASSWORD_INIZIALE` |
+| `admin` o un utente di prova ancora attivo con password `admin` o `password` | cambiala dal profilo o disattiva l'utente |
+
+Gli ultimi due controlli valgono solo con l'accesso locale (`APP_LOGIN_LOCALE=true`). Email non configurata e
+mittente di esempio sono solo avvisi nel log.
+
+Prima di consegnare:
+
+1. **HTTPS davanti a Orditogram.** Il container `frontend` parla HTTP sulla porta `ORDITOGRAM_PORTA`: mettilo dietro
+   il bilanciatore o il proxy dell'ente (nginx, Traefik, Caddy) con un certificato valido. Senza HTTPS l'accesso non
+   funziona, perché il cookie di sessione è marcato `Secure`.
+2. **Indirizzo**: `ORDITOGRAM_INDIRIZZO` con il nome pubblico (es. `orditogram.azienda.it`).
+3. **Accesso**: con Keycloak o Entra ID (vedi "Accesso con Keycloak o Microsoft Entra ID") metti `APP_LOGIN_LOCALE=false`
+   se nessuno deve entrare con utente e password locali.
+4. **Database**: la porta di PostgreSQL è aperta solo sul server stesso (`127.0.0.1`); non esporla altrove.
+5. **Backup pianificato** con `strumenti/backup.sh` (ad esempio ogni notte con cron), copie fuori dal server, e una
+   prova di ripristino con `strumenti/ripristino.sh` su una macchina pulita prima dell'avvio.
+6. **Aggiornamenti**: backup, poi `docker compose build && docker compose up -d`. Le migrazioni del database partono
+   da sole; leggi prima il `CHANGELOG.md` per le versioni che chiedono interventi.
+7. **Risorse**: per iniziare 2 vCPU e 4 GB di RAM per il backend (`JAVA_OPTS` usa il 75% della memoria del
+   container), poi misura con i volumi reali del cliente.
+8. **Email**: `SMTP_HOST`, `SMTP_UTENTE`, `SMTP_PASSWORD` ed `EMAIL_MITTENTE` con un indirizzo dell'ente.
 
 ## Avvio
 
