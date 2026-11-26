@@ -3,22 +3,31 @@ const dataOraAnno = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 's
 const soloData = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })
 const relativo = new Intl.RelativeTimeFormat('it-IT', { numeric: 'auto' })
 
+/** Una data leggibile o null: un valore che non è una data non deve rompere la pagina. */
+function leggi(d) {
+  const date = d instanceof Date ? d : new Date(d)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
 export function quando(d) {
   if (!d) return ''
-  const date = new Date(d)
+  const date = leggi(d)
+  if (!date) return String(d)
   return (date.getFullYear() === new Date().getFullYear() ? dataOra : dataOraAnno).format(date)
 }
 
 export function giorno(d) {
   if (!d) return ''
   // le date dei form arrivano come "2026-10-03": niente fuso orario
-  const date = typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d) ? new Date(d + 'T12:00:00') : new Date(d)
-  return soloData.format(date)
+  const date = typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d) ? new Date(d + 'T12:00:00') : leggi(d)
+  // un valore che non è una data (es. scritto da un sistema esterno) si mostra com'è, senza rompere la pagina
+  return date ? soloData.format(date) : String(d)
 }
 
 /** "3 ore fa", "ieri", "tra 2 giorni" */
 export function fa(d) {
   if (!d) return ''
+  if (!leggi(d)) return String(d)
   const sec = (new Date(d).getTime() - Date.now()) / 1000
   const abs = Math.abs(sec)
   if (abs < 60) return 'adesso'
@@ -51,5 +60,6 @@ export const cx = (...c) => c.filter(Boolean).join(' ')
 /** Data e ora complete per le esportazioni: "04/10/2026 09:30". */
 export function dataOraCompleta(d) {
   if (!d) return ''
+  if (!leggi(d)) return String(d)
   return new Intl.DateTimeFormat('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(d)).replace(',', '')
 }

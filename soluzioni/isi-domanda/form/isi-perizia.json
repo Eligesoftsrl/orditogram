@@ -106,8 +106,7 @@
       "visibileAlleParti": true
     }
   ],
-  "documenti": "carica",
-  "documentiObbligatori": true,
+  "documenti": "modifica",
   "documentiVisibilita": "parti",
   "submitLabel": "Firma e invia la perizia"
 }

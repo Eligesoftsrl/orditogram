@@ -78,8 +78,7 @@
       "visibileAlleParti": true
     }
   ],
-  "documenti": "carica",
-  "documentiObbligatori": true,
+  "documenti": "modifica",
   "documentiVisibilita": "parti",
   "submitLabel": "Conferma l'invio"
 }

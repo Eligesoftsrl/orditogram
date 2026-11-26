@@ -451,7 +451,7 @@ public class PraticaController {
                 || !vars.containsKey(k) || !visibile.test(k)) continue;
             // titolo e fotografia di una scheda di anagrafica: si mostrano con il campo e in "anagrafiche"
             if (derivataDaAnagrafica(k, tipi)) continue;
-            Object v = vars.get(k);
+            Object v = com.eligesoft.orditogram.connettore.Testi.leggibile(vars.get(k));
             if (v == null || v.toString().isBlank()) continue;
             if (v instanceof List<?> righe && colonne.containsKey(k)) {
                 // tabella di righe: il testo è un riassunto, le righe e le colonne servono per mostrarla

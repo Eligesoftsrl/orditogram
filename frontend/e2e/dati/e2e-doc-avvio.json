@@ -1,0 +1,5 @@
+{
+  "title": "Nuova domanda",
+  "fields": [ { "name": "oggetto", "label": "Oggetto", "type": "text", "required": true, "titolo": true } ],
+  "submitLabel": "Crea la domanda"
+}

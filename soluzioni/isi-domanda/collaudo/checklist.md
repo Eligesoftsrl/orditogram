@@ -8,7 +8,7 @@ importati, credenziale `servizio-isi` configurata, utenti dei gruppi `sede-tosca
 
 | # | Entra come | Fai | Devi vedere | ✓ |
 |---|---|---|---|---|
-| 1 | marco (impresa) | Nuova pratica → Bando ISI: domanda di finanziamento, codice fiscale `01234560789`, titolo a piacere | "Compila la domanda" nella scrivania, ragione sociale "Carpenterie Rossi S.r.l." già scritta | ☐ |
+| 1 | marco (impresa) | Nuova pratica → Bando ISI: domanda di finanziamento, codice fiscale `01234560785`, titolo a piacere | "Compila la domanda" nella scrivania, ragione sociale "Carpenterie Rossi S.r.l." già scritta | ☐ |
 | 2 | marco | Apri "Compila la domanda": scorri i passi, cambia l'**Asse** tra 2, 3, 4 e 5.1 | compaiono solo i campi dell'asse scelto; l'Asse 5 mostra Bene 1 e la casella per il Bene 2 | ☐ |
 | 3 | marco | Compila con i dati A, **Calcola e salva** | la domanda torna nella scrivania con "Punteggio 201 su soglia 130 · contributo 70.200,00 € · registrabile", dettaglio del punteggio e degli importi, elenco dei documenti | ☐ |
 | 4 | marco | Togli una dichiarazione, **Calcola e salva** | in **Errori che bloccano la registrazione** "Manca la dichiarazione R-REQ-…" | ☐ |
@@ -35,7 +35,7 @@ importati, credenziale `servizio-isi` configurata, utenti dei gruppi `sede-tosca
 |---|---|
 | A (TC-01) | ATECO 25.11, Impresa, INAIL, iscrizione CCIAA 01/03/2010, associazione al portale 10/01/2026, Toscana, ULA 8, fatturato 1.500.000, dipendenti 8 e 8, Asse 2 tipologia a, tasso 60, Ente bilaterale, RLS, ISO 45001, spese di progetto 100.000, spese tecniche 8.000, anticipo, tutte le dichiarazioni |
 | B (TC-02) | come A ma ULA 60, fatturato 40.000.000, tasso 10, iscrizione 2005, Asse 1.1 tipologia b, parti sociali Nessuna, senza RLS e certificazioni → 89 punti |
-| Imprese INAIL finte | `01234560789` Carpenterie Rossi, `02345670890` Azienda agricola Verdi (Asse 3 e 5), `03456780901` Falegnameria Bianchi (Asse 4) |
+| Imprese INAIL finte | `01234560785` Carpenterie Rossi, `02345670893` Azienda agricola Verdi (Asse 3 e 5), `03456780901` Falegnameria Bianchi (Asse 4) |
 | Codici fiscali | legale rappresentante `RSSMRA70A01D612W`, tecnico `VRDLGU75B02H501X` |
 
 ## Non provato in automatico

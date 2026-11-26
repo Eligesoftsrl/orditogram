@@ -38,7 +38,7 @@ class ServizioHttpTest {
         assertThat(r.getBody().get("contributoTotaleTesto")).isEqualTo("70.200,00 €");
         assertThat(r.getBody().get("modelloPerizia")).isEqualTo("B2");
 
-        r = chiama(HttpMethod.GET, "/impresa?codiceFiscale=01234560789", null, "segreto-di-prova");
+        r = chiama(HttpMethod.GET, "/impresa?codiceFiscale=01234560785", null, "segreto-di-prova");
         assertThat(r.getBody().get("ragioneSociale")).isEqualTo("Carpenterie Rossi S.r.l.");
 
         r = chiama(HttpMethod.POST, "/calcola", d, "sbagliato");

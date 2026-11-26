@@ -567,8 +567,10 @@
       "name": "titoloProgetto",
       "label": "Titolo del progetto",
       "type": "text",
+      "titolo": true,
       "maxLunghezza": 200,
-      "visibileAlleParti": true
+      "visibileAlleParti": true,
+      "help": "È anche il titolo della pratica: se lo cambi, cambia nella scrivania e nelle ricerche."
     },
     {
       "name": "descrizioneProgetto",

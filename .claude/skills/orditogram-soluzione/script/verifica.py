@@ -601,6 +601,12 @@ def analizza_bpmn(path, forms, pb, credenziali, processi_pubblicati):
             pb.errore("Il form \"%s\" non esiste: crealo o scegline un altro" % fk, el)
     for fk in forms:
         if fk not in definizioni: pb.avviso("Il form \"%s\" non è usato dal processo: non finirà nel pacchetto" % fk)
+    # "carica" funziona solo nel form di avvio: in un'attività la persona non vedrebbe dove allegare i file
+    for t in compiti:
+        d = definizioni.get(t.el.get(q(ACT, "formKey")))
+        if d and d.get("documenti") == "carica":
+            pb.avviso(t.descrivi() + ": \"documenti\": \"carica\" vale solo nel form di avvio, qui non si potrebbe "
+                      "allegare niente. Usa \"modifica\"", t.id)
     # processo di livello: un'attività per passo, mai tutto in una schermata (regola della skill, non del backend)
     for t in compiti:
         d = definizioni.get(t.el.get(q(ACT, "formKey")))

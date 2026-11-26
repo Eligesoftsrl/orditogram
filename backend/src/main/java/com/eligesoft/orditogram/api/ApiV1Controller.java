@@ -498,7 +498,7 @@ public class ApiV1Controller {
             if (k.endsWith(AnagraficheNellePratiche.SUFFISSO_DATI) && x instanceof Map) return;
             if (x instanceof String || x instanceof Number || x instanceof Boolean || x instanceof Date
                 || x instanceof java.time.temporal.Temporal || x instanceof JsonNode
-                || x instanceof Map || x instanceof Collection) out.put(k, x);
+                || x instanceof Map || x instanceof Collection) out.put(k, com.eligesoft.orditogram.connettore.Testi.leggibile(x));
             else out.put(k, x.toString());
         });
         return out;

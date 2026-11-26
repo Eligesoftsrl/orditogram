@@ -45,6 +45,7 @@ import java.util.*;
 public class BpmController {
 
     private final TaskRuntime taskRuntime;
+    private final org.activiti.engine.TaskService taskService;
     private final RepositoryService repositoryService;
     private final RuntimeService runtimeService;
     private final CurrentUserService currentUser;
@@ -60,7 +61,7 @@ public class BpmController {
     private final com.eligesoft.orditogram.storico.CampiVisibili campiVisibili;
     private final com.eligesoft.orditogram.anagrafica.AnagraficheNellePratiche anagrafiche;
 
-    public BpmController(TaskRuntime taskRuntime,
+    public BpmController(TaskRuntime taskRuntime, org.activiti.engine.TaskService taskService,
                          RepositoryService repositoryService, RuntimeService runtimeService,
                          CurrentUserService currentUser, FormService forms, BpmnResourceService bpmn,
                          StoricoService storico, DocumentoService documenti, ScadenzeService scadenze,
@@ -75,6 +76,7 @@ public class BpmController {
         this.permessiProcesso = permessiProcesso;
         this.praticaStruttura = praticaStruttura;
         this.taskRuntime = taskRuntime;
+        this.taskService = taskService;
         this.repositoryService = repositoryService;
         this.runtimeService = runtimeService;
         this.currentUser = currentUser;
@@ -207,7 +209,7 @@ public class BpmController {
         Task task = taskRuntime.task(id);
         Map<String, Object> variables = new HashMap<>();
         taskRuntime.variables(TaskPayloadBuilder.variables().withTaskId(id).build())
-            .forEach(v -> variables.put(v.getName(), v.getValue()));
+            .forEach(v -> variables.put(v.getName(), com.eligesoft.orditogram.connettore.Testi.leggibile(v.getValue())));
 
         JsonNode form = forms.perPratica(task.getProcessInstanceId(), task.getFormKey());
         // solo i dati che l'utente può vedere, più quelli del form dell'attività (vedi storico/CampiVisibili)
@@ -299,9 +301,16 @@ public class BpmController {
         parti.registra(task.getProcessInstanceId(), partiNuove);
         anagrafiche.registra(task.getProcessInstanceId(), schedeScelte, currentUser.username());
 
+        // un campo "titolo" in un form di attività aggiorna il titolo della pratica (es. il titolo del progetto
+        // cambiato durante la compilazione)
+        titoloDaAttivita(form, vars).ifPresent(t -> runtimeService.setProcessInstanceName(task.getProcessInstanceId(), t));
+
         vars.put("chiusaDa", currentUser.current().getFullName());
         vars.put("chiusaIl", OffsetDateTime.now().toString());
-        taskRuntime.complete(TaskPayloadBuilder.complete().withTaskId(id).withVariables(vars).build());
+        // TaskService e non TaskRuntime.complete: TaskRuntime trasforma in java.util.Date ogni testo che sembra una
+        // data ("2010-03-01"), e la pratica si ritroverebbe date illeggibili. Il controllo di TaskRuntime (attività in
+        // carico a chi completa) resta qui sopra: l'attività è appena stata presa in carico da questo utente.
+        taskService.complete(id, vars, true);
         return Map.of("completed", id, "chiusaDa", vars.get("chiusaDa"));
     }
 
@@ -340,6 +349,17 @@ public class BpmController {
     private void controllaRegole(JsonNode form, Map<String, Object> vars, Map<String, Object> pratica) {
         List<ValoriForm.Errore> errori = ValoriForm.erroriRegole(form, vars, pratica, LocalDate.now());
         if (!errori.isEmpty()) throw bad("Controlla i campi: " + ValoriForm.descriviErrori(form, errori));
+    }
+
+    /** Il valore del campo marcato "titolo" se l'attività lo ha compilato. */
+    static java.util.Optional<String> titoloDaAttivita(JsonNode form, Map<String, Object> vars) {
+        if (form == null) return java.util.Optional.empty();
+        for (JsonNode f : form.path("fields")) {
+            if (!f.path("titolo").asBoolean(false) || f.path("readonly").asBoolean(false)) continue;
+            Object v = vars.get(f.path("name").asText());
+            if (v instanceof String s && !s.isBlank()) return java.util.Optional.of(s.trim());
+        }
+        return java.util.Optional.empty();
     }
 
     private String titoloPratica(JsonNode form, Map<String, Object> vars, ProcessDefinition def) {

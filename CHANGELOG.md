@@ -29,6 +29,18 @@ la MAGGIORE quando un aggiornamento richiede interventi (indicati qui sotto).
 - Collaudo: 21 scenari su 21, 112 passi su 117 (restano fuori 5 strade "servizio non disponibile" uguali a
   quelle provate). Servizio ISI: 40 test.
 - **Grafica**: menu laterale chiaro e intestazione blu, come nella proposta approvata (il menu era diventato scuro).
+- **Date nelle attività** (nucleo): una data scritta in un'attività restava salvata come data Java e la scheda
+  della pratica riceveva "Mon Feb 15 01:00:00 CET 2010", che l'interfaccia non sapeva leggere (pagina bianca).
+  Ora resta testo ISO (`2010-02-15`) come all'avvio; le date già salvate nelle pratiche vecchie escono in ISO
+  da scheda, attività, API pubblica e connettori, e l'interfaccia mostra com'è un valore che non è una data
+  invece di fermarsi.
+- **Titolo della pratica dalle attività** (nucleo): un campo `"titolo": true` nel form di un'attività aggiorna il
+  titolo della pratica (scrivania, ricerche, storico).
+- Bando ISI: allegati nelle attività con `"documenti": "modifica"` (con `carica` non si poteva allegare niente),
+  partite IVA delle imprese finte valide (`01234560785`, `02345670893`), il titolo del progetto cambiato nel passo
+  "Scegli asse e progetto" diventa il titolo della pratica. Test nel browser nuovo: attività con data e allegato,
+  poi la scheda della pratica.
+- Skill: `verifica.py` avvisa di `"documenti": "carica"` nei form delle attività.
 - **Skill**: il BPMN è sempre di livello enterprise, un'attività per passo con decisioni, ritorni e avvisi
   (`riferimenti/bpmn.md`, "Processi di livello", con gli esempi da evitare); `verifica.py` avvisa quando un form
   ha troppi campi o sezioni o il processo ha una sola attività con un form lungo, e accetta lo stesso campo con

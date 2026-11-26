@@ -132,6 +132,9 @@ domande aperte, richieste di sviluppo per Orditogram, dove sono pacchetto, check
 
 ## Errori frequenti
 
+- `"documenti": "carica"` nel form di un'attività: vale solo all'avvio, nell'attività non si allega niente. Usa `"modifica"`.
+- Date di prova o codici fiscali/partite IVA di prova non validi: i form li rifiutano (`formato: "partitaIva"`).
+  Usa valori con la cifra di controllo giusta.
 - Processo "compitino": una sola attività con un form lunghissimo e la scelta dell'azione in fondo. Dividi in passi.
 
 - Opzione di un `select` scritta diversamente nella condizione (`'Accolta'` vs `'Accolto'`): la strada non si prende mai.
