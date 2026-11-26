@@ -9,6 +9,7 @@ import Approfondimenti from '../components/Approfondimenti.jsx'
 import { Badge, Button, Caricamento, Dialogo, Errore, Menu, Pannello, Tessera, useToast } from '../components/ui.jsx'
 import { BadgeScadenza } from '../components/Scadenza.jsx'
 import { TabellaLettura } from '../components/CampoTabella.jsx'
+import { gl } from '../lib/glossario.js'
 
 /** Scheda di una pratica: dove si trova, i suoi dati, documenti e storico. */
 export default function PraticaPage() {
@@ -59,7 +60,7 @@ export default function PraticaPage() {
             <Menu etichetta="Altre azioni" icona={MoreHorizontal} voci={[
               ...messaggi.map(m => ({ label: `Registra arrivo: ${m.elemento}`, icona: Inbox, onClick: () => setDaConfermare(m) })),
               { label: 'Copia il collegamento', icona: Link2, onClick: () => navigator.clipboard?.writeText(window.location.href).then(() => toast.ok('Collegamento copiato'), () => toast.errore('Non riesco a copiare il collegamento')) },
-              { label: 'Stampa la pratica', icona: Printer, onClick: () => window.print() }
+              { label: `Stampa ${gl('pratica', 'il')}`, icona: Printer, onClick: () => window.print() }
             ]} />
             {p.taskId && (
               <Link to={`/attivita/${p.taskId}`}
@@ -116,7 +117,7 @@ export default function PraticaPage() {
                     <Hourglass className="mt-0.5 size-4 shrink-0 text-grafite" />
                     <div>
                       <p className="font-medium text-pino-900">{a.nome}</p>
-                      <p className="text-sm text-grafite">La pratica è in attesa e riprende da sola il {quando(a.quando)}</p>
+                      <p className="text-sm text-grafite">{gl('pratica', 'Il')} è in attesa e riprende da sola il {quando(a.quando)}</p>
                     </div>
                   </li>
                 ))}
@@ -124,7 +125,7 @@ export default function PraticaPage() {
             </Pannello>
           )}
 
-          <Pannello titolo="Dati della pratica">
+          <Pannello titolo={`Dati ${gl('pratica', 'del')}`}>
             {p.dati.length === 0
               ? <p className="text-grafite">Nessun dato registrato.</p>
               : (
@@ -158,8 +159,8 @@ export default function PraticaPage() {
       <Dialogo aperto={!!daConfermare} onClose={() => setDaConfermare(null)} larghezza="max-w-lg"
                titolo={daConfermare ? `Registrare l'arrivo di "${daConfermare.elemento}"?` : ''}>
         <div className="space-y-4">
-          <p className="text-pino-800">La pratica prosegue subito dal punto previsto nel processo, come se il messaggio fosse arrivato da un sistema esterno.</p>
-          <p className="rounded-blocco bg-carta px-3 py-2 text-sm text-grafite">Resta nello storico della pratica con il tuo nome e l'ora.</p>
+          <p className="text-pino-800">{gl('pratica', 'Il')} prosegue subito dal punto previsto nel processo, come se il messaggio fosse arrivato da un sistema esterno.</p>
+          <p className="rounded-blocco bg-carta px-3 py-2 text-sm text-grafite">Resta nello storico {gl('pratica', 'del')} con il tuo nome e l'ora.</p>
           <div className="flex flex-wrap justify-end gap-2">
             <Button onClick={() => setDaConfermare(null)}>Annulla</Button>
             <Button variante="primario" icona={Inbox} onClick={() => registra(daConfermare)}>Registra l'arrivo</Button>
@@ -182,11 +183,11 @@ function TesserePratica({ p }) {
   const parti = p.parti || []
   const durata = Math.max(0, Math.floor(((conclusa ? new Date(p.fine) : new Date()) - new Date(p.inizio)) / GIORNO))
   return (
-    <div className="in-sequenza grid gap-4 sm:grid-cols-3" aria-label="La pratica in breve">
+    <div className="in-sequenza grid gap-4 sm:grid-cols-3" aria-label={`${gl('pratica', 'Il')} in breve`}>
       <Tessera tono={tonoTermine} icona={Timer} etichetta={s ? (s.nome && s.nome !== 'Scadenza' ? s.nome : 'Termine') : 'Termine'}
                valore={s ? giorni : '—'}
                pastiglia={s ? (manca <= 0 ? (giorni === 1 ? 'giorno di ritardo' : 'giorni di ritardo') : giorni === 1 ? 'ultimo giorno' : 'giorni rimasti') : null}
-               nota={s ? (manca <= 0 ? `scaduto il ${quando(s.quando)}` : `scade il ${quando(s.quando)}`) : conclusa ? 'pratica conclusa' : 'nessun termine in corso'} />
+               nota={s ? (manca <= 0 ? `scaduto il ${quando(s.quando)}` : `scade il ${quando(s.quando)}`) : conclusa ? `${gl('pratica', 'nome')} ${gl.agg('pratica', 'conclus')}` : 'nessun termine in corso'} />
       <Tessera tono="lilla" icona={Users} etichetta="Chi la riguarda" valore={parti.length || (p.avviataDa ? 1 : 0)}
                nota={parti.length ? parti.map(x => [x.utente, x.organizzazione].filter(Boolean).join(', ')).join(' · ') : p.avviataDa ? `avviata da ${p.avviataDa}` : 'nessuna parte'} />
       <Tessera tono="neutro" icona={CalendarClock} etichetta={conclusa ? 'Durata' : 'Aperta da'} valore={durata}
@@ -270,10 +271,10 @@ function Collegate({ madre, figlie }) {
     </li>
   )
   return (
-    <Pannello titolo="Pratiche collegate">
+    <Pannello titolo={`${gl('pratica', 'Nomi')} ${gl.agg('pratica', 'collegat', true)}`}>
       <ul className="space-y-2">
-        {madre && voce(madre, 'Pratica che ha aperto questa')}
-        {figlie.map(f => voce(f, 'Aperta da questa pratica'))}
+        {madre && voce(madre, `${gl('pratica', 'Nome')} che ha aperto questa`)}
+        {figlie.map(f => voce(f, `Apert${gl.agg('pratica', '')} da quest${gl.agg('pratica', '')} ${gl('pratica', 'nome')}`))}
       </ul>
     </Pannello>
   )
@@ -282,7 +283,7 @@ function Collegate({ madre, figlie }) {
 function Indietro() {
   return (
     <Link to="/pratiche" className="inline-flex items-center gap-1.5 text-sm font-medium text-grafite hover:text-pino-900">
-      <ArrowLeft className="size-4" /> Pratiche
+      <ArrowLeft className="size-4" /> {gl('pratica', 'Nomi')}
     </Link>
   )
 }

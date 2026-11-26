@@ -4,6 +4,7 @@ import { api } from '../../api.js'
 import { dataOraCompleta, quando } from '../../lib/format.js'
 import { Badge, Caricamento, Errore, Vuoto } from '../../components/ui.jsx'
 import Esporta from '../../components/Esporta.jsx'
+import { gl } from '../../lib/glossario.js'
 
 export const AZIONI = {
   PROCESSO_PUBBLICATO: ['Processo pubblicato', 'verde'],
@@ -62,7 +63,7 @@ export default function Registro() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Registro</h1>
-          <p className="mt-1 max-w-2xl text-grafite">Chi ha pubblicato processi, modificato form e utenti, importato pacchetti; gli accessi negati. Le azioni sulle pratiche sono nello storico di ciascuna pratica.</p>
+          <p className="mt-1 max-w-2xl text-grafite">Chi ha pubblicato processi, modificato form e utenti, importato pacchetti; gli accessi negati. Le azioni su {gl('pratica', 'i')} sono nello storico di ciascuno.</p>
         </div>
         <Esporta nome="registro" titolo="Registro delle azioni" disabled={!totale}
                  sottotitolo={[azione && etichetta(azione), q && `ricerca "${q}"`].filter(Boolean).join(', ')}

@@ -63,6 +63,34 @@ public class GlossarioService {
         return repo.findById(t.chiave()).map(TermineGlossario::getSingolare).orElse(t.singolare());
     }
 
+    /** Prima lettera maiuscola. */
+    public static String maiuscola(String s) {
+        return s == null || s.isEmpty() ? s : Character.toUpperCase(s.charAt(0)) + s.substring(1);
+    }
+
+    /**
+     * La parola con l'articolo, per i testi del server (stesse regole di lib/glossario.js):
+     * "il" → "la pratica" / "il ticket" / "l'istanza", "del" → "della pratica" / "del ticket".
+     */
+    @Transactional(readOnly = true)
+    public String conArticolo(Termine t, boolean di) {
+        TermineGlossario s = repo.findById(t.chiave()).orElse(null);
+        String parola = s != null ? s.getSingolare() : t.singolare();
+        boolean f = "F".equals(s != null ? s.getGenere() : t.genere());
+        boolean vocale = parola.matches("(?iu)^[aeiouàèéìòóùh].*") && !parola.matches("(?iu)^i[aeiou].*");
+        boolean impura = parola.matches("(?iu)^(s[^aeiouàèéìòóù]|z|gn|ps|pn|x|y|i[aeiou]).*");
+        String art = vocale ? "l'" : f ? "la" : impura ? "lo" : "il";
+        if (di) art = switch (art) { case "l'" -> "dell'"; case "la" -> "della"; case "lo" -> "dello"; default -> "del"; };
+        return art.endsWith("'") ? art + parola : art + " " + parola;
+    }
+
+    /** Desinenza di un aggettivo in -o/-a accordato al termine: radice "trovat" → "trovata" / "trovato". */
+    @Transactional(readOnly = true)
+    public String accorda(Termine t, String radice) {
+        String genere = repo.findById(t.chiave()).map(TermineGlossario::getGenere).orElse(t.genere());
+        return radice + ("F".equals(genere) ? "a" : "o");
+    }
+
     /**
      * Salva le parole indicate; un termine uguale al predefinito (o senza parole) torna predefinito.
      * Termini sconosciuti o parole non valide: 400, e non si salva niente.

@@ -5,6 +5,7 @@ import { useAuth } from '../lib/auth.jsx'
 import Logo from '../components/Logo.jsx'
 import { Button, Errore } from '../components/ui.jsx'
 import { useGlossario } from '../lib/useGlossario.jsx'
+import { gl } from '../lib/glossario.js'
 
 const FERMATE = ['Avvio', 'Verifica', 'Revisione', 'Accettata']
 
@@ -49,7 +50,7 @@ export default function Login() {
         <Logo />
         <div className="my-auto max-w-xl">
           <h1 className="font-display text-[56px] font-semibold leading-[1.02] tracking-[-0.03em]">
-            Ogni pratica<br />sa dove si trova.
+            Ogni {gl('pratica')}<br />sa dove si trova.
           </h1>
           <p className="mt-5 max-w-md text-lg leading-relaxed text-pino-200">
             Disegni il processo, Orditogram lo fa funzionare: attività, documenti firmati, notifiche e storico, senza scrivere codice.

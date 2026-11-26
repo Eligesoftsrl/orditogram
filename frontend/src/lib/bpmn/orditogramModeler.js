@@ -1,4 +1,5 @@
 import { is } from 'bpmn-js/lib/util/ModelUtil'
+import { gl } from '../glossario.js'
 
 /**
  * Personalizzazioni del modeler bpmn-js per Orditogram:
@@ -31,13 +32,13 @@ class OrditogramPalette {
       out['create.user-task'] = this.voce('bpmn:UserTask', 'bpmn-icon-user-task', 'Attività di una persona', 'activity')
       out['create.service-task'] = this.voce('bpmn:ServiceTask', 'bpmn-icon-service-task', 'Attività automatica', 'activity')
       out['create.call-activity'] = this.voce('bpmn:CallActivity', 'bpmn-icon-call-activity',
-        'Processo richiamato: apre una pratica di un altro processo pubblicato e aspetta che finisca', 'activity')
+        `Processo richiamato: apre ${gl('pratica', 'un')} di un altro processo pubblicato e aspetta che finisca`, 'activity')
       if (entries['create.subprocess-expanded']) out['create.subprocess-expanded'] = { ...entries['create.subprocess-expanded'], title: 'Sottoprocesso: un gruppo di passi con scadenze ed errori comuni' }
       out['create.attesa'] = this.voce('bpmn:IntermediateCatchEvent', 'bpmn-icon-intermediate-event-catch-timer',
-        'Attesa: la pratica aspetta un tempo o una data (trascinala sul bordo di un\'attività per farne una scadenza)', 'event',
+        `Attesa: ${gl('pratica', 'il')} aspetta un tempo o una data (trascinala sul bordo di un'attività per farne una scadenza)`, 'event',
         { eventDefinitionType: 'bpmn:TimerEventDefinition' })
       out['create.messaggio'] = this.voce('bpmn:IntermediateCatchEvent', 'bpmn-icon-intermediate-event-catch-message',
-        'Messaggio in arrivo: la pratica aspetta un segnale da un sistema esterno o da un operatore (sul bordo di un\'attività la fa deviare)', 'event',
+        `Messaggio in arrivo: ${gl('pratica', 'il')} aspetta un segnale da un sistema esterno o da un operatore (sul bordo di un'attività la fa deviare)`, 'event',
         { eventDefinitionType: 'bpmn:MessageEventDefinition' })
       return out
     }

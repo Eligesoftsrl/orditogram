@@ -10,6 +10,7 @@ import Logo from './Logo.jsx'
 import NotificationBell from './NotificationBell.jsx'
 import StartDialog from './StartDialog.jsx'
 import { Avatar, Button } from './ui.jsx'
+import { gl, nuovaPratica } from '../lib/glossario.js'
 
 const AvvioContext = createContext(() => {})
 /** Apre la finestra "Nuova pratica" da qualunque pagina. */
@@ -34,7 +35,7 @@ export default function Shell() {
 
   const nav = [
     { to: '/', label: 'Scrivania', icona: Inbox, end: true },
-    { to: '/pratiche', label: 'Pratiche', icona: FolderOpen },
+    { to: '/pratiche', label: gl('pratica', 'Nomi'), icona: FolderOpen },
     ...(conAnagrafiche ? [{ to: '/anagrafiche', label: 'Anagrafiche', icona: BookUser }] : []),
     // il referente gestisce le persone della sua organizzazione
     ...(me.referenteDi?.length ? [{ to: '/organizzazione', label: 'La mia organizzazione', icona: Briefcase }] : [])
@@ -64,9 +65,9 @@ export default function Shell() {
       </div>
 
       <Button variante="primario" icona={Plus} className={cx('mt-7', ridotta ? 'mx-auto w-11 px-0' : 'mx-1')}
-              aria-label={ridotta ? 'Nuova pratica' : undefined} title={ridotta ? 'Nuova pratica' : undefined}
+              aria-label={ridotta ? nuovaPratica() : undefined} title={ridotta ? nuovaPratica() : undefined}
               onClick={() => { setMenu(false); apriAvvio() }}>
-        {!ridotta && 'Nuova pratica'}
+        {!ridotta && nuovaPratica()}
       </Button>
 
       <nav className="mt-6 space-y-1" aria-label="Lavoro">

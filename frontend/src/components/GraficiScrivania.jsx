@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { CalendarClock, ChartColumn, Gauge, Route, Table2 } from 'lucide-react'
 import { cx } from '../lib/format.js'
 import { altezzaBarra, etichettaGiorno, etichettaSettimana, fasceAvanzamento } from '../lib/grafici.js'
+import { gl } from '../lib/glossario.js'
 
 /**
  * I grafici della scrivania, sui numeri delle sole pratiche che l'utente vede (GET /api/pratiche/indicatori).
@@ -13,7 +14,7 @@ export default function GraficiScrivania({ dati }) {
   if (!dati || (dati.inCorso === 0 && dati.concluse30 === 0)) return null
   return (
     <section aria-labelledby="grafici-titolo" className="space-y-4">
-      <h2 id="grafici-titolo" className="text-xl font-bold">Come vanno le pratiche</h2>
+      <h2 id="grafici-titolo" className="text-xl font-bold">Come vanno {gl('pratica', 'i')}</h2>
       <div className="in-sequenza grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
         <DoveSiTrovano processi={dati.processi} />
         <Avanzamento dati={dati} />
@@ -64,9 +65,9 @@ function DoveSiTrovano({ processi }) {
   const conPratiche = processi.filter(p => p.inCorso > 0).slice(0, 4)
   const righe = conPratiche.flatMap(p => p.passi.map(s => [p.nome, s.nome, s.pratiche]))
   return (
-    <Riquadro titolo="Dove si trovano" icona={Route} sottotitolo="pratiche in corso per passo del flusso"
-              tabella={{ colonne: ['Processo', 'Passo', 'Pratiche'], righe }}>
-      {conPratiche.length === 0 ? <p className="text-grafite">Nessuna pratica in corso.</p> : (
+    <Riquadro titolo="Dove si trovano" icona={Route} sottotitolo={`${gl('pratica', 'nomi')} in corso per passo del flusso`}
+              tabella={{ colonne: ['Processo', 'Passo', gl('pratica', 'Nomi')], righe }}>
+      {conPratiche.length === 0 ? <p className="text-grafite">Niente in corso.</p> : (
         <div className="space-y-6">
           {conPratiche.map(p => {
             const max = Math.max(1, ...p.passi.map(s => s.pratiche))
@@ -86,7 +87,7 @@ function DoveSiTrovano({ processi }) {
                 )}
                 <ol className="space-y-1.5">
                   {p.passi.map((s, i) => (
-                    <li key={s.chiave} className="grid grid-cols-[minmax(0,10rem)_minmax(0,1fr)_2.5rem] items-center gap-3 text-sm" title={`${s.nome}: ${s.pratiche} pratiche`}>
+                    <li key={s.chiave} className="grid grid-cols-[minmax(0,10rem)_minmax(0,1fr)_2.5rem] items-center gap-3 text-sm" title={`${s.nome}: ${s.pratiche} ${gl('pratica', 'nomi')}`}>
                       <span className="truncate text-pino-800">{s.nome}</span>
                       <span className="h-5 rounded-[6px] bg-carta">
                         <span className="cresce-x block h-full rounded-[6px] bg-verde-400" style={{ width: `${(s.pratiche / max) * 100}%`, '--i': i }} />
@@ -112,10 +113,10 @@ function Avanzamento({ dati }) {
   const toni = ['bg-verde-400', 'bg-verde-500', 'bg-verde-600', 'bg-verde-700']
   return (
     <Riquadro titolo="Avanzamento" icona={Gauge} sottotitolo="stima: attività fatte sul totale del processo"
-              tabella={{ colonne: ['Avanzamento', 'Pratiche'], righe: fasce.map(f => [f.etichetta, f.n]) }}>
+              tabella={{ colonne: ['Avanzamento', gl('pratica', 'Nomi')], righe: fasce.map(f => [f.etichetta, f.n]) }}>
       <div className="flex h-40 items-end gap-3" role="img" aria-label={fasce.map(f => `${f.etichetta}: ${f.n}`).join(', ')}>
         {fasce.map((f, i) => (
-          <div key={f.etichetta} className="flex h-full flex-1 flex-col items-center justify-end gap-1.5" title={`${f.etichetta}: ${f.n} pratiche`}>
+          <div key={f.etichetta} className="flex h-full flex-1 flex-col items-center justify-end gap-1.5" title={`${f.etichetta}: ${f.n} ${gl('pratica', 'nomi')}`}>
             <span className="numeri text-sm font-semibold">{f.n}</span>
             <span className={cx('cresce-y block w-full rounded-t-[6px] rounded-b-[2px]', toni[i])} style={{ height: altezzaBarra(f.n, max, 110), '--i': i }} />
             <span className="text-[13px] text-grafite">{f.etichetta}</span>

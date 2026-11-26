@@ -3,6 +3,7 @@ import { Plus, Trash2 } from 'lucide-react'
 import { api } from '../api.js'
 import { AMBITI, AZIONI_PROCESSO } from '../lib/permessi.js'
 import { Button, Caricamento, Dialogo, Errore, useToast } from './ui.jsx'
+import { gl } from '../lib/glossario.js'
 
 /**
  * Studio → Processi → Accesso: chi avvia il processo, chi vede tutte le sue pratiche (con l'ambito) e chi le esporta.
@@ -56,7 +57,7 @@ export default function AccessoProcesso({ aperto, onClose, processo, onSalvato }
                 <p className="text-[13px] text-grafite">{a.aiuto}</p>
                 {righe.length === 0 && (
                   <p className="rounded-campo bg-carta px-3 py-2 text-sm text-grafite">
-                    {a.codice === 'AVVIA' ? 'Come nel BPMN' : a.codice === 'VEDE' ? 'Nessuno oltre a chi lavora la pratica' : 'Chiunque veda le pratiche'}
+                    {a.codice === 'AVVIA' ? 'Come nel BPMN' : a.codice === 'VEDE' ? `Nessuno oltre a chi lavora ${gl('pratica', 'il')}` : `Chiunque veda ${gl('pratica', 'i')}`}
                   </p>
                 )}
                 {righe.map(({ r, i }) => (
@@ -71,7 +72,7 @@ export default function AccessoProcesso({ aperto, onClose, processo, onSalvato }
                            placeholder={r.tipoSoggetto === 'RUOLO' ? 'es. auditor' : 'es. supervisori'}
                            value={r.soggetto} onChange={e => cambia(i, 'soggetto', e.target.value)} />
                     {a.codice === 'VEDE' && (
-                      <select className="campo h-9 w-auto py-0" aria-label="Quali pratiche" value={r.ambito}
+                      <select className="campo h-9 w-auto py-0" aria-label={`Quali ${gl('pratica', 'nomi')}`} value={r.ambito}
                               onChange={e => cambia(i, 'ambito', e.target.value)}>
                         {AMBITI.map(x => <option key={x.codice} value={x.codice}>{x.nome}</option>)}
                       </select>

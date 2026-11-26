@@ -102,15 +102,17 @@ alle tabelle, Orditogram non parte e il log dice quale colonna manca, invece di 
 ## Glossario (Studio → Glossario)
 
 Orditogram serve aziende, enti pubblici e studi: ognuno chiama le cose a modo suo. L'amministratore sceglie in
-Studio → *Glossario* le parole per tre concetti, con singolare, plurale e genere (maschile o femminile):
+Studio → *Glossario* le parole per quattro concetti, con singolare, plurale e genere (maschile o femminile):
 
 | Termine | Predefinito | Esempi |
 |---|---|---|
 | Chi usa Orditogram | ente | azienda, società, studio, comune |
 | Il personale visto da fuori | Ufficio | Assistenza, Segreteria, Servizio clienti |
 | Chi entra da fuori | cittadino | cliente, fornitore, socio |
+| Il caso che si lavora | pratica | richiesta, ticket, ordine, caso |
 
-L'interfaccia compone da sola gli articoli ("Entra con l'account dell'azienda", "della società", "dello studio").
+L'interfaccia compone da sola articoli e aggettivi ("Entra con l'account dell'azienda", "Nuovo ticket",
+"la richiesta conclusa"). I nomi tecnici dell'API restano quelli (`/api/pratiche`, `pratica.avviata`).
 Le parole valgono subito, anche nella pagina di accesso (`GET /api/info` → `glossario`), e gli utenti esterni
 leggono quella scelta al posto di "Ufficio" nello storico e nei documenti. Le modifiche vanno nel registro.
 Svuotando un termine si torna al predefinito.

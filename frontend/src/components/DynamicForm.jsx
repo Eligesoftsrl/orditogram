@@ -8,6 +8,7 @@ import { Button, Dialogo, Errore } from './ui.jsx'
 import { campiNascosti, eSezione, raggruppa, senzaNascosti } from '../lib/formCondizioni.js'
 import { erroriForm, righePiene } from '../lib/formRegole.js'
 import { CampoTabella, PrefissoId, TabellaLettura, righeIniziali } from './CampoTabella.jsx'
+import { gl } from '../lib/glossario.js'
 
 /**
  * Form generato dalla definizione JSON (formKey del BPMN).
@@ -353,7 +354,7 @@ export function CampoAnagrafica({ f, value, onChange, disabled, errore, nomeIniz
           <select id={id} className={cx('campo', errore && 'border-mattone-600!')} value={value ?? ''} disabled={disabled}
                   aria-invalid={errore ? true : undefined} aria-describedby={descritto}
                   onChange={e => scegli(opzioni.find(x => String(x.id) === e.target.value))}>
-            <option value="">{anteprima ? 'Le schede si scelgono nella pratica' : opzioni.length ? 'Scegli…' : 'Nessuna scheda trovata'}</option>
+            <option value="">{anteprima ? `Le schede si scelgono ${gl('pratica', 'nel')}` : opzioni.length ? 'Scegli…' : 'Nessuna scheda trovata'}</option>
             {opzioni.map(o => <option key={o.id} value={String(o.id)}>{o.titolo}</option>)}
           </select>
         </label>

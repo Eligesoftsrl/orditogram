@@ -59,7 +59,8 @@ class GlossarioIntegrationTest {
     @Test
     void predefinitiLeggibiliDaTutti() {
         Map<String, Map<String, String>> g = glossarioPubblico();
-        assertThat(g).containsKeys("ente", "ufficio", "esterno");
+        assertThat(g).containsKeys("ente", "ufficio", "esterno", "pratica");
+        assertThat(g.get("pratica")).containsEntry("singolare", "pratica").containsEntry("genere", "F");
         assertThat(g.get("ente")).containsEntry("singolare", "ente").containsEntry("genere", "M");
         assertThat(g.get("ufficio")).containsEntry("singolare", "Ufficio");
         assertThat(g.get("esterno")).containsEntry("plurale", "cittadini");
@@ -92,12 +93,25 @@ class GlossarioIntegrationTest {
     void paroleNonValideOTerminiSconosciutiRifiutati() {
         assertThat(stato("admin", Map.of("ente", Map.of("singolare", "<b>ente</b>", "plurale", "enti", "genere", "M")))).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(stato("admin", Map.of("ente", Map.of("singolare", "ditta", "plurale", "ditte", "genere", "X")))).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(stato("admin", Map.of("pratica", Map.of("singolare", "ticket", "plurale", "ticket", "genere", "M")))).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(stato("admin", Map.of("fattura", Map.of("singolare", "fattura", "plurale", "fatture", "genere", "F")))).isEqualTo(HttpStatus.BAD_REQUEST);
         // tutto o niente: con un termine sbagliato non si salva neanche quello giusto
         assertThat(stato("admin", Map.of(
             "esterno", Map.of("singolare", "socio", "plurale", "soci", "genere", "M"),
             "ufficio", Map.of("singolare", "", "plurale", "x", "genere", "M")))).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(glossarioPubblico().get("esterno")).containsEntry("singolare", "cittadino");
+    }
+
+    @Test
+    void iMessaggiDelServerUsanoLaParolaScelta() {
+        String url = "/api/pratiche/non-esiste";
+        String prima = rest.withBasicAuth("admin", "admin").exchange(url, HttpMethod.GET, new HttpEntity<>(xhr()), String.class).getBody();
+        assertThat(prima).contains("Pratica non trovata");
+
+        assertThat(salva("admin", Map.of("pratica", Map.of("singolare", "ticket", "plurale", "ticket", "genere", "M")))
+            .getStatusCode()).isEqualTo(HttpStatus.OK);
+        ResponseEntity<String> dopo = rest.withBasicAuth("admin", "admin").exchange(url, HttpMethod.GET, new HttpEntity<>(xhr()), String.class);
+        assertThat(dopo.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(dopo.getBody()).contains("Ticket non trovato");
     }
 
     @Test

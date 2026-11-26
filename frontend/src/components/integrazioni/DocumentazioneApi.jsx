@@ -5,13 +5,14 @@ import { cx } from '../../lib/format.js'
 import { VERIFICA_FIRMA, campi, codice, compilaPercorso, esempio, sezioni } from '../../lib/openapi.js'
 import { Badge, Button, Caricamento, Errore } from '../ui.jsx'
 import { Codice, CodiceASchede, Copia, Metodo, Testo } from './comuni.jsx'
+import { gl } from '../../lib/glossario.js'
 
 const ERRORI = [
   ['400', 'richiesta_non_valida', 'Il corpo non è JSON valido o manca qualcosa (es. il processo)'],
   ['401', 'chiave_mancante / chiave_non_valida', 'Chiave assente, sbagliata, scaduta, sospesa o revocata'],
   ['403', 'permesso_mancante', 'La chiave non ha il permesso necessario'],
   ['404', 'non_trovato', 'Non esiste, oppure la chiave non può vederlo (processo non consentito)'],
-  ['409', 'conflitto', 'Operazione non possibile ora (es. pratica conclusa, messaggio non atteso)'],
+  ['409', 'conflitto', `Operazione non possibile ora (es. ${gl('pratica', 'nome')} ${gl.agg('pratica', 'conclus')}, messaggio non atteso)`],
   ['422', 'dati_non_validi', 'Dati di avvio non validi: l\'elenco completo è in errore.campi'],
   ['429', 'troppe_richieste', 'Limite di richieste al minuto superato: riprova dopo Retry-After secondi']
 ]
@@ -103,8 +104,8 @@ export default function DocumentazioneApi({ panoramica }) {
           <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
             {[
               ['1', 'Crea una chiave', 'In "Chiavi API", con i permessi che servono al sistema.'],
-              ['2', 'Avvia una pratica', 'POST sul percorso del processo, con i dati del form di avvio.'],
-              ['3', 'Segui la pratica', 'Leggi lo stato, oppure ricevi gli avvisi con un webhook.']
+              ['2', `Avvia ${gl('pratica', 'un')}`, 'POST sul percorso del processo, con i dati del form di avvio.'],
+              ['3', `Segui ${gl('pratica', 'il')}`, 'Leggi lo stato, oppure ricevi gli avvisi con un webhook.']
             ].map(([n, t, d]) => (
               <div key={n} className="flex gap-3 rounded-campo bg-carta p-3">
                 <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-verde-600 text-sm font-semibold text-white">{n}</span>
@@ -288,7 +289,7 @@ function Prova({ op, chiave, esempioCorpo }) {
       )}
       <div className="flex items-center gap-3">
         <Button misura="sm" variante="primario" icona={Play} attesa={attesa} onClick={invia}>Invia</Button>
-        {op.metodo === 'POST' && <span className="text-xs text-grafite">Attenzione: la chiamata è vera (crea pratiche, consegna messaggi).</span>}
+        {op.metodo === 'POST' && <span className="text-xs text-grafite">Attenzione: la chiamata è vera (crea {gl('pratica', 'nomi')}, consegna messaggi).</span>}
       </div>
       <Errore>{errore}</Errore>
       {risposta && (

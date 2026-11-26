@@ -5,6 +5,7 @@ import { cx } from '../../lib/format.js'
 import { codiceDa } from '../../lib/permessi.js'
 import { Badge, Button, Caricamento, Errore, Pannello, Vuoto, useToast } from '../../components/ui.jsx'
 import { useGlossario } from '../../lib/useGlossario.jsx'
+import { gl } from '../../lib/glossario.js'
 
 const VUOTA = { id: null, codice: '', nome: '', codiceFiscale: '', attiva: true }
 
@@ -68,8 +69,8 @@ export default function Organizzazioni() {
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Organizzazioni</h1>
           <p className="mt-1 max-w-2xl text-grafite">
-            Enti, aziende e studi esterni che possono essere parti delle pratiche. I loro utenti entrano come utenti
-            esterni: vedono solo le pratiche in cui la loro organizzazione è parte.
+            Enti, aziende e studi esterni che possono essere parti {gl('pratica', 'dei')}. I loro utenti entrano come utenti
+            esterni: vedono solo {gl('pratica', 'i')} in cui la loro organizzazione è parte.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

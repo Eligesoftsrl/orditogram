@@ -5,6 +5,7 @@ import { cx, dataOraCompleta } from '../../lib/format.js'
 import FormEditor from '../../components/FormEditor.jsx'
 import { Button, Caricamento, Errore, Pannello, Vuoto } from '../../components/ui.jsx'
 import Esporta from '../../components/Esporta.jsx'
+import { gl } from '../../lib/glossario.js'
 
 const SENZA_PROCESSO = '__nessuno'
 
@@ -31,7 +32,7 @@ export default function FormStudio() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Form</h1>
-          <p className="mt-1 max-w-2xl text-grafite">Le schermate che gli utenti compilano, raggruppate per tipologia di pratica. Li puoi creare qui o direttamente dall'editor dei processi.</p>
+          <p className="mt-1 max-w-2xl text-grafite">Le schermate che gli utenti compilano, raggruppate per tipologia di {gl('pratica', 'nome')}. Li puoi creare qui o direttamente dall'editor dei processi.</p>
         </div>
         <div className="flex gap-2">
           {lista && (
@@ -62,7 +63,7 @@ export default function FormStudio() {
                 <input className="campo h-9 pl-9" value={cerca} onChange={e => setCerca(e.target.value)}
                        placeholder="Cerca per nome, titolo, processo" aria-label="Cerca form" />
               </div>
-              <p className="mt-2 px-1 text-xs text-grafite">{lista.length} form in {gruppi.filter(g => g.chiave !== SENZA_PROCESSO).length} tipologie di pratica</p>
+              <p className="mt-2 px-1 text-xs text-grafite">{lista.length} form in {gruppi.filter(g => g.chiave !== SENZA_PROCESSO).length} tipologie di {gl('pratica')}</p>
             </div>
             <div className="max-h-[calc(100vh-15rem)] overflow-y-auto py-1">
               {gruppi.length === 0 && <p className="px-4 py-6 text-center text-sm text-grafite">Nessun form trovato.</p>}

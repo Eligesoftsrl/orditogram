@@ -10,6 +10,7 @@ import BpmnViewer from '../../components/BpmnViewer.jsx'
 import { Badge, Button, Caricamento, Dialogo, Errore, Pannello, Vuoto, useToast } from '../../components/ui.jsx'
 import Esporta from '../../components/Esporta.jsx'
 import AccessoProcesso from '../../components/AccessoProcesso.jsx'
+import { gl } from '../../lib/glossario.js'
 
 /** Studio: i processi in produzione e il caricamento di nuovi BPMN, senza riavviare. */
 export default function Processi() {
@@ -67,7 +68,7 @@ export default function Processi() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Processi</h1>
-          <p className="mt-1 max-w-2xl text-grafite">I processi in produzione. Caricane uno nuovo o una nuova versione: le pratiche in corso proseguono sulla versione con cui sono partite.</p>
+          <p className="mt-1 max-w-2xl text-grafite">I processi in produzione. Caricane uno nuovo o una nuova versione: {gl('pratica', 'i')} in corso proseguono sulla versione con cui sono partite.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Esporta nome="processi" titolo="Processi" disabled={!lista} righe={lista || []}
@@ -157,7 +158,7 @@ export default function Processi() {
                 </dl>
                 {regole.some(r => r.azione !== 'AVVIA') && (
                   <p className="text-sm text-grafite">
-                    {regole.some(r => r.azione === 'VEDE') && <>Vedono tutte le pratiche: {regole.filter(r => r.azione === 'VEDE').map(r => descriviRegola(r)).join('; ')}. </>}
+                    {regole.some(r => r.azione === 'VEDE') && <>Vedono tutt{gl.agg('pratica', '', true)} {gl('pratica', 'i')}: {regole.filter(r => r.azione === 'VEDE').map(r => descriviRegola(r)).join('; ')}. </>}
                     {regole.some(r => r.azione === 'ESPORTA') && <>Esportano: {regole.filter(r => r.azione === 'ESPORTA').map(r => descriviRegola(r)).join(', ')}.</>}
                   </p>
                 )}

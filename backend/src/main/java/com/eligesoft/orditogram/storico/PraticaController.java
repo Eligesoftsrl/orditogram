@@ -178,7 +178,7 @@ public class PraticaController {
         access.checkView(pi);
         HistoricProcessInstance h = historyService.createHistoricProcessInstanceQuery()
             .processInstanceId(pi).includeProcessVariables().singleResult();
-        if (h == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Pratica non trovata");
+        if (h == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, nonTrovata());
 
         Vista vista = new Vista(currentUser.current());
         java.util.function.Predicate<String> visibile = campiVisibili.per(vista.utente(), h.getProcessDefinitionId(), pi);
@@ -255,7 +255,7 @@ public class PraticaController {
         access.checkView(pi);
         HistoricProcessInstance h = historyService.createHistoricProcessInstanceQuery()
             .processInstanceId(pi).singleResult();
-        if (h == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Pratica non trovata");
+        if (h == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, nonTrovata());
         List<String> attivi = h.getEndTime() == null ? runtimeService.getActiveActivityIds(pi) : List.of();
         Set<String> percorsi = new LinkedHashSet<>();
         for (HistoricActivityInstance a : historyService.createHistoricActivityInstanceQuery()
@@ -297,6 +297,12 @@ public class PraticaController {
             var def = repositoryService.getProcessDefinition(id);
             return def.getName() != null ? def.getName() : def.getKey();
         });
+    }
+
+    /** "Pratica non trovata", "Ticket non trovato": con la parola del glossario. */
+    private String nonTrovata() {
+        var p = com.eligesoft.orditogram.glossario.Termine.PRATICA;
+        return com.eligesoft.orditogram.glossario.GlossarioService.maiuscola(glossario.singolare(p)) + " non " + glossario.accorda(p, "trovat");
     }
 
     /**

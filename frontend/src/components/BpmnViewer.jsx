@@ -4,6 +4,7 @@ import 'bpmn-js/dist/assets/diagram-js.css'
 import 'bpmn-js/dist/assets/bpmn-js.css'
 import { camminoFinoA, flussiPercorsi, puntoLungo } from '../lib/percorsoBpmn.js'
 import { Errore } from './ui.jsx'
+import { gl } from '../lib/glossario.js'
 
 const fermo = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 const SVG = 'http://www.w3.org/2000/svg'
@@ -88,7 +89,7 @@ export default function BpmnViewer({ xml, attivi = [], fatti = [], altezza = 340
            style={{ height: altezza }} />
       {(attivi.length > 0 || fatti.length > 0) && (
         <div className="mt-3 flex flex-wrap gap-4 text-[13px] text-grafite">
-          <span className="inline-flex items-center gap-1.5"><span className="size-3 animate-respiro rounded-sm border-2 border-verde-700 bg-verde-100" /> la pratica è qui</span>
+          <span className="inline-flex items-center gap-1.5"><span className="size-3 animate-respiro rounded-sm border-2 border-verde-700 bg-verde-100" /> {gl('pratica', 'il')} è qui</span>
           <span className="inline-flex items-center gap-1.5"><span className="size-3 rounded-sm border border-verde-600 bg-verde-50" /> già percorso</span>
           {segnalino && <span className="inline-flex items-center gap-1.5"><span className="size-3 rounded-full border-2 border-white bg-focus ring-1 ring-linea" /> il cammino fatto</span>}
         </div>

@@ -8,6 +8,7 @@ import { cx, dataOraCompleta, fa, quando } from '../../lib/format.js'
 import { VERIFICA_FIRMA } from '../../lib/openapi.js'
 import { Badge, Button, Caricamento, Dialogo, Errore, Pannello, Vuoto, useToast } from '../ui.jsx'
 import { Caselle, Codice, CodiceASchede, Copia, SceltaProcessi } from './comuni.jsx'
+import { gl } from '../../lib/glossario.js'
 
 export const STATI_CONSEGNA = {
   IN_CODA: ['In coda', 'neutro', Clock],
@@ -61,7 +62,7 @@ export default function Webhook({ panoramica }) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <p className="max-w-2xl text-grafite">
-          Orditogram avvisa i tuoi sistemi quando una pratica parte, un'attività è pronta, arriva un messaggio o c'è un errore.
+          Orditogram avvisa i tuoi sistemi quando {gl('pratica', 'un')} parte, un'attività è pronta, arriva un messaggio o c'è un errore.
           Ogni avviso è firmato; se il destinatario non risponde, Orditogram riprova per 24 ore.
         </p>
         <Button variante="primario" icona={Plus} onClick={() => setModifica({ nuovo: true })}>Nuovo webhook</Button>
@@ -213,7 +214,7 @@ function DialogoWebhook({ webhook, panoramica, onClose, onSalvato }) {
           {tutti && <p className="text-sm text-grafite">Anche gli eventi che verranno aggiunti nelle prossime versioni di Orditogram.</p>}
         </div>
         <div>
-          <span className="etichetta">Pratiche di</span>
+          <span className="etichetta">{gl('pratica', 'Nomi')} di</span>
           <SceltaProcessi processi={panoramica.processi || []} valori={processi} onChange={setProcessi} />
         </div>
         <Errore>{errore}</Errore>
@@ -308,7 +309,7 @@ function Consegne({ webhook, eventi, aggiornamento, onCambio }) {
       </header>
       <Errore>{errore}</Errore>
       {!ris && !errore && <Caricamento />}
-      {ris && ris.righe.length === 0 && <Vuoto icona={Inbox} titolo="Nessuna consegna">Gli avvisi compaiono qui appena succede qualcosa nelle pratiche. Prova con il pulsante "Prova" di un webhook.</Vuoto>}
+      {ris && ris.righe.length === 0 && <Vuoto icona={Inbox} titolo="Nessuna consegna">Gli avvisi compaiono qui appena succede qualcosa in {gl('pratica', 'nomi')}. Prova con il pulsante "Prova" di un webhook.</Vuoto>}
       {ris && ris.righe.length > 0 && (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">

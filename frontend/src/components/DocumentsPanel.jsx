@@ -5,6 +5,7 @@ import { cx, dimensione, quando } from '../lib/format.js'
 import { Badge, Button, Caricamento, Errore, Vuoto, useToast } from './ui.jsx'
 import AnteprimaDocumento from './AnteprimaDocumento.jsx'
 import { siPuoVedere } from '../lib/anteprima.js'
+import { gl } from '../lib/glossario.js'
 
 const ESITO = {
   OK:         { tono: 'verde',     icona: ShieldCheck, testo: 'Firma valida' },
@@ -44,7 +45,7 @@ export default function DocumentsPanel({ pi, onChange }) {
   return (
     <div className="space-y-3">
       {dati.documenti.length === 0 && !dati.modificabile && (
-        <Vuoto icona={FileText} titolo="Nessun documento">La pratica non ha allegati.</Vuoto>
+        <Vuoto icona={FileText} titolo="Nessun documento">{gl('pratica', 'Il')} non ha allegati.</Vuoto>
       )}
       {dati.documenti.map(d => (
         <Documento key={d.id} d={d} modificabile={dati.modificabile} condivisibile={dati.condivisibile} onCaricato={dopoCaricamento} />
@@ -99,7 +100,7 @@ function Documento({ d, modificabile, condivisibile, onCaricato }) {
         )}
         {condivisibile && (
           <Button misura="sm" variante="fantasma" icona={d.visibilita === 'PARTI' ? EyeOff : Users}
-                  title={d.visibilita === 'PARTI' ? 'Le parti esterne non lo vedranno più' : 'Lo vedranno anche le parti esterne della pratica'}
+                  title={d.visibilita === 'PARTI' ? 'Le parti esterne non lo vedranno più' : `Lo vedranno anche le parti esterne ${gl('pratica', 'del')}`}
                   onClick={async () => {
                     try {
                       await api.visibilitaDocumento(d.id, d.visibilita === 'PARTI' ? 'INTERNA' : 'PARTI')

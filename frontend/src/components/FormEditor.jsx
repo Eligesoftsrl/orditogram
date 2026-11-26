@@ -24,6 +24,7 @@ const perTipo = (tipo, f = {}) => ({
 })
 import { Badge, Button, Caricamento, Errore, Pannello, Vuoto, useToast } from './ui.jsx'
 import { useGlossario } from '../lib/useGlossario.jsx'
+import { gl } from '../lib/glossario.js'
 
 const TIPI = [
   { id: 'text', label: 'Testo', icona: Type },
@@ -43,8 +44,8 @@ const INDICIZZABILI = ['text', 'number', 'date', 'select']
 
 const DOCUMENTI = [
   { id: '', label: 'Nessuno', aiuto: 'Il form non mostra documenti.' },
-  { id: 'carica', label: 'Allegati all\'avvio', aiuto: 'Solo per il form di avvio: chi apre la pratica allega i documenti.' },
-  { id: 'lettura', label: 'In consultazione', aiuto: 'Si vedono e si scaricano i documenti della pratica.' },
+  { id: 'carica', label: 'Allegati all\'avvio', aiuto: `Solo per il form di avvio: chi apre ${gl('pratica', 'il')} allega i documenti.` },
+  { id: 'lettura', label: 'In consultazione', aiuto: `Si vedono e si scaricano i documenti ${gl('pratica', 'del')}.` },
   { id: 'modifica', label: 'Modificabili', aiuto: 'Chi ha in carico l\'attività può aggiungere documenti e nuove versioni.' }
 ]
 
@@ -233,7 +234,7 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
                           <input id={`${uid}-3`} className="campo" value={form.submitLabel || ''} onChange={e => aggiorna({ submitLabel: e.target.value })} placeholder="Conferma" />
                         </div>
                         <div>
-                          <label className="etichetta" htmlFor={`${uid}-4`}>Documenti della pratica</label>
+                          <label className="etichetta" htmlFor={`${uid}-4`}>Documenti {gl('pratica', 'del')}</label>
                           <select id={`${uid}-4`} className="campo" value={form.documenti || ''} onChange={e => aggiorna({ documenti: e.target.value || undefined })}>
                             {DOCUMENTI.map(d => <option key={d.id} value={d.id}>{d.label}</option>)}
                           </select>
@@ -250,7 +251,7 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
                           <label className="flex items-center gap-2 text-[15px] sm:col-span-2">
                             <input type="checkbox" className="size-4 accent-verde-600" checked={form.documentiVisibilita === 'parti'}
                                    onChange={e => aggiorna({ documentiVisibilita: e.target.checked ? 'parti' : undefined })} />
-                            I documenti caricati qui li vedono anche le parti esterne della pratica
+                            I documenti caricati qui li vedono anche le parti esterne {gl('pratica', 'del')}
                           </label>
                         )}
                       </div>
@@ -387,7 +388,7 @@ function CampoEditor({ f, i, n, catalogo, campi, modo, tipiAnagrafica, onChange,
             <label className="etichetta" htmlFor={`${uid}-6`}>Nome del dato</label>
             <input id={`${uid}-6`} className="campo font-mono text-sm" list={listId} value={f.name || ''} onChange={e => cambiaNome(e.target.value)} placeholder="numeroDiProtocollo" />
             <datalist id={listId}>{Object.values(catalogo).map(c => <option key={c.name} value={c.name}>{c.label}</option>)}</datalist>
-            <p className="mt-1 text-xs text-grafite">Stesso nome in più form = stesso dato della pratica.</p>
+            <p className="mt-1 text-xs text-grafite">Stesso nome in più form = stesso dato {gl('pratica', 'del')}.</p>
           </div>
           <div>
             <label className="etichetta" htmlFor={`${uid}-7`}>Tipo</label>
@@ -403,11 +404,11 @@ function CampoEditor({ f, i, n, catalogo, campi, modo, tipiAnagrafica, onChange,
 
           {f.type === 'organizzazione' && !f.readonly && (
             <div className="sm:col-span-2">
-              <label className="etichetta" htmlFor={`${uid}-9`}>È la parte della pratica</label>
+              <label className="etichetta" htmlFor={`${uid}-9`}>È la parte {gl('pratica', 'del')}</label>
               <input id={`${uid}-9`} className="campo font-mono text-sm" value={f.parte || ''} placeholder="Es. controparte"
                      onChange={e => onChange({ parte: e.target.value.replace(/[^a-zA-Z0-9_]/g, '') || undefined })} />
               <p className="mt-1 text-xs text-grafite">
-                L'organizzazione scelta diventa questa parte: i suoi utenti esterni vedono la pratica e lavorano le attività
+                L'organizzazione scelta diventa questa parte: i suoi utenti esterni vedono {gl('pratica', 'il')} e lavorano le attività
                 del BPMN assegnate al gruppo <span className="font-mono">parte:{f.parte || 'controparte'}</span>.
               </p>
             </div>
@@ -431,7 +432,7 @@ function CampoEditor({ f, i, n, catalogo, campi, modo, tipiAnagrafica, onChange,
               <p className="mt-1 text-xs text-grafite">
                 {modo === 'anagrafica'
                   ? 'Collega la scheda a una scheda di un\'altra anagrafica (o della stessa), scelta tra quelle attive.'
-                  : 'Chi compila sceglie una scheda attiva (serve la regola "sceglie" o "vede" dell\'anagrafica); la pratica ne conserva una fotografia. Una scheda nuova la crea solo chi può modificare l\'anagrafica.'}
+                  : 'Chi compila sceglie una scheda attiva (serve la regola "sceglie" o "vede" dell\'anagrafica); ' + gl('pratica', 'il') + ' ne conserva una fotografia. Una scheda nuova la crea solo chi può modificare l\'anagrafica.'}
               </p>
             </div>
           )}
@@ -440,7 +441,7 @@ function CampoEditor({ f, i, n, catalogo, campi, modo, tipiAnagrafica, onChange,
             <Spunta checked={!!f.required} onChange={v => onChange({ required: v, ...(v ? { readonly: false } : {}) })}>Obbligatorio</Spunta>
             <Spunta checked={!!f.readonly} onChange={v => onChange({ readonly: v, ...(v ? { required: false } : {}) })}>Sola lettura</Spunta>
             {modo === 'form' && !f.readonly && <Spunta checked={f.precompila === false} onChange={v => onChange({ precompila: v ? false : undefined })}>Non riproporre il valore precedente</Spunta>}
-            {modo === 'form' && !f.readonly && ['text', 'anagrafica'].includes(f.type) && <Spunta checked={!!f.titolo} onChange={v => onChange({ titolo: v })}>Usa come titolo della pratica</Spunta>}
+            {modo === 'form' && !f.readonly && ['text', 'anagrafica'].includes(f.type) && <Spunta checked={!!f.titolo} onChange={v => onChange({ titolo: v })}>Usa come titolo {gl('pratica', 'del')}</Spunta>}
             {!f.readonly && f.type === 'anagrafica' && <Spunta checked={!!f.creaScheda} onChange={v => onChange({ creaScheda: v || undefined })}>Si può creare una scheda nuova da qui</Spunta>}
             {modo === 'anagrafica' && INDICIZZABILI.includes(f.type || 'text') && <>
               <Spunta checked={!!f.titolo} onChange={v => onChange({ titolo: v || undefined })}>Dà il nome alla scheda</Spunta>
@@ -455,7 +456,7 @@ function CampoEditor({ f, i, n, catalogo, campi, modo, tipiAnagrafica, onChange,
 
           <fieldset className="space-y-2 rounded-campo bg-carta px-3 py-2.5 sm:col-span-2">
             <legend className="sr-only">Chi vede questo dato</legend>
-            <p className="text-[13px] font-medium text-pino-900">{modo === 'anagrafica' ? 'Chi vede questo dato nella scheda' : 'Chi vede questo dato nella pratica'}</p>
+            <p className="text-[13px] font-medium text-pino-900">{modo === 'anagrafica' ? 'Chi vede questo dato nella scheda' : `Chi vede questo dato ${gl('pratica', 'nel')}`}</p>
             {modo === 'form' && f.type !== 'anagrafica' && (
               <Spunta checked={!!f.visibileAlleParti} onChange={v => onChange({ visibileAlleParti: v || undefined })}>
                 Anche le parti esterne ({g('esterno', 'nomi')}, organizzazioni)

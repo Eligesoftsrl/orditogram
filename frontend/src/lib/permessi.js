@@ -1,3 +1,4 @@
+import { gl } from './glossario.js'
 // Permessi applicativi dell'utente (da /api/me). Il server controlla sempre: qui servono solo a mostrare
 // le voci giuste. I codici sono quelli di backend accesso/Permesso.java.
 
@@ -53,12 +54,12 @@ export const codiceDa = (nome) => nome.toLowerCase().normalize('NFD').replace(/[
 
 export const AZIONI_PROCESSO = [
   { codice: 'AVVIA', titolo: 'Chi può avviarlo', aiuto: 'Se indichi qualcuno, vale questo elenco al posto dei gruppi di avvio del BPMN.' },
-  { codice: 'VEDE', titolo: 'Chi vede tutte le pratiche', aiuto: 'Supervisori e responsabili: vedono le pratiche anche senza lavorarle, entro l\'ambito scelto.' },
-  { codice: 'ESPORTA', titolo: 'Chi può esportare le pratiche', aiuto: 'Se indichi qualcuno, solo loro esportano l\'elenco delle pratiche di questo processo.' }
+  { codice: 'VEDE', get titolo() { return `Chi vede tutt${gl.agg('pratica', '', true)} ${gl('pratica', 'i')}` }, get aiuto() { return `Supervisori e responsabili: vedono ${gl('pratica', 'i')} anche senza lavorarle, entro l'ambito scelto.` } },
+  { codice: 'ESPORTA', get titolo() { return `Chi può esportare ${gl('pratica', 'i')}` }, get aiuto() { return `Se indichi qualcuno, solo loro esportano l'elenco ${gl('pratica', 'dei')} di questo processo.` } }
 ]
 
 export const AMBITI = [
-  { codice: 'TUTTE', nome: 'tutte le pratiche' },
+  { codice: 'TUTTE', get nome() { return `tutt${gl.agg('pratica', '', true)} ${gl('pratica', 'i')}` } },
   { codice: 'STRUTTURA', nome: 'della propria struttura' },
   { codice: 'STRUTTURA_E_SOTTO', nome: 'della propria struttura e di quelle sotto' }
 ]

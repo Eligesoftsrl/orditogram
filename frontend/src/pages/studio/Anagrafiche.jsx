@@ -7,6 +7,7 @@ import { codiceDa } from '../../lib/permessi.js'
 import { AZIONI_ANAGRAFICA } from '../../lib/anagrafiche.js'
 import FormEditor from '../../components/FormEditor.jsx'
 import { Badge, Button, Caricamento, Dialogo, Errore, Pannello, Vuoto, useToast } from '../../components/ui.jsx'
+import { gl } from '../../lib/glossario.js'
 
 const NUOVO = { codice: '', nome: '', descrizione: '', attivo: true, definizione: { fields: [] } }
 
@@ -54,7 +55,7 @@ export default function AnagraficheStudio() {
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Anagrafiche</h1>
           <p className="mt-1 max-w-2xl text-grafite">
-            Elenchi di soggetti e oggetti che le pratiche usano: fornitori, fondi, immobili, contratti. Per ognuno
+            Elenchi di soggetti e oggetti che {gl('pratica', 'i')} usano: fornitori, fondi, immobili, contratti. Per ognuno
             decidi i campi, quali identificano la scheda, quali si cercano e chi può consultarle o modificarle.
           </p>
         </div>

@@ -29,8 +29,11 @@ public class AscoltatoreTimer implements ActivitiEventListener {
     private final RuntimeService runtimeService;
     private final StoricoService storico;
     private final ScadenzeService scadenze;
+    private final com.eligesoft.orditogram.glossario.GlossarioService glossario;
 
-    public AscoltatoreTimer(RuntimeService runtimeService, StoricoService storico, ScadenzeService scadenze) {
+    public AscoltatoreTimer(RuntimeService runtimeService, StoricoService storico, ScadenzeService scadenze,
+                            com.eligesoft.orditogram.glossario.GlossarioService glossario) {
+        this.glossario = glossario;
         this.runtimeService = runtimeService;
         this.storico = storico;
         this.scadenze = scadenze;
@@ -51,10 +54,11 @@ public class AscoltatoreTimer implements ActivitiEventListener {
             String cosa;
             if (el instanceof BoundaryEvent b) {
                 cosa = b.isCancelActivity()
-                    ? "Termine scaduto: l'attività è stata chiusa e la pratica ha proseguito sulla strada della scadenza"
+                    ? "Termine scaduto: l'attività è stata chiusa e " + glossario.conArticolo(com.eligesoft.orditogram.glossario.Termine.PRATICA, false)
+                        + " ha proseguito sulla strada della scadenza"
                     : "Promemoria: l'attività resta aperta";
             } else {
-                cosa = "Attesa terminata: la pratica prosegue";
+                cosa = "Attesa terminata: " + glossario.conArticolo(com.eligesoft.orditogram.glossario.Termine.PRATICA, false) + " prosegue";
             }
             // transazione separata: un problema dello storico non deve annullare lo scatto del timer
             storico.registraSubito(job.getProcessInstanceId(), PraticaEvento.Tipo.SCADENZA, nome,

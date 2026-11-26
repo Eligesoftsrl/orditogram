@@ -7,6 +7,7 @@ import { eSezione } from '../lib/formCondizioni.js'
 import { campiCambiati, valoriScheda } from '../lib/anagrafiche.js'
 import DynamicForm from '../components/DynamicForm.jsx'
 import { Badge, Button, Caricamento, Dialogo, Errore, Pannello, Schede, useToast } from '../components/ui.jsx'
+import { gl } from '../lib/glossario.js'
 
 const OPERAZIONI = { CREATA: 'Creata', MODIFICATA: 'Modificata', CESSATA: 'Cessata', RIATTIVATA: 'Riattivata' }
 
@@ -156,9 +157,9 @@ function PraticheCollegate({ codice, id }) {
   const [errore, setErrore] = useState('')
   useEffect(() => { api.praticheScheda(codice, id).then(setPratiche).catch(e => setErrore(e.message)) }, [codice, id])
   return (
-    <Pannello titolo="Pratiche che la usano" className="lg:col-span-2">
+    <Pannello titolo={`${gl('pratica', 'Nomi')} che la usano`} className="lg:col-span-2">
       {!pratiche ? (errore ? <Errore>{errore}</Errore> : <Caricamento />) : pratiche.length === 0 ? (
-        <p className="text-sm text-grafite">Nessuna pratica che puoi vedere usa questa scheda.</p>
+        <p className="text-sm text-grafite">Nessun elemento che puoi vedere tra {gl('pratica', 'i')} usa questa scheda.</p>
       ) : (
         <ul className="space-y-2">
           {pratiche.map(p => (

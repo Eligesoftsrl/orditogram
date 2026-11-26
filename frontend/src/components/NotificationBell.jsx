@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Bell, CheckCheck } from 'lucide-react'
 import { api } from '../api.js'
 import { cx, fa } from '../lib/format.js'
+import { gl } from '../lib/glossario.js'
 
 /** Campanella: notifiche dell'utente, aggiornate ogni 30 secondi. */
 export default function NotificationBell({ suBlu = false, bluSoloMobile = false }) {
@@ -60,7 +61,7 @@ export default function NotificationBell({ suBlu = false, bluSoloMobile = false 
             )}
           </div>
           {dati.notifiche.length === 0 ? (
-            <p className="px-4 py-8 text-center text-sm text-grafite">Nessuna notifica. Qui arriveranno gli aggiornamenti sulle tue pratiche.</p>
+            <p className="px-4 py-8 text-center text-sm text-grafite">Nessuna notifica. Qui arriveranno gli aggiornamenti {gl('pratica', 'sui')} che ti riguardano.</p>
           ) : (
             <ul className="max-h-[60vh] divide-y divide-linea overflow-y-auto">
               {dati.notifiche.map(n => (
