@@ -3,13 +3,12 @@
 Le versioni seguono il formato MAGGIORE.MINORE.CORREZIONE: cambia la MINORE per funzioni nuove compatibili,
 la MAGGIORE quando un aggiornamento richiede interventi (indicati qui sotto).
 
-## 0.13.0 (in preparazione)
+## 0.13.0 (26 novembre 2026)
 
-Verso un Orditogram per ogni settore: il nucleo non parla più solo la lingua della PA.
+Verso un Orditogram per ogni settore, il nucleo non parla più solo la lingua della PA, e pronto per i primi
+progetti reali: installazione sicura, form che cambiano senza toccare le pratiche in corso, registro di chi legge
+cosa, errori con un codice per l'assistenza, test nel browser.
 
-- **Test nel browser** (Playwright, `npm run e2e`): il percorso principale Studio → pubblicazione → scrivania →
-  pratica conclusa, più accesso negato allo Studio e password sbagliata, su backend con H2 in memoria. Gira in CI
-  nel job `e2e`, che ora serve anche per costruire le immagini Docker.
 - **Glossario** (Studio → Glossario, solo amministratore): le parole con cui l'installazione chiama chi la usa
   (*ente*: azienda, studio, comune...), il personale visto da fuori (*Ufficio*: Assistenza, Segreteria...) e chi
   entra da fuori (*cittadino*: cliente, fornitore, socio...), con singolare, plurale e genere. L'interfaccia mette da
@@ -24,13 +23,6 @@ Verso un Orditogram per ogni settore: il nucleo non parla più solo la lingua de
   ("il ticket concluso", "la richiesta conclusa"). Anche i messaggi del server per le persone (non trovata, accesso
   negato, termine scaduto, titolo predefinito delle notifiche). Restano invariati i percorsi e i nomi tecnici
   dell'API (`/api/pratiche`, `pratica.avviata`, `pratiche:avvia`).
-- **Registro delle letture, degli accessi e degli errori** (Studio → Registro, schede *Azioni*, *Letture*,
-  *Errori*): chi apre pratiche, attività, schede di anagrafica e documenti, anche quando l'accesso è negato, dall'
-  interfaccia e dall'API pubblica; gli accessi con utente e password (uno ogni 30 minuti per utente) e le uscite.
-  Ogni errore imprevisto riceve un codice `E-…` da comunicare all'assistenza: la persona non vede più dettagli
-  tecnici, che restano nel registro con la traccia, insieme ai job del motore falliti. Letture conservate 365
-  giorni, errori 90 (`app.registro.*`). Le letture si registrano con l'annotazione `@RegistraLettura` (un aspetto
-  Spring AOP). API `GET /api/admin/registro/letture` e `/errori`, migrazione `V14`.
 - **Moduli** (Studio → Moduli, solo amministratore): le funzioni legate all'Italia e alla PA diventano pacchetti
   che si spengono per le installazioni di altri settori. *Italia*: festività nazionali nel calendario lavorativo e
   formati `codiceFiscale`, `partitaIva`, `cap`, `telefono` nei form (spento, i form nuovi o modificati che li usano
@@ -52,6 +44,16 @@ Verso un Orditogram per ogni settore: il nucleo non parla più solo la lingua de
   dopo l'aggiornamento le pratiche in corso ricevono le versioni attuali dei loro form.
 - Esempi nei campi dello Studio senza riferimenti alla PA ("Richiesta d'acquisto", "portale-clienti",
   `numeroRegistrazione`).
+- **Registro delle letture, degli accessi e degli errori** (Studio → Registro, schede *Azioni*, *Letture*,
+  *Errori*): chi apre pratiche, attività, schede di anagrafica e documenti, anche quando l'accesso è negato, dall'
+  interfaccia e dall'API pubblica; gli accessi con utente e password (uno ogni 30 minuti per utente) e le uscite.
+  Ogni errore imprevisto riceve un codice `E-…` da comunicare all'assistenza: la persona non vede più dettagli
+  tecnici, che restano nel registro con la traccia, insieme ai job del motore falliti. Letture conservate 365
+  giorni, errori 90 (`app.registro.*`). Le letture si registrano con l'annotazione `@RegistraLettura` (un aspetto
+  Spring AOP). API `GET /api/admin/registro/letture` e `/errori`, migrazione `V14`.
+- **Test nel browser** (Playwright, `npm run e2e`): il percorso principale Studio → pubblicazione → scrivania →
+  pratica conclusa, più accesso negato allo Studio e password sbagliata, su backend con H2 in memoria. Gira in CI
+  nel job `e2e`, che ora serve anche per costruire le immagini Docker.
 
 ## 0.12.0 (novembre 2026)
 
