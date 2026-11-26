@@ -9,6 +9,7 @@ la MAGGIORE quando un aggiornamento richiede interventi (indicati qui sotto).
 - In ogni pratica e attività il pulsante *Il percorso* (in basso a destra) apre il diagramma BPMN in un pannello da
   destra: il resto si spegne, un segnalino lascia una scia blu dall'inizio al passo attuale, accende i passi che
   raggiunge (anche dentro i sottoprocessi) e si ferma dove la pratica è adesso. Le tappe sono scritte anche in parole.
+- Il riquadro "Il processo" in fondo alla pratica e all'attività non c'è più: il diagramma è nel pulsante.
 - Il diagramma della pratica riceve i passi fatti nell'ordine in cui sono iniziati.
 
 ### Grafica: intestazioni, benvenuto e tessere-filtro

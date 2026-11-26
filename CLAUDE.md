@@ -130,14 +130,14 @@ Orditogram e ogni soluzione consegnata ai clienti. Obiettivo dichiarato: un effe
   pastiglia; `tono` blu piena per la cosa principale, `grande` per la tessera doppia del bento, tinte `acqua`,
   `lilla`, `ambra`, `rosa`; `children` sotto il numero), `Contatore`, `Forme` (forme morbide decorative nell'angolo), `TesseraFiltro` (tessera-filtro in cima a un elenco, `aria-pressed`), `IntestazionePagina` (tessera bianca con `Percorso` e titolo: in ogni pagina nuova), `Selettore` (capsula per cambiare vista, es. Grafico/Tabella), `Menu` (azioni a comparsa, frecce ed Esc),
   `Pannello`, `Schede`, `Dialogo` (al centro, per confermare), `Cassetto` (pannello laterale da destra: vedere o
-  fare qualcosa senza cambiare pagina). Altri: `BpmnViewer` (con `segnalino`), `ProcessoVivo` (il diagramma della
-  pratica, non per gli esterni), `PercorsoPratica` (pulsante fisso *Il percorso* + cassetto con `BpmnViewer viaggio`:
+  fare qualcosa senza cambiare pagina). Altri: `BpmnViewer` (con `segnalino`), `PercorsoPratica` (pulsante fisso *Il percorso* + cassetto con `BpmnViewer viaggio`:
   resto spento, scia blu e segnalino fino al passo attuale; colore blu, non rosso, perché il rosso è l'errore), `GraficiScrivania` (riquadri con *Tabella*), `AnteprimaPratica`. Prima di crearne uno nuovo,
   usa o estendi questi.
 - **Aperture laterali**: un elemento di un elenco si apre nel `Cassetto` con il riassunto e l'azione principale;
   Ctrl/Cmd + clic apre la pagina; i documenti si vedono nel cassetto con `AnteprimaDocumento`. Le decisioni importanti si confermano in un `Dialogo` che dice cosa succede e
   che resta nello storico.
-- **Flusso e grafici**: il diagramma BPMN vero è sempre in vista nella pratica e nell'attività; il passo dove è ferma
+- **Flusso e grafici**: il diagramma BPMN vero è sempre a un tocco nella pratica e nell'attività (pulsante *Il percorso*,
+  non più un riquadro nella pagina); il passo dove è ferma
   pulsa (`.bpmn-corrente`), i passi fatti si accendono in fila, ogni 8 secondi un segnalino giallo percorre il
   cammino fatto (`lib/percorsoBpmn.js`). Grafici: un solo tono di blu per le grandezze, due serie al massimo con
   legenda, barre che crescono dalla base (`.cresce-y`, `.cresce-x`), valori scritti, `aria-label` con i numeri e

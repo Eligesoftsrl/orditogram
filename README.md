@@ -842,9 +842,6 @@ blu. Le superfici sono morbide e arrotondate, gli stati hanno sempre icona e par
   prossimi 14 giorni. Contano solo le pratiche che vedi (`GET /api/pratiche/indicatori`); *Tabella* mostra gli
   stessi valori in una tabella. L'avanzamento è una stima: attività fatte sul totale del modello, al massimo 95%
   finché la pratica è in corso.
-- **Il processo dal vivo**: nella pratica e nell'attività il diagramma BPMN è sempre in vista; il passo dove la
-  pratica è ferma pulsa, i passi fatti si accendono in fila e ogni tanto un segnalino percorre il cammino fatto.
-  Gli utenti esterni non lo vedono.
 - **Il percorso, sempre a un tocco**: in ogni pratica e in ogni attività un pulsante fisso in basso a destra
   (*Il percorso*) apre da destra il diagramma grande. Ciò che la pratica non ha toccato si spegne, un segnalino
   giallo parte dall'inizio, lascia una scia blu, entra nei sottoprocessi, accende ogni passo che raggiunge e si ferma
