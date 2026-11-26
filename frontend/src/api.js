@@ -1,4 +1,6 @@
 // Client verso il backend. Autenticazione Basic, conservata per la sessione della scheda.
+import { parametri } from './lib/registro.js'
+
 const CHIAVE = 'orditogram.auth'
 let authHeader = sessionStorage.getItem(CHIAVE)
 let onUnauthorized = () => {}
@@ -121,6 +123,8 @@ export const api = {
     call('GET', `/api/pratiche?stato=${encodeURIComponent(stato)}&q=${encodeURIComponent(q)}&processo=${encodeURIComponent(processo)}&pagina=${pagina}&dimensione=${dimensione}${esporta ? '&esporta=true' : ''}`),
   registro: ({ q = '', azione = '', pagina = 0, dimensione = 50 } = {}) =>
     call('GET', `/api/admin/registro?q=${encodeURIComponent(q)}&azione=${encodeURIComponent(azione)}&pagina=${pagina}&dimensione=${dimensione}`),
+  registroLetture: (filtri = {}) => call('GET', `/api/admin/registro/letture?${parametri(filtri)}`),
+  registroErrori: (filtri = {}) => call('GET', `/api/admin/registro/errori?${parametri(filtri)}`),
   tipologie: () => call('GET', '/api/pratiche/tipologie'),
   pratica: (id) => call('GET', `/api/pratiche/${id}`),
   indicatori: () => call('GET', '/api/pratiche/indicatori'),

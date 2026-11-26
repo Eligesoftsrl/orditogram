@@ -57,7 +57,8 @@ public class RegistroService {
         log.info("{} oggetto={} utente={} da={}", azione, oggetto, utente, r.getIndirizzo());
     }
 
-    private static String indirizzo() {
+    /** L'indirizzo di chi fa la richiesta in corso (il primo di X-Forwarded-For, dietro nginx), se c'è. */
+    static String indirizzo() {
         if (!(RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes a)) return null;
         HttpServletRequest req = a.getRequest();
         String inoltrato = req.getHeader("X-Forwarded-For");
@@ -65,7 +66,7 @@ public class RegistroService {
         return taglia(ip, 64);
     }
 
-    private static String taglia(String s, int max) {
+    static String taglia(String s, int max) {
         return s == null || s.length() <= max ? s : s.substring(0, max);
     }
 }

@@ -67,6 +67,7 @@ public class ApiV1AnagraficheController {
         return m;
     }
 
+    @com.eligesoft.orditogram.registro.RegistraLettura(value = "SCHEDA_APERTA", oggetto = "id", dettagli = "tipo")
     @GetMapping("/{tipo}/schede/{id}")
     public Map<String, Object> leggi(@PathVariable String tipo, @PathVariable Long id) {
         richiediLettura();

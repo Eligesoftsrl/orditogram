@@ -201,6 +201,7 @@ public class BpmController {
     }
 
     /** Dettaglio: valori correnti + form. */
+    @com.eligesoft.orditogram.registro.RegistraLettura(value = "ATTIVITA_APERTA", oggetto = "id")
     @GetMapping("/tasks/{id}")
     public Map<String, Object> task(@PathVariable String id) {
         Task task = taskRuntime.task(id);

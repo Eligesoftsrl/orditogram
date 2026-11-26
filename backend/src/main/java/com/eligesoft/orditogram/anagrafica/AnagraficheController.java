@@ -62,6 +62,7 @@ public class AnagraficheController {
         return schede.crea(tipo, richiesta.dati());
     }
 
+    @com.eligesoft.orditogram.registro.RegistraLettura(value = "SCHEDA_APERTA", oggetto = "id", dettagli = "tipo")
     @GetMapping("/{tipo}/schede/{id}")
     public SchedeService.Scheda leggi(@PathVariable String tipo, @PathVariable Long id) {
         return schede.leggi(tipo, id);
