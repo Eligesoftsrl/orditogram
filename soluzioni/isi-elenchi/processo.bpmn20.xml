@@ -1,0 +1,139 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_isiElenchi" targetNamespace="http://orditogram.it/processi">
+  <process id="isiElenchi" name="Bando ISI: elenchi cronologici" isExecutable="true">
+    <documentation>La direzione calcola un elenco del Bando ISI (NCD, provvisorio o definitivo con la redistribuzione), ne controlla l'anteprima e lo pubblica: il servizio ISI aggiorna lo stato delle domande e avvisa ogni pratica con il suo esito.</documentation>
+    <startEvent id="inizio" name="Nuovo elenco" activiti:formKey="isie-avvio" />
+    <serviceTask id="anteprima" name="Calcola l'anteprima" implementation="apiConnector">
+      <extensionElements>
+        <activiti:field name="metodo" stringValue="POST" />
+        <activiti:field name="url" stringValue="http://localhost:8095/elenchi/anteprima" />
+        <activiti:field name="credenziale" stringValue="servizio-isi" />
+        <activiti:field name="corpo" stringValue="{&quot;tipoElenco&quot;: &quot;${tipoElenco}&quot;}" />
+        <activiti:field name="risposta" stringValue="righeElenco = righeElenco&#10;riepilogoElenco = riepilogoElenco" />
+        <activiti:field name="timeout" stringValue="60" />
+        <activiti:field name="inErrore" stringValue="Segui la strada di errore" />
+      </extensionElements>
+    </serviceTask>
+    <boundaryEvent id="anteprimaErrore" name="Servizio ISI non disponibile" attachedToRef="anteprima">
+      <errorEventDefinition />
+    </boundaryEvent>
+    <userTask id="controlla" name="Controlla l'anteprima e pubblica" activiti:candidateGroups="direzione-isi" activiti:formKey="isie-pubblica" />
+    <exclusiveGateway id="decisione" name="Pubblicare?" default="fNo" />
+    <serviceTask id="pubblica" name="Pubblica l'elenco e avvisa le domande" implementation="apiConnector">
+      <extensionElements>
+        <activiti:field name="metodo" stringValue="POST" />
+        <activiti:field name="url" stringValue="http://localhost:8095/elenchi/pubblica" />
+        <activiti:field name="credenziale" stringValue="servizio-isi" />
+        <activiti:field name="corpo" stringValue="{&quot;tipoElenco&quot;: &quot;${tipoElenco}&quot;}" />
+        <activiti:field name="risposta" stringValue="praticheAvvisate = praticheAvvisate&#10;termineDocumenti = termineDocumenti&#10;riepilogoElenco = riepilogoElenco" />
+        <activiti:field name="timeout" stringValue="60" />
+        <activiti:field name="inErrore" stringValue="Segui la strada di errore" />
+      </extensionElements>
+    </serviceTask>
+    <boundaryEvent id="pubblicaErrore" name="Servizio ISI non disponibile" attachedToRef="pubblica">
+      <errorEventDefinition />
+    </boundaryEvent>
+    <serviceTask id="avvisaErrore" name="Avvisa la direzione del disservizio" implementation="notificaConnector">
+      <extensionElements>
+        <activiti:field name="destinatario" stringValue="gruppo:direzione-isi" />
+        <activiti:field name="titolo" stringValue="Elenco ${tipoElenco} non calcolato" />
+        <activiti:field name="messaggio" stringValue="Il servizio ISI non ha risposto: l'elenco ${tipoElenco} non è stato calcolato né pubblicato. Riprova con un nuovo elenco." />
+      </extensionElements>
+    </serviceTask>
+    <endEvent id="finePubblicato" name="Elenco pubblicato" />
+    <endEvent id="fineNonPubblicato" name="Elenco non pubblicato" />
+    <endEvent id="fineErrore" name="Servizio non disponibile" />
+    <sequenceFlow id="f1" sourceRef="inizio" targetRef="anteprima" />
+    <sequenceFlow id="f2" sourceRef="anteprima" targetRef="controlla" />
+    <sequenceFlow id="f3" sourceRef="controlla" targetRef="decisione" />
+    <sequenceFlow id="fSi" name="Pubblica" sourceRef="decisione" targetRef="pubblica">
+      <conditionExpression xsi:type="tFormalExpression">${decisioneElenco == 'Pubblica'}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="fNo" name="Non pubblicare" sourceRef="decisione" targetRef="fineNonPubblicato" />
+    <sequenceFlow id="f4" sourceRef="pubblica" targetRef="finePubblicato" />
+    <sequenceFlow id="f5" sourceRef="anteprimaErrore" targetRef="avvisaErrore" />
+    <sequenceFlow id="f6" sourceRef="pubblicaErrore" targetRef="avvisaErrore" />
+    <sequenceFlow id="f7" sourceRef="avvisaErrore" targetRef="fineErrore" />
+  </process>
+  <bpmndi:BPMNDiagram id="Diagram_isiElenchi">
+    <bpmndi:BPMNPlane id="Plane_isiElenchi" bpmnElement="isiElenchi">
+      <bpmndi:BPMNShape id="s_inizio" bpmnElement="inizio">
+        <dc:Bounds x="80" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_anteprima" bpmnElement="anteprima">
+        <dc:Bounds x="186" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_anteprimaErrore" bpmnElement="anteprimaErrore">
+        <dc:Bounds x="240" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_controlla" bpmnElement="controlla">
+        <dc:Bounds x="356" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_decisione" bpmnElement="decisione" isMarkerVisible="true">
+        <dc:Bounds x="526" y="95" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_pubblica" bpmnElement="pubblica">
+        <dc:Bounds x="646" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_pubblicaErrore" bpmnElement="pubblicaErrore">
+        <dc:Bounds x="700" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_avvisaErrore" bpmnElement="avvisaErrore">
+        <dc:Bounds x="816" y="230" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_finePubblicato" bpmnElement="finePubblicato">
+        <dc:Bounds x="848" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fineNonPubblicato" bpmnElement="fineNonPubblicato">
+        <dc:Bounds x="678" y="252" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fineErrore" bpmnElement="fineErrore">
+        <dc:Bounds x="986" y="252" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="e_f1" bpmnElement="f1">
+        <di:waypoint x="116" y="120" />
+        <di:waypoint x="186" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f2" bpmnElement="f2">
+        <di:waypoint x="286" y="120" />
+        <di:waypoint x="356" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f3" bpmnElement="f3">
+        <di:waypoint x="456" y="120" />
+        <di:waypoint x="526" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fSi" bpmnElement="fSi">
+        <di:waypoint x="576" y="120" />
+        <di:waypoint x="646" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fNo" bpmnElement="fNo">
+        <di:waypoint x="576" y="120" />
+        <di:waypoint x="623" y="120" />
+        <di:waypoint x="623" y="270" />
+        <di:waypoint x="678" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f4" bpmnElement="f4">
+        <di:waypoint x="746" y="120" />
+        <di:waypoint x="848" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f5" bpmnElement="f5">
+        <di:waypoint x="258" y="178" />
+        <di:waypoint x="258" y="189" />
+        <di:waypoint x="775" y="189" />
+        <di:waypoint x="775" y="270" />
+        <di:waypoint x="816" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f6" bpmnElement="f6">
+        <di:waypoint x="718" y="178" />
+        <di:waypoint x="718" y="195" />
+        <di:waypoint x="781" y="195" />
+        <di:waypoint x="781" y="270" />
+        <di:waypoint x="816" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f7" bpmnElement="f7">
+        <di:waypoint x="916" y="270" />
+        <di:waypoint x="986" y="270" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

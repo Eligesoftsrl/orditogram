@@ -1,0 +1,1379 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:orditogram="http://orditogram.it/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_isiDomanda" targetNamespace="http://orditogram.it/processi">
+  <message id="esitoElenco" name="esitoElenco" />
+  <message id="rinunciaImpresa" name="rinunciaImpresa" />
+  <process id="isiDomanda" name="Bando ISI: domanda di finanziamento" isExecutable="true">
+    <documentation>Domanda di finanziamento del Bando ISI di INAIL: compilazione guidata con punteggio e importi calcolati dal servizio ISI, registrazione (una per impresa), codice identificativo, sportello informatico, esito degli elenchi, caricamento dei documenti con la perizia del tecnico, decadenza e istanza di revoca, istruttoria della sede INAIL entro 120 giorni con integrazioni e preavviso di rigetto.</documentation>
+    <startEvent id="inizio" name="Nuova domanda" activiti:formKey="isi-avvio" />
+    <serviceTask id="leggiCalendario" name="Leggi il calendario del bando" implementation="apiConnector">
+      <extensionElements>
+        <activiti:field name="metodo" stringValue="GET" />
+        <activiti:field name="url" stringValue="http://localhost:8095/calendario" />
+        <activiti:field name="credenziale" stringValue="servizio-isi" />
+        <activiti:field name="risposta" stringValue="chiusuraCompilazione = chiusuraCompilazione&#10;aperturaCodice = aperturaCodice&#10;chiusuraCodice = chiusuraCodice&#10;aperturaSportello = aperturaSportello&#10;chiusuraSportello = chiusuraSportello" />
+        <activiti:field name="timeout" stringValue="20" />
+        <activiti:field name="inErrore" stringValue="Blocca e riprova più tardi" />
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="leggiAnagrafica" name="Leggi i dati dell'impresa da INAIL" implementation="apiConnector">
+      <extensionElements>
+        <activiti:field name="metodo" stringValue="GET" />
+        <activiti:field name="url" stringValue="http://localhost:8095/impresa?codiceFiscale=${codiceFiscaleImpresa}" />
+        <activiti:field name="credenziale" stringValue="servizio-isi" />
+        <activiti:field name="risposta" stringValue="ragioneSociale = ragioneSociale&#10;partitaIva = partitaIva&#10;formaGiuridica = formaGiuridica&#10;ateco = ateco&#10;sedeLegale = sedeLegale&#10;codiceDitta = codiceDitta&#10;tassoMedio = tassoMedio&#10;rapportoAssicurativo = rapportoAssicurativo&#10;dataAssociazionePortale = dataAssociazionePortale&#10;dataIscrizioneCciaa = dataIscrizioneCciaa&#10;dataCostituzione = dataCostituzione&#10;pec = pec&#10;avvisoAnagrafica = avvisoAnagrafica" />
+        <activiti:field name="timeout" stringValue="20" />
+        <activiti:field name="inErrore" stringValue="Segui la strada di errore" />
+      </extensionElements>
+    </serviceTask>
+    <boundaryEvent id="leggiAnagraficaErrore" name="Servizio ISI non disponibile" attachedToRef="leggiAnagrafica">
+      <errorEventDefinition />
+    </boundaryEvent>
+    <sequenceFlow id="f1" sourceRef="inizio" targetRef="leggiCalendario" />
+    <sequenceFlow id="f2" sourceRef="leggiCalendario" targetRef="leggiAnagrafica" />
+    <sequenceFlow id="f3" sourceRef="leggiAnagrafica" targetRef="compilazione" />
+    <sequenceFlow id="f4" sourceRef="leggiAnagraficaErrore" targetRef="compilazione" />
+    <subProcess id="compilazione" name="Compilazione della domanda">
+      <startEvent id="cInizio" />
+      <userTask id="compila" name="Compila la domanda" activiti:candidateGroups="parte:richiedente" activiti:formKey="isi-domanda" />
+      <serviceTask id="calcola" name="Calcola punteggio e importi" implementation="apiConnector">
+        <extensionElements>
+          <activiti:field name="metodo" stringValue="POST" />
+          <activiti:field name="url" stringValue="http://localhost:8095/calcola" />
+          <activiti:field name="credenziale" stringValue="servizio-isi" />
+          <activiti:field name="corpo" stringValue="{&#10;  &quot;ragioneSociale&quot;: &quot;${ragioneSociale}&quot;,&#10;  &quot;partitaIva&quot;: &quot;${partitaIva}&quot;,&#10;  &quot;formaGiuridica&quot;: &quot;${formaGiuridica}&quot;,&#10;  &quot;ateco&quot;: &quot;${ateco}&quot;,&#10;  &quot;dataCostituzione&quot;: &quot;${dataCostituzione}&quot;,&#10;  &quot;dataIscrizioneCciaa&quot;: &quot;${dataIscrizioneCciaa}&quot;,&#10;  &quot;sedeLegale&quot;: &quot;${sedeLegale}&quot;,&#10;  &quot;codiceDitta&quot;: &quot;${codiceDitta}&quot;,&#10;  &quot;pec&quot;: &quot;${pec}&quot;,&#10;  &quot;tipoSoggetto&quot;: &quot;${tipoSoggetto}&quot;,&#10;  &quot;agricolaPrimaria&quot;: &quot;${agricolaPrimaria}&quot;,&#10;  &quot;iap&quot;: &quot;${iap}&quot;,&#10;  &quot;associataCollegata&quot;: &quot;${associataCollegata}&quot;,&#10;  &quot;rapportoAssicurativo&quot;: &quot;${rapportoAssicurativo}&quot;,&#10;  &quot;dataAssociazionePortale&quot;: &quot;${dataAssociazionePortale}&quot;,&#10;  &quot;indirizzoUnita&quot;: &quot;${indirizzoUnita}&quot;,&#10;  &quot;regione&quot;: &quot;${regione}&quot;,&#10;  &quot;ula&quot;: &quot;${ula}&quot;,&#10;  &quot;fatturato&quot;: &quot;${fatturato}&quot;,&#10;  &quot;totaleBilancio&quot;: &quot;${totaleBilancio}&quot;,&#10;  &quot;dipendentiImpresa&quot;: &quot;${dipendentiImpresa}&quot;,&#10;  &quot;dipendentiUnita&quot;: &quot;${dipendentiUnita}&quot;,&#10;  &quot;attivitaStagionale&quot;: &quot;${attivitaStagionale}&quot;,&#10;  &quot;dataInizioAttivita&quot;: &quot;${dataInizioAttivita}&quot;,&#10;  &quot;dittaSenzaDipendenti&quot;: &quot;${dittaSenzaDipendenti}&quot;,&#10;  &quot;asse&quot;: &quot;${asse}&quot;,&#10;  &quot;tipologia11&quot;: &quot;${tipologia11}&quot;,&#10;  &quot;tipologia12&quot;: &quot;${tipologia12}&quot;,&#10;  &quot;tipologia2&quot;: &quot;${tipologia2}&quot;,&#10;  &quot;tipologia3&quot;: &quot;${tipologia3}&quot;,&#10;  &quot;tipologia4a&quot;: &quot;${tipologia4a}&quot;,&#10;  &quot;tipologia4b&quot;: &quot;${tipologia4b}&quot;,&#10;  &quot;tipologia4c&quot;: &quot;${tipologia4c}&quot;,&#10;  &quot;aggiuntivo11&quot;: &quot;${aggiuntivo11}&quot;,&#10;  &quot;aggiuntivo2&quot;: &quot;${aggiuntivo2}&quot;,&#10;  &quot;aggiuntivo3&quot;: &quot;${aggiuntivo3}&quot;,&#10;  &quot;aggiuntivo4&quot;: &quot;${aggiuntivo4}&quot;,&#10;  &quot;bene1Tipo&quot;: &quot;${bene1Tipo}&quot;,&#10;  &quot;bene1Misura&quot;: &quot;${bene1Misura}&quot;,&#10;  &quot;bene1Fattore&quot;: &quot;${bene1Fattore}&quot;,&#10;  &quot;bene1Preventivo&quot;: &quot;${bene1Preventivo}&quot;,&#10;  &quot;bene1Listino&quot;: &quot;${bene1Listino}&quot;,&#10;  &quot;bene1PotenzaKw&quot;: &quot;${bene1PotenzaKw}&quot;,&#10;  &quot;bene1AnnoSostituito&quot;: &quot;${bene1AnnoSostituito}&quot;,&#10;  &quot;bene1Modalita&quot;: &quot;${bene1Modalita}&quot;,&#10;  &quot;bene1RicavoPermuta&quot;: &quot;${bene1RicavoPermuta}&quot;,&#10;  &quot;secondoBene&quot;: &quot;${secondoBene}&quot;,&#10;  &quot;bene2Tipo&quot;: &quot;${bene2Tipo}&quot;,&#10;  &quot;bene2Misura&quot;: &quot;${bene2Misura}&quot;,&#10;  &quot;bene2Fattore&quot;: &quot;${bene2Fattore}&quot;,&#10;  &quot;bene2Preventivo&quot;: &quot;${bene2Preventivo}&quot;,&#10;  &quot;bene2Listino&quot;: &quot;${bene2Listino}&quot;,&#10;  &quot;bene2PotenzaKw&quot;: &quot;${bene2PotenzaKw}&quot;,&#10;  &quot;bene2AnnoSostituito&quot;: &quot;${bene2AnnoSostituito}&quot;,&#10;  &quot;bene2Modalita&quot;: &quot;${bene2Modalita}&quot;,&#10;  &quot;bene2RicavoPermuta&quot;: &quot;${bene2RicavoPermuta}&quot;,&#10;  &quot;noleggioPattoAcquisto&quot;: &quot;${noleggioPattoAcquisto}&quot;,&#10;  &quot;giovaneEta&quot;: &quot;${giovaneEta}&quot;,&#10;  &quot;giovaneFormazione&quot;: &quot;${giovaneFormazione}&quot;,&#10;  &quot;giovaneCapoAzienda&quot;: &quot;${giovaneCapoAzienda}&quot;,&#10;  &quot;titoloProgetto&quot;: &quot;${titoloProgetto}&quot;,&#10;  &quot;descrizioneProgetto&quot;: &quot;${descrizioneProgetto}&quot;,&#10;  &quot;lavorazioneRischio&quot;: &quot;${lavorazioneRischio}&quot;,&#10;  &quot;macchina1Descrizione&quot;: &quot;${macchina1Descrizione}&quot;,&#10;  &quot;macchina1MarcaModello&quot;: &quot;${macchina1MarcaModello}&quot;,&#10;  &quot;macchina1Preventivo&quot;: &quot;${macchina1Preventivo}&quot;,&#10;  &quot;macchina1Listino&quot;: &quot;${macchina1Listino}&quot;,&#10;  &quot;macchina1Trattore&quot;: &quot;${macchina1Trattore}&quot;,&#10;  &quot;macchina1ListinoAccessori&quot;: &quot;${macchina1ListinoAccessori}&quot;,&#10;  &quot;macchina1PotenzaKw&quot;: &quot;${macchina1PotenzaKw}&quot;,&#10;  &quot;macchina1AnnoSostituito&quot;: &quot;${macchina1AnnoSostituito}&quot;,&#10;  &quot;macchina1Modalita&quot;: &quot;${macchina1Modalita}&quot;,&#10;  &quot;secondaMacchina&quot;: &quot;${secondaMacchina}&quot;,&#10;  &quot;macchina2Descrizione&quot;: &quot;${macchina2Descrizione}&quot;,&#10;  &quot;macchina2MarcaModello&quot;: &quot;${macchina2MarcaModello}&quot;,&#10;  &quot;macchina2Preventivo&quot;: &quot;${macchina2Preventivo}&quot;,&#10;  &quot;macchina2Listino&quot;: &quot;${macchina2Listino}&quot;,&#10;  &quot;macchina2Trattore&quot;: &quot;${macchina2Trattore}&quot;,&#10;  &quot;macchina2ListinoAccessori&quot;: &quot;${macchina2ListinoAccessori}&quot;,&#10;  &quot;macchina2PotenzaKw&quot;: &quot;${macchina2PotenzaKw}&quot;,&#10;  &quot;macchina2AnnoSostituito&quot;: &quot;${macchina2AnnoSostituito}&quot;,&#10;  &quot;macchina2Modalita&quot;: &quot;${macchina2Modalita}&quot;,&#10;  &quot;mqCopertura&quot;: &quot;${mqCopertura}&quot;,&#10;  &quot;speseCopertura&quot;: &quot;${speseCopertura}&quot;,&#10;  &quot;mqControsoffitto&quot;: &quot;${mqControsoffitto}&quot;,&#10;  &quot;speseControsoffitto&quot;: &quot;${speseControsoffitto}&quot;,&#10;  &quot;speseAccessorie&quot;: &quot;${speseAccessorie}&quot;,&#10;  &quot;immobileLocato&quot;: &quot;${immobileLocato}&quot;,&#10;  &quot;quotaImmobile&quot;: &quot;${quotaImmobile}&quot;,&#10;  &quot;sgslUltimi3Anni&quot;: &quot;${sgslUltimi3Anni}&quot;,&#10;  &quot;concessione12Precedenti&quot;: &quot;${concessione12Precedenti}&quot;,&#10;  &quot;tassoMedio&quot;: &quot;${tassoMedio}&quot;,&#10;  &quot;partiSociali&quot;: &quot;${partiSociali}&quot;,&#10;  &quot;rls&quot;: &quot;${rls}&quot;,&#10;  &quot;certIso45001&quot;: &quot;${certIso45001}&quot;,&#10;  &quot;certIso14001&quot;: &quot;${certIso14001}&quot;,&#10;  &quot;certEmas&quot;: &quot;${certEmas}&quot;,&#10;  &quot;certIso39001&quot;: &quot;${certIso39001}&quot;,&#10;  &quot;certMog&quot;: &quot;${certMog}&quot;,&#10;  &quot;certRlaq&quot;: &quot;${certRlaq}&quot;,&#10;  &quot;ratingLegalita&quot;: &quot;${ratingLegalita}&quot;,&#10;  &quot;speseProgetto&quot;: &quot;${speseProgetto}&quot;,&#10;  &quot;speseTecniche&quot;: &quot;${speseTecniche}&quot;,&#10;  &quot;costoPerizia&quot;: &quot;${costoPerizia}&quot;,&#10;  &quot;speseAggiuntivo&quot;: &quot;${speseAggiuntivo}&quot;,&#10;  &quot;ivaNonRecuperabile&quot;: &quot;${ivaNonRecuperabile}&quot;,&#10;  &quot;motivazioneIva&quot;: &quot;${motivazioneIva}&quot;,&#10;  &quot;anticipo&quot;: &quot;${anticipo}&quot;,&#10;  &quot;nessunaSpesaNonAmmessa&quot;: &quot;${nessunaSpesaNonAmmessa}&quot;,&#10;  &quot;dichR02&quot;: &quot;${dichR02}&quot;,&#10;  &quot;dichR03&quot;: &quot;${dichR03}&quot;,&#10;  &quot;dichR05&quot;: &quot;${dichR05}&quot;,&#10;  &quot;dichR06&quot;: &quot;${dichR06}&quot;,&#10;  &quot;dichR07&quot;: &quot;${dichR07}&quot;,&#10;  &quot;dichR08&quot;: &quot;${dichR08}&quot;,&#10;  &quot;dichR09&quot;: &quot;${dichR09}&quot;,&#10;  &quot;dichR10&quot;: &quot;${dichR10}&quot;,&#10;  &quot;dichR11&quot;: &quot;${dichR11}&quot;,&#10;  &quot;dichR12&quot;: &quot;${dichR12}&quot;,&#10;  &quot;dichR15&quot;: &quot;${dichR15}&quot;,&#10;  &quot;dichR16&quot;: &quot;${dichR16}&quot;,&#10;  &quot;dichR17&quot;: &quot;${dichR17}&quot;,&#10;  &quot;dichR18&quot;: &quot;${dichR18}&quot;,&#10;  &quot;finanziamentiPrecedenti&quot;: &quot;${finanziamentiPrecedenti}&quot;,&#10;  &quot;assePrecedente&quot;: &quot;${assePrecedente}&quot;,&#10;  &quot;rinunciaPec&quot;: &quot;${rinunciaPec}&quot;,&#10;  &quot;azione&quot;: &quot;${azione}&quot;,&#10;  &quot;confermaRegistrazione&quot;: &quot;${confermaRegistrazione}&quot;,&#10;  &quot;confermaAnnullamento&quot;: &quot;${confermaAnnullamento}&quot;,&#10;  &quot;codiceFiscaleImpresa&quot;: &quot;${codiceFiscaleImpresa}&quot;,&#10;  &quot;annualita&quot;: &quot;2025&quot;&#10;}" />
+          <activiti:field name="risposta" stringValue="riepilogo = riepilogo&#10;punteggio = punteggio&#10;registrabile = registrabile&#10;erroriBloccanti = erroriBloccanti&#10;avvisiCalcolo = avvisiCalcolo&#10;dettaglioPunteggio = dettaglioPunteggio&#10;dettaglioImporti = dettaglioImporti&#10;assiAmmessi = assiAmmessi&#10;assiNonAmmessi = assiNonAmmessi&#10;documentiRichiesti = documentiRichiesti&#10;contributoTotale = contributoTotale&#10;contributoTotaleTesto = contributoTotaleTesto&#10;importoAnticipo = anticipo&#10;fideiussione = fideiussione&#10;ulaCalcolate = ula&#10;versioneRegole = versioneRegole&#10;modelloPerizia = modelloPerizia&#10;gruppoSede = gruppoSede" />
+          <activiti:field name="timeout" stringValue="20" />
+          <activiti:field name="inErrore" stringValue="Segui la strada di errore" />
+        </extensionElements>
+      </serviceTask>
+      <boundaryEvent id="calcolaErrore" name="Servizio ISI non disponibile" attachedToRef="calcola">
+        <errorEventDefinition />
+      </boundaryEvent>
+      <exclusiveGateway id="cosaFare" name="Cosa ha scelto l'impresa?" default="cSalva" />
+      <serviceTask id="registra" name="Registra la domanda" implementation="apiConnector">
+        <extensionElements>
+          <activiti:field name="metodo" stringValue="POST" />
+          <activiti:field name="url" stringValue="http://localhost:8095/registra" />
+          <activiti:field name="credenziale" stringValue="servizio-isi" />
+          <activiti:field name="corpo" stringValue="{&#10;  &quot;ragioneSociale&quot;: &quot;${ragioneSociale}&quot;,&#10;  &quot;partitaIva&quot;: &quot;${partitaIva}&quot;,&#10;  &quot;formaGiuridica&quot;: &quot;${formaGiuridica}&quot;,&#10;  &quot;ateco&quot;: &quot;${ateco}&quot;,&#10;  &quot;dataCostituzione&quot;: &quot;${dataCostituzione}&quot;,&#10;  &quot;dataIscrizioneCciaa&quot;: &quot;${dataIscrizioneCciaa}&quot;,&#10;  &quot;sedeLegale&quot;: &quot;${sedeLegale}&quot;,&#10;  &quot;codiceDitta&quot;: &quot;${codiceDitta}&quot;,&#10;  &quot;pec&quot;: &quot;${pec}&quot;,&#10;  &quot;tipoSoggetto&quot;: &quot;${tipoSoggetto}&quot;,&#10;  &quot;agricolaPrimaria&quot;: &quot;${agricolaPrimaria}&quot;,&#10;  &quot;iap&quot;: &quot;${iap}&quot;,&#10;  &quot;associataCollegata&quot;: &quot;${associataCollegata}&quot;,&#10;  &quot;rapportoAssicurativo&quot;: &quot;${rapportoAssicurativo}&quot;,&#10;  &quot;dataAssociazionePortale&quot;: &quot;${dataAssociazionePortale}&quot;,&#10;  &quot;indirizzoUnita&quot;: &quot;${indirizzoUnita}&quot;,&#10;  &quot;regione&quot;: &quot;${regione}&quot;,&#10;  &quot;ula&quot;: &quot;${ula}&quot;,&#10;  &quot;fatturato&quot;: &quot;${fatturato}&quot;,&#10;  &quot;totaleBilancio&quot;: &quot;${totaleBilancio}&quot;,&#10;  &quot;dipendentiImpresa&quot;: &quot;${dipendentiImpresa}&quot;,&#10;  &quot;dipendentiUnita&quot;: &quot;${dipendentiUnita}&quot;,&#10;  &quot;attivitaStagionale&quot;: &quot;${attivitaStagionale}&quot;,&#10;  &quot;dataInizioAttivita&quot;: &quot;${dataInizioAttivita}&quot;,&#10;  &quot;dittaSenzaDipendenti&quot;: &quot;${dittaSenzaDipendenti}&quot;,&#10;  &quot;asse&quot;: &quot;${asse}&quot;,&#10;  &quot;tipologia11&quot;: &quot;${tipologia11}&quot;,&#10;  &quot;tipologia12&quot;: &quot;${tipologia12}&quot;,&#10;  &quot;tipologia2&quot;: &quot;${tipologia2}&quot;,&#10;  &quot;tipologia3&quot;: &quot;${tipologia3}&quot;,&#10;  &quot;tipologia4a&quot;: &quot;${tipologia4a}&quot;,&#10;  &quot;tipologia4b&quot;: &quot;${tipologia4b}&quot;,&#10;  &quot;tipologia4c&quot;: &quot;${tipologia4c}&quot;,&#10;  &quot;aggiuntivo11&quot;: &quot;${aggiuntivo11}&quot;,&#10;  &quot;aggiuntivo2&quot;: &quot;${aggiuntivo2}&quot;,&#10;  &quot;aggiuntivo3&quot;: &quot;${aggiuntivo3}&quot;,&#10;  &quot;aggiuntivo4&quot;: &quot;${aggiuntivo4}&quot;,&#10;  &quot;bene1Tipo&quot;: &quot;${bene1Tipo}&quot;,&#10;  &quot;bene1Misura&quot;: &quot;${bene1Misura}&quot;,&#10;  &quot;bene1Fattore&quot;: &quot;${bene1Fattore}&quot;,&#10;  &quot;bene1Preventivo&quot;: &quot;${bene1Preventivo}&quot;,&#10;  &quot;bene1Listino&quot;: &quot;${bene1Listino}&quot;,&#10;  &quot;bene1PotenzaKw&quot;: &quot;${bene1PotenzaKw}&quot;,&#10;  &quot;bene1AnnoSostituito&quot;: &quot;${bene1AnnoSostituito}&quot;,&#10;  &quot;bene1Modalita&quot;: &quot;${bene1Modalita}&quot;,&#10;  &quot;bene1RicavoPermuta&quot;: &quot;${bene1RicavoPermuta}&quot;,&#10;  &quot;secondoBene&quot;: &quot;${secondoBene}&quot;,&#10;  &quot;bene2Tipo&quot;: &quot;${bene2Tipo}&quot;,&#10;  &quot;bene2Misura&quot;: &quot;${bene2Misura}&quot;,&#10;  &quot;bene2Fattore&quot;: &quot;${bene2Fattore}&quot;,&#10;  &quot;bene2Preventivo&quot;: &quot;${bene2Preventivo}&quot;,&#10;  &quot;bene2Listino&quot;: &quot;${bene2Listino}&quot;,&#10;  &quot;bene2PotenzaKw&quot;: &quot;${bene2PotenzaKw}&quot;,&#10;  &quot;bene2AnnoSostituito&quot;: &quot;${bene2AnnoSostituito}&quot;,&#10;  &quot;bene2Modalita&quot;: &quot;${bene2Modalita}&quot;,&#10;  &quot;bene2RicavoPermuta&quot;: &quot;${bene2RicavoPermuta}&quot;,&#10;  &quot;noleggioPattoAcquisto&quot;: &quot;${noleggioPattoAcquisto}&quot;,&#10;  &quot;giovaneEta&quot;: &quot;${giovaneEta}&quot;,&#10;  &quot;giovaneFormazione&quot;: &quot;${giovaneFormazione}&quot;,&#10;  &quot;giovaneCapoAzienda&quot;: &quot;${giovaneCapoAzienda}&quot;,&#10;  &quot;titoloProgetto&quot;: &quot;${titoloProgetto}&quot;,&#10;  &quot;descrizioneProgetto&quot;: &quot;${descrizioneProgetto}&quot;,&#10;  &quot;lavorazioneRischio&quot;: &quot;${lavorazioneRischio}&quot;,&#10;  &quot;macchina1Descrizione&quot;: &quot;${macchina1Descrizione}&quot;,&#10;  &quot;macchina1MarcaModello&quot;: &quot;${macchina1MarcaModello}&quot;,&#10;  &quot;macchina1Preventivo&quot;: &quot;${macchina1Preventivo}&quot;,&#10;  &quot;macchina1Listino&quot;: &quot;${macchina1Listino}&quot;,&#10;  &quot;macchina1Trattore&quot;: &quot;${macchina1Trattore}&quot;,&#10;  &quot;macchina1ListinoAccessori&quot;: &quot;${macchina1ListinoAccessori}&quot;,&#10;  &quot;macchina1PotenzaKw&quot;: &quot;${macchina1PotenzaKw}&quot;,&#10;  &quot;macchina1AnnoSostituito&quot;: &quot;${macchina1AnnoSostituito}&quot;,&#10;  &quot;macchina1Modalita&quot;: &quot;${macchina1Modalita}&quot;,&#10;  &quot;secondaMacchina&quot;: &quot;${secondaMacchina}&quot;,&#10;  &quot;macchina2Descrizione&quot;: &quot;${macchina2Descrizione}&quot;,&#10;  &quot;macchina2MarcaModello&quot;: &quot;${macchina2MarcaModello}&quot;,&#10;  &quot;macchina2Preventivo&quot;: &quot;${macchina2Preventivo}&quot;,&#10;  &quot;macchina2Listino&quot;: &quot;${macchina2Listino}&quot;,&#10;  &quot;macchina2Trattore&quot;: &quot;${macchina2Trattore}&quot;,&#10;  &quot;macchina2ListinoAccessori&quot;: &quot;${macchina2ListinoAccessori}&quot;,&#10;  &quot;macchina2PotenzaKw&quot;: &quot;${macchina2PotenzaKw}&quot;,&#10;  &quot;macchina2AnnoSostituito&quot;: &quot;${macchina2AnnoSostituito}&quot;,&#10;  &quot;macchina2Modalita&quot;: &quot;${macchina2Modalita}&quot;,&#10;  &quot;mqCopertura&quot;: &quot;${mqCopertura}&quot;,&#10;  &quot;speseCopertura&quot;: &quot;${speseCopertura}&quot;,&#10;  &quot;mqControsoffitto&quot;: &quot;${mqControsoffitto}&quot;,&#10;  &quot;speseControsoffitto&quot;: &quot;${speseControsoffitto}&quot;,&#10;  &quot;speseAccessorie&quot;: &quot;${speseAccessorie}&quot;,&#10;  &quot;immobileLocato&quot;: &quot;${immobileLocato}&quot;,&#10;  &quot;quotaImmobile&quot;: &quot;${quotaImmobile}&quot;,&#10;  &quot;sgslUltimi3Anni&quot;: &quot;${sgslUltimi3Anni}&quot;,&#10;  &quot;concessione12Precedenti&quot;: &quot;${concessione12Precedenti}&quot;,&#10;  &quot;tassoMedio&quot;: &quot;${tassoMedio}&quot;,&#10;  &quot;partiSociali&quot;: &quot;${partiSociali}&quot;,&#10;  &quot;rls&quot;: &quot;${rls}&quot;,&#10;  &quot;certIso45001&quot;: &quot;${certIso45001}&quot;,&#10;  &quot;certIso14001&quot;: &quot;${certIso14001}&quot;,&#10;  &quot;certEmas&quot;: &quot;${certEmas}&quot;,&#10;  &quot;certIso39001&quot;: &quot;${certIso39001}&quot;,&#10;  &quot;certMog&quot;: &quot;${certMog}&quot;,&#10;  &quot;certRlaq&quot;: &quot;${certRlaq}&quot;,&#10;  &quot;ratingLegalita&quot;: &quot;${ratingLegalita}&quot;,&#10;  &quot;speseProgetto&quot;: &quot;${speseProgetto}&quot;,&#10;  &quot;speseTecniche&quot;: &quot;${speseTecniche}&quot;,&#10;  &quot;costoPerizia&quot;: &quot;${costoPerizia}&quot;,&#10;  &quot;speseAggiuntivo&quot;: &quot;${speseAggiuntivo}&quot;,&#10;  &quot;ivaNonRecuperabile&quot;: &quot;${ivaNonRecuperabile}&quot;,&#10;  &quot;motivazioneIva&quot;: &quot;${motivazioneIva}&quot;,&#10;  &quot;anticipo&quot;: &quot;${anticipo}&quot;,&#10;  &quot;nessunaSpesaNonAmmessa&quot;: &quot;${nessunaSpesaNonAmmessa}&quot;,&#10;  &quot;dichR02&quot;: &quot;${dichR02}&quot;,&#10;  &quot;dichR03&quot;: &quot;${dichR03}&quot;,&#10;  &quot;dichR05&quot;: &quot;${dichR05}&quot;,&#10;  &quot;dichR06&quot;: &quot;${dichR06}&quot;,&#10;  &quot;dichR07&quot;: &quot;${dichR07}&quot;,&#10;  &quot;dichR08&quot;: &quot;${dichR08}&quot;,&#10;  &quot;dichR09&quot;: &quot;${dichR09}&quot;,&#10;  &quot;dichR10&quot;: &quot;${dichR10}&quot;,&#10;  &quot;dichR11&quot;: &quot;${dichR11}&quot;,&#10;  &quot;dichR12&quot;: &quot;${dichR12}&quot;,&#10;  &quot;dichR15&quot;: &quot;${dichR15}&quot;,&#10;  &quot;dichR16&quot;: &quot;${dichR16}&quot;,&#10;  &quot;dichR17&quot;: &quot;${dichR17}&quot;,&#10;  &quot;dichR18&quot;: &quot;${dichR18}&quot;,&#10;  &quot;finanziamentiPrecedenti&quot;: &quot;${finanziamentiPrecedenti}&quot;,&#10;  &quot;assePrecedente&quot;: &quot;${assePrecedente}&quot;,&#10;  &quot;rinunciaPec&quot;: &quot;${rinunciaPec}&quot;,&#10;  &quot;azione&quot;: &quot;${azione}&quot;,&#10;  &quot;confermaRegistrazione&quot;: &quot;${confermaRegistrazione}&quot;,&#10;  &quot;confermaAnnullamento&quot;: &quot;${confermaAnnullamento}&quot;,&#10;  &quot;codiceFiscaleImpresa&quot;: &quot;${codiceFiscaleImpresa}&quot;,&#10;  &quot;annualita&quot;: &quot;2025&quot;&#10;}" />
+          <activiti:field name="risposta" stringValue="esitoRegistrazione = esitoRegistrazione&#10;messaggioRegistrazione = messaggioRegistrazione&#10;numeroDomanda = numeroDomanda&#10;dataOraRegistrazione = dataOraRegistrazione&#10;gruppoSede = gruppoSede&#10;esitoElenco = esitoElenco" />
+          <activiti:field name="timeout" stringValue="20" />
+          <activiti:field name="inErrore" stringValue="Segui la strada di errore" />
+        </extensionElements>
+      </serviceTask>
+      <boundaryEvent id="registraErrore" name="Servizio ISI non disponibile" attachedToRef="registra">
+        <errorEventDefinition />
+      </boundaryEvent>
+      <exclusiveGateway id="registrata" name="Registrata?" default="cNonRegistrata" />
+      <endEvent id="cFineRegistrata" name="Domanda registrata" />
+      <endEvent id="cFineAnnullata" name="Bozza annullata" />
+      <exclusiveGateway id="annullaGw" name="Annulla la bozza?" default="cCalcola" />
+      <sequenceFlow id="c1" sourceRef="cInizio" targetRef="compila" />
+      <sequenceFlow id="c2" sourceRef="compila" targetRef="annullaGw" />
+      <sequenceFlow id="cAnnulla" name="Sì" sourceRef="annullaGw" targetRef="cFineAnnullata">
+        <conditionExpression xsi:type="tFormalExpression">${azione == 'Annulla la bozza'}</conditionExpression>
+      </sequenceFlow>
+      <sequenceFlow id="cCalcola" name="No" sourceRef="annullaGw" targetRef="calcola" />
+      <sequenceFlow id="c3" sourceRef="calcola" targetRef="cosaFare" />
+      <sequenceFlow id="c4" sourceRef="calcolaErrore" targetRef="compila" />
+      <sequenceFlow id="cSalva" name="Calcola e salva" sourceRef="cosaFare" targetRef="compila" />
+      <sequenceFlow id="cRegistra" name="Registra, senza errori" sourceRef="cosaFare" targetRef="registra">
+        <conditionExpression xsi:type="tFormalExpression">${azione == 'Registra la domanda' &amp;&amp; registrabile == 'Sì'}</conditionExpression>
+      </sequenceFlow>
+      <sequenceFlow id="c5" sourceRef="registra" targetRef="registrata" />
+      <sequenceFlow id="c6" sourceRef="registraErrore" targetRef="compila" />
+      <sequenceFlow id="cOk" name="Sì" sourceRef="registrata" targetRef="cFineRegistrata">
+        <conditionExpression xsi:type="tFormalExpression">${esitoRegistrazione == 'REGISTRATA'}</conditionExpression>
+      </sequenceFlow>
+      <sequenceFlow id="cNonRegistrata" name="No" sourceRef="registrata" targetRef="compila" />
+    </subProcess>
+    <boundaryEvent id="chiusuraCompilazioneTimer" name="Chiusura della compilazione" attachedToRef="compilazione">
+      <timerEventDefinition>
+        <timeDate>${chiusuraCompilazione}</timeDate>
+      </timerEventDefinition>
+    </boundaryEvent>
+    <endEvent id="fineNonRegistrata" name="Non registrata entro il termine" />
+    <sequenceFlow id="f5" sourceRef="chiusuraCompilazioneTimer" targetRef="fineNonRegistrata" />
+    <exclusiveGateway id="dopoCompilazione" name="Domanda registrata?" default="fAnnullata" />
+    <endEvent id="fineAnnullata" name="Bozza annullata" />
+    <sequenceFlow id="f6" sourceRef="compilazione" targetRef="dopoCompilazione" />
+    <sequenceFlow id="fAnnullata" name="No" sourceRef="dopoCompilazione" targetRef="fineAnnullata" />
+    <sequenceFlow id="fRegistrata" name="Sì" sourceRef="dopoCompilazione" targetRef="ricevutaRegistrazione">
+      <conditionExpression xsi:type="tFormalExpression">${azione == 'Registra la domanda'}</conditionExpression>
+    </sequenceFlow>
+    <serviceTask id="ricevutaRegistrazione" name="Invia la ricevuta di registrazione" implementation="emailConnector">
+      <extensionElements>
+        <activiti:field name="destinatari" stringValue="campo:pec" />
+        <activiti:field name="oggetto" stringValue="Bando ISI 2025: domanda ${numeroDomanda} registrata" />
+        <activiti:field name="testo" stringValue="Gentile ${ragioneSociale},&#10;&#10;la domanda n. ${numeroDomanda} per il progetto &quot;${titoloProgetto}&quot; è stata registrata il ${dataOraRegistrazione}.&#10;${riepilogo}&#10;&#10;Dal ${aperturaCodice} potrà acquisire il codice identificativo per lo sportello informatico.&#10;&#10;INAIL - Bando ISI 2025&#10;Questa comunicazione è inviata alla PEC indicata nella domanda." />
+        <activiti:field name="allegati" stringValue="Nessuno" />
+      </extensionElements>
+    </serviceTask>
+    <sequenceFlow id="f7" sourceRef="ricevutaRegistrazione" targetRef="sportello" />
+    <subProcess id="sportello" name="Codice e sportello informatico">
+      <startEvent id="sInizio" />
+      <intermediateCatchEvent id="attesaCodice" name="Apertura del periodo del codice">
+        <timerEventDefinition>
+          <timeDate>${aperturaCodice}</timeDate>
+        </timerEventDefinition>
+      </intermediateCatchEvent>
+      <userTask id="acquisisciCodice" name="Acquisisci il codice identificativo" activiti:candidateGroups="parte:richiedente" activiti:formKey="isi-codice" />
+      <boundaryEvent id="chiusuraCodiceTimer" name="Chiusura del periodo del codice" attachedToRef="acquisisciCodice">
+        <timerEventDefinition>
+          <timeDate>${chiusuraCodice}</timeDate>
+        </timerEventDefinition>
+      </boundaryEvent>
+      <serviceTask id="generaCodice" name="Rilascia il codice identificativo" implementation="apiConnector">
+        <extensionElements>
+          <activiti:field name="metodo" stringValue="POST" />
+          <activiti:field name="url" stringValue="http://localhost:8095/codice" />
+          <activiti:field name="credenziale" stringValue="servizio-isi" />
+          <activiti:field name="corpo" stringValue="{&quot;numeroDomanda&quot;: &quot;${numeroDomanda}&quot;}" />
+          <activiti:field name="risposta" stringValue="codiceIdentificativo = codiceIdentificativo" />
+          <activiti:field name="timeout" stringValue="20" />
+          <activiti:field name="inErrore" stringValue="Segui la strada di errore" />
+        </extensionElements>
+      </serviceTask>
+      <boundaryEvent id="generaCodiceErrore" name="Servizio ISI non disponibile" attachedToRef="generaCodice">
+        <errorEventDefinition />
+      </boundaryEvent>
+      <userTask id="inviaSportello" name="Invia il codice allo sportello" activiti:candidateGroups="parte:richiedente" activiti:formKey="isi-sportello" />
+      <boundaryEvent id="chiusuraSportelloTimer" name="Chiusura dello sportello" attachedToRef="inviaSportello">
+        <timerEventDefinition>
+          <timeDate>${chiusuraSportello}</timeDate>
+        </timerEventDefinition>
+      </boundaryEvent>
+      <serviceTask id="registraInvio" name="Registra l'ora di arrivo" implementation="apiConnector">
+        <extensionElements>
+          <activiti:field name="metodo" stringValue="POST" />
+          <activiti:field name="url" stringValue="http://localhost:8095/sportello" />
+          <activiti:field name="credenziale" stringValue="servizio-isi" />
+          <activiti:field name="corpo" stringValue="{&quot;numeroDomanda&quot;: &quot;${numeroDomanda}&quot;, &quot;codice&quot;: &quot;${codiceInviato}&quot;}" />
+          <activiti:field name="risposta" stringValue="esitoInvio = esitoInvio&#10;messaggioInvio = messaggioInvio&#10;dataOraInvio = dataOraInvio" />
+          <activiti:field name="timeout" stringValue="20" />
+          <activiti:field name="inErrore" stringValue="Segui la strada di errore" />
+        </extensionElements>
+      </serviceTask>
+      <boundaryEvent id="registraInvioErrore" name="Servizio ISI non disponibile" attachedToRef="registraInvio">
+        <errorEventDefinition />
+      </boundaryEvent>
+      <exclusiveGateway id="invioOk" name="Codice preso in carico?" default="sRifiutato" />
+      <intermediateCatchEvent id="attesaElenchi" name="Attesa degli elenchi (90 giorni)">
+        <timerEventDefinition>
+          <timeDuration>P90D</timeDuration>
+        </timerEventDefinition>
+      </intermediateCatchEvent>
+      <endEvent id="sFineSenzaCodice" name="Codice non acquisito" />
+      <endEvent id="sFineNonInviata" name="Codice non inviato" />
+      <endEvent id="sFineSenzaElenchi" name="Elenchi non pubblicati" />
+      <sequenceFlow id="s1" sourceRef="sInizio" targetRef="attesaCodice" />
+      <sequenceFlow id="s2" sourceRef="attesaCodice" targetRef="acquisisciCodice" />
+      <sequenceFlow id="s3" sourceRef="acquisisciCodice" targetRef="generaCodice" />
+      <sequenceFlow id="s4" sourceRef="generaCodiceErrore" targetRef="acquisisciCodice" />
+      <sequenceFlow id="s5" sourceRef="generaCodice" targetRef="inviaSportello" />
+      <sequenceFlow id="s6" sourceRef="chiusuraCodiceTimer" targetRef="sFineSenzaCodice" />
+      <sequenceFlow id="s7" sourceRef="inviaSportello" targetRef="registraInvio" />
+      <sequenceFlow id="s8" sourceRef="registraInvioErrore" targetRef="inviaSportello" />
+      <sequenceFlow id="s9" sourceRef="registraInvio" targetRef="invioOk" />
+      <sequenceFlow id="sInviato" name="Sì" sourceRef="invioOk" targetRef="attesaElenchi">
+        <conditionExpression xsi:type="tFormalExpression">${esitoInvio == 'INVIATA'}</conditionExpression>
+      </sequenceFlow>
+      <sequenceFlow id="sRifiutato" name="Rifiutato" sourceRef="invioOk" targetRef="inviaSportello" />
+      <sequenceFlow id="s10" sourceRef="chiusuraSportelloTimer" targetRef="sFineNonInviata" />
+      <sequenceFlow id="s11" sourceRef="attesaElenchi" targetRef="sFineSenzaElenchi" />
+    </subProcess>
+    <boundaryEvent id="esitoElencoArrivato" name="Esito degli elenchi" attachedToRef="sportello">
+      <extensionElements>
+        <orditogram:datiMessaggio>esitoElenco, posizioneElenco, termineDocumenti</orditogram:datiMessaggio>
+      </extensionElements>
+      <messageEventDefinition messageRef="esitoElenco" />
+    </boundaryEvent>
+    <boundaryEvent id="rinunciaSportello" name="Rinuncia dell'impresa" attachedToRef="sportello">
+      <extensionElements>
+        <orditogram:datiMessaggio>motivoRinuncia</orditogram:datiMessaggio>
+      </extensionElements>
+      <messageEventDefinition messageRef="rinunciaImpresa" />
+    </boundaryEvent>
+    <sequenceFlow id="f8" sourceRef="esitoElencoArrivato" targetRef="esitoGw" />
+    <sequenceFlow id="f9" sourceRef="sportello" targetRef="esitoGw" />
+    <sequenceFlow id="f10" sourceRef="rinunciaSportello" targetRef="registraRinuncia" />
+    <exclusiveGateway id="esitoGw" name="Esito negli elenchi?" default="fSenzaEsito" />
+    <endEvent id="fineSenzaEsito" name="Non in elenco (codice non inviato)" />
+    <sequenceFlow id="fSenzaEsito" name="Altrimenti" sourceRef="esitoGw" targetRef="fineSenzaEsito" />
+    <sequenceFlow id="fPosizioneUtile" name="NCD o in posizione utile" sourceRef="esitoGw" targetRef="documenti">
+      <conditionExpression xsi:type="tFormalExpression">${esitoElenco == 'NCD' || esitoElenco == 'IN_POSIZIONE_UTILE' || esitoElenco == 'SUBENTRATA'}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="fFuoriFondi" name="Fuori dai fondi" sourceRef="esitoGw" targetRef="attesaRedistribuzione">
+      <conditionExpression xsi:type="tFormalExpression">${esitoElenco == 'NON_AMMISSIBILE_FONDI'}</conditionExpression>
+    </sequenceFlow>
+    <intermediateCatchEvent id="attesaRedistribuzione" name="Attesa della redistribuzione">
+      <extensionElements>
+        <orditogram:datiMessaggio>esitoElenco, posizioneElenco, termineDocumenti</orditogram:datiMessaggio>
+      </extensionElements>
+      <messageEventDefinition messageRef="esitoElenco" />
+    </intermediateCatchEvent>
+    <exclusiveGateway id="subentrataGw" name="Subentrata?" default="fNonSubentrata" />
+    <endEvent id="fineFuoriFondi" name="Non ammissibile per carenza di fondi" />
+    <sequenceFlow id="f11" sourceRef="attesaRedistribuzione" targetRef="subentrataGw" />
+    <sequenceFlow id="fSubentrata" name="Sì" sourceRef="subentrataGw" targetRef="documenti">
+      <conditionExpression xsi:type="tFormalExpression">${esitoElenco == 'SUBENTRATA'}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="fNonSubentrata" name="No" sourceRef="subentrataGw" targetRef="fineFuoriFondi" />
+    <subProcess id="documenti" name="Caricamento dei documenti">
+      <startEvent id="dInizio" />
+      <parallelGateway id="dApri" name="Documenti e perizia" />
+      <userTask id="caricaDocumenti" name="Carica i documenti" activiti:candidateGroups="parte:richiedente" activiti:formKey="isi-documenti" />
+      <exclusiveGateway id="serveperizia" name="Serve la perizia?" default="dPerizia" />
+      <userTask id="incaricaTecnico" name="Incarica il tecnico" activiti:candidateGroups="parte:richiedente" activiti:formKey="isi-incarico" />
+      <serviceTask id="verificaIncarico" name="Controlla il tecnico incaricato" implementation="apiConnector">
+        <extensionElements>
+          <activiti:field name="metodo" stringValue="POST" />
+          <activiti:field name="url" stringValue="http://localhost:8095/incarico" />
+          <activiti:field name="credenziale" stringValue="servizio-isi" />
+          <activiti:field name="corpo" stringValue="{&quot;cfTecnico&quot;: &quot;${cfTecnico}&quot;, &quot;cfLegaleRappresentante&quot;: &quot;${cfLegaleRappresentante}&quot;, &quot;cfSoci&quot;: &quot;${cfSoci}&quot;}" />
+          <activiti:field name="risposta" stringValue="incaricoAmmesso = incaricoAmmesso&#10;motivoIncarico = motivoIncarico" />
+          <activiti:field name="timeout" stringValue="20" />
+          <activiti:field name="inErrore" stringValue="Segui la strada di errore" />
+        </extensionElements>
+      </serviceTask>
+      <boundaryEvent id="verificaIncaricoErrore" name="Servizio ISI non disponibile" attachedToRef="verificaIncarico">
+        <errorEventDefinition />
+      </boundaryEvent>
+      <exclusiveGateway id="incaricoOk" name="Tecnico ammesso?" default="dTecnicoNo" />
+      <userTask id="abilitaTecnico" name="Abilita il tecnico sulla domanda" activiti:candidateGroups="supporto-isi" activiti:formKey="isi-abilita-tecnico" />
+      <userTask id="compilaPerizia" name="Compila e firma la perizia" activiti:candidateGroups="parte:tecnico" activiti:formKey="isi-perizia" />
+      <exclusiveGateway id="periziaPronta" name="Perizia pronta o non richiesta" default="d11" />
+      <parallelGateway id="dChiudi" name="Tutto pronto" />
+      <endEvent id="dFine" name="Documenti completi" />
+      <sequenceFlow id="d1" sourceRef="dInizio" targetRef="dApri" />
+      <sequenceFlow id="d2" sourceRef="dApri" targetRef="caricaDocumenti" />
+      <sequenceFlow id="d3" sourceRef="dApri" targetRef="serveperizia" />
+      <sequenceFlow id="d4" sourceRef="caricaDocumenti" targetRef="dChiudi" />
+      <sequenceFlow id="dNoPerizia" name="Asse 1.2: no" sourceRef="serveperizia" targetRef="periziaPronta">
+        <conditionExpression xsi:type="tFormalExpression">${asse == '1.2 Modelli organizzativi'}</conditionExpression>
+      </sequenceFlow>
+      <sequenceFlow id="dPerizia" name="Sì" sourceRef="serveperizia" targetRef="incaricaTecnico" />
+      <sequenceFlow id="d5" sourceRef="incaricaTecnico" targetRef="verificaIncarico" />
+      <sequenceFlow id="d6" sourceRef="verificaIncaricoErrore" targetRef="incaricaTecnico" />
+      <sequenceFlow id="d7" sourceRef="verificaIncarico" targetRef="incaricoOk" />
+      <sequenceFlow id="dTecnicoSi" name="Sì" sourceRef="incaricoOk" targetRef="abilitaTecnico">
+        <conditionExpression xsi:type="tFormalExpression">${incaricoAmmesso == 'Sì'}</conditionExpression>
+      </sequenceFlow>
+      <sequenceFlow id="dTecnicoNo" name="No" sourceRef="incaricoOk" targetRef="incaricaTecnico" />
+      <sequenceFlow id="d8" sourceRef="abilitaTecnico" targetRef="compilaPerizia" />
+      <sequenceFlow id="d9" sourceRef="compilaPerizia" targetRef="periziaPronta" />
+      <sequenceFlow id="d11" sourceRef="periziaPronta" targetRef="dChiudi" />
+      <sequenceFlow id="d10" sourceRef="dChiudi" targetRef="dFine" />
+    </subProcess>
+    <boundaryEvent id="termineDocumentiTimer" name="Termine per i documenti" attachedToRef="documenti">
+      <timerEventDefinition>
+        <timeDate>${termineDocumenti}</timeDate>
+      </timerEventDefinition>
+    </boundaryEvent>
+    <boundaryEvent id="rinunciaDocumenti" name="Rinuncia dell'impresa" attachedToRef="documenti">
+      <extensionElements>
+        <orditogram:datiMessaggio>motivoRinuncia</orditogram:datiMessaggio>
+      </extensionElements>
+      <messageEventDefinition messageRef="rinunciaImpresa" />
+    </boundaryEvent>
+    <sequenceFlow id="f12" sourceRef="documenti" targetRef="statoDocumentiInviati" />
+    <sequenceFlow id="f13" sourceRef="rinunciaDocumenti" targetRef="registraRinuncia" />
+    <serviceTask id="statoDocumentiInviati" name="Segna i documenti come inviati" implementation="apiConnector">
+      <extensionElements>
+        <activiti:field name="metodo" stringValue="POST" />
+        <activiti:field name="url" stringValue="http://localhost:8095/stato" />
+        <activiti:field name="credenziale" stringValue="servizio-isi" />
+        <activiti:field name="corpo" stringValue="{&quot;numeroDomanda&quot;: &quot;${numeroDomanda}&quot;, &quot;stato&quot;: &quot;DOCUMENTI_INVIATI&quot;, &quot;chi&quot;: &quot;impresa&quot;}" />
+        <activiti:field name="risposta" stringValue="statoDomanda = statoDomanda" />
+        <activiti:field name="timeout" stringValue="20" />
+        <activiti:field name="inErrore" stringValue="Blocca e riprova più tardi" />
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="ricevutaDocumenti" name="Invia la ricevuta del caricamento" implementation="emailConnector">
+      <extensionElements>
+        <activiti:field name="destinatari" stringValue="campo:pec" />
+        <activiti:field name="oggetto" stringValue="Bando ISI 2025: domanda ${numeroDomanda}, documenti ricevuti" />
+        <activiti:field name="testo" stringValue="Gentile ${ragioneSociale},&#10;&#10;il caricamento dei documenti della domanda n. ${numeroDomanda} è completo. La sede INAIL della Regione ${regione} avvia l'istruttoria, che si conclude entro 120 giorni.&#10;&#10;INAIL - Bando ISI 2025&#10;Questa comunicazione è inviata alla PEC indicata nella domanda." />
+        <activiti:field name="allegati" stringValue="Nessuno" />
+      </extensionElements>
+    </serviceTask>
+    <sequenceFlow id="f14" sourceRef="statoDocumentiInviati" targetRef="ricevutaDocumenti" />
+    <sequenceFlow id="f15" sourceRef="ricevutaDocumenti" targetRef="avviaIstruttoria" />
+    <serviceTask id="comunicaDecadenza" name="Comunica la decadenza" implementation="emailConnector">
+      <extensionElements>
+        <activiti:field name="destinatari" stringValue="campo:pec" />
+        <activiti:field name="oggetto" stringValue="Bando ISI 2025: domanda ${numeroDomanda} decaduta" />
+        <activiti:field name="testo" stringValue="Gentile ${ragioneSociale},&#10;&#10;la domanda n. ${numeroDomanda} è decaduta perché i documenti non sono stati inviati entro il ${termineDocumenti}.&#10;Entro 5 giorni può presentare un'istanza motivata di revoca della decadenza dalla sua area riservata.&#10;&#10;INAIL - Bando ISI 2025&#10;Questa comunicazione è inviata alla PEC indicata nella domanda." />
+        <activiti:field name="allegati" stringValue="Nessuno" />
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="statoDecaduta" name="Segna la domanda come decaduta" implementation="apiConnector">
+      <extensionElements>
+        <activiti:field name="metodo" stringValue="POST" />
+        <activiti:field name="url" stringValue="http://localhost:8095/stato" />
+        <activiti:field name="credenziale" stringValue="servizio-isi" />
+        <activiti:field name="corpo" stringValue="{&quot;numeroDomanda&quot;: &quot;${numeroDomanda}&quot;, &quot;stato&quot;: &quot;DECADUTA&quot;, &quot;motivo&quot;: &quot;Documenti non inviati nei termini&quot;}" />
+        <activiti:field name="risposta" stringValue="statoDomanda = statoDomanda" />
+        <activiti:field name="timeout" stringValue="20" />
+        <activiti:field name="inErrore" stringValue="Blocca e riprova più tardi" />
+      </extensionElements>
+    </serviceTask>
+    <userTask id="istanzaRevoca" name="Presenta l'istanza di revoca" activiti:candidateGroups="parte:richiedente" activiti:formKey="isi-revoca" />
+    <boundaryEvent id="termineRevoca" name="5 giorni per l'istanza" attachedToRef="istanzaRevoca">
+      <timerEventDefinition activiti:businessCalendarName="proroga">
+        <timeDuration>P5D</timeDuration>
+      </timerEventDefinition>
+    </boundaryEvent>
+    <userTask id="valutaRevoca" name="Valuta l'istanza di revoca" activiti:candidateGroups="${gruppoSede}" activiti:formKey="isi-valuta-revoca" />
+    <exclusiveGateway id="revocaGw" name="Istanza accolta?" default="fRevocaNo" />
+    <serviceTask id="comunicaRevocaRespinta" name="Comunica il rigetto dell'istanza" implementation="emailConnector">
+      <extensionElements>
+        <activiti:field name="destinatari" stringValue="campo:pec" />
+        <activiti:field name="oggetto" stringValue="Bando ISI 2025: domanda ${numeroDomanda}, istanza di revoca respinta" />
+        <activiti:field name="testo" stringValue="Gentile ${ragioneSociale},&#10;&#10;l'istanza di revoca della decadenza della domanda n. ${numeroDomanda} è stata respinta:&#10;${noteRevoca}&#10;&#10;INAIL - Bando ISI 2025&#10;Questa comunicazione è inviata alla PEC indicata nella domanda." />
+        <activiti:field name="allegati" stringValue="Nessuno" />
+      </extensionElements>
+    </serviceTask>
+    <endEvent id="fineDecaduta" name="Decaduta" />
+    <sequenceFlow id="f16" sourceRef="termineDocumentiTimer" targetRef="comunicaDecadenza" />
+    <sequenceFlow id="f17" sourceRef="comunicaDecadenza" targetRef="statoDecaduta" />
+    <sequenceFlow id="f18" sourceRef="statoDecaduta" targetRef="istanzaRevoca" />
+    <sequenceFlow id="f19" sourceRef="termineRevoca" targetRef="fineDecaduta" />
+    <sequenceFlow id="f20" sourceRef="istanzaRevoca" targetRef="valutaRevoca" />
+    <sequenceFlow id="f21" sourceRef="valutaRevoca" targetRef="revocaGw" />
+    <sequenceFlow id="fRevocaSi" name="Accolta" sourceRef="revocaGw" targetRef="statoDocumentiInviati">
+      <conditionExpression xsi:type="tFormalExpression">${esitoRevoca == 'Accolta'}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="fRevocaNo" name="Respinta" sourceRef="revocaGw" targetRef="comunicaRevocaRespinta" />
+    <sequenceFlow id="f22" sourceRef="comunicaRevocaRespinta" targetRef="fineDecaduta" />
+    <serviceTask id="avviaIstruttoria" name="Avvia il conteggio dei 120 giorni" implementation="apiConnector">
+      <extensionElements>
+        <activiti:field name="metodo" stringValue="POST" />
+        <activiti:field name="url" stringValue="http://localhost:8095/istruttoria/avvia" />
+        <activiti:field name="credenziale" stringValue="servizio-isi" />
+        <activiti:field name="corpo" stringValue="{&quot;numeroDomanda&quot;: &quot;${numeroDomanda}&quot;}" />
+        <activiti:field name="risposta" stringValue="scadenzaIstruttoria = scadenzaIstruttoria&#10;avvisoIstruttoria = avvisoIstruttoria&#10;giorniRimanenti = giorniRimanenti" />
+        <activiti:field name="timeout" stringValue="20" />
+        <activiti:field name="inErrore" stringValue="Blocca e riprova più tardi" />
+      </extensionElements>
+    </serviceTask>
+    <sequenceFlow id="f23" sourceRef="avviaIstruttoria" targetRef="istruttoria" />
+    <subProcess id="istruttoria" name="Istruttoria della sede INAIL">
+      <startEvent id="iInizio" />
+      <userTask id="svolgiIstruttoria" name="Svolgi l'istruttoria" activiti:candidateGroups="${gruppoSede}" activiti:formKey="isi-istruttoria" />
+      <serviceTask id="ricalcola" name="Ricalcola punteggio e contributo" implementation="apiConnector">
+        <extensionElements>
+          <activiti:field name="metodo" stringValue="POST" />
+          <activiti:field name="url" stringValue="http://localhost:8095/calcola" />
+          <activiti:field name="credenziale" stringValue="servizio-isi" />
+          <activiti:field name="corpo" stringValue="{&#10;  &quot;ragioneSociale&quot;: &quot;${ragioneSociale}&quot;,&#10;  &quot;partitaIva&quot;: &quot;${partitaIva}&quot;,&#10;  &quot;formaGiuridica&quot;: &quot;${formaGiuridica}&quot;,&#10;  &quot;ateco&quot;: &quot;${ateco}&quot;,&#10;  &quot;dataCostituzione&quot;: &quot;${dataCostituzione}&quot;,&#10;  &quot;dataIscrizioneCciaa&quot;: &quot;${dataIscrizioneCciaa}&quot;,&#10;  &quot;sedeLegale&quot;: &quot;${sedeLegale}&quot;,&#10;  &quot;codiceDitta&quot;: &quot;${codiceDitta}&quot;,&#10;  &quot;pec&quot;: &quot;${pec}&quot;,&#10;  &quot;tipoSoggetto&quot;: &quot;${tipoSoggetto}&quot;,&#10;  &quot;agricolaPrimaria&quot;: &quot;${agricolaPrimaria}&quot;,&#10;  &quot;iap&quot;: &quot;${iap}&quot;,&#10;  &quot;associataCollegata&quot;: &quot;${associataCollegata}&quot;,&#10;  &quot;rapportoAssicurativo&quot;: &quot;${rapportoAssicurativo}&quot;,&#10;  &quot;dataAssociazionePortale&quot;: &quot;${dataAssociazionePortale}&quot;,&#10;  &quot;indirizzoUnita&quot;: &quot;${indirizzoUnita}&quot;,&#10;  &quot;regione&quot;: &quot;${regione}&quot;,&#10;  &quot;ula&quot;: &quot;${ula}&quot;,&#10;  &quot;fatturato&quot;: &quot;${fatturato}&quot;,&#10;  &quot;totaleBilancio&quot;: &quot;${totaleBilancio}&quot;,&#10;  &quot;dipendentiImpresa&quot;: &quot;${dipendentiImpresa}&quot;,&#10;  &quot;dipendentiUnita&quot;: &quot;${dipendentiUnita}&quot;,&#10;  &quot;attivitaStagionale&quot;: &quot;${attivitaStagionale}&quot;,&#10;  &quot;dataInizioAttivita&quot;: &quot;${dataInizioAttivita}&quot;,&#10;  &quot;dittaSenzaDipendenti&quot;: &quot;${dittaSenzaDipendenti}&quot;,&#10;  &quot;asse&quot;: &quot;${asse}&quot;,&#10;  &quot;tipologia11&quot;: &quot;${tipologia11}&quot;,&#10;  &quot;tipologia12&quot;: &quot;${tipologia12}&quot;,&#10;  &quot;tipologia2&quot;: &quot;${tipologia2}&quot;,&#10;  &quot;tipologia3&quot;: &quot;${tipologia3}&quot;,&#10;  &quot;tipologia4a&quot;: &quot;${tipologia4a}&quot;,&#10;  &quot;tipologia4b&quot;: &quot;${tipologia4b}&quot;,&#10;  &quot;tipologia4c&quot;: &quot;${tipologia4c}&quot;,&#10;  &quot;aggiuntivo11&quot;: &quot;${aggiuntivo11}&quot;,&#10;  &quot;aggiuntivo2&quot;: &quot;${aggiuntivo2}&quot;,&#10;  &quot;aggiuntivo3&quot;: &quot;${aggiuntivo3}&quot;,&#10;  &quot;aggiuntivo4&quot;: &quot;${aggiuntivo4}&quot;,&#10;  &quot;bene1Tipo&quot;: &quot;${bene1Tipo}&quot;,&#10;  &quot;bene1Misura&quot;: &quot;${bene1Misura}&quot;,&#10;  &quot;bene1Fattore&quot;: &quot;${bene1Fattore}&quot;,&#10;  &quot;bene1Preventivo&quot;: &quot;${bene1Preventivo}&quot;,&#10;  &quot;bene1Listino&quot;: &quot;${bene1Listino}&quot;,&#10;  &quot;bene1PotenzaKw&quot;: &quot;${bene1PotenzaKw}&quot;,&#10;  &quot;bene1AnnoSostituito&quot;: &quot;${bene1AnnoSostituito}&quot;,&#10;  &quot;bene1Modalita&quot;: &quot;${bene1Modalita}&quot;,&#10;  &quot;bene1RicavoPermuta&quot;: &quot;${bene1RicavoPermuta}&quot;,&#10;  &quot;secondoBene&quot;: &quot;${secondoBene}&quot;,&#10;  &quot;bene2Tipo&quot;: &quot;${bene2Tipo}&quot;,&#10;  &quot;bene2Misura&quot;: &quot;${bene2Misura}&quot;,&#10;  &quot;bene2Fattore&quot;: &quot;${bene2Fattore}&quot;,&#10;  &quot;bene2Preventivo&quot;: &quot;${bene2Preventivo}&quot;,&#10;  &quot;bene2Listino&quot;: &quot;${bene2Listino}&quot;,&#10;  &quot;bene2PotenzaKw&quot;: &quot;${bene2PotenzaKw}&quot;,&#10;  &quot;bene2AnnoSostituito&quot;: &quot;${bene2AnnoSostituito}&quot;,&#10;  &quot;bene2Modalita&quot;: &quot;${bene2Modalita}&quot;,&#10;  &quot;bene2RicavoPermuta&quot;: &quot;${bene2RicavoPermuta}&quot;,&#10;  &quot;noleggioPattoAcquisto&quot;: &quot;${noleggioPattoAcquisto}&quot;,&#10;  &quot;giovaneEta&quot;: &quot;${giovaneEta}&quot;,&#10;  &quot;giovaneFormazione&quot;: &quot;${giovaneFormazione}&quot;,&#10;  &quot;giovaneCapoAzienda&quot;: &quot;${giovaneCapoAzienda}&quot;,&#10;  &quot;titoloProgetto&quot;: &quot;${titoloProgetto}&quot;,&#10;  &quot;descrizioneProgetto&quot;: &quot;${descrizioneProgetto}&quot;,&#10;  &quot;lavorazioneRischio&quot;: &quot;${lavorazioneRischio}&quot;,&#10;  &quot;macchina1Descrizione&quot;: &quot;${macchina1Descrizione}&quot;,&#10;  &quot;macchina1MarcaModello&quot;: &quot;${macchina1MarcaModello}&quot;,&#10;  &quot;macchina1Preventivo&quot;: &quot;${macchina1Preventivo}&quot;,&#10;  &quot;macchina1Listino&quot;: &quot;${macchina1Listino}&quot;,&#10;  &quot;macchina1Trattore&quot;: &quot;${macchina1Trattore}&quot;,&#10;  &quot;macchina1ListinoAccessori&quot;: &quot;${macchina1ListinoAccessori}&quot;,&#10;  &quot;macchina1PotenzaKw&quot;: &quot;${macchina1PotenzaKw}&quot;,&#10;  &quot;macchina1AnnoSostituito&quot;: &quot;${macchina1AnnoSostituito}&quot;,&#10;  &quot;macchina1Modalita&quot;: &quot;${macchina1Modalita}&quot;,&#10;  &quot;secondaMacchina&quot;: &quot;${secondaMacchina}&quot;,&#10;  &quot;macchina2Descrizione&quot;: &quot;${macchina2Descrizione}&quot;,&#10;  &quot;macchina2MarcaModello&quot;: &quot;${macchina2MarcaModello}&quot;,&#10;  &quot;macchina2Preventivo&quot;: &quot;${macchina2Preventivo}&quot;,&#10;  &quot;macchina2Listino&quot;: &quot;${macchina2Listino}&quot;,&#10;  &quot;macchina2Trattore&quot;: &quot;${macchina2Trattore}&quot;,&#10;  &quot;macchina2ListinoAccessori&quot;: &quot;${macchina2ListinoAccessori}&quot;,&#10;  &quot;macchina2PotenzaKw&quot;: &quot;${macchina2PotenzaKw}&quot;,&#10;  &quot;macchina2AnnoSostituito&quot;: &quot;${macchina2AnnoSostituito}&quot;,&#10;  &quot;macchina2Modalita&quot;: &quot;${macchina2Modalita}&quot;,&#10;  &quot;mqCopertura&quot;: &quot;${mqCopertura}&quot;,&#10;  &quot;speseCopertura&quot;: &quot;${speseCopertura}&quot;,&#10;  &quot;mqControsoffitto&quot;: &quot;${mqControsoffitto}&quot;,&#10;  &quot;speseControsoffitto&quot;: &quot;${speseControsoffitto}&quot;,&#10;  &quot;speseAccessorie&quot;: &quot;${speseAccessorie}&quot;,&#10;  &quot;immobileLocato&quot;: &quot;${immobileLocato}&quot;,&#10;  &quot;quotaImmobile&quot;: &quot;${quotaImmobile}&quot;,&#10;  &quot;sgslUltimi3Anni&quot;: &quot;${sgslUltimi3Anni}&quot;,&#10;  &quot;concessione12Precedenti&quot;: &quot;${concessione12Precedenti}&quot;,&#10;  &quot;tassoMedio&quot;: &quot;${tassoMedio}&quot;,&#10;  &quot;partiSociali&quot;: &quot;${partiSociali}&quot;,&#10;  &quot;rls&quot;: &quot;${rls}&quot;,&#10;  &quot;certIso45001&quot;: &quot;${certIso45001}&quot;,&#10;  &quot;certIso14001&quot;: &quot;${certIso14001}&quot;,&#10;  &quot;certEmas&quot;: &quot;${certEmas}&quot;,&#10;  &quot;certIso39001&quot;: &quot;${certIso39001}&quot;,&#10;  &quot;certMog&quot;: &quot;${certMog}&quot;,&#10;  &quot;certRlaq&quot;: &quot;${certRlaq}&quot;,&#10;  &quot;ratingLegalita&quot;: &quot;${ratingLegalita}&quot;,&#10;  &quot;speseProgetto&quot;: &quot;${speseProgetto}&quot;,&#10;  &quot;speseTecniche&quot;: &quot;${speseTecniche}&quot;,&#10;  &quot;costoPerizia&quot;: &quot;${costoPerizia}&quot;,&#10;  &quot;speseAggiuntivo&quot;: &quot;${speseAggiuntivo}&quot;,&#10;  &quot;ivaNonRecuperabile&quot;: &quot;${ivaNonRecuperabile}&quot;,&#10;  &quot;motivazioneIva&quot;: &quot;${motivazioneIva}&quot;,&#10;  &quot;anticipo&quot;: &quot;${anticipo}&quot;,&#10;  &quot;nessunaSpesaNonAmmessa&quot;: &quot;${nessunaSpesaNonAmmessa}&quot;,&#10;  &quot;dichR02&quot;: &quot;${dichR02}&quot;,&#10;  &quot;dichR03&quot;: &quot;${dichR03}&quot;,&#10;  &quot;dichR05&quot;: &quot;${dichR05}&quot;,&#10;  &quot;dichR06&quot;: &quot;${dichR06}&quot;,&#10;  &quot;dichR07&quot;: &quot;${dichR07}&quot;,&#10;  &quot;dichR08&quot;: &quot;${dichR08}&quot;,&#10;  &quot;dichR09&quot;: &quot;${dichR09}&quot;,&#10;  &quot;dichR10&quot;: &quot;${dichR10}&quot;,&#10;  &quot;dichR11&quot;: &quot;${dichR11}&quot;,&#10;  &quot;dichR12&quot;: &quot;${dichR12}&quot;,&#10;  &quot;dichR15&quot;: &quot;${dichR15}&quot;,&#10;  &quot;dichR16&quot;: &quot;${dichR16}&quot;,&#10;  &quot;dichR17&quot;: &quot;${dichR17}&quot;,&#10;  &quot;dichR18&quot;: &quot;${dichR18}&quot;,&#10;  &quot;finanziamentiPrecedenti&quot;: &quot;${finanziamentiPrecedenti}&quot;,&#10;  &quot;assePrecedente&quot;: &quot;${assePrecedente}&quot;,&#10;  &quot;rinunciaPec&quot;: &quot;${rinunciaPec}&quot;,&#10;  &quot;azione&quot;: &quot;${azione}&quot;,&#10;  &quot;confermaRegistrazione&quot;: &quot;${confermaRegistrazione}&quot;,&#10;  &quot;confermaAnnullamento&quot;: &quot;${confermaAnnullamento}&quot;,&#10;  &quot;codiceFiscaleImpresa&quot;: &quot;${codiceFiscaleImpresa}&quot;,&#10;  &quot;annualita&quot;: &quot;2025&quot;&#10;}" />
+          <activiti:field name="risposta" stringValue="riepilogo = riepilogo&#10;punteggio = punteggio&#10;registrabile = registrabile&#10;erroriBloccanti = erroriBloccanti&#10;avvisiCalcolo = avvisiCalcolo&#10;dettaglioPunteggio = dettaglioPunteggio&#10;dettaglioImporti = dettaglioImporti&#10;assiAmmessi = assiAmmessi&#10;assiNonAmmessi = assiNonAmmessi&#10;documentiRichiesti = documentiRichiesti&#10;contributoTotale = contributoTotale&#10;contributoTotaleTesto = contributoTotaleTesto&#10;importoAnticipo = anticipo&#10;fideiussione = fideiussione&#10;ulaCalcolate = ula&#10;versioneRegole = versioneRegole&#10;modelloPerizia = modelloPerizia&#10;gruppoSede = gruppoSede" />
+          <activiti:field name="timeout" stringValue="20" />
+          <activiti:field name="inErrore" stringValue="Segui la strada di errore" />
+        </extensionElements>
+      </serviceTask>
+      <boundaryEvent id="ricalcolaErrore" name="Servizio ISI non disponibile" attachedToRef="ricalcola">
+        <errorEventDefinition />
+      </boundaryEvent>
+      <exclusiveGateway id="esitoIstruttoriaGw" name="Esito pronto?" default="iFatto" />
+      <endEvent id="iFine" name="Esito deciso" />
+      <sequenceFlow id="i1" sourceRef="iInizio" targetRef="svolgiIstruttoria" />
+      <sequenceFlow id="i2" sourceRef="svolgiIstruttoria" targetRef="ricalcola" />
+      <sequenceFlow id="i3" sourceRef="ricalcolaErrore" targetRef="svolgiIstruttoria" />
+      <sequenceFlow id="i4" sourceRef="ricalcola" targetRef="esitoIstruttoriaGw" />
+      <sequenceFlow id="iRicalcola" name="Ricalcola o sotto soglia" sourceRef="esitoIstruttoriaGw" targetRef="svolgiIstruttoria">
+        <conditionExpression xsi:type="tFormalExpression">${esitoIstruttoria == 'Ricalcola' || (esitoIstruttoria == 'Ammetti' &amp;&amp; registrabile != 'Sì')}</conditionExpression>
+      </sequenceFlow>
+      <sequenceFlow id="iFatto" name="Altrimenti" sourceRef="esitoIstruttoriaGw" targetRef="iFine" />
+    </subProcess>
+    <boundaryEvent id="avviso100" name="Avviso a 100 giorni" attachedToRef="istruttoria" cancelActivity="false">
+      <timerEventDefinition>
+        <timeDate>${avvisoIstruttoria}</timeDate>
+      </timerEventDefinition>
+    </boundaryEvent>
+    <boundaryEvent id="termine120" name="Termine di 120 giorni" attachedToRef="istruttoria" cancelActivity="false">
+      <timerEventDefinition>
+        <timeDate>${scadenzaIstruttoria}</timeDate>
+      </timerEventDefinition>
+    </boundaryEvent>
+    <boundaryEvent id="rinunciaIstruttoria" name="Rinuncia dell'impresa" attachedToRef="istruttoria">
+      <extensionElements>
+        <orditogram:datiMessaggio>motivoRinuncia</orditogram:datiMessaggio>
+      </extensionElements>
+      <messageEventDefinition messageRef="rinunciaImpresa" />
+    </boundaryEvent>
+    <serviceTask id="notificaAvviso100" name="Segnala l'istruttoria a 100 giorni" implementation="notificaConnector">
+      <extensionElements>
+        <activiti:field name="destinatario" stringValue="gruppo:${gruppoSede}" />
+        <activiti:field name="titolo" stringValue="Istruttoria oltre 100 giorni: domanda ${numeroDomanda}" />
+        <activiti:field name="messaggio" stringValue="La domanda n. ${numeroDomanda} di ${ragioneSociale} è in istruttoria da oltre 100 giorni: il termine è il ${scadenzaIstruttoria}." />
+      </extensionElements>
+    </serviceTask>
+    <endEvent id="fineAvviso100" name="Avviso inviato" />
+    <serviceTask id="notificaTermine120" name="Segnala il termine superato" implementation="notificaConnector">
+      <extensionElements>
+        <activiti:field name="destinatario" stringValue="gruppo:direzione-isi" />
+        <activiti:field name="titolo" stringValue="Termine di 120 giorni superato: domanda ${numeroDomanda}" />
+        <activiti:field name="messaggio" stringValue="L'istruttoria della domanda n. ${numeroDomanda} di ${ragioneSociale} (sede ${gruppoSede}) ha superato i 120 giorni." />
+      </extensionElements>
+    </serviceTask>
+    <endEvent id="fineTermine120" name="Termine segnalato" />
+    <sequenceFlow id="f24" sourceRef="avviso100" targetRef="notificaAvviso100" />
+    <sequenceFlow id="f25" sourceRef="notificaAvviso100" targetRef="fineAvviso100" />
+    <sequenceFlow id="f26" sourceRef="termine120" targetRef="notificaTermine120" />
+    <sequenceFlow id="f27" sourceRef="notificaTermine120" targetRef="fineTermine120" />
+    <sequenceFlow id="f28" sourceRef="rinunciaIstruttoria" targetRef="registraRinuncia" />
+    <sequenceFlow id="f29" sourceRef="istruttoria" targetRef="dopoIstruttoria" />
+    <exclusiveGateway id="dopoIstruttoria" name="Cosa ha deciso la sede?" default="fProvvedimento" />
+    <sequenceFlow id="fIntegrazione" name="Richiedi integrazione" sourceRef="dopoIstruttoria" targetRef="sospendiIstruttoria">
+      <conditionExpression xsi:type="tFormalExpression">${esitoIstruttoria == 'Richiedi integrazione'}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="fPreavviso" name="Preavviso di rigetto" sourceRef="dopoIstruttoria" targetRef="comunicaPreavviso">
+      <conditionExpression xsi:type="tFormalExpression">${esitoIstruttoria == 'Preavviso di rigetto'}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="fProvvedimento" name="Ammetti, ammetti parzialmente o respingi" sourceRef="dopoIstruttoria" targetRef="statoEsito" />
+    <serviceTask id="sospendiIstruttoria" name="Sospendi il conteggio dei 120 giorni" implementation="apiConnector">
+      <extensionElements>
+        <activiti:field name="metodo" stringValue="POST" />
+        <activiti:field name="url" stringValue="http://localhost:8095/istruttoria/sospendi" />
+        <activiti:field name="credenziale" stringValue="servizio-isi" />
+        <activiti:field name="corpo" stringValue="{&quot;numeroDomanda&quot;: &quot;${numeroDomanda}&quot;}" />
+        <activiti:field name="risposta" stringValue="giorniRimanenti = giorniRimanenti" />
+        <activiti:field name="timeout" stringValue="20" />
+        <activiti:field name="inErrore" stringValue="Blocca e riprova più tardi" />
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="chiediIntegrazione" name="Chiedi l'integrazione" implementation="emailConnector">
+      <extensionElements>
+        <activiti:field name="destinatari" stringValue="campo:pec" />
+        <activiti:field name="oggetto" stringValue="Bando ISI 2025: domanda ${numeroDomanda}, richiesta di integrazione" />
+        <activiti:field name="testo" stringValue="Gentile ${ragioneSociale},&#10;&#10;per l'istruttoria della domanda n. ${numeroDomanda} la sede INAIL chiede:&#10;${richiestaIstruttoria}&#10;&#10;Ha 30 giorni per rispondere dalla sua area riservata. Il termine dell'istruttoria resta sospeso fino alla risposta.&#10;&#10;INAIL - Bando ISI 2025&#10;Questa comunicazione è inviata alla PEC indicata nella domanda." />
+        <activiti:field name="allegati" stringValue="Nessuno" />
+      </extensionElements>
+    </serviceTask>
+    <userTask id="rispondiIntegrazione" name="Rispondi alla richiesta di integrazione" activiti:candidateGroups="parte:richiedente" activiti:formKey="isi-integrazione" />
+    <boundaryEvent id="termineIntegrazione" name="30 giorni per l'integrazione" attachedToRef="rispondiIntegrazione">
+      <timerEventDefinition activiti:businessCalendarName="proroga">
+        <timeDuration>P30D</timeDuration>
+      </timerEventDefinition>
+    </boundaryEvent>
+    <serviceTask id="riprendiIstruttoria" name="Riprendi il conteggio dei 120 giorni" implementation="apiConnector">
+      <extensionElements>
+        <activiti:field name="metodo" stringValue="POST" />
+        <activiti:field name="url" stringValue="http://localhost:8095/istruttoria/riprendi" />
+        <activiti:field name="credenziale" stringValue="servizio-isi" />
+        <activiti:field name="corpo" stringValue="{&quot;numeroDomanda&quot;: &quot;${numeroDomanda}&quot;}" />
+        <activiti:field name="risposta" stringValue="scadenzaIstruttoria = scadenzaIstruttoria&#10;avvisoIstruttoria = avvisoIstruttoria&#10;giorniRimanenti = giorniRimanenti" />
+        <activiti:field name="timeout" stringValue="20" />
+        <activiti:field name="inErrore" stringValue="Blocca e riprova più tardi" />
+      </extensionElements>
+    </serviceTask>
+    <sequenceFlow id="f30" sourceRef="sospendiIstruttoria" targetRef="chiediIntegrazione" />
+    <sequenceFlow id="f31" sourceRef="chiediIntegrazione" targetRef="rispondiIntegrazione" />
+    <sequenceFlow id="f32" sourceRef="rispondiIntegrazione" targetRef="riprendiIstruttoria" />
+    <sequenceFlow id="f33" sourceRef="termineIntegrazione" targetRef="riprendiIstruttoria" />
+    <sequenceFlow id="f34" sourceRef="riprendiIstruttoria" targetRef="istruttoria" />
+    <serviceTask id="comunicaPreavviso" name="Comunica il preavviso di rigetto" implementation="emailConnector">
+      <extensionElements>
+        <activiti:field name="destinatari" stringValue="campo:pec" />
+        <activiti:field name="oggetto" stringValue="Bando ISI 2025: domanda ${numeroDomanda}, preavviso di rigetto" />
+        <activiti:field name="testo" stringValue="Gentile ${ragioneSociale},&#10;&#10;la sede INAIL intende respingere la domanda n. ${numeroDomanda} per questi motivi:&#10;${richiestaIstruttoria}&#10;&#10;Ha 10 giorni per presentare osservazioni e documenti dalla sua area riservata (art. 10-bis L. 241/1990).&#10;&#10;INAIL - Bando ISI 2025&#10;Questa comunicazione è inviata alla PEC indicata nella domanda." />
+        <activiti:field name="allegati" stringValue="Nessuno" />
+      </extensionElements>
+    </serviceTask>
+    <userTask id="presentaOsservazioni" name="Presenta le osservazioni" activiti:candidateGroups="parte:richiedente" activiti:formKey="isi-osservazioni" />
+    <boundaryEvent id="termineOsservazioni" name="10 giorni per le osservazioni" attachedToRef="presentaOsservazioni">
+      <timerEventDefinition activiti:businessCalendarName="proroga">
+        <timeDuration>P10D</timeDuration>
+      </timerEventDefinition>
+    </boundaryEvent>
+    <sequenceFlow id="f35" sourceRef="comunicaPreavviso" targetRef="presentaOsservazioni" />
+    <sequenceFlow id="f36" sourceRef="presentaOsservazioni" targetRef="istruttoria" />
+    <sequenceFlow id="f37" sourceRef="termineOsservazioni" targetRef="istruttoria" />
+    <serviceTask id="statoEsito" name="Registra l'esito dell'istruttoria" implementation="apiConnector">
+      <extensionElements>
+        <activiti:field name="metodo" stringValue="POST" />
+        <activiti:field name="url" stringValue="http://localhost:8095/stato" />
+        <activiti:field name="credenziale" stringValue="servizio-isi" />
+        <activiti:field name="corpo" stringValue="{&quot;numeroDomanda&quot;: &quot;${numeroDomanda}&quot;, &quot;esitoIstruttoria&quot;: &quot;${esitoIstruttoria}&quot;, &quot;chi&quot;: &quot;sede&quot;}" />
+        <activiti:field name="risposta" stringValue="statoDomanda = statoDomanda" />
+        <activiti:field name="timeout" stringValue="20" />
+        <activiti:field name="inErrore" stringValue="Blocca e riprova più tardi" />
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="comunicaProvvedimento" name="Invia il provvedimento" implementation="emailConnector">
+      <extensionElements>
+        <activiti:field name="destinatari" stringValue="campo:pec" />
+        <activiti:field name="oggetto" stringValue="Bando ISI 2025: domanda ${numeroDomanda}, esito dell'istruttoria" />
+        <activiti:field name="testo" stringValue="Gentile ${ragioneSociale},&#10;&#10;l'istruttoria della domanda n. ${numeroDomanda} si è conclusa con questo esito: ${esitoIstruttoria}.&#10;Contributo richiesto: ${contributoTotaleTesto}. Contributo ammesso (se parziale): ${importoAmmesso} €.&#10;${motivazioneIstruttoria}&#10;&#10;Il provvedimento vale per l'intervento principale e per quello aggiuntivo.&#10;&#10;INAIL - Bando ISI 2025&#10;Questa comunicazione è inviata alla PEC indicata nella domanda." />
+        <activiti:field name="allegati" stringValue="Tutti i documenti della pratica" />
+      </extensionElements>
+    </serviceTask>
+    <exclusiveGateway id="esitoFinaleGw" name="Esito?" default="fRespinta" />
+    <endEvent id="fineAmmessa" name="Ammessa" />
+    <endEvent id="fineAmmessaParz" name="Ammessa parzialmente" />
+    <endEvent id="fineRespinta" name="Respinta" />
+    <sequenceFlow id="f38" sourceRef="statoEsito" targetRef="comunicaProvvedimento" />
+    <sequenceFlow id="f39" sourceRef="comunicaProvvedimento" targetRef="esitoFinaleGw" />
+    <sequenceFlow id="fAmmessa" name="Ammessa" sourceRef="esitoFinaleGw" targetRef="fineAmmessa">
+      <conditionExpression xsi:type="tFormalExpression">${esitoIstruttoria == 'Ammetti'}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="fParziale" name="Parziale" sourceRef="esitoFinaleGw" targetRef="fineAmmessaParz">
+      <conditionExpression xsi:type="tFormalExpression">${esitoIstruttoria == 'Ammetti parzialmente'}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="fRespinta" name="Respinta" sourceRef="esitoFinaleGw" targetRef="fineRespinta" />
+    <serviceTask id="registraRinuncia" name="Registra la rinuncia" implementation="apiConnector">
+      <extensionElements>
+        <activiti:field name="metodo" stringValue="POST" />
+        <activiti:field name="url" stringValue="http://localhost:8095/stato" />
+        <activiti:field name="credenziale" stringValue="servizio-isi" />
+        <activiti:field name="corpo" stringValue="{&quot;numeroDomanda&quot;: &quot;${numeroDomanda}&quot;, &quot;stato&quot;: &quot;RINUNCIATA&quot;, &quot;motivo&quot;: &quot;${motivoRinuncia}&quot;, &quot;chi&quot;: &quot;impresa&quot;}" />
+        <activiti:field name="risposta" stringValue="statoDomanda = statoDomanda" />
+        <activiti:field name="timeout" stringValue="20" />
+        <activiti:field name="inErrore" stringValue="Blocca e riprova più tardi" />
+      </extensionElements>
+    </serviceTask>
+    <endEvent id="fineRinuncia" name="Rinunciata" />
+    <sequenceFlow id="f40" sourceRef="registraRinuncia" targetRef="fineRinuncia" />
+  </process>
+  <bpmndi:BPMNDiagram id="Diagram_isiDomanda">
+    <bpmndi:BPMNPlane id="Plane_isiDomanda" bpmnElement="isiDomanda">
+      <bpmndi:BPMNShape id="s_compilazione" bpmnElement="compilazione" isExpanded="true">
+        <dc:Bounds x="526" y="80" width="1092" height="370" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_sportello" bpmnElement="sportello" isExpanded="true">
+        <dc:Bounds x="1978" y="520" width="1234" height="326" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_documenti" bpmnElement="documenti" isExpanded="true">
+        <dc:Bounds x="3628" y="916" width="1552" height="370" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_istruttoria" bpmnElement="istruttoria" isExpanded="true">
+        <dc:Bounds x="6560" y="991" width="682" height="220" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_inizio" bpmnElement="inizio">
+        <dc:Bounds x="80" y="247" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_leggiCalendario" bpmnElement="leggiCalendario">
+        <dc:Bounds x="186" y="225" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_leggiAnagrafica" bpmnElement="leggiAnagrafica">
+        <dc:Bounds x="356" y="225" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_leggiAnagraficaErrore" bpmnElement="leggiAnagraficaErrore">
+        <dc:Bounds x="410" y="287" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_chiusuraCompilazioneTimer" bpmnElement="chiusuraCompilazioneTimer">
+        <dc:Bounds x="556" y="432" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fineNonRegistrata" bpmnElement="fineNonRegistrata">
+        <dc:Bounds x="1695" y="665" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_dopoCompilazione" bpmnElement="dopoCompilazione" isMarkerVisible="true">
+        <dc:Bounds x="1688" y="240" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fineAnnullata" bpmnElement="fineAnnullata">
+        <dc:Bounds x="1840" y="247" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_ricevutaRegistrazione" bpmnElement="ricevutaRegistrazione">
+        <dc:Bounds x="1808" y="643" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_esitoElencoArrivato" bpmnElement="esitoElencoArrivato">
+        <dc:Bounds x="2008" y="828" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_rinunciaSportello" bpmnElement="rinunciaSportello">
+        <dc:Bounds x="2068" y="828" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_esitoGw" bpmnElement="esitoGw" isMarkerVisible="true">
+        <dc:Bounds x="3282" y="1076" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fineSenzaEsito" bpmnElement="fineSenzaEsito">
+        <dc:Bounds x="3402" y="1083" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_attesaRedistribuzione" bpmnElement="attesaRedistribuzione">
+        <dc:Bounds x="3402" y="1378" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_subentrataGw" bpmnElement="subentrataGw" isMarkerVisible="true">
+        <dc:Bounds x="3508" y="1371" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fineFuoriFondi" bpmnElement="fineFuoriFondi">
+        <dc:Bounds x="4386" y="1378" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_termineDocumentiTimer" bpmnElement="termineDocumentiTimer">
+        <dc:Bounds x="3658" y="1268" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_rinunciaDocumenti" bpmnElement="rinunciaDocumenti">
+        <dc:Bounds x="3718" y="1268" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_statoDocumentiInviati" bpmnElement="statoDocumentiInviati">
+        <dc:Bounds x="6050" y="1061" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_ricevutaDocumenti" bpmnElement="ricevutaDocumenti">
+        <dc:Bounds x="6220" y="1061" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_comunicaDecadenza" bpmnElement="comunicaDecadenza">
+        <dc:Bounds x="5250" y="1356" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_statoDecaduta" bpmnElement="statoDecaduta">
+        <dc:Bounds x="5420" y="1356" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_istanzaRevoca" bpmnElement="istanzaRevoca">
+        <dc:Bounds x="5590" y="1356" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_termineRevoca" bpmnElement="termineRevoca">
+        <dc:Bounds x="5644" y="1418" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_valutaRevoca" bpmnElement="valutaRevoca">
+        <dc:Bounds x="5760" y="1356" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_revocaGw" bpmnElement="revocaGw" isMarkerVisible="true">
+        <dc:Bounds x="5930" y="1371" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_comunicaRevocaRespinta" bpmnElement="comunicaRevocaRespinta">
+        <dc:Bounds x="6050" y="1356" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fineDecaduta" bpmnElement="fineDecaduta">
+        <dc:Bounds x="6252" y="1528" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_avviaIstruttoria" bpmnElement="avviaIstruttoria">
+        <dc:Bounds x="6390" y="1061" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_avviso100" bpmnElement="avviso100">
+        <dc:Bounds x="6590" y="1193" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_termine120" bpmnElement="termine120">
+        <dc:Bounds x="6650" y="1193" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_rinunciaIstruttoria" bpmnElement="rinunciaIstruttoria">
+        <dc:Bounds x="6710" y="1193" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_notificaAvviso100" bpmnElement="notificaAvviso100">
+        <dc:Bounds x="7312" y="1356" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fineAvviso100" bpmnElement="fineAvviso100">
+        <dc:Bounds x="7514" y="1378" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_notificaTermine120" bpmnElement="notificaTermine120">
+        <dc:Bounds x="7312" y="1506" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fineTermine120" bpmnElement="fineTermine120">
+        <dc:Bounds x="7514" y="1528" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_dopoIstruttoria" bpmnElement="dopoIstruttoria" isMarkerVisible="true">
+        <dc:Bounds x="7337" y="1671" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_sospendiIstruttoria" bpmnElement="sospendiIstruttoria">
+        <dc:Bounds x="7482" y="1656" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_chiediIntegrazione" bpmnElement="chiediIntegrazione">
+        <dc:Bounds x="7652" y="1656" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_rispondiIntegrazione" bpmnElement="rispondiIntegrazione">
+        <dc:Bounds x="7822" y="1656" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_termineIntegrazione" bpmnElement="termineIntegrazione">
+        <dc:Bounds x="7876" y="1718" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_riprendiIstruttoria" bpmnElement="riprendiIstruttoria">
+        <dc:Bounds x="7992" y="1656" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_comunicaPreavviso" bpmnElement="comunicaPreavviso">
+        <dc:Bounds x="7482" y="1806" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_presentaOsservazioni" bpmnElement="presentaOsservazioni">
+        <dc:Bounds x="7652" y="1806" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_termineOsservazioni" bpmnElement="termineOsservazioni">
+        <dc:Bounds x="7706" y="1868" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_statoEsito" bpmnElement="statoEsito">
+        <dc:Bounds x="7482" y="1956" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_comunicaProvvedimento" bpmnElement="comunicaProvvedimento">
+        <dc:Bounds x="7652" y="1956" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_esitoFinaleGw" bpmnElement="esitoFinaleGw" isMarkerVisible="true">
+        <dc:Bounds x="7847" y="1971" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fineAmmessa" bpmnElement="fineAmmessa">
+        <dc:Bounds x="8024" y="1978" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fineAmmessaParz" bpmnElement="fineAmmessaParz">
+        <dc:Bounds x="8024" y="2106" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fineRespinta" bpmnElement="fineRespinta">
+        <dc:Bounds x="8024" y="2212" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_registraRinuncia" bpmnElement="registraRinuncia">
+        <dc:Bounds x="7312" y="1061" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fineRinuncia" bpmnElement="fineRinuncia">
+        <dc:Bounds x="7514" y="1083" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_cInizio" bpmnElement="cInizio">
+        <dc:Bounds x="566" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_compila" bpmnElement="compila">
+        <dc:Bounds x="672" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_calcola" bpmnElement="calcola">
+        <dc:Bounds x="962" y="270" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_calcolaErrore" bpmnElement="calcolaErrore">
+        <dc:Bounds x="1016" y="332" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_cosaFare" bpmnElement="cosaFare" isMarkerVisible="true">
+        <dc:Bounds x="1132" y="285" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_registra" bpmnElement="registra">
+        <dc:Bounds x="1252" y="270" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_registraErrore" bpmnElement="registraErrore">
+        <dc:Bounds x="1306" y="332" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_registrata" bpmnElement="registrata" isMarkerVisible="true">
+        <dc:Bounds x="1422" y="285" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_cFineRegistrata" bpmnElement="cFineRegistrata">
+        <dc:Bounds x="1542" y="292" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_cFineAnnullata" bpmnElement="cFineAnnullata">
+        <dc:Bounds x="994" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_annullaGw" bpmnElement="annullaGw" isMarkerVisible="true">
+        <dc:Bounds x="842" y="135" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_sInizio" bpmnElement="sInizio">
+        <dc:Bounds x="2018" y="582" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_attesaCodice" bpmnElement="attesaCodice">
+        <dc:Bounds x="2124" y="582" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_acquisisciCodice" bpmnElement="acquisisciCodice">
+        <dc:Bounds x="2230" y="560" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_chiusuraCodiceTimer" bpmnElement="chiusuraCodiceTimer">
+        <dc:Bounds x="2284" y="622" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_generaCodice" bpmnElement="generaCodice">
+        <dc:Bounds x="2400" y="560" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_generaCodiceErrore" bpmnElement="generaCodiceErrore">
+        <dc:Bounds x="2454" y="622" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_inviaSportello" bpmnElement="inviaSportello">
+        <dc:Bounds x="2570" y="560" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_chiusuraSportelloTimer" bpmnElement="chiusuraSportelloTimer">
+        <dc:Bounds x="2624" y="622" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_registraInvio" bpmnElement="registraInvio">
+        <dc:Bounds x="2740" y="560" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_registraInvioErrore" bpmnElement="registraInvioErrore">
+        <dc:Bounds x="2794" y="622" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_invioOk" bpmnElement="invioOk" isMarkerVisible="true">
+        <dc:Bounds x="2910" y="575" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_attesaElenchi" bpmnElement="attesaElenchi">
+        <dc:Bounds x="3030" y="582" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_sFineSenzaCodice" bpmnElement="sFineSenzaCodice">
+        <dc:Bounds x="2432" y="710" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_sFineNonInviata" bpmnElement="sFineNonInviata">
+        <dc:Bounds x="2772" y="710" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_sFineSenzaElenchi" bpmnElement="sFineSenzaElenchi">
+        <dc:Bounds x="3136" y="582" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_dInizio" bpmnElement="dInizio">
+        <dc:Bounds x="3668" y="978" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_dApri" bpmnElement="dApri">
+        <dc:Bounds x="3774" y="971" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_caricaDocumenti" bpmnElement="caricaDocumenti">
+        <dc:Bounds x="3894" y="956" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_serveperizia" bpmnElement="serveperizia" isMarkerVisible="true">
+        <dc:Bounds x="3919" y="1121" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_incaricaTecnico" bpmnElement="incaricaTecnico">
+        <dc:Bounds x="4064" y="1106" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_verificaIncarico" bpmnElement="verificaIncarico">
+        <dc:Bounds x="4234" y="1106" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_verificaIncaricoErrore" bpmnElement="verificaIncaricoErrore">
+        <dc:Bounds x="4288" y="1168" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_incaricoOk" bpmnElement="incaricoOk" isMarkerVisible="true">
+        <dc:Bounds x="4404" y="1121" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_abilitaTecnico" bpmnElement="abilitaTecnico">
+        <dc:Bounds x="4524" y="1106" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_compilaPerizia" bpmnElement="compilaPerizia">
+        <dc:Bounds x="4694" y="1106" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_periziaPronta" bpmnElement="periziaPronta" isMarkerVisible="true">
+        <dc:Bounds x="4864" y="1121" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_dChiudi" bpmnElement="dChiudi">
+        <dc:Bounds x="4984" y="1121" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_dFine" bpmnElement="dFine">
+        <dc:Bounds x="5104" y="1128" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_iInizio" bpmnElement="iInizio">
+        <dc:Bounds x="6600" y="1053" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_svolgiIstruttoria" bpmnElement="svolgiIstruttoria">
+        <dc:Bounds x="6706" y="1031" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_ricalcola" bpmnElement="ricalcola">
+        <dc:Bounds x="6876" y="1031" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_ricalcolaErrore" bpmnElement="ricalcolaErrore">
+        <dc:Bounds x="6930" y="1093" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_esitoIstruttoriaGw" bpmnElement="esitoIstruttoriaGw" isMarkerVisible="true">
+        <dc:Bounds x="7046" y="1046" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_iFine" bpmnElement="iFine">
+        <dc:Bounds x="7166" y="1053" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="e_f1" bpmnElement="f1">
+        <di:waypoint x="116" y="265" />
+        <di:waypoint x="186" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f2" bpmnElement="f2">
+        <di:waypoint x="286" y="265" />
+        <di:waypoint x="356" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f3" bpmnElement="f3">
+        <di:waypoint x="456" y="265" />
+        <di:waypoint x="526" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f4" bpmnElement="f4">
+        <di:waypoint x="428" y="323" />
+        <di:waypoint x="428" y="491" />
+        <di:waypoint x="497" y="491" />
+        <di:waypoint x="497" y="265" />
+        <di:waypoint x="526" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_c1" bpmnElement="c1">
+        <di:waypoint x="602" y="160" />
+        <di:waypoint x="672" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_c2" bpmnElement="c2">
+        <di:waypoint x="772" y="160" />
+        <di:waypoint x="842" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cAnnulla" bpmnElement="cAnnulla">
+        <di:waypoint x="892" y="160" />
+        <di:waypoint x="994" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cCalcola" bpmnElement="cCalcola">
+        <di:waypoint x="892" y="160" />
+        <di:waypoint x="933" y="160" />
+        <di:waypoint x="933" y="310" />
+        <di:waypoint x="962" y="310" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_c3" bpmnElement="c3">
+        <di:waypoint x="1062" y="310" />
+        <di:waypoint x="1132" y="310" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_c4" bpmnElement="c4">
+        <di:waypoint x="1034" y="368" />
+        <di:waypoint x="1034" y="363" />
+        <di:waypoint x="625" y="363" />
+        <di:waypoint x="625" y="160" />
+        <di:waypoint x="672" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cSalva" bpmnElement="cSalva">
+        <di:waypoint x="1182" y="310" />
+        <di:waypoint x="1211" y="310" />
+        <di:waypoint x="1211" y="369" />
+        <di:waypoint x="631" y="369" />
+        <di:waypoint x="631" y="160" />
+        <di:waypoint x="672" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cRegistra" bpmnElement="cRegistra">
+        <di:waypoint x="1182" y="310" />
+        <di:waypoint x="1252" y="310" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_c5" bpmnElement="c5">
+        <di:waypoint x="1352" y="310" />
+        <di:waypoint x="1422" y="310" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_c6" bpmnElement="c6">
+        <di:waypoint x="1324" y="368" />
+        <di:waypoint x="1324" y="387" />
+        <di:waypoint x="649" y="387" />
+        <di:waypoint x="649" y="160" />
+        <di:waypoint x="672" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cOk" bpmnElement="cOk">
+        <di:waypoint x="1472" y="310" />
+        <di:waypoint x="1542" y="310" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cNonRegistrata" bpmnElement="cNonRegistrata">
+        <di:waypoint x="1472" y="310" />
+        <di:waypoint x="1501" y="310" />
+        <di:waypoint x="1501" y="369" />
+        <di:waypoint x="631" y="369" />
+        <di:waypoint x="631" y="160" />
+        <di:waypoint x="672" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f5" bpmnElement="f5">
+        <di:waypoint x="574" y="468" />
+        <di:waypoint x="574" y="497" />
+        <di:waypoint x="1665" y="497" />
+        <di:waypoint x="1665" y="683" />
+        <di:waypoint x="1695" y="683" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f6" bpmnElement="f6">
+        <di:waypoint x="1618" y="265" />
+        <di:waypoint x="1688" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fAnnullata" bpmnElement="fAnnullata">
+        <di:waypoint x="1738" y="265" />
+        <di:waypoint x="1840" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fRegistrata" bpmnElement="fRegistrata">
+        <di:waypoint x="1738" y="265" />
+        <di:waypoint x="1773" y="265" />
+        <di:waypoint x="1773" y="683" />
+        <di:waypoint x="1808" y="683" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f7" bpmnElement="f7">
+        <di:waypoint x="1908" y="683" />
+        <di:waypoint x="1978" y="683" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_s1" bpmnElement="s1">
+        <di:waypoint x="2054" y="600" />
+        <di:waypoint x="2124" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_s2" bpmnElement="s2">
+        <di:waypoint x="2160" y="600" />
+        <di:waypoint x="2230" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_s3" bpmnElement="s3">
+        <di:waypoint x="2330" y="600" />
+        <di:waypoint x="2400" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_s4" bpmnElement="s4">
+        <di:waypoint x="2472" y="658" />
+        <di:waypoint x="2472" y="777" />
+        <di:waypoint x="2201" y="777" />
+        <di:waypoint x="2201" y="600" />
+        <di:waypoint x="2230" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_s5" bpmnElement="s5">
+        <di:waypoint x="2500" y="600" />
+        <di:waypoint x="2570" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_s6" bpmnElement="s6">
+        <di:waypoint x="2302" y="658" />
+        <di:waypoint x="2302" y="663" />
+        <di:waypoint x="2353" y="663" />
+        <di:waypoint x="2353" y="728" />
+        <di:waypoint x="2432" y="728" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_s7" bpmnElement="s7">
+        <di:waypoint x="2670" y="600" />
+        <di:waypoint x="2740" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_s8" bpmnElement="s8">
+        <di:waypoint x="2812" y="658" />
+        <di:waypoint x="2812" y="771" />
+        <di:waypoint x="2535" y="771" />
+        <di:waypoint x="2535" y="600" />
+        <di:waypoint x="2570" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_s9" bpmnElement="s9">
+        <di:waypoint x="2840" y="600" />
+        <di:waypoint x="2910" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sInviato" bpmnElement="sInviato">
+        <di:waypoint x="2960" y="600" />
+        <di:waypoint x="3030" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sRifiutato" bpmnElement="sRifiutato">
+        <di:waypoint x="2960" y="600" />
+        <di:waypoint x="2983" y="600" />
+        <di:waypoint x="2983" y="759" />
+        <di:waypoint x="2523" y="759" />
+        <di:waypoint x="2523" y="600" />
+        <di:waypoint x="2570" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_s10" bpmnElement="s10">
+        <di:waypoint x="2642" y="658" />
+        <di:waypoint x="2642" y="669" />
+        <di:waypoint x="2699" y="669" />
+        <di:waypoint x="2699" y="728" />
+        <di:waypoint x="2772" y="728" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_s11" bpmnElement="s11">
+        <di:waypoint x="3066" y="600" />
+        <di:waypoint x="3136" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f8" bpmnElement="f8">
+        <di:waypoint x="2026" y="864" />
+        <di:waypoint x="2026" y="893" />
+        <di:waypoint x="3259" y="893" />
+        <di:waypoint x="3259" y="1101" />
+        <di:waypoint x="3282" y="1101" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f9" bpmnElement="f9">
+        <di:waypoint x="3212" y="683" />
+        <di:waypoint x="3235" y="683" />
+        <di:waypoint x="3235" y="1101" />
+        <di:waypoint x="3282" y="1101" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f10" bpmnElement="f10">
+        <di:waypoint x="2086" y="864" />
+        <di:waypoint x="2086" y="875" />
+        <di:waypoint x="7271" y="875" />
+        <di:waypoint x="7271" y="1101" />
+        <di:waypoint x="7312" y="1101" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fSenzaEsito" bpmnElement="fSenzaEsito">
+        <di:waypoint x="3332" y="1101" />
+        <di:waypoint x="3402" y="1101" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fPosizioneUtile" bpmnElement="fPosizioneUtile">
+        <di:waypoint x="3332" y="1101" />
+        <di:waypoint x="3373" y="1101" />
+        <di:waypoint x="3373" y="1327" />
+        <di:waypoint x="3599" y="1327" />
+        <di:waypoint x="3599" y="1101" />
+        <di:waypoint x="3628" y="1101" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fFuoriFondi" bpmnElement="fFuoriFondi">
+        <di:waypoint x="3332" y="1101" />
+        <di:waypoint x="3379" y="1101" />
+        <di:waypoint x="3379" y="1396" />
+        <di:waypoint x="3402" y="1396" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f11" bpmnElement="f11">
+        <di:waypoint x="3438" y="1396" />
+        <di:waypoint x="3508" y="1396" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fSubentrata" bpmnElement="fSubentrata">
+        <di:waypoint x="3558" y="1396" />
+        <di:waypoint x="3587" y="1396" />
+        <di:waypoint x="3587" y="1101" />
+        <di:waypoint x="3628" y="1101" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fNonSubentrata" bpmnElement="fNonSubentrata">
+        <di:waypoint x="3558" y="1396" />
+        <di:waypoint x="4386" y="1396" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_d1" bpmnElement="d1">
+        <di:waypoint x="3704" y="996" />
+        <di:waypoint x="3774" y="996" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_d2" bpmnElement="d2">
+        <di:waypoint x="3824" y="996" />
+        <di:waypoint x="3894" y="996" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_d3" bpmnElement="d3">
+        <di:waypoint x="3824" y="996" />
+        <di:waypoint x="3859" y="996" />
+        <di:waypoint x="3859" y="1146" />
+        <di:waypoint x="3919" y="1146" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_d4" bpmnElement="d4">
+        <di:waypoint x="3994" y="996" />
+        <di:waypoint x="4035" y="996" />
+        <di:waypoint x="4035" y="1077" />
+        <di:waypoint x="4955" y="1077" />
+        <di:waypoint x="4955" y="1146" />
+        <di:waypoint x="4984" y="1146" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_dNoPerizia" bpmnElement="dNoPerizia">
+        <di:waypoint x="3969" y="1146" />
+        <di:waypoint x="4041" y="1146" />
+        <di:waypoint x="4041" y="1233" />
+        <di:waypoint x="4841" y="1233" />
+        <di:waypoint x="4841" y="1146" />
+        <di:waypoint x="4864" y="1146" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_dPerizia" bpmnElement="dPerizia">
+        <di:waypoint x="3969" y="1146" />
+        <di:waypoint x="4064" y="1146" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_d5" bpmnElement="d5">
+        <di:waypoint x="4164" y="1146" />
+        <di:waypoint x="4234" y="1146" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_d6" bpmnElement="d6">
+        <di:waypoint x="4306" y="1204" />
+        <di:waypoint x="4306" y="1211" />
+        <di:waypoint x="4029" y="1211" />
+        <di:waypoint x="4029" y="1146" />
+        <di:waypoint x="4064" y="1146" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_d7" bpmnElement="d7">
+        <di:waypoint x="4334" y="1146" />
+        <di:waypoint x="4404" y="1146" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_dTecnicoSi" bpmnElement="dTecnicoSi">
+        <di:waypoint x="4454" y="1146" />
+        <di:waypoint x="4524" y="1146" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_dTecnicoNo" bpmnElement="dTecnicoNo">
+        <di:waypoint x="4454" y="1146" />
+        <di:waypoint x="4477" y="1146" />
+        <di:waypoint x="4477" y="1199" />
+        <di:waypoint x="4017" y="1199" />
+        <di:waypoint x="4017" y="1146" />
+        <di:waypoint x="4064" y="1146" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_d8" bpmnElement="d8">
+        <di:waypoint x="4624" y="1146" />
+        <di:waypoint x="4694" y="1146" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_d9" bpmnElement="d9">
+        <di:waypoint x="4794" y="1146" />
+        <di:waypoint x="4864" y="1146" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_d11" bpmnElement="d11">
+        <di:waypoint x="4914" y="1146" />
+        <di:waypoint x="4984" y="1146" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_d10" bpmnElement="d10">
+        <di:waypoint x="5034" y="1146" />
+        <di:waypoint x="5104" y="1146" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f12" bpmnElement="f12">
+        <di:waypoint x="5180" y="1101" />
+        <di:waypoint x="6050" y="1101" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f13" bpmnElement="f13">
+        <di:waypoint x="3736" y="1304" />
+        <di:waypoint x="3736" y="1333" />
+        <di:waypoint x="7289" y="1333" />
+        <di:waypoint x="7289" y="1101" />
+        <di:waypoint x="7312" y="1101" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f14" bpmnElement="f14">
+        <di:waypoint x="6150" y="1101" />
+        <di:waypoint x="6220" y="1101" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f15" bpmnElement="f15">
+        <di:waypoint x="6320" y="1101" />
+        <di:waypoint x="6390" y="1101" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f16" bpmnElement="f16">
+        <di:waypoint x="3676" y="1304" />
+        <di:waypoint x="3676" y="1321" />
+        <di:waypoint x="5215" y="1321" />
+        <di:waypoint x="5215" y="1396" />
+        <di:waypoint x="5250" y="1396" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f17" bpmnElement="f17">
+        <di:waypoint x="5350" y="1396" />
+        <di:waypoint x="5420" y="1396" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f18" bpmnElement="f18">
+        <di:waypoint x="5520" y="1396" />
+        <di:waypoint x="5590" y="1396" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f19" bpmnElement="f19">
+        <di:waypoint x="5662" y="1454" />
+        <di:waypoint x="5662" y="1459" />
+        <di:waypoint x="6173" y="1459" />
+        <di:waypoint x="6173" y="1546" />
+        <di:waypoint x="6252" y="1546" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f20" bpmnElement="f20">
+        <di:waypoint x="5690" y="1396" />
+        <di:waypoint x="5760" y="1396" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f21" bpmnElement="f21">
+        <di:waypoint x="5860" y="1396" />
+        <di:waypoint x="5930" y="1396" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fRevocaSi" bpmnElement="fRevocaSi">
+        <di:waypoint x="5980" y="1396" />
+        <di:waypoint x="6021" y="1396" />
+        <di:waypoint x="6021" y="1101" />
+        <di:waypoint x="6050" y="1101" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fRevocaNo" bpmnElement="fRevocaNo">
+        <di:waypoint x="5980" y="1396" />
+        <di:waypoint x="6050" y="1396" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f22" bpmnElement="f22">
+        <di:waypoint x="6150" y="1396" />
+        <di:waypoint x="6173" y="1396" />
+        <di:waypoint x="6173" y="1546" />
+        <di:waypoint x="6252" y="1546" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f23" bpmnElement="f23">
+        <di:waypoint x="6490" y="1101" />
+        <di:waypoint x="6560" y="1101" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_i1" bpmnElement="i1">
+        <di:waypoint x="6636" y="1071" />
+        <di:waypoint x="6706" y="1071" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_i2" bpmnElement="i2">
+        <di:waypoint x="6806" y="1071" />
+        <di:waypoint x="6876" y="1071" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_i3" bpmnElement="i3">
+        <di:waypoint x="6948" y="1129" />
+        <di:waypoint x="6948" y="1136" />
+        <di:waypoint x="6671" y="1136" />
+        <di:waypoint x="6671" y="1071" />
+        <di:waypoint x="6706" y="1071" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_i4" bpmnElement="i4">
+        <di:waypoint x="6976" y="1071" />
+        <di:waypoint x="7046" y="1071" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_iRicalcola" bpmnElement="iRicalcola">
+        <di:waypoint x="7096" y="1071" />
+        <di:waypoint x="7143" y="1071" />
+        <di:waypoint x="7143" y="1148" />
+        <di:waypoint x="6683" y="1148" />
+        <di:waypoint x="6683" y="1071" />
+        <di:waypoint x="6706" y="1071" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_iFatto" bpmnElement="iFatto">
+        <di:waypoint x="7096" y="1071" />
+        <di:waypoint x="7166" y="1071" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f24" bpmnElement="f24">
+        <di:waypoint x="6608" y="1229" />
+        <di:waypoint x="6608" y="1321" />
+        <di:waypoint x="7277" y="1321" />
+        <di:waypoint x="7277" y="1396" />
+        <di:waypoint x="7312" y="1396" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f25" bpmnElement="f25">
+        <di:waypoint x="7412" y="1396" />
+        <di:waypoint x="7514" y="1396" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f26" bpmnElement="f26">
+        <di:waypoint x="6668" y="1229" />
+        <di:waypoint x="6668" y="1333" />
+        <di:waypoint x="7289" y="1333" />
+        <di:waypoint x="7289" y="1546" />
+        <di:waypoint x="7312" y="1546" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f27" bpmnElement="f27">
+        <di:waypoint x="7412" y="1546" />
+        <di:waypoint x="7514" y="1546" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f28" bpmnElement="f28">
+        <di:waypoint x="6728" y="1229" />
+        <di:waypoint x="6728" y="1315" />
+        <di:waypoint x="7271" y="1315" />
+        <di:waypoint x="7271" y="1101" />
+        <di:waypoint x="7312" y="1101" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f29" bpmnElement="f29">
+        <di:waypoint x="7242" y="1101" />
+        <di:waypoint x="7277" y="1101" />
+        <di:waypoint x="7277" y="1696" />
+        <di:waypoint x="7337" y="1696" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fIntegrazione" bpmnElement="fIntegrazione">
+        <di:waypoint x="7387" y="1696" />
+        <di:waypoint x="7482" y="1696" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fPreavviso" bpmnElement="fPreavviso">
+        <di:waypoint x="7387" y="1696" />
+        <di:waypoint x="7459" y="1696" />
+        <di:waypoint x="7459" y="1846" />
+        <di:waypoint x="7482" y="1846" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fProvvedimento" bpmnElement="fProvvedimento">
+        <di:waypoint x="7387" y="1696" />
+        <di:waypoint x="7435" y="1696" />
+        <di:waypoint x="7435" y="1996" />
+        <di:waypoint x="7482" y="1996" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f30" bpmnElement="f30">
+        <di:waypoint x="7582" y="1696" />
+        <di:waypoint x="7652" y="1696" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f31" bpmnElement="f31">
+        <di:waypoint x="7752" y="1696" />
+        <di:waypoint x="7822" y="1696" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f32" bpmnElement="f32">
+        <di:waypoint x="7922" y="1696" />
+        <di:waypoint x="7992" y="1696" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f33" bpmnElement="f33">
+        <di:waypoint x="7894" y="1754" />
+        <di:waypoint x="7894" y="1783" />
+        <di:waypoint x="7969" y="1783" />
+        <di:waypoint x="7969" y="1696" />
+        <di:waypoint x="7992" y="1696" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f34" bpmnElement="f34">
+        <di:waypoint x="8092" y="1696" />
+        <di:waypoint x="8115" y="1696" />
+        <di:waypoint x="8115" y="2261" />
+        <di:waypoint x="6513" y="2261" />
+        <di:waypoint x="6513" y="1101" />
+        <di:waypoint x="6560" y="1101" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f35" bpmnElement="f35">
+        <di:waypoint x="7582" y="1846" />
+        <di:waypoint x="7652" y="1846" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f36" bpmnElement="f36">
+        <di:waypoint x="7752" y="1846" />
+        <di:waypoint x="7787" y="1846" />
+        <di:waypoint x="7787" y="2273" />
+        <di:waypoint x="6525" y="2273" />
+        <di:waypoint x="6525" y="1101" />
+        <di:waypoint x="6560" y="1101" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f37" bpmnElement="f37">
+        <di:waypoint x="7724" y="1904" />
+        <di:waypoint x="7724" y="2279" />
+        <di:waypoint x="6531" y="2279" />
+        <di:waypoint x="6531" y="1101" />
+        <di:waypoint x="6560" y="1101" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f38" bpmnElement="f38">
+        <di:waypoint x="7582" y="1996" />
+        <di:waypoint x="7652" y="1996" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f39" bpmnElement="f39">
+        <di:waypoint x="7752" y="1996" />
+        <di:waypoint x="7847" y="1996" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fAmmessa" bpmnElement="fAmmessa">
+        <di:waypoint x="7897" y="1996" />
+        <di:waypoint x="8024" y="1996" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fParziale" bpmnElement="fParziale">
+        <di:waypoint x="7897" y="1996" />
+        <di:waypoint x="7957" y="1996" />
+        <di:waypoint x="7957" y="2124" />
+        <di:waypoint x="8024" y="2124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fRespinta" bpmnElement="fRespinta">
+        <di:waypoint x="7897" y="1996" />
+        <di:waypoint x="7963" y="1996" />
+        <di:waypoint x="7963" y="2230" />
+        <di:waypoint x="8024" y="2230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f40" bpmnElement="f40">
+        <di:waypoint x="7412" y="1101" />
+        <di:waypoint x="7514" y="1101" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

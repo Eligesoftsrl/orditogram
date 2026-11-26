@@ -884,6 +884,7 @@ frontend/src/
   lib/bpmn/                estensioni activiti e orditogram per bpmn-js, palette, traduzioni, simulazione
   components/              binario dell'iter, form dinamico, documenti, storico, diagramma, notifiche
 esempi/                    processi di esempio pronti da caricare, file firmati di prova
+soluzioni/                 soluzioni consegnate ai clienti (Bando ISI di INAIL), costruite con la skill
 ```
 
 I font sono inclusi nell'applicazione: il frontend non contatta server esterni.

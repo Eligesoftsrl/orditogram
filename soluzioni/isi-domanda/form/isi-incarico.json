@@ -1,0 +1,108 @@
+{
+  "title": "Incarica il tecnico per la perizia",
+  "description": "Il tecnico compila e firma la perizia asseverata online. Non può essere titolare, legale rappresentante, amministratore o socio dell'impresa.",
+  "fields": [
+    {
+      "name": "numeroDomanda",
+      "label": "Numero della domanda",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "ragioneSociale",
+      "label": "Impresa",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "asse",
+      "label": "Asse",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "titoloProgetto",
+      "label": "Progetto",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "riepilogo",
+      "label": "Punteggio e contributo",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "motivoIncarico",
+      "label": "Esito del controllo",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "type": "sezione",
+      "label": "Tecnico"
+    },
+    {
+      "name": "cfTecnico",
+      "label": "Codice fiscale del tecnico",
+      "type": "text",
+      "required": true,
+      "formato": "codiceFiscale",
+      "visibileAlleParti": true
+    },
+    {
+      "name": "nomeTecnico",
+      "label": "Nome e cognome del tecnico",
+      "type": "text",
+      "required": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "ordineTecnico",
+      "label": "Ordine o collegio",
+      "type": "text",
+      "required": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "numeroIscrizioneTecnico",
+      "label": "Numero di iscrizione",
+      "type": "text",
+      "required": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "emailTecnico",
+      "label": "Email o PEC del tecnico",
+      "type": "text",
+      "required": true,
+      "formato": "email",
+      "visibileAlleParti": true
+    },
+    {
+      "type": "sezione",
+      "label": "Persone dell'impresa",
+      "help": "Servono per il controllo sul tecnico."
+    },
+    {
+      "name": "cfLegaleRappresentante",
+      "label": "Codice fiscale del legale rappresentante",
+      "type": "text",
+      "required": true,
+      "formato": "codiceFiscale",
+      "visibileAlleParti": true
+    },
+    {
+      "name": "cfSoci",
+      "label": "Codici fiscali di titolari, amministratori e soci (separati da virgola)",
+      "type": "textarea"
+    }
+  ],
+  "submitLabel": "Incarica il tecnico"
+}

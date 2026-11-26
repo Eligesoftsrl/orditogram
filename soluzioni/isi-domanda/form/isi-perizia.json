@@ -1,0 +1,113 @@
+{
+  "title": "Compila e firma la perizia asseverata",
+  "description": "Riprende in sola lettura i dati della domanda registrata. Allega la perizia firmata digitalmente (PDF o P7M): dopo la conferma non si modifica più.",
+  "fields": [
+    {
+      "name": "numeroDomanda",
+      "label": "Numero della domanda",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "ragioneSociale",
+      "label": "Impresa",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "asse",
+      "label": "Asse",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "titoloProgetto",
+      "label": "Progetto",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "riepilogo",
+      "label": "Punteggio e contributo",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "descrizioneProgetto",
+      "label": "Descrizione del progetto",
+      "type": "textarea",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "lavorazioneRischio",
+      "label": "Lavorazione e rischio",
+      "type": "textarea",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "modelloPerizia",
+      "label": "Modello di perizia",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "type": "sezione",
+      "label": "Perizia"
+    },
+    {
+      "name": "situazioneAnte",
+      "label": "Situazione prima dell'intervento",
+      "type": "textarea",
+      "required": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "situazionePost",
+      "label": "Situazione dopo l'intervento",
+      "type": "textarea",
+      "required": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "dataCertaDvr",
+      "label": "Data certa del DVR che attesta il rischio",
+      "type": "date",
+      "required": true,
+      "max": "oggi",
+      "visibileAlleParti": true
+    },
+    {
+      "name": "conformitaPreventivi",
+      "label": "Attesto la conformità dei preventivi e dei listini",
+      "type": "checkbox",
+      "required": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "confrontoBeni",
+      "label": "Confronto tra bene nuovo e bene sostituito (R-ALL-13)",
+      "type": "textarea",
+      "visibileAlleParti": true,
+      "help": "Per ogni macchina: tipo, prestazioni, scostamento e motivazione se oltre i limiti."
+    },
+    {
+      "name": "periziaFirmata",
+      "label": "La perizia allegata è firmata digitalmente da me",
+      "type": "checkbox",
+      "required": true,
+      "visibileAlleParti": true
+    }
+  ],
+  "documenti": "carica",
+  "documentiObbligatori": true,
+  "documentiVisibilita": "parti",
+  "submitLabel": "Firma e invia la perizia"
+}

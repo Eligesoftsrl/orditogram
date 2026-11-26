@@ -1,0 +1,27 @@
+#!/bin/sh
+# ----------------------------------------------------------------------------
+# Maven senza installarlo: la prima volta scarica la versione indicata in
+# .mvn/wrapper/maven-wrapper.properties dentro ~/.m2/wrapper, poi la usa.
+#   ./mvnw verify            compila e lancia tutti i test
+#   ./mvnw spring-boot:run   avvia il backend
+# Se Maven è già installato e preferisci quello: usa semplicemente "mvn".
+# ----------------------------------------------------------------------------
+set -e
+BASE="$(cd "$(dirname "$0")" && pwd)"
+PROPS="$BASE/.mvn/wrapper/maven-wrapper.properties"
+URL="$(sed -n 's/^distributionUrl=//p' "$PROPS" | tr -d '\r')"
+[ -n "$URL" ] || { echo "distributionUrl mancante in $PROPS" >&2; exit 1; }
+NOME="$(basename "$URL" -bin.tar.gz)"
+DEST="${MAVEN_USER_HOME:-$HOME/.m2}/wrapper/dists/$NOME"
+MVN="$DEST/$NOME/bin/mvn"
+if [ ! -x "$MVN" ]; then
+  echo "Scarico $NOME (una volta sola)..." >&2
+  mkdir -p "$DEST"
+  TMP="$DEST/download.tar.gz"
+  if command -v curl >/dev/null 2>&1; then curl -fsSL "$URL" -o "$TMP"
+  elif command -v wget >/dev/null 2>&1; then wget -q "$URL" -O "$TMP"
+  else echo "Serve curl o wget per scaricare Maven" >&2; exit 1; fi
+  tar -xzf "$TMP" -C "$DEST"
+  rm -f "$TMP"
+fi
+exec "$MVN" "$@"

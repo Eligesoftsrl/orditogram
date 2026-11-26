@@ -47,6 +47,8 @@ cd backend && ./mvnw -q -DskipTests package && java -jar target/orditogram-*.jar
     tabelle come liste di oggetti), `allegati` (file in `collaudo/`; se il form li vuole obbligatori e non ne indichi,
     ne allega uno di prova).
   - `completa`: `attivita` (nome o id), `dati`, `utente` (facoltativo: altrimenti quello del gruppo).
+    Nei `dati`, `"@dato:<nome>"` diventa il valore attuale di quel dato della pratica: serve quando un servizio
+    genera un valore che la persona poi riscrive (un codice, un numero di protocollo).
     Aspetta che l'attività compaia nella scrivania dell'utente: verifica anche che sia assegnata al gruppo giusto.
   - `messaggio`: `nome`, `dati`; lo registra l'utente indicato (di solito chi ha avviato) dalla scheda della pratica.
   - `timer`: `elemento` = id del timer nel BPMN; lo fa scattare subito (serve `--db`).

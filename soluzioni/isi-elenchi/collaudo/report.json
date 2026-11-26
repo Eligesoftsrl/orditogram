@@ -1,0 +1,105 @@
+{
+  "processo": "isiElenchi",
+  "risultati": [
+    {
+      "scenario": "Elenco provvisorio pubblicato",
+      "descrizione": "Anteprima calcolata sulle domande inviate allo sportello nel collaudo di isiDomanda, poi pubblicata.",
+      "esito": "superato",
+      "errore": null,
+      "pratica": "619c699f-e9bc-11f1-9114-02fc00000001",
+      "secondi": 0.6,
+      "passi": [
+        {
+          "passo": "collaudo-direzione-isi avvia la pratica \"PROVVISORIO\"",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: attivita \"Controlla l'anteprima e pubblica\"; dati {\"righeElenco\": \"*\", \"riepilogoElenco\": \"*\"}",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "collaudo-direzione-isi completa \"Controlla l'anteprima e pubblica\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: conclusa true; fine \"finePubblicato\"; dati {\"termineDocumenti\": \"*\"}",
+          "esito": "ok"
+        }
+      ]
+    },
+    {
+      "scenario": "Elenco NCD non pubblicato",
+      "descrizione": "",
+      "esito": "superato",
+      "errore": null,
+      "pratica": "61f9a4f1-e9bc-11f1-9114-02fc00000001",
+      "secondi": 0.5,
+      "passi": [
+        {
+          "passo": "collaudo-direzione-isi avvia la pratica \"NCD\"",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "collaudo-direzione-isi completa \"Controlla l'anteprima e pubblica\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: conclusa true; fine \"fineNonPubblicato\"",
+          "esito": "ok"
+        }
+      ]
+    },
+    {
+      "scenario": "Servizio ISI non disponibile",
+      "descrizione": "",
+      "esito": "superato",
+      "errore": null,
+      "pratica": "62595142-e9bc-11f1-9114-02fc00000001",
+      "secondi": 0.5,
+      "passi": [
+        {
+          "passo": "collaudo-direzione-isi avvia la pratica \"DEFINITIVO\"",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: conclusa true; fine \"fineErrore\"; eventi [\"ERRORE\", \"NOTIFICA\"]",
+          "esito": "ok"
+        }
+      ]
+    },
+    {
+      "scenario": "Pubblicazione non riuscita",
+      "descrizione": "",
+      "esito": "superato",
+      "errore": null,
+      "pratica": "62a65fe8-e9bc-11f1-9114-02fc00000001",
+      "secondi": 0.8,
+      "passi": [
+        {
+          "passo": "collaudo-direzione-isi avvia la pratica \"DEFINITIVO\"",
+          "secondi": 0.1,
+          "esito": "ok"
+        },
+        {
+          "passo": "collaudo-direzione-isi completa \"Controlla l'anteprima e pubblica\"",
+          "secondi": 0.2,
+          "esito": "ok"
+        },
+        {
+          "passo": "controllo: conclusa true; fine \"fineErrore\"; passa [\"pubblicaErrore\"]",
+          "esito": "ok"
+        }
+      ]
+    }
+  ],
+  "copertura": {
+    "totale": 10,
+    "maiPercorsi": []
+  }
+}

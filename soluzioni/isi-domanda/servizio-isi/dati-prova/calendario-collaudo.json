@@ -1,0 +1,10 @@
+{
+  "aperturaCompilazione": "2026-11-01T10:00:00+01:00",
+  "chiusuraCompilazione": "2027-03-31T18:00:00+02:00",
+  "aperturaCodice": "2027-04-05T10:00:00+02:00",
+  "chiusuraCodice": "2027-04-20T18:00:00+02:00",
+  "aperturaSportello": "2027-04-27T10:00:00+02:00",
+  "chiusuraSportello": "2027-04-27T10:30:00+02:00",
+  "pubblicazioneElenchi": "2027-05-11T12:00:00+02:00",
+  "giorniCaricamentoDocumenti": 30
+}

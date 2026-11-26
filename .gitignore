@@ -10,3 +10,5 @@ __pycache__/
 frontend/test-results/
 frontend/playwright-report/
 frontend/blob-report/
+soluzioni/*/servizio-*/target/
+soluzioni/*/servizio-*/dati/

@@ -1,0 +1,39 @@
+{
+  "password": "password",
+  "utenti": { "direzione-isi": "collaudo-direzione-isi", "avvio": "collaudo-direzione-isi" },
+  "scenari": [
+    {
+      "nome": "Elenco provvisorio pubblicato",
+      "descrizione": "Anteprima calcolata sulle domande inviate allo sportello nel collaudo di isiDomanda, poi pubblicata.",
+      "passi": [
+        { "azione": "avvia", "dati": { "tipoElenco": "PROVVISORIO" } },
+        { "azione": "controlla", "attivita": "Controlla l'anteprima e pubblica", "dati": { "righeElenco": "*", "riepilogoElenco": "*" } },
+        { "azione": "completa", "attivita": "controlla", "dati": { "decisioneElenco": "Pubblica", "confermaPubblicazione": true } }
+      ],
+      "atteso": { "conclusa": true, "fine": "finePubblicato", "dati": { "termineDocumenti": "*" } }
+    },
+    {
+      "nome": "Elenco NCD non pubblicato",
+      "passi": [
+        { "azione": "avvia", "dati": { "tipoElenco": "NCD" } },
+        { "azione": "completa", "attivita": "controlla", "dati": { "decisioneElenco": "Non pubblicare" } }
+      ],
+      "atteso": { "conclusa": true, "fine": "fineNonPubblicato" }
+    },
+    {
+      "nome": "Servizio ISI non disponibile",
+      "variante": { "/elenchi/anteprima\"": "/elenchi/anteprima?simula=errore\"" },
+      "passi": [ { "azione": "avvia", "dati": { "tipoElenco": "DEFINITIVO" } } ],
+      "atteso": { "conclusa": true, "fine": "fineErrore", "eventi": ["ERRORE", "NOTIFICA"] }
+    },
+    {
+      "nome": "Pubblicazione non riuscita",
+      "variante": { "/elenchi/pubblica\"": "/elenchi/pubblica?simula=errore\"" },
+      "passi": [
+        { "azione": "avvia", "dati": { "tipoElenco": "DEFINITIVO" } },
+        { "azione": "completa", "attivita": "controlla", "dati": { "decisioneElenco": "Pubblica", "confermaPubblicazione": true } }
+      ],
+      "atteso": { "conclusa": true, "fine": "fineErrore", "passa": ["pubblicaErrore"] }
+    }
+  ]
+}

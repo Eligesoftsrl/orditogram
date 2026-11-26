@@ -1,0 +1,20 @@
+{
+  "01234560789": {
+    "ragioneSociale": "Carpenterie Rossi S.r.l.", "partitaIva": "01234560789", "formaGiuridica": "Società di capitali",
+    "ateco": "25.11", "sedeLegale": "Via dei Fabbri 12, 50100 Firenze (FI)", "codiceDitta": "12345678",
+    "tassoMedio": "60", "rapportoAssicurativo": "INAIL", "dataAssociazionePortale": "2026-01-10",
+    "dataIscrizioneCciaa": "2010-03-01", "dataCostituzione": "2010-02-15", "pec": "carpenterierossi@pec.it"
+  },
+  "02345670890": {
+    "ragioneSociale": "Azienda agricola Verdi", "partitaIva": "02345670890", "formaGiuridica": "Impresa individuale",
+    "ateco": "01.11", "sedeLegale": "Località Poggio 3, 53100 Siena (SI)", "codiceDitta": "",
+    "tassoMedio": "", "rapportoAssicurativo": "INPS gestione agricola", "dataAssociazionePortale": "2026-02-01",
+    "dataIscrizioneCciaa": "2015-06-01", "dataCostituzione": "2015-05-20", "pec": "agricolaverdi@pec.it"
+  },
+  "03456780901": {
+    "ragioneSociale": "Falegnameria Bianchi S.n.c.", "partitaIva": "03456780901", "formaGiuridica": "Società di persone",
+    "ateco": "16.23", "sedeLegale": "Via del Legno 7, 20100 Milano (MI)", "codiceDitta": "23456789",
+    "tassoMedio": "45", "rapportoAssicurativo": "INAIL", "dataAssociazionePortale": "2026-01-20",
+    "dataIscrizioneCciaa": "2001-09-10", "dataCostituzione": "2001-09-01", "pec": "falegnameriabianchi@pec.it"
+  }
+}

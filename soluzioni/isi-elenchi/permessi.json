@@ -1,0 +1,4 @@
+[
+  { "azione": "AVVIA", "tipoSoggetto": "GRUPPO", "soggetto": "direzione-isi", "ambito": "TUTTE" },
+  { "azione": "VEDE", "tipoSoggetto": "GRUPPO", "soggetto": "direzione-isi", "ambito": "TUTTE" }
+]

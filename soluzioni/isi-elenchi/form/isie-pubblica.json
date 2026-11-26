@@ -1,0 +1,13 @@
+{
+  "title": "Controlla l'anteprima e pubblica",
+  "description": "La pubblicazione è definitiva: cambia lo stato delle domande e avvisa ciascuna pratica con il suo esito.",
+  "fields": [
+    { "name": "tipoElenco", "label": "Elenco", "type": "text", "readonly": true },
+    { "name": "righeElenco", "label": "Domande nell'elenco", "type": "text", "readonly": true },
+    { "name": "riepilogoElenco", "label": "Anteprima (Regione · Asse · posizione · domanda · importo · esito)", "type": "textarea", "readonly": true },
+    { "name": "decisioneElenco", "label": "Cosa fai", "type": "select", "required": true, "options": ["Pubblica", "Non pubblicare"] },
+    { "name": "confermaPubblicazione", "label": "Ho controllato l'anteprima: pubblica l'elenco", "type": "checkbox", "required": true,
+      "visibileSe": { "campo": "decisioneElenco", "valori": ["Pubblica"] } }
+  ],
+  "submitLabel": "Conferma"
+}

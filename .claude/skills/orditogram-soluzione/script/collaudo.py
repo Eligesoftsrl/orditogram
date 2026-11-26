@@ -95,6 +95,20 @@ def sostituisci(valore, schede):
     return valore
 
 
+def dati_pratica(valore, cli, admin, pi):
+    """"@dato:nome" diventa il valore attuale di quel dato della pratica (es. un codice generato da un servizio)."""
+    if isinstance(valore, dict) and any(isinstance(v, str) and v.startswith("@dato:") for v in valore.values()):
+        letti = {x["nome"]: x["value"] for x in cli.chiama("GET", "/api/pratiche/" + pi, admin).get("dati", [])}
+        out = {}
+        for k, v in valore.items():
+            if isinstance(v, str) and v.startswith("@dato:"):
+                if v[6:] not in letti: raise Fallito("la pratica non ha il dato \"%s\"" % v[6:])
+                v = letti[v[6:]]
+            out[k] = v
+        return out
+    return valore
+
+
 def attendi(cond, descrizione):
     fine = time.time() + ATTESA
     ultimo = None
@@ -210,7 +224,8 @@ def main(argv):
                     task = attendi(lambda: next((t for t in cli.chiama("GET", "/api/tasks", u)
                                                  if t["processInstanceId"] == pi and t["name"] == nome), None),
                                    "%s non vede l'attività \"%s\" nella sua scrivania" % (u, nome))
-                    cli.chiama("POST", "/api/tasks/%s/complete" % task["id"], u, sostituisci(p.get("dati", {}), schede))
+                    cli.chiama("POST", "/api/tasks/%s/complete" % task["id"], u,
+                               dati_pratica(sostituisci(p.get("dati", {}), schede), cli, admin, pi))
                     desc = "%s completa \"%s\"" % (u, nome)
                 elif az == "messaggio":
                     u = p.get("utente", avviatore)

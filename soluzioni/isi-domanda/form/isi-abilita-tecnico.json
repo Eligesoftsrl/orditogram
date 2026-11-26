@@ -1,0 +1,84 @@
+{
+  "title": "Abilita il tecnico sulla domanda",
+  "description": "Collega lo studio del tecnico indicato dall'impresa: da quel momento il tecnico vede questa domanda e compila la perizia. Se lo studio non c'è, crealo in Amministrazione → Organizzazioni.",
+  "fields": [
+    {
+      "name": "numeroDomanda",
+      "label": "Numero della domanda",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "ragioneSociale",
+      "label": "Impresa",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "asse",
+      "label": "Asse",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "titoloProgetto",
+      "label": "Progetto",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "riepilogo",
+      "label": "Punteggio e contributo",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "nomeTecnico",
+      "label": "Tecnico",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "cfTecnico",
+      "label": "Codice fiscale",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "ordineTecnico",
+      "label": "Ordine o collegio",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "numeroIscrizioneTecnico",
+      "label": "Numero di iscrizione",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "emailTecnico",
+      "label": "Email o PEC",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "studioTecnico",
+      "label": "Studio del tecnico",
+      "type": "organizzazione",
+      "parte": "tecnico",
+      "required": true
+    }
+  ],
+  "submitLabel": "Abilita il tecnico"
+}

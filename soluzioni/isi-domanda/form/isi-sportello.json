@@ -1,0 +1,66 @@
+{
+  "title": "Invia il codice allo sportello",
+  "description": "Nel giorno e nell'ora dello sportello scrivi il codice e invialo: conta l'ora di arrivo sul server.",
+  "fields": [
+    {
+      "name": "numeroDomanda",
+      "label": "Numero della domanda",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "ragioneSociale",
+      "label": "Impresa",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "asse",
+      "label": "Asse",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "titoloProgetto",
+      "label": "Progetto",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "riepilogo",
+      "label": "Punteggio e contributo",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "codiceIdentificativo",
+      "label": "Il tuo codice identificativo",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "messaggioInvio",
+      "label": "Esito dell'ultimo tentativo",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "codiceInviato",
+      "label": "Codice identificativo",
+      "type": "text",
+      "required": true,
+      "precompila": false,
+      "minLunghezza": 12,
+      "maxLunghezza": 14,
+      "visibileAlleParti": true
+    }
+  ],
+  "submitLabel": "Invia allo sportello"
+}

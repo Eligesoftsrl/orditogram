@@ -1,0 +1,32 @@
+# Servizio ISI. Ogni valore si può dare con una variabile d'ambiente (ISI_TOKEN, ISI_ANNUALITA, SPRING_DATASOURCE_URL…)
+server:
+  address: ${ISI_INDIRIZZO:127.0.0.1}   # solo sulla stessa macchina di Orditogram, o dietro un proxy HTTPS
+  port: ${ISI_PORTA:8095}
+  shutdown: graceful
+  error:
+    whitelabel:
+      enabled: false
+
+isi:
+  token: ${ISI_TOKEN:}
+  annualita: ${ISI_ANNUALITA:2025}
+  configurazione: ${ISI_CONFIGURAZIONE:configurazione}
+  dati-prova: ${ISI_DATI_PROVA:dati-prova}
+  calendario-libero: ${ISI_CALENDARIO_LIBERO:false}
+  calendario-file: ${ISI_CALENDARIO_FILE:}
+  orditogram-url: ${ORDITOGRAM_URL:}
+  orditogram-chiave: ${ORDITOGRAM_CHIAVE:}
+
+spring:
+  application:
+    name: servizio-isi
+  main:
+    banner-mode: off
+  # sviluppo e collaudo: file H2 accanto al servizio; in produzione PostgreSQL con SPRING_DATASOURCE_URL,
+  # SPRING_DATASOURCE_USERNAME e SPRING_DATASOURCE_PASSWORD
+  datasource:
+    url: ${ISI_DB:jdbc:h2:file:./dati/isi}
+  flyway:
+    locations: classpath:db/migration
+  jackson:
+    default-property-inclusion: always

@@ -1,0 +1,6 @@
+[
+  { "azione": "AVVIA", "tipoSoggetto": "GRUPPO", "soggetto": "esterni", "ambito": "TUTTE" },
+  { "azione": "VEDE", "tipoSoggetto": "GRUPPO", "soggetto": "direzione-isi", "ambito": "TUTTE" },
+  { "azione": "VEDE", "tipoSoggetto": "GRUPPO", "soggetto": "supporto-isi", "ambito": "TUTTE" },
+  { "azione": "ESPORTA", "tipoSoggetto": "GRUPPO", "soggetto": "direzione-isi", "ambito": "TUTTE" }
+]
