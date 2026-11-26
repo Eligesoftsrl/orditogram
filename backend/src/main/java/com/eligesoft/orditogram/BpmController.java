@@ -208,7 +208,7 @@ public class BpmController {
         taskRuntime.variables(TaskPayloadBuilder.variables().withTaskId(id).build())
             .forEach(v -> variables.put(v.getName(), v.getValue()));
 
-        JsonNode form = forms.load(task.getFormKey());
+        JsonNode form = forms.perPratica(task.getProcessInstanceId(), task.getFormKey());
         // solo i dati che l'utente può vedere, più quelli del form dell'attività (vedi storico/CampiVisibili)
         ProcessInstance pi = runtimeService.createProcessInstanceQuery().processInstanceId(task.getProcessInstanceId()).singleResult();
         if (pi != null) {
@@ -273,7 +273,7 @@ public class BpmController {
                                         @RequestBody(required = false) Map<String, Object> body) {
         Task task = taskRuntime.task(id);
         checkNotTakenByOthers(task);
-        JsonNode form = forms.load(task.getFormKey());
+        JsonNode form = forms.perPratica(task.getProcessInstanceId(), task.getFormKey());
         // i dati già nella pratica servono alle condizioni che guardano campi in sola lettura
         Map<String, Object> pratica = new HashMap<>();
         taskRuntime.variables(TaskPayloadBuilder.variables().withTaskId(id).build())

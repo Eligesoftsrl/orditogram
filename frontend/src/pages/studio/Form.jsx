@@ -43,6 +43,7 @@ export default function FormStudio() {
                        { titolo: 'Campi', valore: f => f.campi },
                        { titolo: 'Usato in', valore: f => (f.uso || []).map(u => `${u.nome}: ${u.passo}`).join('; ') },
                        { titolo: 'Origine', valore: f => f.source === 'database' ? 'Studio' : 'Progetto' },
+                       { titolo: 'Versione', valore: f => f.versione ?? '' },
                        { titolo: 'Modificato', valore: f => dataOraCompleta(f.updatedAt) }
                      ]}
                      righe={lista} />

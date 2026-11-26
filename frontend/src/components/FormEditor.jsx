@@ -147,7 +147,7 @@ export default function FormEditor({ chiave: chiaveIniziale, nuovo: nuovoInizial
         return
       }
       await api.saveForm(chiave, testo)
-      toast.ok(`Form "${chiave}" salvato: è già attivo nei processi che lo usano`)
+      toast.ok(`Form "${chiave}" salvato: vale per ${gl('pratica', 'i')} ${gl.agg('pratica', 'nuov', true)}; ${gl('pratica', 'i')} già ${gl.agg('pratica', 'avviat', true)} restano sulla versione con cui sono partit${gl.agg('pratica', '', true)}`)
       setSorgente('database')
       await apri(chiave)
       onSalvato?.(chiave)

@@ -74,7 +74,7 @@ public class PraticaAccessService {
             .taskAssignee(currentUser.username())
             .list().stream()
             .filter(t -> {
-                var form = forms.load(t.getFormKey());
+                var form = forms.perPratica(processInstanceId, t.getFormKey());
                 return form != null && "modifica".equals(form.path("documenti").asText());
             })
             .findFirst();
@@ -89,7 +89,7 @@ public class PraticaAccessService {
         return query.list().stream()
             .filter(t -> t.getAssignee() == null)
             .filter(t -> {
-                var form = forms.load(t.getFormKey());
+                var form = forms.perPratica(processInstanceId, t.getFormKey());
                 return form != null && "modifica".equals(form.path("documenti").asText());
             })
             .findFirst();

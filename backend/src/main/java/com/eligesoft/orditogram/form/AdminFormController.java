@@ -109,8 +109,23 @@ public class AdminFormController {
     @PutMapping("/{formKey}")
     public JsonNode save(@PathVariable String formKey, @RequestBody String json) {
         JsonNode salvato = forms.save(formKey, json, currentUser.username());
-        registro.registra("FORM_SALVATO", formKey, null);
+        List<FormVersione> versioni = forms.versioni(formKey);
+        registro.registra("FORM_SALVATO", formKey, versioni.isEmpty() ? null : "versione " + versioni.get(0).getVersione());
         return salvato;
+    }
+
+    /** Le versioni salvate del form, dalla più recente: le pratiche avviate restano su quella del loro avvio. */
+    @GetMapping("/{formKey}/versioni")
+    public List<Map<String, Object>> versioni(@PathVariable String formKey) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (FormVersione v : forms.versioni(formKey)) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("versione", v.getVersione());
+            m.put("salvatoIl", v.getSalvatoIl());
+            m.put("salvatoDa", v.getSalvatoDa());
+            out.add(m);
+        }
+        return out;
     }
 
     @DeleteMapping("/{formKey}")

@@ -32,7 +32,7 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
 |---|---|
 | `process` | validazione dei BPMN (`ProcessValidator`), pubblicazione, Studio processi |
 | `bozza` | bozze dei processi, pacchetti `.orditogram.zip` (esporta/importa) |
-| `form` | form JSON dello Studio, `ValoriForm` (regole comuni su valori, obbligatori, titolo) |
+| `form` | form JSON dello Studio con versioni (`form_versione`, `pratica_form` fissate all'avvio da `VersioniForm`), `ValoriForm` (regole comuni su valori, obbligatori, titolo) |
 | `storico` | pratiche (`PraticaController`, ricerca paginata), storico eventi, scadenze, permessi |
 | `documento` | documenti con versioni e verifica delle firme |
 | `connettore`, `notifica`, `integrazione` | connettori dei service task: notifiche, email, chiamate API, credenziali |
@@ -50,6 +50,8 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
 
 ### Concetti chiave
 - **Pratica** = istanza di processo Activiti. Titolo da un campo del form marcato `titolo`.
+- **Versioni dei form**: per una pratica esistente leggi il form con `FormService.perPratica(pi, formKey)`, mai con
+  `load` (che dà l'ultima versione: solo Studio e avvio).
 - **Form**: JSON `{fields:[{name,label,type,required,readonly,options,titolo,visibileSe}], documenti, documentiObbligatori}`.
   Tipi: text, textarea, number, date, select, checkbox, tabella. L'interfaccia invia i numeri come testo.
   `{type:"tabella",colonne:[campi senza textarea],minRighe,maxRighe}`: valore = lista di oggetti, righe vuote tolte;

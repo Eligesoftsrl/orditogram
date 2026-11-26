@@ -183,7 +183,7 @@ public class PraticaController {
         Vista vista = new Vista(currentUser.current());
         java.util.function.Predicate<String> visibile = campiVisibili.per(vista.utente(), h.getProcessDefinitionId(), pi);
         List<Map<String, Object>> eventi = eventiPer(pi, vista,
-            campiVisibili.etichetteNascoste(h.getProcessDefinitionId(), visibile));
+            campiVisibili.etichetteNascoste(h.getProcessDefinitionId(), pi, visibile));
         Map<String, Object> m = riepilogo(h, new HashMap<>(), vista, eventi);
         m.put("dati", dati(h, visibile));
         m.put("eventi", eventi);
@@ -223,7 +223,7 @@ public class PraticaController {
         p.findFlowElementsOfType(StartEvent.class).forEach(s -> { if (s.getFormKey() != null) formKeys.add(s.getFormKey()); });
         p.findFlowElementsOfType(UserTask.class, true).forEach(t -> { if (t.getFormKey() != null) formKeys.add(t.getFormKey()); });
         for (String fk : formKeys) {
-            JsonNode form = forms.load(fk);
+            JsonNode form = forms.perPratica(pi, fk);
             if (form != null) form.path("fields").forEach(f -> etichette.putIfAbsent(f.path("name").asText(), f.path("label").asText(f.path("name").asText())));
         }
         List<Map<String, Object>> out = new ArrayList<>();
@@ -425,7 +425,7 @@ public class PraticaController {
         p.findFlowElementsOfType(StartEvent.class).forEach(s -> { if (s.getFormKey() != null) formKeys.add(s.getFormKey()); });
         p.findFlowElementsOfType(UserTask.class, true).forEach(t -> { if (t.getFormKey() != null) formKeys.add(t.getFormKey()); });
         for (String fk : formKeys) {
-            JsonNode form = forms.load(fk);
+            JsonNode form = forms.perPratica(h.getId(), fk);
             if (form == null || !form.has("fields")) continue;
             for (JsonNode f : form.get("fields")) {
                 etichette.putIfAbsent(f.path("name").asText(), f.path("label").asText(f.path("name").asText()));

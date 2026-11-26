@@ -19,6 +19,10 @@ public class FormDefinition {
     @Column(nullable = false, columnDefinition = "text")
     private String json;
 
+    /** L'ultima versione salvata (le precedenti restano in form_versione per le pratiche avviate con loro). */
+    @Column(nullable = false)
+    private int versione = 1;
+
     private OffsetDateTime updatedAt;
     private String updatedBy;
 
@@ -27,6 +31,8 @@ public class FormDefinition {
     public void setFormKey(String formKey) { this.formKey = formKey; }
     public String getJson() { return json; }
     public void setJson(String json) { this.json = json; }
+    public int getVersione() { return versione; }
+    public void setVersione(int versione) { this.versione = versione; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
     public String getUpdatedBy() { return updatedBy; }

@@ -56,7 +56,7 @@ public class CampiVisibili {
         p.findFlowElementsOfType(StartEvent.class).forEach(s -> { if (s.getFormKey() != null) chiavi.add(s.getFormKey()); });
         p.findFlowElementsOfType(UserTask.class, true).forEach(t -> { if (t.getFormKey() != null) chiavi.add(t.getFormKey()); });
         for (String k : new LinkedHashSet<>(chiavi))
-            for (JsonNode f : campi(forms.load(k)))
+            for (JsonNode f : campi(forms.perPratica(processInstanceId, k)))
                 if (com.eligesoft.orditogram.form.ValoriForm.ANAGRAFICA.equals(f.path("type").asText())) anagrafiche.add(f.path("name").asText());
         if (anagrafiche.isEmpty()) return campi;
         String dati = com.eligesoft.orditogram.anagrafica.AnagraficheNellePratiche.SUFFISSO_DATI;
@@ -77,9 +77,9 @@ public class CampiVisibili {
         String avvio = p.findFlowElementsOfType(StartEvent.class).stream().map(StartEvent::getFormKey)
             .filter(Objects::nonNull).findFirst().orElse(null);
         Map<String, JsonNode> perForm = new LinkedHashMap<>();
-        if (avvio != null) perForm.put(avvio, forms.load(avvio));
+        if (avvio != null) perForm.put(avvio, forms.perPratica(processInstanceId, avvio));
         for (UserTask t : p.findFlowElementsOfType(UserTask.class, true))
-            if (t.getFormKey() != null) perForm.computeIfAbsent(t.getFormKey(), forms::load);
+            if (t.getFormKey() != null) perForm.computeIfAbsent(t.getFormKey(), k -> forms.perPratica(processInstanceId, k));
 
         if (!u.isEsterno()) {
             if (permessi.permessiDi(u).containsAll(java.util.EnumSet.allOf(com.eligesoft.orditogram.accesso.Permesso.class))) return nome -> true;
@@ -118,14 +118,14 @@ public class CampiVisibili {
     }
 
     /** Le etichette dei campi che l'utente non vede, per togliere gli stessi valori dallo storico. */
-    public Set<String> etichetteNascoste(String processDefinitionId, Predicate<String> visibile) {
+    public Set<String> etichetteNascoste(String processDefinitionId, String processInstanceId, Predicate<String> visibile) {
         Set<String> out = new HashSet<>();
         Process p = repositoryService.getBpmnModel(processDefinitionId).getMainProcess();
         List<String> chiavi = new ArrayList<>();
         p.findFlowElementsOfType(StartEvent.class).forEach(s -> { if (s.getFormKey() != null) chiavi.add(s.getFormKey()); });
         p.findFlowElementsOfType(UserTask.class, true).forEach(t -> { if (t.getFormKey() != null) chiavi.add(t.getFormKey()); });
         for (String k : chiavi)
-            for (JsonNode f : campi(forms.load(k))) {
+            for (JsonNode f : campi(forms.perPratica(processInstanceId, k))) {
                 String nome = f.path("name").asText();
                 if (!visibile.test(nome)) out.add(f.path("label").asText(nome));
             }
