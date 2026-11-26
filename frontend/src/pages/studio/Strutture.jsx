@@ -3,7 +3,7 @@ import { Building2, Plus, X } from 'lucide-react'
 import { api } from '../../api.js'
 import { cx } from '../../lib/format.js'
 import { alberoStrutture, codiceDa } from '../../lib/permessi.js'
-import { Badge, Button, Caricamento, Errore, Pannello, Vuoto, useToast } from '../../components/ui.jsx'
+import { Badge, Button, Caricamento, Errore, Pannello, Vuoto, useToast, IntestazionePagina } from '../../components/ui.jsx'
 import { useGlossario } from '../../lib/useGlossario.jsx'
 import { gl } from '../../lib/glossario.js'
 
@@ -59,8 +59,8 @@ export default function Strutture() {
   }
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+    <div className="in-sequenza space-y-6">
+      <IntestazionePagina percorso={[{ label: 'Studio' }, { label: 'Strutture' }]}>
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Strutture</h1>
           <p className="mt-1 max-w-2xl text-grafite">
@@ -69,7 +69,7 @@ export default function Strutture() {
           </p>
         </div>
         <Button variante="primario" icona={Plus} onClick={() => { setErrore(''); setEdit({ ...VUOTA }) }}>Nuova struttura</Button>
-      </header>
+      </IntestazionePagina>
 
       {!lista ? (errore ? <Errore>{errore}</Errore> : <Caricamento />) : (
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">

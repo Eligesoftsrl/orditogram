@@ -69,13 +69,17 @@
   --shadow-sollevato: 0 20px 48px -16px rgb(0 30 60 / 0.38), 0 2px 6px rgb(0 30 60 / 0.06);
 
   --ease-morbido: cubic-bezier(.2, .8, .2, 1);
+  /* la cascata delle tessere: parte svelta e si posa piano */
+  --ease-cascata: cubic-bezier(.22, 1, .36, 1);
   --animate-treno: treno 7s cubic-bezier(.65,0,.35,1) infinite;
   --animate-respiro: respiro 2.4s ease-in-out infinite;
   --animate-entra: entra .2s var(--ease-morbido);
-  --animate-sale: sale .32s var(--ease-morbido) both;
+  --animate-sale: sale .5s var(--ease-cascata) both;
   --animate-cassetto: cassetto .3s var(--ease-morbido);
   --animate-velo: velo .2s ease-out;
   --animate-menu: menu .18s var(--ease-morbido);
+  --animate-pagina: pagina .32s var(--ease-morbido) both;
+  --animate-fluttua: fluttua 9s ease-in-out infinite alternate;
 }
 
 @keyframes treno {
@@ -90,7 +94,7 @@
   50%      { box-shadow: 0 0 0 7px rgb(0 102 204 / 0); }
 }
 @keyframes sale {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: none; }
 }
 @keyframes cassetto {
@@ -111,6 +115,25 @@
 }
 @keyframes cresce-y { from { transform: scaleY(0); } to { transform: none; } }
 @keyframes cresce-x { from { transform: scaleX(0); } to { transform: none; } }
+@keyframes pagina {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes fluttua {
+  from { transform: translate(0, 0) rotate(0deg); }
+  to   { transform: translate(-10px, 8px) rotate(6deg); }
+}
+/* il segnalino del disegno nel benvenuto: percorre il filo della pratica, come quello del BPMN ogni 8 secondi */
+@keyframes ordito-segnalino {
+  0%       { offset-distance: 0%; opacity: 0; }
+  4%       { opacity: 1; }
+  30%      { offset-distance: 100%; opacity: 1; }
+  34%, 100% { offset-distance: 100%; opacity: 0; }
+}
+@keyframes ordito-nodo {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
 @keyframes velo {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -147,10 +170,16 @@
   .cresce-y { transform-origin: bottom; animation: cresce-y .5s var(--ease-morbido) both; animation-delay: calc(min(var(--i, 0), 14) * 40ms + 150ms); }
   .cresce-x { transform-origin: left; animation: cresce-x .5s var(--ease-morbido) both; animation-delay: calc(min(var(--i, 0), 14) * 40ms + 150ms); }
   /* entrata in sequenza: figli con style="--i: n" (fino a 8, poi tutti insieme) */
-  .in-sequenza > * { animation: var(--animate-sale); animation-delay: calc(min(var(--i, 0), 8) * 50ms); }
+  .in-sequenza > * { animation: var(--animate-sale); animation-delay: calc(min(var(--i, 0), 10) * 60ms); }
   .in-sequenza > :nth-child(1) { --i: 0; } .in-sequenza > :nth-child(2) { --i: 1; } .in-sequenza > :nth-child(3) { --i: 2; }
   .in-sequenza > :nth-child(4) { --i: 3; } .in-sequenza > :nth-child(5) { --i: 4; } .in-sequenza > :nth-child(6) { --i: 5; }
-  .in-sequenza > :nth-child(7) { --i: 6; } .in-sequenza > :nth-child(n+8) { --i: 7; }
+  .in-sequenza > :nth-child(7) { --i: 6; } .in-sequenza > :nth-child(8) { --i: 7; }
+  .in-sequenza > :nth-child(9) { --i: 8; } .in-sequenza > :nth-child(10) { --i: 9; } .in-sequenza > :nth-child(n+11) { --i: 10; }
+  /* voci dei menu a comparsa: scendono una dopo l'altra */
+  .menu-sequenza > * { animation: sale .32s var(--ease-cascata) both; animation-delay: calc(80ms + min(var(--i, 0), 8) * 45ms); }
+  /* disegno dell'ordito: i passi compaiono in fila, poi il segnalino giallo percorre il filo */
+  .ordito-nodo { animation: ordito-nodo .32s var(--ease-morbido) both; animation-delay: calc(var(--i, 0) * 90ms + 200ms); transform-box: fill-box; }
+  .ordito-segnalino { offset-rotate: 0deg; animation: ordito-segnalino 8s var(--ease-morbido) 1s infinite both; }
 }
 
 /* ---------------------------------------------------------------- bpmn-js */
@@ -169,6 +198,16 @@
 .bpmn-fatto:not(.djs-connection) .djs-visual > :nth-child(1) {
   stroke: var(--color-verde-600) !important; fill: var(--color-verde-50) !important;
 }
+
+/* il viaggio della pratica (pulsante "Il percorso"): il resto si spegne, il segnalino lascia una scia blu */
+.bpmn-viaggio .djs-element > .djs-visual { transition: opacity .32s var(--ease-morbido); }
+.bpmn-spento > .djs-visual { opacity: .28; }
+.bpmn-spento.djs-connection > .djs-visual > path { stroke-dasharray: 4 5; }
+.viaggio-scia { stroke: var(--color-verde-400); stroke-width: 16px; opacity: .22; }
+.viaggio-filo { stroke: var(--color-verde-600); stroke-width: 4px; opacity: .55; }
+.viaggio-segnalino { fill: var(--color-focus); stroke: var(--color-pino-900); stroke-width: 2.5px; }
+.viaggio-alone { fill: var(--color-focus); opacity: .3; }
+.fermo .viaggio-alone { animation: bpmn-pulsa 1.6s ease-in-out infinite; }
 
 /* ---------------------------------------------------------------- editor dei processi */
 .orditogram-editor .djs-palette {

@@ -235,13 +235,15 @@ class AccessoAttiIntegrationTest {
     @SuppressWarnings("unchecked")
     void elencoPaginatoERicerca() throws Exception {
         pubblica(protocolloDemo());
-        avvia("Ricerca uno alfa");
+        // una parola che nessun altro test usa: il database H2 è comune a tutte le classi di test e altre pratiche
+        // contengono "Alfa" (es. le anagrafiche), quindi l'ordine delle classi non deve cambiare il conteggio
+        avvia("Ricerca uno zibaldone");
         avvia("Ricerca due beta");
         Map<String, Object> pagina = come("admin").exchange("/api/pratiche?stato=tutte&dimensione=1", HttpMethod.GET, new HttpEntity<>(xhr()), Map.class).getBody();
         assertEquals(1, ((List<?>) pagina.get("righe")).size());
         assertTrue(((Number) pagina.get("totale")).intValue() >= 2);
 
-        Map<String, Object> trovate = come("admin").exchange("/api/pratiche?stato=tutte&q=ALFA", HttpMethod.GET, new HttpEntity<>(xhr()), Map.class).getBody();
+        Map<String, Object> trovate = come("admin").exchange("/api/pratiche?stato=tutte&q=ZIBALDONE", HttpMethod.GET, new HttpEntity<>(xhr()), Map.class).getBody();
         assertEquals(1, ((Number) trovate.get("totale")).intValue(), "ricerca senza distinzione di maiuscole");
 
         // mario vede le sue pratiche, non tutte quelle dell'ente

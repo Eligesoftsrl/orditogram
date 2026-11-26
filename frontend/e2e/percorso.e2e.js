@@ -63,6 +63,13 @@ test('Studio → pubblicazione → scrivania → pratica conclusa', async ({ bro
   const urlPratica = operatore.url()
   await expect(operatore.getByRole('heading', { name: oggetto })).toBeVisible()
   await expect(operatore.getByText('In corso').first()).toBeVisible()
+  // il percorso è sempre a un tocco: il diagramma si apre da destra con le tappe fino a dove è arrivata
+  await operatore.getByRole('button', { name: /Il percorso/ }).click()
+  const percorso = operatore.getByRole('dialog', { name: 'Il percorso' })
+  await expect(percorso.getByText('Esamina la segnalazione')).toBeVisible()
+  await expect(percorso.getByRole('button', { name: 'Rivedi il percorso' })).toBeVisible()
+  await percorso.getByRole('button', { name: 'Chiudi' }).click()
+  await expect(percorso).toBeHidden()
   await operatore.getByRole('link', { name: "Lavora l'attività" }).click()
   await expect(operatore).toHaveURL(/#\/attivita\//)
   await expect(operatore.getByText(oggetto).first()).toBeVisible()   // il campo in sola lettura mostra il dato iniziale

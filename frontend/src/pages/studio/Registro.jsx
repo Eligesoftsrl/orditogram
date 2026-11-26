@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { AlertTriangle, ChevronLeft, ChevronRight, Eye, ScrollText, Search } from 'lucide-react'
 import { api } from '../../api.js'
 import { dataOraCompleta, quando } from '../../lib/format.js'
-import { Badge, Caricamento, Cassetto, Errore, Schede, Vuoto } from '../../components/ui.jsx'
+import { Badge, Caricamento, Cassetto, Errore, Schede, Vuoto, IntestazionePagina } from '../../components/ui.jsx'
 import Esporta from '../../components/Esporta.jsx'
 import { gl } from '../../lib/glossario.js'
 import { AZIONI, ESITI, LETTURE, ORIGINI, etichettaAzione, etichettaLettura } from '../../lib/registro.js'
@@ -39,14 +39,16 @@ function usePagine(carica, filtri) {
 export default function Registro() {
   const [scheda, setScheda] = useState('azioni')
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-[34px] font-semibold leading-tight">Registro</h1>
-        <p className="mt-1 max-w-2xl text-grafite">
-          Chi ha pubblicato processi, modificato form e utenti, chi è entrato e chi ha aperto {gl('pratica', 'i')}, documenti e schede,
-          anche quando non poteva. Gli errori imprevisti hanno un codice da dare all'assistenza.
-        </p>
-      </header>
+    <div className="in-sequenza space-y-6">
+      <IntestazionePagina percorso={[{ label: 'Studio' }, { label: 'Registro' }]}>
+        <div>
+          <h1 className="text-[34px] font-semibold leading-tight">Registro</h1>
+          <p className="mt-1 max-w-2xl text-grafite">
+            Chi ha pubblicato processi, modificato form e utenti, chi è entrato e chi ha aperto {gl('pratica', 'i')}, documenti e schede,
+            anche quando non poteva. Gli errori imprevisti hanno un codice da dare all'assistenza.
+          </p>
+        </div>
+      </IntestazionePagina>
       <div className="rounded-pannello border border-linea bg-white shadow-pannello">
         <Schede className="px-3" attiva={scheda} onChange={setScheda} voci={[
           { id: 'azioni', label: 'Azioni' },

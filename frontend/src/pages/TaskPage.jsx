@@ -8,9 +8,9 @@ import DynamicForm from '../components/DynamicForm.jsx'
 import { Badge, Button, Caricamento, Errore, Pannello, useToast } from '../components/ui.jsx'
 import { BadgeScadenza } from '../components/Scadenza.jsx'
 import Approfondimenti from '../components/Approfondimenti.jsx'
-import ProcessoVivo from '../components/ProcessoVivo.jsx'
+import PercorsoPratica from '../components/PercorsoPratica.jsx'
 
-/** Lavorare un'attività: il form a sinistra, documenti / storico / diagramma a destra. */
+/** Lavorare un'attività: il form a tutta larghezza; documenti e storico si aprono nel pannello da destra. */
 export default function TaskPage() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -79,7 +79,8 @@ export default function TaskPage() {
               {!task.assignee && <span className="text-sm text-grafite">disponibile per il tuo gruppo: lavorala qui, confermando diventa tua</span>}
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Approfondimenti pratica={pratica} richiesti={!!task.form?.documentiObbligatori && modoDocumenti === 'modifica'} onDocumenti={carica} />
             {!task.assignee && (
               <Button variante="fantasma" icona={Hand} attesa={attesa} title="Riservala a te: i colleghi la vedono in carico a te"
                       onClick={() => azione(() => api.claim(task.id), 'Attività riservata a te')}>
@@ -94,26 +95,20 @@ export default function TaskPage() {
         </div>
       </header>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
-        <Pannello titolo={task.form?.title || task.name}>
-          {altrui && <div className="mb-5"><Errore>Questa attività è in carico a {task.assigneeName}: puoi consultarla ma non completarla.</Errore></div>}
-          {task.form
-            ? <DynamicForm key={task.id} form={task.form} initialValues={task.variables} organizzazioni={task.organizzazioni || {}} disabled={altrui}
-                           busy={attesa} onSubmit={completa} mostraTitolo={false} />
-            : !altrui && (
-              <div className="flex items-center justify-between gap-4">
-                <p className="text-grafite">Questa attività non ha un form: conferma quando l'hai svolta.</p>
-                <Button variante="primario" attesa={attesa} onClick={() => completa({})}>Completa</Button>
-              </div>
-            )}
-        </Pannello>
+      <Pannello titolo={task.form?.title || task.name}>
+        {altrui && <div className="mb-5"><Errore>Questa attività è in carico a {task.assigneeName}: puoi consultarla ma non completarla.</Errore></div>}
+        {task.form
+          ? <DynamicForm key={task.id} form={task.form} initialValues={task.variables} organizzazioni={task.organizzazioni || {}} disabled={altrui}
+                         busy={attesa} onSubmit={completa} mostraTitolo={false} />
+          : !altrui && (
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-grafite">Questa attività non ha un form: conferma quando l'hai svolta.</p>
+              <Button variante="primario" attesa={attesa} onClick={() => completa({})}>Completa</Button>
+            </div>
+          )}
+      </Pannello>
 
-        <Approfondimenti pratica={pratica}
-                         suggerimentoDocumenti={null}
-                         onDocumenti={carica} />
-      </div>
-
-      <ProcessoVivo id={pratica.id} altezza={300} />
+      <PercorsoPratica pratica={pratica} />
     </div>
   )
 }
