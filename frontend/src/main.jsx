@@ -31,6 +31,7 @@ import CambioPassword from './pages/CambioPassword.jsx'
 import MiaOrganizzazione from './pages/MiaOrganizzazione.jsx'
 import AnagraficheStudio from './pages/studio/Anagrafiche.jsx'
 import Glossario from './pages/studio/Glossario.jsx'
+import Moduli from './pages/studio/Moduli.jsx'
 import { GlossarioProvider, useGlossario } from './lib/useGlossario.jsx'
 import Anagrafiche from './pages/Anagrafiche.jsx'
 import SchedeAnagrafica from './pages/SchedeAnagrafica.jsx'
@@ -73,6 +74,7 @@ function App() {
         {puo(me, PERMESSI.registro) && <Route path="studio/registro" element={<Registro />} />}
         {puo(me, PERMESSI.integrazioni) && <Route path="studio/integrazioni" element={<Integrazioni />} />}
         {me.admin && <Route path="studio/glossario" element={<Glossario />} />}
+        {me.admin && <Route path="studio/moduli" element={<Moduli />} />}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

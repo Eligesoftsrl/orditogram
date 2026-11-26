@@ -33,6 +33,7 @@ public class DocumentoService {
     private final CurrentUserService currentUser;
     private final ObjectMapper mapper;
     private final com.eligesoft.orditogram.glossario.GlossarioService glossario;
+    private com.eligesoft.orditogram.modulo.ModuliService moduli;
 
     public DocumentoService(DocumentoRepository documenti, DocumentoVersioneRepository versioni,
                             ArchivioDocumenti storage, FirmaService firme, StoricoService storico,
@@ -99,7 +100,10 @@ public class DocumentoService {
         byte[] bytes = leggi(file);
         if (bytes.length == 0) throw bad("Il file " + filename + " è vuoto");
         String sha = sha256(bytes);
-        FirmaService.Report report = firme.analizza(bytes, filename);
+        // con il modulo Firma digitale spento il documento è un file come gli altri: nessuna verifica
+        FirmaService.Report report = moduli == null || moduli.acceso(com.eligesoft.orditogram.modulo.Modulo.FIRMA_DIGITALE)
+            ? firme.analizza(bytes, filename)
+            : new FirmaService.Report("NESSUNA", "NESSUNA", "Verifica delle firme spenta (modulo Firma digitale)", List.of(), null);
 
         DocumentoVersione v = new DocumentoVersione();
         v.setDocumento(d);
@@ -123,6 +127,11 @@ public class DocumentoService {
         }
         d.getVersioni().add(0, v);
         return versioni.save(v);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setModuli(com.eligesoft.orditogram.modulo.ModuliService moduli) {
+        this.moduli = moduli;
     }
 
     // ------------------------------------------------------------ lettura

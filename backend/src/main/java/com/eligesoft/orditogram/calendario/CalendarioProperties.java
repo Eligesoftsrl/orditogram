@@ -37,14 +37,24 @@ public class CalendarioProperties {
     public void setZona(String v) { this.zona = v; }
     public java.time.ZoneId zoneId() { return java.time.ZoneId.of(zona); }
 
+    /** Le festività nazionali italiane valgono solo con il modulo Italia acceso (Studio → Moduli). */
+    private org.springframework.beans.factory.ObjectProvider<com.eligesoft.orditogram.modulo.ModuliService> moduli;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    void setModuli(org.springframework.beans.factory.ObjectProvider<com.eligesoft.orditogram.modulo.ModuliService> moduli) {
+        this.moduli = moduli;
+    }
+
     /** Controllo all'avvio: una festività scritta male si scopre subito, non quando scatta un timer. */
     @jakarta.annotation.PostConstruct
     void controlla() {
-        calendario();
+        CalendarioLavorativo.da(giorniNonLavorativi, festivitaNazionali, festivita);
         zoneId();
     }
 
     public CalendarioLavorativo calendario() {
-        return CalendarioLavorativo.da(giorniNonLavorativi, festivitaNazionali, festivita);
+        var m = moduli != null ? moduli.getIfAvailable() : null;
+        boolean italia = m == null || m.acceso(com.eligesoft.orditogram.modulo.Modulo.ITALIA);
+        return CalendarioLavorativo.da(giorniNonLavorativi, festivitaNazionali && italia, festivita);
     }
 }

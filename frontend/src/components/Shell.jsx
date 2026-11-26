@@ -1,7 +1,7 @@
 import { api } from '../api.js'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { BookA, BookUser, Building2, Briefcase, Database, FolderOpen, Inbox, KeyRound, ListChecks, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Plug, Plus, ScrollText, ShieldCheck, Users, Workflow, X } from 'lucide-react'
+import { Blocks, BookA, BookUser, Building2, Briefcase, Database, FolderOpen, Inbox, KeyRound, ListChecks, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Plug, Plus, ScrollText, ShieldCheck, Users, Workflow, X } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
 import { useInfo } from '../lib/useGlossario.jsx'
 import { cx } from '../lib/format.js'
@@ -40,7 +40,7 @@ export default function Shell() {
     // il referente gestisce le persone della sua organizzazione
     ...(me.referenteDi?.length ? [{ to: '/organizzazione', label: 'La mia organizzazione', icona: Briefcase }] : [])
   ]
-  const icone = { processi: Workflow, form: ListChecks, anagrafiche: Database, utenti: Users, ruoli: ShieldCheck, strutture: Building2, organizzazioni: Briefcase, integrazioni: Plug, registro: ScrollText, glossario: BookA }
+  const icone = { processi: Workflow, form: ListChecks, anagrafiche: Database, utenti: Users, ruoli: ShieldCheck, strutture: Building2, organizzazioni: Briefcase, integrazioni: Plug, registro: ScrollText, glossario: BookA, moduli: Blocks }
   const studio = sezioniStudio(me).map(s => ({ ...s, icona: icone[s.chiave] }))
 
   // `ridotta`: solo l'icona, con il nome come etichetta accessibile e suggerimento

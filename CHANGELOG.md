@@ -21,6 +21,13 @@ Verso un Orditogram per ogni settore: il nucleo non parla più solo la lingua de
   ("il ticket concluso", "la richiesta conclusa"). Anche i messaggi del server per le persone (non trovata, accesso
   negato, termine scaduto, titolo predefinito delle notifiche). Restano invariati i percorsi e i nomi tecnici
   dell'API (`/api/pratiche`, `pratica.avviata`, `pratiche:avvia`).
+- **Moduli** (Studio → Moduli, solo amministratore): le funzioni legate all'Italia e alla PA diventano pacchetti
+  che si spengono per le installazioni di altri settori. *Italia*: festività nazionali nel calendario lavorativo e
+  formati `codiceFiscale`, `partitaIva`, `cap`, `telefono` nei form (spento, i form nuovi o modificati che li usano
+  sono rifiutati con un messaggio chiaro e lo Studio non li propone più). *Firma digitale*: verifica delle firme
+  sui documenti caricati. *PA*: servizi dimostrativi come il protocollo. Tutti accesi per default, quindi nulla
+  cambia per chi aggiorna. Lo spegnimento si conferma e va nel registro (`MODULO_SPENTO`, `MODULO_ACCESO`).
+  API `GET /api/admin/moduli`, `PUT /api/admin/moduli/{codice}`; `GET /api/info` restituisce `moduli`; migrazione `V12`.
 - Esempi nei campi dello Studio senza riferimenti alla PA ("Richiesta d'acquisto", "portale-clienti",
   `numeroRegistrazione`).
 

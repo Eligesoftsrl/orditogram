@@ -8,6 +8,7 @@ import { cx, quando } from '../lib/format.js'
 import DynamicForm from './DynamicForm.jsx'
 import { SEZIONE, condizione, descriviCondizione, eSezione, valoriPossibili } from '../lib/formCondizioni.js'
 import { FORMATI, descriviRegole } from '../lib/formRegole.js'
+import { formatiDisponibili } from '../lib/moduli.js'
 
 const NESSUNA_REGOLA = { min: undefined, max: undefined, minLunghezza: undefined, maxLunghezza: undefined,
   formato: undefined, espressione: undefined, messaggioFormato: undefined, colonne: undefined, minRighe: undefined, maxRighe: undefined,
@@ -23,7 +24,7 @@ const perTipo = (tipo, f = {}) => ({
   ...(tipo === 'tabella' ? { colonne: f.colonne?.length ? f.colonne : [colonnaIniziale()], titolo: undefined } : {})
 })
 import { Badge, Button, Caricamento, Errore, Pannello, Vuoto, useToast } from './ui.jsx'
-import { useGlossario } from '../lib/useGlossario.jsx'
+import { useGlossario, useInfo } from '../lib/useGlossario.jsx'
 import { gl } from '../lib/glossario.js'
 
 const TIPI = [
@@ -481,6 +482,7 @@ function CampoEditor({ f, i, n, catalogo, campi, modo, tipiAnagrafica, onChange,
 
 /** Regole di validazione secondo il tipo: limiti per numeri e date, lunghezza e formato per i testi. */
 function RegoleEditor({ f, onChange }) {
+  const { info } = useInfo()
   const uid = useId()
   const tipo = f.type || 'text'
   const v = (k) => f[k] ?? ''
@@ -508,7 +510,7 @@ function RegoleEditor({ f, onChange }) {
           <select id={`${uid}-15`} className="campo" value={v('formato')} onChange={e => onChange({ formato: e.target.value || undefined,
             ...(e.target.value !== 'espressione' ? { espressione: undefined, messaggioFormato: undefined } : {}) })}>
             <option value="">Testo libero</option>
-            {FORMATI.map(x => <option key={x.id} value={x.id}>{x.label}</option>)}
+            {formatiDisponibili(FORMATI, info, f.formato).map(x => <option key={x.id} value={x.id}>{x.label}</option>)}
           </select>
           {['codiceFiscale', 'partitaIva', 'iban'].includes(f.formato) && <p className="mt-1 text-[13px] text-grafite">Si controlla anche il carattere di controllo.</p>}
         </div>
