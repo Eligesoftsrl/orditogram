@@ -3,7 +3,7 @@ import { Briefcase, Plus, Search, Upload, X } from 'lucide-react'
 import { api } from '../../api.js'
 import { cx } from '../../lib/format.js'
 import { codiceDa } from '../../lib/permessi.js'
-import { Badge, Button, Caricamento, Errore, Pannello, Vuoto, useToast } from '../../components/ui.jsx'
+import { Badge, Button, Caricamento, Errore, Pannello, Vuoto, useToast, IntestazionePagina } from '../../components/ui.jsx'
 import { useGlossario } from '../../lib/useGlossario.jsx'
 import { gl } from '../../lib/glossario.js'
 
@@ -65,7 +65,7 @@ export default function Organizzazioni() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <IntestazionePagina percorso={[{ label: 'Studio' }, { label: 'Organizzazioni' }]}>
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Organizzazioni</h1>
           <p className="mt-1 max-w-2xl text-grafite">
@@ -78,7 +78,7 @@ export default function Organizzazioni() {
           <Button icona={Upload} onClick={() => fileRef.current?.click()}>Importa CSV</Button>
           <Button variante="primario" icona={Plus} onClick={() => { setErrore(''); setEdit({ ...VUOTA }) }}>Nuova organizzazione</Button>
         </div>
-      </header>
+      </IntestazionePagina>
 
       {esitoImport && (
         <Pannello titolo="Importazione" azioni={<button onClick={() => setEsitoImport(null)} className="rounded-md p-1.5 text-grafite hover:bg-carta" aria-label="Chiudi"><X className="size-5" /></button>}>

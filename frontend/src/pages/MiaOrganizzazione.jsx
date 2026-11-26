@@ -3,7 +3,7 @@ import { Briefcase, Copy, UserPlus } from 'lucide-react'
 import { api } from '../api.js'
 import { fa } from '../lib/format.js'
 import { azioniPersona, statoPersona } from '../lib/referente.js'
-import { Badge, Button, Caricamento, Dialogo, Errore, Pannello, Vuoto, useToast } from '../components/ui.jsx'
+import { Badge, Button, Caricamento, Dialogo, Errore, Pannello, Vuoto, useToast, IntestazionePagina } from '../components/ui.jsx'
 import { useGlossario } from '../lib/useGlossario.jsx'
 import { gl } from '../lib/glossario.js'
 
@@ -23,13 +23,15 @@ export default function MiaOrganizzazione() {
   if (!lista) return errore ? <Errore>{errore}</Errore> : <Caricamento />
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-[34px] font-semibold leading-tight">La mia organizzazione</h1>
-        <p className="mt-1 max-w-2xl text-grafite">
-          Come referente, decidi chi lavora per la tua organizzazione. Le persone che aggiungi vedono {gl('pratica', 'i')} in cui
-          l'organizzazione è parte.
-        </p>
-      </header>
+      <IntestazionePagina percorso={[{ label: 'La mia organizzazione' }]}>
+        <div>
+          <h1 className="text-[34px] font-semibold leading-tight">La mia organizzazione</h1>
+          <p className="mt-1 max-w-2xl text-grafite">
+            Come referente, decidi chi lavora per la tua organizzazione. Le persone che aggiungi vedono {gl('pratica', 'i')} in cui
+            l'organizzazione è parte.
+          </p>
+        </div>
+      </IntestazionePagina>
       {lista.length === 0
         ? <Pannello><Vuoto icona={Briefcase} titolo="Non sei referente di nessuna organizzazione">Se pensi sia un errore, contatta {g('ente', 'il')}.</Vuoto></Pannello>
         : lista.map(o => <Organizzazione key={o.id} org={o} onCambio={carica} />)}

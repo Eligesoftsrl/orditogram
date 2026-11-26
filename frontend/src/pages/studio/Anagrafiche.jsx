@@ -6,7 +6,7 @@ import { cx, quando } from '../../lib/format.js'
 import { codiceDa } from '../../lib/permessi.js'
 import { AZIONI_ANAGRAFICA } from '../../lib/anagrafiche.js'
 import FormEditor from '../../components/FormEditor.jsx'
-import { Badge, Button, Caricamento, Dialogo, Errore, Pannello, Vuoto, useToast } from '../../components/ui.jsx'
+import { Badge, Button, Caricamento, Dialogo, Errore, Pannello, Vuoto, useToast, IntestazionePagina } from '../../components/ui.jsx'
 import { gl } from '../../lib/glossario.js'
 
 const NUOVO = { codice: '', nome: '', descrizione: '', attivo: true, definizione: { fields: [] } }
@@ -51,7 +51,7 @@ export default function AnagraficheStudio() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <IntestazionePagina percorso={[{ label: 'Studio' }, { label: 'Anagrafiche' }]}>
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Anagrafiche</h1>
           <p className="mt-1 max-w-2xl text-grafite">
@@ -60,7 +60,7 @@ export default function AnagraficheStudio() {
           </p>
         </div>
         <Button variante="primario" icona={Plus} onClick={() => { setErrore(''); setTipo({ ...NUOVO }) }}>Nuova anagrafica</Button>
-      </header>
+      </IntestazionePagina>
       <Errore>{errore}</Errore>
 
       {!lista ? (errore ? null : <Caricamento />) : lista.length === 0 ? (

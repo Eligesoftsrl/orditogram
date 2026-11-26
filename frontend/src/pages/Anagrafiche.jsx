@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, BookUser } from 'lucide-react'
 import { api } from '../api.js'
-import { Badge, Caricamento, Errore, Vuoto } from '../components/ui.jsx'
+import { Badge, Caricamento, Errore, Vuoto, IntestazionePagina } from '../components/ui.jsx'
 import { gl } from '../lib/glossario.js'
 
 const AZIONI = { MODIFICA: 'puoi modificare', ESPORTA: 'puoi esportare' }
@@ -15,10 +15,12 @@ export default function Anagrafiche() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-[34px] font-semibold leading-tight">Anagrafiche</h1>
-        <p className="mt-1 max-w-2xl text-grafite">Gli elenchi che {gl('pratica', 'i')} usano. Cerca una scheda, consultala o aggiornala.</p>
-      </header>
+      <IntestazionePagina percorso={[{ label: 'Anagrafiche' }]}>
+        <div>
+          <h1 className="text-[34px] font-semibold leading-tight">Anagrafiche</h1>
+          <p className="mt-1 max-w-2xl text-grafite">Gli elenchi che {gl('pratica', 'i')} usano. Cerca una scheda, consultala o aggiornala.</p>
+        </div>
+      </IntestazionePagina>
       {!tipi ? (errore ? <Errore>{errore}</Errore> : <Caricamento />) : tipi.length === 0 ? (
         <Vuoto icona={BookUser} titolo="Nessuna anagrafica">Non hai accesso ad alcuna anagrafica.</Vuoto>
       ) : (

@@ -3,7 +3,7 @@ import { Search, UserPlus, Users, X } from 'lucide-react'
 import { api } from '../../api.js'
 import { useAuth } from '../../lib/auth.jsx'
 import { cx } from '../../lib/format.js'
-import { Avatar, Badge, Button, Caricamento, Errore, Pannello, Vuoto, useToast } from '../../components/ui.jsx'
+import { Avatar, Badge, Button, Caricamento, Errore, Pannello, Vuoto, useToast, IntestazionePagina } from '../../components/ui.jsx'
 import Esporta from '../../components/Esporta.jsx'
 import Gruppi from '../../components/Gruppi.jsx'
 import { alberoStrutture } from '../../lib/permessi.js'
@@ -64,7 +64,7 @@ export default function Utenti() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <IntestazionePagina percorso={[{ label: 'Studio' }, { label: 'Utenti' }]}>
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Utenti</h1>
           <p className="mt-1 max-w-2xl text-grafite">Chi accede, a quali gruppi appartiene e con quali ruoli. I gruppi decidono chi lavora le attività dei processi, i ruoli che cosa si può fare nello Studio.</p>
@@ -83,7 +83,7 @@ export default function Utenti() {
                    ]} />
           <Button variante="primario" icona={UserPlus} onClick={() => { setErrore(''); setEdit({ ...VUOTO }) }}>Nuovo utente</Button>
         </div>
-      </header>
+      </IntestazionePagina>
 
       {!lista ? <Caricamento /> : (
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">

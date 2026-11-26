@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowRight, ChevronLeft, ChevronRight, FolderOpen, Search } from 'lucide-react'
+import { ArrowRight, ChevronLeft, ChevronRight, CircleCheckBig, FolderOpen, Layers, Search, Timer } from 'lucide-react'
 import { api } from '../api.js'
 import { dataOraCompleta, fa, quando } from '../lib/format.js'
 import IterRail from '../components/IterRail.jsx'
-import { Badge, Button, Caricamento, Cassetto, Errore, Schede, Vuoto } from '../components/ui.jsx'
+import { Avatar, Badge, Button, Caricamento, Cassetto, Errore, IntestazionePagina, TesseraFiltro, Vuoto } from '../components/ui.jsx'
 import { BadgeScadenza } from '../components/Scadenza.jsx'
 import Esporta from '../components/Esporta.jsx'
 import AnteprimaPratica from '../components/AnteprimaPratica.jsx'
@@ -23,6 +23,12 @@ const COLONNE_EXPORT = [
 ]
 
 const DIMENSIONI = [25, 50, 100]
+// le tessere-filtro in cima all'elenco: tinta per argomento, non per stato (CLAUDE.md, Interfaccia)
+const STATI = [
+  { id: 'in-corso', label: 'In corso', icona: Timer, tono: 'acqua' },
+  { id: 'concluse', label: 'Concluse', icona: CircleCheckBig, tono: 'lilla' },
+  { id: 'tutte', label: 'Tutte', icona: Layers, tono: 'neutro' }
+]
 const MAX_ESPORTAZIONE = 20000
 
 /** Tutte le pratiche visibili all'utente: ricerca e pagine sul server, filtro per tipologia. */
@@ -43,6 +49,16 @@ export default function Pratiche() {
   const navigate = useNavigate()
 
   useEffect(() => { api.tipologie().then(setTipologie).catch(() => {}) }, [])
+  // i numeri delle tessere-filtro: stessa ricerca e tipologia, un conteggio per stato (una riga sola per chiamata)
+  const [conteggi, setConteggi] = useState({})
+  useEffect(() => {
+    let annullato = false
+    const t = setTimeout(() => {
+      Promise.all(STATI.map(st => api.pratiche(st.id, q, { processo, dimensione: 1 }).then(r => [st.id, r.totale]).catch(() => [st.id, null])))
+        .then(v => !annullato && setConteggi(Object.fromEntries(v)))
+    }, q ? 250 : 0)
+    return () => { annullato = true; clearTimeout(t) }
+  }, [q, processo])
   // un filtro nuovo riparte dalla prima pagina
   useEffect(() => { setPagina(0) }, [stato, q, processo, dimensione])
   useEffect(() => {
@@ -68,7 +84,7 @@ export default function Pratiche() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <IntestazionePagina percorso={[{ label: gl('pratica', 'Nomi') }]}>
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">{gl('pratica', 'Nomi')}</h1>
           <p className="mt-1 text-grafite">{gl('pratica', 'I')} che hai avviato, su cui hai lavorato o che aspettano il tuo gruppo.</p>
@@ -77,22 +93,28 @@ export default function Pratiche() {
                  sottotitolo={[{ 'in-corso': 'In corso', concluse: 'Concluse', tutte: 'Tutte' }[stato],
                    processo && (tipologie.find(t => t.chiave === processo)?.nome || processo), q && `ricerca "${q}"`].filter(Boolean).join(', ')}
                  colonne={COLONNE_EXPORT} totale={totale} carica={caricaTutte} />
-      </header>
+      </IntestazionePagina>
+
+      <div className="in-sequenza grid gap-3 sm:grid-cols-3" role="group" aria-label={`Quali ${gl('pratica', 'nomi')} vedere`}>
+        {STATI.map(st => (
+          <TesseraFiltro key={st.id} tono={st.tono} icona={st.icona} attiva={stato === st.id} onClick={() => setStato(st.id)}
+                         etichetta={st.id === 'tutte' ? `Tutt${gl.agg('pratica', '', true)} ${gl('pratica', 'i')}` : st.label} valore={conteggi[st.id]} />
+        ))}
+      </div>
 
       <div className="rounded-pannello border border-linea bg-white shadow-pannello">
-        <div className="flex flex-wrap items-center justify-between gap-3 px-4 pt-2">
-          <Schede attiva={stato} onChange={setStato} className="border-b-0"
-                  voci={[{ id: 'in-corso', label: 'In corso' }, { id: 'concluse', label: 'Concluse' }, { id: 'tutte', label: 'Tutte' }]} />
-          <div className="mb-2 flex w-full flex-wrap gap-2 sm:w-auto">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+          <h2 className="text-lg font-semibold">{stato === 'tutte' ? `Tutt${gl.agg('pratica', '', true)} ${gl('pratica', 'i')}` : `${gl('pratica', 'Nomi')} ${stato === 'concluse' ? gl.agg('pratica', 'conclus', true) : 'in corso'}`}</h2>
+          <div className="flex w-full flex-wrap gap-2 sm:w-auto">
             {tipologie.length > 1 && (
-              <select className="campo w-full sm:w-56" value={processo} onChange={e => setProcesso(e.target.value)} aria-label={`Tipologia di ${gl('pratica', 'nome')}`}>
+              <select className="campo w-full rounded-full sm:w-56" value={processo} onChange={e => setProcesso(e.target.value)} aria-label={`Tipologia di ${gl('pratica', 'nome')}`}>
                 <option value="">Tutte le tipologie</option>
                 {tipologie.map(t => <option key={t.chiave} value={t.chiave}>{t.nome}</option>)}
               </select>
             )}
             <label className="relative w-full sm:w-72">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-nebbia" />
-              <input className="campo pl-9" placeholder="Cerca per titolo o tipologia" value={q} onChange={e => setQ(e.target.value)} aria-label={`Cerca ${gl('pratica', 'nomi')}`} />
+              <input className="campo rounded-full pl-9" placeholder="Cerca per titolo o tipologia" value={q} onChange={e => setQ(e.target.value)} aria-label={`Cerca ${gl('pratica', 'nomi')}`} />
             </label>
           </div>
         </div>
@@ -111,7 +133,7 @@ export default function Pratiche() {
                 <li key={p.id}>
                   <Link to={`/pratiche/${p.id}`} aria-haspopup="dialog"
                         onClick={(e) => { if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return; e.preventDefault(); setAnteprima(p) }}
-                        className="grid gap-x-6 gap-y-2 px-5 py-4 transition-colors hover:bg-verde-50/60 md:grid-cols-[minmax(0,2fr)_auto_minmax(0,1.4fr)_auto] md:items-center">
+                        className="grid gap-x-6 gap-y-2 px-5 py-[18px] transition-colors hover:bg-verde-50/60 md:grid-cols-[minmax(0,2fr)_auto_minmax(0,1.4fr)_auto] md:items-center">
                     <div className="min-w-0">
                       <p className="truncate font-medium text-pino-900">{p.titolo}</p>
                       <p className="mt-0.5 truncate text-[13px] text-grafite">{p.processo}{p.avviataDa ? `, avviata da ${p.avviataDa}` : ''}</p>
@@ -125,9 +147,13 @@ export default function Pratiche() {
                         : p.stepCorrenti.length === 0 && p.scadenze?.some(x => x.tipo === 'attesa')
                         ? <span className="text-grafite">In attesa, riprende il {quando(p.scadenze.find(x => x.tipo === 'attesa').quando)}</span>
                         : <>
-                            <span className="text-pino-900">{p.stepCorrenti.map(s => s.nome).join(', ')}</span>
+                            <span className="block font-semibold text-pino-900">{p.stepCorrenti.map(s => s.nome).join(', ')}</span>
                             {p.stepCorrenti[0] && (
-                              <span className="text-grafite">{p.stepCorrenti[0].assegnatario ? `, ${p.stepCorrenti[0].assegnatario}` : ', disponibile per il gruppo'}</span>
+                              <span className="mt-1 flex items-center gap-2 text-grafite">
+                                {p.stepCorrenti[0].assegnatario
+                                  ? <><Avatar nome={p.stepCorrenti[0].assegnatario} className="size-6 bg-verde-600 text-[11px]" />{p.stepCorrenti[0].assegnatario}</>
+                                  : 'Disponibile per il gruppo'}
+                              </span>
                             )}
                           </>}
                     </div>

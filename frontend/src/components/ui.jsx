@@ -1,6 +1,7 @@
 import { createPortal } from 'react-dom'
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { CircleCheck, CircleX, LoaderCircle, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ChevronRight, CircleCheck, CircleX, House, LoaderCircle, X } from 'lucide-react'
 import { cx, iniziali } from '../lib/format.js'
 import { valoreContatore } from '../lib/scrivania.js'
 
@@ -223,6 +224,17 @@ const iconeTessera = {
   zafferano: 'bg-zafferano-50 text-zafferano-800', verde: 'bg-ok-50 text-ok-700',
   acqua: 'bg-white text-acqua-700', lilla: 'bg-white text-lilla-700', ambra: 'bg-white text-zafferano-800', rosa: 'bg-white text-mattone-700'
 }
+/** L'icona della tessera in un cerchio pieno nel tono scuro della tinta (contrasto dell'icona oltre 4,5:1). */
+const cerchiTessera = {
+  blu: 'bg-white text-verde-700', neutro: 'bg-pino-700 text-white', mattone: 'bg-mattone-600 text-white',
+  zafferano: 'bg-zafferano-800 text-white', verde: 'bg-ok-600 text-white',
+  acqua: 'bg-acqua-700 text-white', lilla: 'bg-lilla-700 text-white', ambra: 'bg-zafferano-800 text-white', rosa: 'bg-mattone-600 text-white'
+}
+/** La forma morbida nell'angolo: solo decorazione, nello stesso tono della tessera. */
+const formeTessera = {
+  blu: 'bg-white/10', chiaro: 'bg-verde-50/80', neutro: 'bg-carta', mattone: 'bg-mattone-50', zafferano: 'bg-zafferano-50', verde: 'bg-ok-50',
+  acqua: 'bg-acqua-100/70', lilla: 'bg-lilla-100/70', ambra: 'bg-zafferano-100/70', rosa: 'bg-mattone-100/70'
+}
 const noteTessera = { blu: 'text-white/90', acqua: 'text-pino-800', lilla: 'text-pino-800', ambra: 'text-pino-800', rosa: 'text-pino-800' }
 
 /**
@@ -230,14 +242,14 @@ const noteTessera = { blu: 'text-white/90', acqua: 'text-pino-800', lilla: 'text
  * Con `to` è un collegamento; `children` va sotto il numero (es. le prime attività nella tessera grande).
  */
 export function Tessera({ tono = 'neutro', icona: Icona, etichetta, valore, pastiglia, nota, grande, as: Comp = 'div', className, children, ...props }) {
-  const piena = tono === 'blu'
   return (
     <Comp {...props}
-      className={cx('group flex flex-col gap-2.5 rounded-pannello border shadow-pannello transition-[transform,box-shadow] duration-200 ease-[var(--ease-morbido)]',
+      className={cx('group relative isolate flex flex-col gap-3 overflow-hidden rounded-pannello border shadow-pannello transition-[transform,box-shadow] duration-200 ease-[var(--ease-morbido)]',
         grande ? 'p-6' : 'p-5',
         props.to || props.href || props.onClick ? 'hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-14px_rgb(0_40_80/0.4)]' : '', toniTessera[tono], className)}>
-      <span className="flex items-center gap-2.5">
-        {Icona && <span className={cx('inline-flex size-9 items-center justify-center rounded-[10px]', iconeTessera[tono])}><Icona className="size-[18px]" /></span>}
+      <Forme tono={tono} />
+      <span className="flex items-center gap-3">
+        {Icona && <span className={cx('inline-flex size-11 shrink-0 items-center justify-center rounded-full', cerchiTessera[tono])}><Icona className="size-5" /></span>}
         <span className={cx('text-[15px] font-semibold', noteTessera[tono] || 'text-grafite')}>{etichetta}</span>
         {grande && pastiglia && <span className={cx('ml-auto rounded-full px-2.5 py-0.5 text-[13px] font-semibold', iconeTessera[tono])}>{pastiglia}</span>}
       </span>
@@ -248,6 +260,96 @@ export function Tessera({ tono = 'neutro', icona: Icona, etichetta, valore, past
       {nota && <span className={cx('text-sm', noteTessera[tono] || 'text-grafite')}>{nota}</span>}
       {children}
     </Comp>
+  )
+}
+
+/** Le due forme morbide nell'angolo in alto a destra di una tessera (decorative, dietro al contenuto). */
+export function Forme({ tono = 'neutro', className }) {
+  const colore = formeTessera[tono] || formeTessera.neutro
+  return (
+    <span aria-hidden="true" className={cx('pointer-events-none absolute -right-10 -top-12 -z-10 size-36 transition-transform duration-300 ease-[var(--ease-morbido)] group-hover:scale-105', className)}>
+      <span className={cx('absolute inset-0 rounded-[42%_58%_55%_45%/48%_42%_58%_52%]', colore)} />
+      <span className={cx('absolute -bottom-6 left-2 size-16 rounded-full opacity-70', colore)} />
+    </span>
+  )
+}
+
+/**
+ * Tessera che fa da filtro in cima a un elenco: tinta, numero e parola; premuta ha il bordo blu e la spunta.
+ * Il numero arriva dal server; finché non c'è mostra un trattino.
+ */
+export function TesseraFiltro({ tono = 'acqua', icona: Icona, etichetta, valore, attiva, onClick }) {
+  return (
+    <button type="button" onClick={onClick} aria-pressed={!!attiva}
+            className={cx('group relative isolate flex min-w-0 items-center gap-3 overflow-hidden rounded-pannello border-2 px-4 py-3.5 text-left transition-[transform,border-color,box-shadow] duration-200 ease-[var(--ease-morbido)] hover:-translate-y-0.5',
+              toniTessera[tono], attiva ? 'border-verde-600 shadow-[0_10px_24px_-14px_rgb(0_102_204/0.8)]' : '')}>
+      <Forme tono={tono} className="-right-14 -top-16" />
+      {Icona && <span className={cx('inline-flex size-10 shrink-0 items-center justify-center rounded-full', cerchiTessera[tono])}><Icona className="size-[18px]" /></span>}
+      <span className="min-w-0">
+        <span className="numeri block text-[28px] font-bold leading-none">{valore == null ? '–' : <Contatore valore={valore} />}</span>
+        <span className="mt-1 block truncate text-sm font-semibold text-pino-800">{etichetta}</span>
+      </span>
+      {attiva && <CircleCheck className="ml-auto size-5 shrink-0 text-verde-700" aria-hidden="true" />}
+    </button>
+  )
+}
+
+// ================================================================= intestazione di pagina
+
+/**
+ * L'intestazione di una pagina in una tessera bianca: percorso (briciole di pane) sopra, poi titolo,
+ * descrizione e azioni come `children`. percorso: [{ label, to }], l'ultima voce è la pagina corrente.
+ */
+export function IntestazionePagina({ percorso = [], className, children }) {
+  return (
+    <header className={cx('relative isolate overflow-hidden rounded-pannello border border-linea bg-white px-5 py-5 shadow-pannello sm:px-7', className)}>
+      <Forme tono="chiaro" className="-right-6 -top-14 size-44" />
+      {percorso.length > 0 && <Percorso voci={percorso} />}
+      <div className="flex flex-wrap items-end justify-between gap-4 [&_h1]:text-[30px] [&_h1]:font-bold [&_h1]:tracking-tight">{children}</div>
+    </header>
+  )
+}
+
+/** Briciole di pane: casa, poi le sezioni; l'ultima voce è una capsula blu chiara (pagina corrente). */
+export function Percorso({ voci }) {
+  return (
+    <nav aria-label="Percorso" className="mb-2">
+      <ol className="flex flex-wrap items-center gap-1.5 text-[13px] font-semibold text-grafite">
+        <li><Link to="/" className="inline-flex rounded-full p-1 hover:bg-verde-50 hover:text-verde-700" aria-label="Scrivania" title="Scrivania"><House className="size-4" /></Link></li>
+        {voci.map((v, i) => {
+          const ultima = i === voci.length - 1
+          return (
+            <li key={i} className="flex items-center gap-1.5">
+              <ChevronRight className="size-3.5 text-nebbia" aria-hidden="true" />
+              {ultima ? <span aria-current="page" className="rounded-full bg-verde-50 px-2.5 py-0.5 text-verde-700">{v.label}</span>
+                : v.to ? <Link to={v.to} className="hover:text-verde-700 hover:underline">{v.label}</Link>
+                : <span>{v.label}</span>}
+            </li>
+          )
+        })}
+      </ol>
+    </nav>
+  )
+}
+
+// ================================================================= selettore a capsula
+
+/**
+ * Selettore a capsula per cambiare vista (es. Grafico o Tabella, In corso o Concluse).
+ * voci: [{ id, label, icona }]; la voce scelta è una capsula bianca su fondo carta.
+ */
+export function Selettore({ voci, attiva, onChange, etichetta, className }) {
+  return (
+    <div role="group" aria-label={etichetta} className={cx('inline-flex shrink-0 items-center gap-0.5 rounded-full bg-carta p-1', className)}>
+      {voci.map(v => (
+        <button key={v.id} type="button" aria-pressed={attiva === v.id} onClick={() => onChange(v.id)}
+                className={cx('inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold transition-[background-color,color,box-shadow] duration-200',
+                  attiva === v.id ? 'bg-white text-verde-700 shadow-[0_1px_3px_rgb(0_40_80/0.15)]' : 'text-grafite hover:text-pino-900')}>
+          {v.icona && <v.icona className="size-4" aria-hidden="true" />}
+          {v.label}
+        </button>
+      ))}
+    </div>
   )
 }
 

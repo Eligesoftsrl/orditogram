@@ -3,7 +3,7 @@ import { BadgeCheck, CircleOff, Flag, Landmark, PenLine, Power } from 'lucide-re
 import { api } from '../../api.js'
 import { quando } from '../../lib/format.js'
 import { useInfo } from '../../lib/useGlossario.jsx'
-import { Badge, Button, Caricamento, Dialogo, Errore, useToast } from '../../components/ui.jsx'
+import { Badge, Button, Caricamento, Dialogo, Errore, useToast, IntestazionePagina } from '../../components/ui.jsx'
 import { cx } from '../../lib/format.js'
 
 const ICONE = { italia: Flag, 'firma-digitale': PenLine, pa: Landmark }
@@ -35,13 +35,15 @@ export default function Moduli() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-[34px] font-semibold leading-tight">Moduli</h1>
-        <p className="mt-1 max-w-2xl text-grafite">
-          Il nucleo di Orditogram vale per ogni settore. I moduli aggiungono le regole di un paese o di un settore:
-          lascia acceso solo quello che serve a questa installazione. Spegnere un modulo non cancella niente.
-        </p>
-      </header>
+      <IntestazionePagina percorso={[{ label: 'Studio' }, { label: 'Moduli' }]}>
+        <div>
+          <h1 className="text-[34px] font-semibold leading-tight">Moduli</h1>
+          <p className="mt-1 max-w-2xl text-grafite">
+            Il nucleo di Orditogram vale per ogni settore. I moduli aggiungono le regole di un paese o di un settore:
+            lascia acceso solo quello che serve a questa installazione. Spegnere un modulo non cancella niente.
+          </p>
+        </div>
+      </IntestazionePagina>
 
       <Errore>{errore}</Errore>
       {!moduli ? (!errore && <Caricamento />) : (

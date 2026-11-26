@@ -3,7 +3,7 @@ import { BookA, RotateCcw, Save } from 'lucide-react'
 import { api } from '../../api.js'
 import { creaGlossario, gl } from '../../lib/glossario.js'
 import { useInfo } from '../../lib/useGlossario.jsx'
-import { Badge, Button, Caricamento, Errore, Pannello, useToast } from '../../components/ui.jsx'
+import { Badge, Button, Caricamento, Errore, Pannello, useToast, IntestazionePagina } from '../../components/ui.jsx'
 
 /**
  * Studio → Glossario (solo amministratore): le parole con cui questa installazione chiama ente, ufficio e
@@ -45,13 +45,15 @@ export default function Glossario() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-[34px] font-semibold leading-tight">Glossario</h1>
-        <p className="mt-1 max-w-2xl text-grafite">
-          Le parole con cui Orditogram chiama chi lo usa, chi entra da fuori e il caso che si lavora. Un'azienda può
-          scegliere "azienda", "Assistenza", "cliente" e "richiesta"; un ente pubblico lascia quelle predefinite. Valgono subito per tutti.
-        </p>
-      </header>
+      <IntestazionePagina percorso={[{ label: 'Studio' }, { label: 'Glossario' }]}>
+        <div>
+          <h1 className="text-[34px] font-semibold leading-tight">Glossario</h1>
+          <p className="mt-1 max-w-2xl text-grafite">
+            Le parole con cui Orditogram chiama chi lo usa, chi entra da fuori e il caso che si lavora. Un'azienda può
+            scegliere "azienda", "Assistenza", "cliente" e "richiesta"; un ente pubblico lascia quelle predefinite. Valgono subito per tutti.
+          </p>
+        </div>
+      </IntestazionePagina>
 
       {!termini ? (errore ? <Errore>{errore}</Errore> : <Caricamento />) : (
         <form onSubmit={salva} className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">

@@ -7,7 +7,7 @@ import { descriviRegola, PERMESSI, puo } from '../../lib/permessi.js'
 import { chiaveDaNome } from '../../lib/bpmn/orditogramModeler.js'
 import { cx, dataOraCompleta, quando } from '../../lib/format.js'
 import BpmnViewer from '../../components/BpmnViewer.jsx'
-import { Badge, Button, Caricamento, Dialogo, Errore, Pannello, Vuoto, useToast } from '../../components/ui.jsx'
+import { Badge, Button, Caricamento, Dialogo, Errore, Pannello, Vuoto, useToast, IntestazionePagina } from '../../components/ui.jsx'
 import Esporta from '../../components/Esporta.jsx'
 import AccessoProcesso from '../../components/AccessoProcesso.jsx'
 import { gl } from '../../lib/glossario.js'
@@ -65,7 +65,7 @@ export default function Processi() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <IntestazionePagina percorso={[{ label: 'Studio' }, { label: 'Processi' }]}>
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Processi</h1>
           <p className="mt-1 max-w-2xl text-grafite">I processi in produzione. Caricane uno nuovo o una nuova versione: {gl('pratica', 'i')} in corso proseguono sulla versione con cui sono partite.</p>
@@ -88,7 +88,7 @@ export default function Processi() {
           <input ref={inputPacchetto} type="file" accept=".zip" className="hidden"
                  onChange={e => { const f = e.target.files[0]; e.target.value = ''; if (f) void importa(f) }} />
         </div>
-      </header>
+      </IntestazionePagina>
 
       {bozze.filter(b => !b.inProduzione).length > 0 && (
         <div className="rounded-pannello border border-zafferano-100 bg-zafferano-50/60 p-4">

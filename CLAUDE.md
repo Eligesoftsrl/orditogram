@@ -128,7 +128,7 @@ Orditogram e ogni soluzione consegnata ai clienti. Obiettivo dichiarato: un effe
 - **Componenti** (`components/ui.jsx`): `Button` (primario, secondario, fantasma, pericolo, chiaro), `Badge`
   (verde = successo, blu = in corso, zafferano, mattone, neutro, pino), `Tessera` (numero che sale contando, icona,
   pastiglia; `tono` blu piena per la cosa principale, `grande` per la tessera doppia del bento, tinte `acqua`,
-  `lilla`, `ambra`, `rosa`; `children` sotto il numero), `Contatore`, `Menu` (azioni a comparsa, frecce ed Esc),
+  `lilla`, `ambra`, `rosa`; `children` sotto il numero), `Contatore`, `Forme` (forme morbide decorative nell'angolo), `TesseraFiltro` (tessera-filtro in cima a un elenco, `aria-pressed`), `IntestazionePagina` (tessera bianca con `Percorso` e titolo: in ogni pagina nuova), `Selettore` (capsula per cambiare vista, es. Grafico/Tabella), `Menu` (azioni a comparsa, frecce ed Esc),
   `Pannello`, `Schede`, `Dialogo` (al centro, per confermare), `Cassetto` (pannello laterale da destra: vedere o
   fare qualcosa senza cambiare pagina). Altri: `BpmnViewer` (con `segnalino`), `ProcessoVivo` (il diagramma della
   pratica, non per gli esterni), `GraficiScrivania` (riquadri con *Tabella*), `AnteprimaPratica`. Prima di crearne uno nuovo,

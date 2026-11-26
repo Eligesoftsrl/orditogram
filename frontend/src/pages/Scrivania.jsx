@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, CircleAlert, ChevronRight, FolderOpen, Hand, Inbox, Plus, Route, Timer, Users } from 'lucide-react'
+import { ArrowRight, CircleAlert, CircleCheckBig, ChevronRight, FolderOpen, Hand, Inbox, Plus, Route, Timer } from 'lucide-react'
 import { api } from '../api.js'
 import { useAuth } from '../lib/auth.jsx'
 import { fa, giorno, saluto } from '../lib/format.js'
@@ -10,7 +10,8 @@ import IterRail from '../components/IterRail.jsx'
 import AnteprimaPratica from '../components/AnteprimaPratica.jsx'
 import GraficiScrivania from '../components/GraficiScrivania.jsx'
 import { useAvvio } from '../components/Shell.jsx'
-import { Badge, Button, Caricamento, Cassetto, Errore, Pannello, Tessera, Vuoto, useToast } from '../components/ui.jsx'
+import { Badge, Button, Caricamento, Cassetto, Contatore, Errore, Forme, Pannello, Tessera, Vuoto, useToast } from '../components/ui.jsx'
+import Ordito from '../components/Ordito.jsx'
 import { BadgeScadenza, principale } from '../components/Scadenza.jsx'
 import { gl, nuovaPratica, senzaTitolo } from '../lib/glossario.js'
 
@@ -70,7 +71,8 @@ export default function Scrivania() {
   const libere = tasks.filter(t => !t.assignee)
   const nome = me.fullName.split(' ')[0]
   const conteggi = contaScadenze(tasks)
-  const prime = inPrimoPiano(mie, 3)
+  // nel benvenuto: le prime attività in carico, altrimenti le prime del gruppo da prendere
+  const prime = mie.length ? inPrimoPiano(mie, 3) : inPrimoPiano(libere, 3)
 
   const apriAttivita = (e, t) => {
     if (apreLaPagina(e)) return
@@ -85,22 +87,35 @@ export default function Scrivania() {
 
   return (
     <div className="space-y-7">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-[15px] text-grafite">{giorno(new Date())}</p>
-          <h1 className="mt-1 text-[36px] font-bold leading-tight tracking-tight">{saluto()}, {nome}</h1>
-          <p className="mt-1.5 max-w-2xl text-[17px] text-pino-800">{riassunto(mie.length, libere.length)}</p>
-        </div>
-        <Button variante="primario" misura="lg" icona={Plus} className="hidden lg:inline-flex" onClick={() => apriAvvio()}>{nuovaPratica()}</Button>
-      </header>
-
-      {/* bento: la tessera blu grande e quattro tessere di tinte diverse */}
+      {/* bento: il benvenuto blu (tessera doppia) con le attività in primo piano, poi quattro tessere di tinte diverse */}
       <div className="in-sequenza grid grid-cols-2 gap-4 lg:grid-cols-4" aria-label="Riepilogo">
-        <Tessera tono="blu" grande icona={Inbox} etichetta="Tocca a te" valore={mie.length} className="col-span-2 lg:row-span-2"
-                 pastiglia={libere.length ? `+${libere.length} nel gruppo` : null}
-                 nota={mie.length ? null : 'Niente in carico a te: prendi un\'attività del gruppo per iniziare.'}>
+        <section aria-labelledby="benvenuto" className="relative isolate col-span-2 flex flex-col overflow-hidden rounded-pannello bg-verde-600 p-6 text-white shadow-[0_18px_40px_-20px_rgb(0_102_204/0.9)] sm:p-7 lg:row-span-2">
+          <Forme tono="blu" className="-right-16 -top-20 size-64" />
+          <Ordito className="pointer-events-none absolute right-4 top-5 -z-10 hidden w-[210px] sm:block" />
+          <div className="sm:pr-56">
+            <p className="text-[15px] text-verde-50">{giorno(new Date())}</p>
+            <h1 id="benvenuto" className="mt-1 text-[34px] font-bold leading-tight tracking-tight">{saluto()}, {nome}</h1>
+            <p className="mt-1.5 max-w-xl text-[17px] text-verde-50">{riassunto(mie.length, libere.length)}</p>
+          </div>
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <dl className="flex divide-x divide-white/25 rounded-blocco bg-white/12">
+              <div className="px-5 py-2.5">
+                <dt className="sr-only">Tocca a te</dt>
+                <dd className="numeri text-[28px] font-bold leading-none"><Contatore valore={mie.length} /></dd>
+                <dd aria-hidden="true" className="mt-1 text-[13px] font-semibold text-verde-50">Tocca a te</dd>
+              </div>
+              <div className="px-5 py-2.5">
+                <dt className="sr-only">Del tuo gruppo</dt>
+                <dd className="numeri text-[28px] font-bold leading-none"><Contatore valore={libere.length} /></dd>
+                <dd aria-hidden="true" className="mt-1 text-[13px] font-semibold text-verde-50">Del tuo gruppo</dd>
+              </div>
+            </dl>
+            <span className="hidden lg:inline-flex"><Button variante="chiaro" misura="lg" icona={Plus} className="rounded-full" onClick={() => apriAvvio()}>{nuovaPratica()}</Button></span>
+          </div>
           {prime.length > 0 && (
-            <ul className="mt-auto space-y-2 pt-2">
+            <div className="mt-auto pt-5">
+            <p className="mb-2 text-[13px] font-semibold uppercase tracking-[.06em] text-verde-50">{mie.length ? 'Da fare per prime' : 'Dal tuo gruppo, da prendere'}</p>
+            <ul className="space-y-2">
               {prime.map(t => (
                 <li key={t.id}>
                   <Link to={`/attivita/${t.id}`} onClick={(e) => apriAttivita(e, t)}
@@ -114,16 +129,17 @@ export default function Scrivania() {
                 </li>
               ))}
             </ul>
+            </div>
           )}
-        </Tessera>
-        <Tessera tono="lilla" icona={Users} etichetta="Del tuo gruppo" valore={libere.length}
-                 nota={libere.length ? 'da prendere in carico' : 'nessuna in attesa'} />
-        <Tessera tono="acqua" icona={Timer} etichetta="In scadenza" valore={conteggi.vicine}
+        </section>
+        <Tessera tono="acqua" icona={FolderOpen} etichetta={`${gl('pratica', 'Nomi')} in corso`} valore={totalePratiche}
+                 nota="che puoi vedere" as={Link} to="/pratiche" />
+        <Tessera tono={conteggi.vicine ? 'ambra' : 'neutro'} icona={Timer} etichetta="In scadenza" valore={conteggi.vicine}
                  nota={conteggi.vicine ? 'entro 2 giorni' : 'nulla nei prossimi 2 giorni'} />
         <Tessera tono={conteggi.scadute ? 'rosa' : 'neutro'} icona={CircleAlert} etichetta="Scadute" valore={conteggi.scadute}
                  nota={conteggi.scadute ? 'da recuperare' : 'tutto nei tempi'} />
-        <Tessera tono="ambra" icona={FolderOpen} etichetta={`${gl('pratica', 'Nomi')} in corso`} valore={totalePratiche}
-                 nota="che puoi vedere" as={Link} to="/pratiche" />
+        {!me.esterno && <Tessera tono="lilla" icona={CircleCheckBig} etichetta={`${maiuscolaIniziale(gl.agg('pratica', 'conclus', true))}`}
+                 valore={indicatori ? indicatori.concluse30 : '–'} nota="negli ultimi 30 giorni" />}
       </div>
 
       <GraficiScrivania dati={indicatori} />
@@ -199,6 +215,8 @@ export default function Scrivania() {
     </div>
   )
 }
+
+const maiuscolaIniziale = (t) => t.charAt(0).toUpperCase() + t.slice(1)
 
 function riassunto(mie, libere) {
   if (mie === 0 && libere === 0) return `Non hai attività in sospeso. Puoi avviare ${gl('pratica', 'un')} o consultare quell${gl.agg('pratica', '', true)} in corso.`
