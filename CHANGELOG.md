@@ -15,6 +15,12 @@ Verso un Orditogram per ogni settore: il nucleo non parla più solo la lingua de
   esterni vedono la parola scelta al posto di "Ufficio" nello storico e nei documenti. Predefiniti invariati
   (quelli della PA). Ogni modifica va nel registro (`GLOSSARIO_MODIFICATO`). API `GET`/`PUT /api/admin/glossario`,
   migrazione `V11`.
+- **"Pratica" nel glossario**: un quarto termine sceglie come si chiama il caso che si lavora (pratica, richiesta,
+  ticket, ordine...). Cambia il menu, il pulsante *Nuova pratica* ("Nuovo ticket"), la scrivania, l'elenco, la
+  scheda, l'editor dei processi e la simulazione, le integrazioni, con articoli e aggettivi accordati al genere
+  ("il ticket concluso", "la richiesta conclusa"). Anche i messaggi del server per le persone (non trovata, accesso
+  negato, termine scaduto, titolo predefinito delle notifiche). Restano invariati i percorsi e i nomi tecnici
+  dell'API (`/api/pratiche`, `pratica.avviata`, `pratiche:avvia`).
 - Esempi nei campi dello Studio senza riferimenti alla PA ("Richiesta d'acquisto", "portale-clienti",
   `numeroRegistrazione`).
 

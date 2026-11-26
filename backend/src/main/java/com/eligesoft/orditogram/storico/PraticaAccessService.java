@@ -33,10 +33,13 @@ public class PraticaAccessService {
     private final FormService forms;
     private final HistoryService historyService;
     private final VisibilitaPratiche visibilita;
+    private final com.eligesoft.orditogram.glossario.GlossarioService glossario;
 
     public PraticaAccessService(StoricoService storico, CurrentUserService currentUser,
                                 TaskRuntime taskRuntime, TaskService taskService, FormService forms,
-                                HistoryService historyService, VisibilitaPratiche visibilita) {
+                                HistoryService historyService, VisibilitaPratiche visibilita,
+                                com.eligesoft.orditogram.glossario.GlossarioService glossario) {
+        this.glossario = glossario;
         this.historyService = historyService;
         this.visibilita = visibilita;
         this.storico = storico;
@@ -60,7 +63,8 @@ public class PraticaAccessService {
 
     public void checkView(String processInstanceId) {
         if (!canView(processInstanceId))
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Non hai accesso a questa pratica");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Non hai accesso a quest" + glossario.accorda(com.eligesoft.orditogram.glossario.Termine.PRATICA, "") + " "
+                + glossario.singolare(com.eligesoft.orditogram.glossario.Termine.PRATICA));
     }
 
     /** Il task in carico all'utente che gli permette di modificare i documenti, se c'è. */
@@ -112,6 +116,7 @@ public class PraticaAccessService {
         }
         return taskConModificaDocumenti(processInstanceId).orElseThrow(() ->
             new ResponseStatusException(HttpStatus.FORBIDDEN,
-                "Per modificare i documenti devi avere in carico un task della pratica che lo consente"));
+                "Per modificare i documenti devi avere in carico un'attività "
+                    + glossario.conArticolo(com.eligesoft.orditogram.glossario.Termine.PRATICA, true) + " che lo consente"));
     }
 }

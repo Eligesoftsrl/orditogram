@@ -53,3 +53,21 @@ describe('creaGlossario', () => {
     expect(g.termine('esterno').plurale).toBe('soci')
   })
 })
+
+describe('pratica', () => {
+  const ticket = creaGlossario({ pratica: { singolare: 'ticket', plurale: 'ticket', genere: 'M' } })
+  const richiesta = creaGlossario({ pratica: { singolare: 'richiesta', plurale: 'richieste', genere: 'F' } })
+  it('accorda articoli e aggettivi al genere scelto', () => {
+    expect(creaGlossario(null)('pratica', 'un')).toBe('una pratica')
+    expect(ticket('pratica', 'un')).toBe('un ticket')
+    expect(ticket('pratica', 'Il')).toBe('Il ticket')
+    expect(ticket('pratica', 'dei')).toBe('dei ticket')
+    expect(ticket.agg('pratica', 'nuov')).toBe('nuovo')
+    expect(ticket.agg('pratica', 'conclus', true)).toBe('conclusi')
+    expect(richiesta('pratica', 'del')).toBe('della richiesta')
+    expect(richiesta('pratica', 'un')).toBe('una richiesta')
+    expect(richiesta.agg('pratica', 'apert', true)).toBe('aperte')
+    expect(creaGlossario({ pratica: { singolare: 'istanza', plurale: 'istanze', genere: 'F' } })('pratica', 'un')).toBe("un'istanza")
+    expect(creaGlossario({ pratica: { singolare: 'ordine', plurale: 'ordini', genere: 'M' } })('pratica', 'un')).toBe('un ordine')
+  })
+})

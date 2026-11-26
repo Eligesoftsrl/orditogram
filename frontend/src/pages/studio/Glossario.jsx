@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useState } from 'react'
 import { BookA, RotateCcw, Save } from 'lucide-react'
 import { api } from '../../api.js'
-import { creaGlossario } from '../../lib/glossario.js'
+import { creaGlossario, gl } from '../../lib/glossario.js'
 import { useInfo } from '../../lib/useGlossario.jsx'
 import { Badge, Button, Caricamento, Errore, Pannello, useToast } from '../../components/ui.jsx'
 
@@ -48,8 +48,8 @@ export default function Glossario() {
       <header>
         <h1 className="text-[34px] font-semibold leading-tight">Glossario</h1>
         <p className="mt-1 max-w-2xl text-grafite">
-          Le parole con cui Orditogram chiama chi lo usa e chi entra da fuori. Un'azienda può scegliere "azienda",
-          "Assistenza" e "cliente"; un ente pubblico lascia quelle predefinite. Valgono subito per tutti.
+          Le parole con cui Orditogram chiama chi lo usa, chi entra da fuori e il caso che si lavora. Un'azienda può
+          scegliere "azienda", "Assistenza", "cliente" e "richiesta"; un ente pubblico lascia quelle predefinite. Valgono subito per tutti.
         </p>
       </header>
 
@@ -98,9 +98,10 @@ export default function Glossario() {
 
           <Pannello titolo={<h2 className="flex items-center gap-2 text-lg font-semibold"><BookA className="size-5 text-verde-600" aria-hidden="true" /> Come si leggerà</h2>}
                     corpoClassName="space-y-3 p-5 text-[15px]">
+            <p className="rounded-blocco bg-verde-50 px-4 py-3">Pulsante: <strong>{maiuscola(anteprima.agg('pratica', 'nuov'))} {anteprima('pratica')}</strong>; menu: <strong>{anteprima('pratica', 'Nomi')}</strong>.</p>
             <p className="rounded-blocco bg-acqua-50 px-4 py-3">Entra con l'account {anteprima('ente', 'del')}.</p>
-            <p className="rounded-blocco bg-lilla-50 px-4 py-3">{anteprima('esterno', 'Nome')} o referente di un'organizzazione: vede solo le sue pratiche.</p>
-            <p className="rounded-blocco bg-carta px-4 py-3">Nello storico della pratica gli utenti esterni leggono: <strong>{anteprima('ufficio')}</strong> ha completato l'attività.</p>
+            <p className="rounded-blocco bg-lilla-50 px-4 py-3">{anteprima('esterno', 'Nome')} o referente di un'organizzazione: vede solo {anteprima('pratica', 'i')} in cui è parte.</p>
+            <p className="rounded-blocco bg-carta px-4 py-3">Nello storico {anteprima('pratica', 'del')} gli utenti esterni leggono: <strong>{anteprima('ufficio')}</strong> ha completato l'attività.</p>
           </Pannello>
         </form>
       )}

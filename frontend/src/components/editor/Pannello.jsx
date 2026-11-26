@@ -13,6 +13,7 @@ import { api } from '../../api.js'
 import { aggiungiBordo, bordiDi, puoFallire } from './bordo.js'
 import { chiaveDaNome } from '../../lib/bpmn/orditogramModeler.js'
 import { useGlossario } from '../../lib/useGlossario.jsx'
+import { gl } from '../../lib/glossario.js'
 
 /**
  * Pannello guidato dell'editor: mostra e modifica le proprietà dell'elemento selezionato
@@ -90,7 +91,7 @@ function Processo({ bo, set, moddle, dati }) {
   return (
     <>
       <Sezione>
-        <Nome bo={bo} set={set} etichetta="Nome del processo" aiuto="È il nome che gli utenti vedono quando avviano una pratica." />
+        <Nome bo={bo} set={set} etichetta="Nome del processo" aiuto={`È il nome che gli utenti vedono quando avviano ${gl('pratica', 'un')}.`} />
         <div>
           <Etichetta>Identificativo</Etichetta>
           <p className="rounded-campo bg-carta px-3 py-2 font-mono text-sm text-pino-800">{bo.id}</p>
@@ -169,7 +170,7 @@ function Inizio(ctx) {
   return (
     <>
       <Sezione><Nome {...ctx} placeholder="Es. Nuova richiesta" /></Sezione>
-      <Sezione titolo="Form di avvio" aiuto="I dati che chiede chi apre la pratica. Può anche chiedere di allegare documenti.">
+      <Sezione titolo="Form di avvio" aiuto={`I dati che chiede chi apre ${gl('pratica', 'il')}. Può anche chiedere di allegare documenti.`}>
         <SceltaForm {...ctx} tipo="avvio" />
       </Sezione>
     </>
@@ -179,8 +180,8 @@ function Inizio(ctx) {
 function Fine(ctx) {
   return (
     <>
-      <Sezione><Nome {...ctx} placeholder="Es. Pratica accettata" aiuto="Il nome aiuta a leggere il diagramma: è l'esito con cui si chiude la pratica." /></Sezione>
-      <Sezione><Suggerimento>Quando la pratica arriva qui è conclusa e compare tra le pratiche concluse.</Suggerimento></Sezione>
+      <Sezione><Nome {...ctx} placeholder={`Es. ${gl('pratica', 'Nome')} ${gl.agg('pratica', 'accettat')}`} aiuto={`Il nome aiuta a leggere il diagramma: è l'esito con cui si chiude ${gl('pratica', 'il')}.`} /></Sezione>
+      <Sezione><Suggerimento>Quando {gl('pratica', 'il')} arriva qui è {gl.agg('pratica', 'conclus')} e compare tra {gl('pratica', 'i')} {gl.agg('pratica', 'conclus', true)}.</Suggerimento></Sezione>
     </>
   )
 }
@@ -190,7 +191,7 @@ function AttivitaUtente(ctx) {
   const gruppi = (bo.candidateGroups || '').split(',').map(s => s.trim()).filter(Boolean)
   return (
     <>
-      <Sezione><Nome {...ctx} placeholder="Es. Verifica pratica" aiuto="Usa un verbo: è il nome che l'utente vede nella sua scrivania." /></Sezione>
+      <Sezione><Nome {...ctx} placeholder="Es. Verifica dei dati" aiuto="Usa un verbo: è il nome che l'utente vede nella sua scrivania." /></Sezione>
       <Sezione titolo="Chi la lavora" aiuto="L'attività compare a tutti gli utenti di questi gruppi: il primo che la prende in carico la lavora.">
         <SceltaGruppi valori={gruppi} gruppi={dati.gruppi} onChange={g => set({ candidateGroups: g.length ? g.join(',') : undefined })} />
       </Sezione>
@@ -327,7 +328,7 @@ function Parametro({ p, valore, dati, onChange }) {
       <div>
         <Etichetta>{p.etichetta}{p.obbligatorio && <span className="text-mattone-600"> *</span>}</Etichetta>
         <div className="space-y-2">
-          {[['iniziatore', 'Chi ha avviato la pratica'], ['gruppo', 'Tutti gli utenti di un gruppo'], ['utente', 'Un utente preciso']].map(([k, l]) => (
+          {[['iniziatore', `Chi ha avviato ${gl('pratica', 'il')}`], ['gruppo', 'Tutti gli utenti di un gruppo'], ['utente', 'Un utente preciso']].map(([k, l]) => (
             <label key={k} className="flex items-center gap-2 text-[15px]">
               <input type="radio" name={id} className="accent-verde-600" checked={modo === k}
                      onChange={() => onChange(k === 'iniziatore' ? 'iniziatore' : k === 'gruppo' ? `gruppo:${dati.gruppi[0]?.nome || ''}` : '')} />
@@ -374,7 +375,7 @@ function EditorMappatura({ valore, onChange }) {
     <div className="space-y-2">
       {righe.length > 0 && (
         <div className="grid grid-cols-[1fr_auto_1fr_auto] items-center gap-x-1.5 gap-y-1.5 text-[13px] text-grafite">
-          <span>Dato della pratica</span><span /><span>Dalla risposta</span><span />
+          <span>Dato {gl('pratica', 'del')}</span><span /><span>Dalla risposta</span><span />
           {righe.map((r, i) => (
             <FragmentoRiga key={i} r={r} onDato={v => cambia(i, { dato: v })} onPercorso={v => cambia(i, { percorso: v })}
                            onBlur={() => scrivi(righe)}
@@ -395,7 +396,7 @@ function FragmentoRiga({ r, onDato, onPercorso, onBlur, onTogli }) {
   return (
     <>
       <input className={cx('campo h-9 font-mono text-sm', errato && 'border-mattone-600')} value={r.dato} placeholder="numeroRegistrazione"
-             aria-label="Dato della pratica" onChange={e => onDato(e.target.value)} onBlur={onBlur} />
+             aria-label={`Dato ${gl('pratica', 'del')}`} onChange={e => onDato(e.target.value)} onBlur={onBlur} />
       <span className="text-grafite">=</span>
       <input className="campo h-9 font-mono text-sm" value={r.percorso} placeholder="numero" aria-label="Percorso nella risposta"
              onChange={e => onPercorso(e.target.value)} onBlur={onBlur} />
@@ -404,8 +405,8 @@ function FragmentoRiga({ r, onDato, onPercorso, onBlur, onTogli }) {
   )
 }
 
-const TIPI_DESTINATARIO = [
-  ['iniziatore', 'Chi ha avviato la pratica'],
+const tipiDestinatario = () => [
+  ['iniziatore', `Chi ha avviato ${gl('pratica', 'il')}`],
   ['gruppo', 'Gli utenti di un gruppo'],
   ['utente', 'Un utente di Orditogram'],
   ['campo', 'L\'indirizzo scritto in un campo del form'],
@@ -413,7 +414,7 @@ const TIPI_DESTINATARIO = [
 ]
 
 function descriviDestinatario(t, campi) {
-  if (t === 'iniziatore') return 'Chi ha avviato la pratica'
+  if (t === 'iniziatore') return `Chi ha avviato ${gl('pratica', 'il')}`
   const [k, ...resto] = t.split(':')
   const v = resto.join(':')
   if (k === 'gruppo') return `Gruppo ${v}`
@@ -450,7 +451,7 @@ function EditorDestinatari({ valore, dati, onChange }) {
       </div>
       <div className="space-y-2 rounded-campo bg-carta p-3">
         <select className="campo" value={tipo} onChange={e => { setTipo(e.target.value); setV('') }} aria-label="Tipo di destinatario">
-          {TIPI_DESTINATARIO.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+          {tipiDestinatario().map(([k, l]) => <option key={k} value={k}>{l}</option>)}
         </select>
         <div className="flex gap-2">
           {tipo === 'gruppo' && (
@@ -492,7 +493,7 @@ function Scadenze({ modeler, elemento, dati, onSeleziona }) {
   const aggiungi = (tipo) => onSeleziona(aggiungiBordo(modeler, elemento, tipo))
   return (
     <Sezione titolo={errore ? 'Scadenze, solleciti ed errori' : 'Scadenze e solleciti'}
-             aiuto="Una scadenza chiude l'attività quando il tempo finisce e porta la pratica su un'altra strada. Un sollecito avvisa senza chiuderla.">
+             aiuto={`Una scadenza chiude l'attività quando il tempo finisce e porta ${gl('pratica', 'il')} su un'altra strada. Un sollecito avvisa senza chiuderla.`}>
       {bordi.length > 0 && (
         <ul className="space-y-2">
           {bordi.map(({ shape, tipo }) => {
@@ -571,12 +572,12 @@ function Bordo(ctx) {
           <Sezione titolo="Cosa succede quando scatta">
             <div className="space-y-2" role="radiogroup">
               <Opzione attiva={interrompente} onClick={() => cambiaInterruzione(true)} icona={Timer}
-                       titolo="Chiude l'attività" testo="La pratica lascia l'attività e segue la freccia che parte da qui (es. silenzio-assenso, archiviazione)." />
+                       titolo="Chiude l'attività" testo={`${gl('pratica', 'Il')} lascia l'attività e segue la freccia che parte da qui (es. silenzio-assenso, archiviazione).`} />
               <Opzione attiva={!interrompente} onClick={() => cambiaInterruzione(false)} icona={BellRing}
-                       titolo="Lascia l'attività aperta" testo="È un promemoria: la pratica segue anche la freccia da qui (es. un sollecito) ma l'attività resta da completare." />
+                       titolo="Lascia l'attività aperta" testo={`È un promemoria: ${gl('pratica', 'il')} segue anche la freccia da qui (es. un sollecito) ma l'attività resta da completare.`} />
             </div>
           </Sezione>
-          <Sezione titolo="Quando scatta" aiuto="Il tempo parte quando la pratica arriva all'attività.">
+          <Sezione titolo="Quando scatta" aiuto={`Il tempo parte quando ${gl('pratica', 'il')} arriva all'attività.`}>
             <EditorTimer key={elemento.id} {...ctx} def={def} ripetibile={!interrompente} />
           </Sezione>
         </>
@@ -586,7 +587,7 @@ function Bordo(ctx) {
           <Sezione titolo="Cosa succede quando arriva">
             <div className="space-y-2" role="radiogroup">
               <Opzione attiva={interrompente} onClick={() => modeling.updateProperties(elemento, { cancelActivity: true })} icona={Mail}
-                       titolo="Chiude l'attività" testo={`Es. ${g('esterno', 'il')} rinuncia: l'attività si chiude e la pratica segue la freccia che parte da qui.`} />
+                       titolo="Chiude l'attività" testo={`Es. ${g('esterno', 'il')} rinuncia: l'attività si chiude e ${gl('pratica', 'il')} segue la freccia che parte da qui.`} />
               <Opzione attiva={!interrompente} onClick={() => modeling.updateProperties(elemento, { cancelActivity: false })} icona={BellRing}
                        titolo="Lascia l'attività aperta" testo="Es. arriva un documento in più: si avvisa qualcuno, l'attività resta da completare." />
             </div>
@@ -598,8 +599,8 @@ function Bordo(ctx) {
         <Sezione>
           <Suggerimento>
             {host && is(host, 'bpmn:SubProcess')
-              ? 'Se un\'attività automatica dentro il sottoprocesso non riesce (per esempio un servizio esterno non risponde), il sottoprocesso si interrompe e la pratica segue la freccia che parte da qui.'
-              : 'Se l\'attività automatica non riesce (per esempio un servizio esterno non risponde o restituisce un errore), la pratica segue la freccia che parte da qui. Il motivo viene annotato nello storico.'}
+              ? `Se un'attività automatica dentro il sottoprocesso non riesce (per esempio un servizio esterno non risponde), il sottoprocesso si interrompe e ${gl('pratica', 'il')} segue la freccia che parte da qui.`
+              : `Se l'attività automatica non riesce (per esempio un servizio esterno non risponde o restituisce un errore), ${gl('pratica', 'il')} segue la freccia che parte da qui. Il motivo viene annotato nello storico.`}
           </Suggerimento>
         </Sezione>
       )}
@@ -736,7 +737,7 @@ function AnteprimaTermine({ giorni, modo }) {
   const testo = new Intl.DateTimeFormat('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(data + 'T12:00:00'))
   return (
     <div className="mt-1 text-[13px] text-grafite">
-      <p>Se la pratica arrivasse oggi, scadrebbe {testo}.</p>
+      <p>Se {gl('pratica', 'il')} arrivasse oggi, scadrebbe {testo}.</p>
       {modo !== 'calendario' && <Festivita />}
     </div>
   )
@@ -823,11 +824,11 @@ Content-Type: application/json
         <div>
           <Etichetta htmlFor="msg-dati">Dati che porta (facoltativo)</Etichetta>
           <TestoDifferito id="msg-dati" mono value={datiTesto} placeholder="esitoPagamento, notaRichiedente" onCommit={impostaDati} />
-          <p className="mt-1 text-[13px] text-grafite">Diventano dati della pratica: puoi usarli nei form, nei testi e nelle decisioni.</p>
+          <p className="mt-1 text-[13px] text-grafite">Diventano dati {gl('pratica', 'del')}: puoi usarli nei form, nei testi e nelle decisioni.</p>
         </div>
       </Sezione>
       <Sezione titolo="Come arriva">
-        <p className="text-[13px] text-pino-800">Un operatore lo registra dalla scheda della pratica, oppure un sistema esterno (portale, PEC, pagamenti) lo invia così:</p>
+        <p className="text-[13px] text-pino-800">Un operatore lo registra dalla scheda {gl('pratica', 'del')}, oppure un sistema esterno (portale, PEC, pagamenti) lo invia così:</p>
         <div className="relative">
           <pre className="overflow-x-auto rounded-campo bg-pino-900 p-3 pt-10 font-mono text-[12px] leading-relaxed text-white">{esempio}</pre>
           <button type="button" onClick={() => { void navigator.clipboard?.writeText(esempio).catch(() => {}); setCopiato(true); setTimeout(() => setCopiato(false), 1500) }}
@@ -835,7 +836,7 @@ Content-Type: application/json
             <Copy className="size-3.5" /> {copiato ? 'Copiato' : 'Copia'}
           </button>
         </div>
-        <p className="text-[13px] text-grafite">La pratica si trova con "cerca" (uno o più suoi dati) o con "pratica" (il suo identificativo). Le chiavi dei sistemi si configurano in application.yml (app.messaggi.chiavi).</p>
+        <p className="text-[13px] text-grafite">{gl('pratica', 'Il')} si trova con "cerca" (uno o più suoi dati) o con "pratica" (il suo identificativo). Le chiavi dei sistemi si configurano in application.yml (app.messaggi.chiavi).</p>
       </Sezione>
     </>
   )
@@ -845,7 +846,7 @@ function MessaggioInArrivo(ctx) {
   const def = ctx.bo.eventDefinitions?.[0]
   return (
     <>
-      <Sezione><Nome {...ctx} placeholder="Es. Pagamento ricevuto" aiuto="La pratica si ferma qui finché il messaggio non arriva." /></Sezione>
+      <Sezione><Nome {...ctx} placeholder="Es. Pagamento ricevuto" aiuto={`${gl('pratica', 'Il')} si ferma qui finché il messaggio non arriva.`} /></Sezione>
       <EditorMessaggio {...ctx} def={def} />
       <Sezione><Suggerimento>Per non aspettare all'infinito, metti il messaggio dopo una decisione o aggiungi una scadenza all'attività precedente.</Suggerimento></Sezione>
     </>
@@ -860,9 +861,9 @@ function Attesa(ctx) {
   }
   return (
     <>
-      <Sezione><Nome {...ctx} placeholder="Es. Attesa di 10 giorni per le opposizioni" aiuto="La pratica resta ferma qui, poi prosegue da sola." /></Sezione>
+      <Sezione><Nome {...ctx} placeholder="Es. Attesa di 10 giorni per le opposizioni" aiuto={`${gl('pratica', 'Il')} resta ${gl.agg('pratica', 'ferm')} qui, poi prosegue da sola.`} /></Sezione>
       <Sezione titolo="Quanto aspetta"><EditorTimer key={ctx.elemento.id} {...ctx} def={def} ripetibile={false} /></Sezione>
-      <Sezione><Suggerimento>Durante l'attesa la pratica è visibile tra le pratiche in corso, con la data in cui riprenderà.</Suggerimento></Sezione>
+      <Sezione><Suggerimento>Durante l'attesa {gl('pratica', 'il')} è visibile tra {gl('pratica', 'i')} in corso, con la data in cui riprenderà.</Suggerimento></Sezione>
     </>
   )
 }
@@ -876,7 +877,7 @@ function Sottoprocesso(ctx) {
       <Sezione><Nome {...ctx} placeholder="Es. Richiesta di integrazioni" aiuto="Raggruppa più passi: una scadenza o un errore sul bordo vale per tutti." /></Sezione>
       <Sezione>
         <Suggerimento>
-          Disegna i passi dentro il riquadro, con un inizio e almeno una fine. Quando la pratica arriva alla fine del sottoprocesso
+          Disegna i passi dentro il riquadro, con un inizio e almeno una fine. Quando {gl('pratica', 'il')} arriva alla fine del sottoprocesso
           prosegue sulla freccia in uscita dal riquadro.
         </Suggerimento>
         {avvii !== 1 && <Suggerimento tono="avviso">Il sottoprocesso deve contenere esattamente un inizio.</Suggerimento>}
@@ -895,9 +896,9 @@ function ProcessoRichiamato(ctx) {
   const noto = processi.find(p => p.key === scelto)
   return (
     <>
-      <Sezione><Nome {...ctx} placeholder="Es. Verifica tecnica" aiuto="Il passo come lo vede chi segue la pratica." /></Sezione>
+      <Sezione><Nome {...ctx} placeholder="Es. Verifica tecnica" aiuto={`Il passo come lo vede chi segue ${gl('pratica', 'il')}.`} /></Sezione>
       <Sezione titolo="Processo da richiamare"
-               aiuto="Quando la pratica arriva qui si apre una pratica del processo scelto. Questa pratica aspetta che l'altra finisca, poi prosegue.">
+               aiuto={`Quando ${gl('pratica', 'il')} arriva qui si apre ${gl('pratica', 'un')} del processo scelto. Quest${gl.agg('pratica', '')} ${gl('pratica')} aspetta che l'altr${gl.agg('pratica', '')} finisca, poi prosegue.`}>
         <select className="campo" value={scelto} onChange={e => {
           const p = processi.find(x => x.key === e.target.value)
           set({ calledElement: e.target.value || undefined, ...(p && !bo.name ? { name: p.name } : {}) })
@@ -912,7 +913,7 @@ function ProcessoRichiamato(ctx) {
       </Sezione>
       <Sezione titolo="Dati">
         <Suggerimento>
-          La pratica richiamata riceve tutti i dati di questa pratica e ne prende il titolo. Quando finisce, i dati che ha raccolto
+          {gl('pratica', 'Il')} {gl.agg('pratica', 'richiamat')} riceve tutti i dati di quest{gl.agg('pratica', '')} {gl('pratica')} e ne prende il titolo. Quando finisce, i dati che ha raccolto
           (per esempio un esito) tornano qui e si possono usare nelle decisioni e nei form successivi.
           Si usa sempre l'ultima versione pubblicata del processo richiamato.
         </Suggerimento>
@@ -935,7 +936,7 @@ function Decisione(ctx) {
   return (
     <>
       <Sezione><Nome {...ctx} etichetta="Domanda" placeholder="Es. Esito della verifica?" aiuto="La domanda a cui risponde la decisione: rende il diagramma leggibile." /></Sezione>
-      <Sezione titolo="Strade possibili" aiuto="Seleziona una freccia per impostarne la condizione. La pratica segue la prima condizione vera.">
+      <Sezione titolo="Strade possibili" aiuto={`Seleziona una freccia per impostarne la condizione. ${gl('pratica', 'Il')} segue la prima condizione vera.`}>
         {uscite.length < 2 && <Suggerimento tono="avviso">Una decisione serve con almeno due frecce in uscita.</Suggerimento>}
         <ul className="space-y-2">
           {uscite.map(f => {
@@ -973,7 +974,7 @@ function Parallelo(ctx) {
       <Sezione>
         <Suggerimento>
           Con più frecce in uscita, tutte le attività collegate partono insieme. Usane un altro per riunirle:
-          la pratica prosegue solo quando sono state completate tutte.
+          {gl('pratica', 'il')} prosegue solo quando sono state completate tutte.
         </Suggerimento>
       </Sezione>
     </>
@@ -1011,10 +1012,10 @@ function Freccia({ elemento, bo, set, modeling, moddle, dati, onSeleziona }) {
         </p>
       </Sezione>
       {!daDecisione && (
-        <Sezione><Suggerimento>Le frecce normali non hanno condizioni: la pratica passa sempre di qui. Per scegliere una strada usa una decisione.</Suggerimento></Sezione>
+        <Sezione><Suggerimento>Le frecce normali non hanno condizioni: {gl('pratica', 'il')} passa sempre di qui. Per scegliere una strada usa una decisione.</Suggerimento></Sezione>
       )}
       {daDecisione && (
-        <Sezione titolo="Quando la pratica passa di qui">
+        <Sezione titolo={`Quando ${gl('pratica', 'il')} passa di qui`}>
           <label className="flex items-center gap-2 text-[15px]">
             <input type="checkbox" className="size-4 accent-verde-600" checked={predefinita} onChange={e => rendiPredefinita(e.target.checked)} />
             Altrimenti: se nessun'altra condizione è vera

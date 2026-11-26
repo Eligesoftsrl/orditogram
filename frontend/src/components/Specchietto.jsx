@@ -3,6 +3,7 @@ import { Check } from 'lucide-react'
 import { cx, quando } from '../lib/format.js'
 import { posizioneAttuale, tempiDelPercorso } from '../lib/percorso.js'
 import { BadgeScadenza } from './Scadenza.jsx'
+import { gl } from '../lib/glossario.js'
 
 /**
  * Specchietto del flusso: dove si trova la pratica, a colpo d'occhio.
@@ -29,7 +30,7 @@ export default function Specchietto({ p }) {
   return (
     <section className="rounded-pannello border border-linea bg-white p-5 shadow-pannello" aria-labelledby="specchietto-titolo">
       <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="specchietto-titolo" className="text-lg font-semibold">Dove si trova la pratica</h2>
+        <h2 id="specchietto-titolo" className="text-lg font-semibold">Dove si trova {gl('pratica', 'il')}</h2>
         <p className="numeri text-sm text-grafite">{conclusa ? 'Percorso completo' : `Passo ${pos + 1} di ${n} finora`}</p>
       </div>
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-center">
@@ -69,7 +70,7 @@ export default function Specchietto({ p }) {
         <div className="space-y-3 rounded-blocco bg-carta p-4" aria-live="polite">
           <p className="text-xs font-semibold uppercase tracking-[.06em] text-grafite">Adesso</p>
           <p className="text-lg font-semibold leading-tight text-pino-900">
-            {conclusa ? 'Pratica conclusa' : p.stepCorrenti?.length ? p.stepCorrenti.map(s => s.nome).join(', ') : 'In attesa'}
+            {conclusa ? `${gl('pratica', 'Nome')} ${gl.agg('pratica', 'conclus')}` : p.stepCorrenti?.length ? p.stepCorrenti.map(s => s.nome).join(', ') : 'In attesa'}
           </p>
           <dl className="grid grid-cols-[88px_minmax(0,1fr)] gap-x-2 gap-y-1.5 text-sm">
             {conclusa ? <><dt className="text-grafite">Il</dt><dd className="font-semibold">{quando(p.fine)}</dd></> : <>

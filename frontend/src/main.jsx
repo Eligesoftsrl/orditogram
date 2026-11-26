@@ -31,12 +31,14 @@ import CambioPassword from './pages/CambioPassword.jsx'
 import MiaOrganizzazione from './pages/MiaOrganizzazione.jsx'
 import AnagraficheStudio from './pages/studio/Anagrafiche.jsx'
 import Glossario from './pages/studio/Glossario.jsx'
-import { GlossarioProvider } from './lib/useGlossario.jsx'
+import { GlossarioProvider, useGlossario } from './lib/useGlossario.jsx'
 import Anagrafiche from './pages/Anagrafiche.jsx'
 import SchedeAnagrafica from './pages/SchedeAnagrafica.jsx'
 import SchedaAnagrafica from './pages/SchedaAnagrafica.jsx'
 
 function App() {
+  // i testi con le parole del glossario (gl) si ridisegnano quando /api/info risponde o il glossario cambia
+  useGlossario()
   const { me, pronto } = useAuth()
   if (!pronto) return <Caricamento testo="Apertura di Orditogram…" />
   if (!me) return <Login />

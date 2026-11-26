@@ -1,5 +1,6 @@
 import TokenSimulationModule from 'bpmn-js-token-simulation'
 import 'bpmn-js-token-simulation/assets/css/bpmn-js-token-simulation.css'
+import { gl } from '../glossario.js'
 
 /**
  * Simulazione con i gettoni (bpmn-js-token-simulation, licenza MIT): l'analista vede scorrere la pratica
@@ -49,7 +50,7 @@ export function traduciSimulazione(container) {
     root.querySelectorAll?.('[title]').forEach(el => {
       const t = el.getAttribute('title')
       if (TITOLI[t]) el.setAttribute('title', TITOLI[t])
-      else if (/^View Process Instance/.test(t)) el.setAttribute('title', 'Mostra solo questa pratica di prova')
+      else if (/^View Process Instance/.test(t)) el.setAttribute('title', `Mostra solo quest${gl.agg('pratica', '')} ${gl('pratica', 'nome')} di prova`)
       else if (/^Set animation speed/.test(t)) el.setAttribute('title', 'Velocità')
     })
     root.querySelectorAll?.('.bts-element-notification .bts-text, .bts-notification .bts-text').forEach(el => {

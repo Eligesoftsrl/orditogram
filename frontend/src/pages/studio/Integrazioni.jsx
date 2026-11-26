@@ -5,6 +5,7 @@ import { Caricamento, Errore, Schede } from '../../components/ui.jsx'
 import ChiaviApi from '../../components/integrazioni/ChiaviApi.jsx'
 import Webhook from '../../components/integrazioni/Webhook.jsx'
 import DocumentazioneApi from '../../components/integrazioni/DocumentazioneApi.jsx'
+import { gl } from '../../lib/glossario.js'
 
 const SCHEDE = [
   { id: 'chiavi', label: 'Chiavi API' },
@@ -29,7 +30,7 @@ export default function Integrazioni() {
       <header>
         <h1 className="text-[34px] font-semibold leading-tight">Integrazioni</h1>
         <p className="mt-1 max-w-3xl text-grafite">
-          Portali, gestionali e app avviano pratiche e ne seguono lo stato con l'API pubblica; Orditogram li avvisa con i webhook.
+          Portali, gestionali e app avviano {gl('pratica', 'nomi')} e ne seguono lo stato con l'API pubblica; Orditogram li avvisa con i webhook.
           Tutto quello che l'analista pubblica è subito disponibile anche per le integrazioni.
         </p>
       </header>

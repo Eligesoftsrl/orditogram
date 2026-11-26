@@ -5,6 +5,7 @@ import { cx } from '../../lib/format.js'
 import { alberoStrutture, codiceDa } from '../../lib/permessi.js'
 import { Badge, Button, Caricamento, Errore, Pannello, Vuoto, useToast } from '../../components/ui.jsx'
 import { useGlossario } from '../../lib/useGlossario.jsx'
+import { gl } from '../../lib/glossario.js'
 
 const VUOTA = { id: null, codice: '', nome: '', codiceFiscale: '', padreId: null, attiva: true }
 
@@ -63,7 +64,7 @@ export default function Strutture() {
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Strutture</h1>
           <p className="mt-1 max-w-2xl text-grafite">
-            Gli uffici {g('ente', 'del')}, uno dentro l'altro. Servono a dire chi vede le pratiche della propria struttura
+            Gli uffici {g('ente', 'del')}, uno dentro l'altro. Servono a dire chi vede {gl('pratica', 'i')} della propria struttura
             (o anche di quelle sotto) nell'accesso di un processo.
           </p>
         </div>

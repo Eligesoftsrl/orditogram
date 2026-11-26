@@ -6,6 +6,7 @@ import {
 import { cx } from '../../lib/format.js'
 import { tipoBordo } from './timer.js'
 import { avviaPraticaDiProva, EVENTI } from '../../lib/bpmn/simulazione.js'
+import { gl } from '../../lib/glossario.js'
 
 const VELOCITA = [['Lenta', 0.5], ['Normale', 1], ['Veloce', 2]]
 
@@ -43,7 +44,7 @@ export default function PannelloSimulazione({ modeler, onEsci }) {
           const n = pratiche.current.get(scope.id)
           const ok = scope.completed
           setConteggi(c => ok ? { ...c, concluse: c.concluse + 1 } : { ...c, interrotte: c.interrotte + 1 })
-          aggiungi({ tipo: ok ? 'fine' : 'interrotta', testo: `Pratica di prova ${n} ${ok ? 'conclusa' : 'interrotta'}`, n })
+          aggiungi({ tipo: ok ? 'fine' : 'interrotta', testo: `${gl('pratica', 'Nome')} di prova ${n} ${ok ? gl.agg('pratica', 'conclus') : gl.agg('pratica', 'interrott')}`, n })
         } else if (t === 'bpmn:SubProcess') {
           aggiungi({ tipo: scope.completed ? 'ok' : 'interrotta', n: numero(scope),
             testo: `Sottoprocesso "${nomeDi(element) || 'senza nome'}" ${scope.completed ? 'concluso' : 'interrotto'}` })
@@ -54,7 +55,7 @@ export default function PannelloSimulazione({ modeler, onEsci }) {
       if (action === 'exit') {
         if (t === 'bpmn:UserTask') aggiungi({ tipo: 'persona', n, testo: `Completata: ${nomeDi(element) || 'attività di una persona'}` })
         else if (t === 'bpmn:ServiceTask') aggiungi({ tipo: 'automatica', n, testo: `Eseguita: ${nomeDi(element) || 'attività automatica'}` })
-        else if (t === 'bpmn:CallActivity') aggiungi({ tipo: 'automatica', n, testo: `Conclusa la pratica richiamata: ${nomeDi(element) || element.businessObject.calledElement || 'processo richiamato'}` })
+        else if (t === 'bpmn:CallActivity') aggiungi({ tipo: 'automatica', n, testo: `${gl.agg('pratica', 'Conclus')} ${gl('pratica', 'il')} ${gl.agg('pratica', 'richiamat')}: ${nomeDi(element) || element.businessObject.calledElement || 'processo richiamato'}` })
         else if (t === 'bpmn:IntermediateCatchEvent' && tipoBordo(element.businessObject) === 'messaggio') aggiungi({ tipo: 'messaggio', n, testo: `Messaggio arrivato: ${nomeDi(element) || element.businessObject.eventDefinitions?.[0]?.messageRef?.name || 'messaggio'}` })
         else if (t === 'bpmn:IntermediateCatchEvent') aggiungi({ tipo: 'attesa', n, testo: `Attesa finita: ${nomeDi(element) || 'attesa'}` })
       }
@@ -77,7 +78,7 @@ export default function PannelloSimulazione({ modeler, onEsci }) {
       const n = pratiche.current.size + 1
       pratiche.current.set(scope.id, n)
       setConteggi(c => ({ ...c, avviate: c.avviate + 1 }))
-      aggiungi({ tipo: 'avvio', testo: `Pratica di prova ${n} avviata`, n })
+      aggiungi({ tipo: 'avvio', testo: `${gl('pratica', 'Nome')} di prova ${n} ${gl.agg('pratica', 'avviat')}`, n })
     }
     const play = () => setInPausa(false)
     const pausa = () => setInPausa(true)
@@ -130,7 +131,7 @@ export default function PannelloSimulazione({ modeler, onEsci }) {
       <section className="space-y-3 border-b border-linea px-5 py-4">
         <button type="button" onClick={avvia}
                 className="flex w-full items-center justify-center gap-2 rounded-campo bg-verde-600 px-4 py-2.5 font-medium text-white hover:bg-verde-700">
-          <Play className="size-4" /> Avvia una pratica di prova
+          <Play className="size-4" /> Avvia {gl('pratica', 'un')} di prova
         </button>
         <div className="flex gap-2">
           <button type="button" onClick={alternaPausa} disabled={conteggi.avviate === 0}
@@ -173,14 +174,14 @@ export default function PannelloSimulazione({ modeler, onEsci }) {
           <li className="flex gap-2"><Play className="mt-0.5 size-3.5 shrink-0 text-verde-700" /> Il gettone scorre da solo; sulle attività delle persone si ferma (se lo lasci scegliere sopra): clicca ▶ per completarle.</li>
           <li className="flex gap-2"><GitBranch className="mt-0.5 size-3.5 shrink-0 text-verde-700" /> Alle decisioni clicca l'icona accanto per scegliere la strada: le condizioni sui dati qui non vengono calcolate.</li>
           <li className="flex gap-2"><Timer className="mt-0.5 size-3.5 shrink-0 text-verde-700" /> Scadenze, solleciti, errori, attese e messaggi aspettano te: clicca ▶ sull'evento per farlo scattare.</li>
-          <li className="flex gap-2"><CircleDot className="mt-0.5 size-3.5 shrink-0 text-verde-700" /> Puoi avviare più pratiche di prova: ognuna ha il suo colore.</li>
+          <li className="flex gap-2"><CircleDot className="mt-0.5 size-3.5 shrink-0 text-verde-700" /> Puoi avviarne più di una per prova: ognuna ha il suo colore.</li>
         </ul>
       </section>
 
       <section className="px-5 py-4">
         <h3 className="text-[15px] font-semibold text-pino-900">Cosa è successo</h3>
         {registro.length === 0
-          ? <p className="mt-2 text-[13px] text-grafite">Avvia una pratica di prova: qui vedrai ogni passo.</p>
+          ? <p className="mt-2 text-[13px] text-grafite">Avvia {gl('pratica', 'un')} di prova: qui vedrai ogni passo.</p>
           : (
             <ol className="mt-2 space-y-1.5" aria-live="polite">
               {registro.map(v => <Voce key={v.id} v={v} />)}

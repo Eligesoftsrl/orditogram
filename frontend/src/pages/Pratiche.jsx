@@ -8,6 +8,7 @@ import { Badge, Button, Caricamento, Cassetto, Errore, Schede, Vuoto } from '../
 import { BadgeScadenza } from '../components/Scadenza.jsx'
 import Esporta from '../components/Esporta.jsx'
 import AnteprimaPratica from '../components/AnteprimaPratica.jsx'
+import { gl } from '../lib/glossario.js'
 
 const COLONNE_EXPORT = [
   { titolo: 'Titolo', valore: p => p.titolo, larghezza: 40 },
@@ -69,10 +70,10 @@ export default function Pratiche() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-[34px] font-semibold leading-tight">Pratiche</h1>
-          <p className="mt-1 text-grafite">Le pratiche che hai avviato, su cui hai lavorato o che aspettano il tuo gruppo.</p>
+          <h1 className="text-[34px] font-semibold leading-tight">{gl('pratica', 'Nomi')}</h1>
+          <p className="mt-1 text-grafite">{gl('pratica', 'I')} che hai avviato, su cui hai lavorato o che aspettano il tuo gruppo.</p>
         </div>
-        <Esporta nome="pratiche" titolo="Pratiche" disabled={!lista || totale === 0}
+        <Esporta nome="pratiche" titolo={gl('pratica', 'Nomi')} disabled={!lista || totale === 0}
                  sottotitolo={[{ 'in-corso': 'In corso', concluse: 'Concluse', tutte: 'Tutte' }[stato],
                    processo && (tipologie.find(t => t.chiave === processo)?.nome || processo), q && `ricerca "${q}"`].filter(Boolean).join(', ')}
                  colonne={COLONNE_EXPORT} totale={totale} carica={caricaTutte} />
@@ -84,14 +85,14 @@ export default function Pratiche() {
                   voci={[{ id: 'in-corso', label: 'In corso' }, { id: 'concluse', label: 'Concluse' }, { id: 'tutte', label: 'Tutte' }]} />
           <div className="mb-2 flex w-full flex-wrap gap-2 sm:w-auto">
             {tipologie.length > 1 && (
-              <select className="campo w-full sm:w-56" value={processo} onChange={e => setProcesso(e.target.value)} aria-label="Tipologia di pratica">
+              <select className="campo w-full sm:w-56" value={processo} onChange={e => setProcesso(e.target.value)} aria-label={`Tipologia di ${gl('pratica', 'nome')}`}>
                 <option value="">Tutte le tipologie</option>
                 {tipologie.map(t => <option key={t.chiave} value={t.chiave}>{t.nome}</option>)}
               </select>
             )}
             <label className="relative w-full sm:w-72">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-nebbia" />
-              <input className="campo pl-9" placeholder="Cerca per titolo o tipologia" value={q} onChange={e => setQ(e.target.value)} aria-label="Cerca pratiche" />
+              <input className="campo pl-9" placeholder="Cerca per titolo o tipologia" value={q} onChange={e => setQ(e.target.value)} aria-label={`Cerca ${gl('pratica', 'nomi')}`} />
             </label>
           </div>
         </div>
@@ -100,8 +101,8 @@ export default function Pratiche() {
           {errore && <div className="p-4"><Errore>{errore}</Errore></div>}
           {!lista && !errore && <Caricamento />}
           {lista && lista.length === 0 && (
-            <Vuoto icona={FolderOpen} titolo={q ? `Nessuna pratica trovata per "${q}"` : 'Nessuna pratica qui'}>
-              {q || processo ? 'Prova con un\'altra parola o un\'altra tipologia.' : 'Le pratiche compaiono appena le avvii o ci lavori.'}
+            <Vuoto icona={FolderOpen} titolo={q ? `Nessun risultato per "${q}"` : 'Ancora niente qui'}>
+              {q || processo ? 'Prova con un\'altra parola o un\'altra tipologia.' : `${gl('pratica', 'I')} compaiono appena le avvii o ci lavori.`}
             </Vuoto>
           )}
           {lista && lista.length > 0 && (
@@ -145,7 +146,7 @@ export default function Pratiche() {
         {lista && totale > 0 && (
           <nav className="flex flex-wrap items-center justify-between gap-3 border-t border-linea px-5 py-3 text-sm text-grafite" aria-label="Pagine">
             <span className="numeri">
-              {pagina * dimensione + 1}–{Math.min(totale, (pagina + 1) * dimensione)} di {totale.toLocaleString('it-IT')} {totale === 1 ? 'pratica' : 'pratiche'}
+              {pagina * dimensione + 1}–{Math.min(totale, (pagina + 1) * dimensione)} di {totale.toLocaleString('it-IT')} {totale === 1 ? gl('pratica') : gl('pratica', 'nomi')}
             </span>
             <div className="flex items-center gap-3">
               <label className="flex items-center gap-2">

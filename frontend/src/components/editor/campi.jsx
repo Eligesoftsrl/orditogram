@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Braces, Plus, X } from 'lucide-react'
 import { cx } from '../../lib/format.js'
+import { gl } from '../../lib/glossario.js'
 
 /** Campo di testo che salva quando esci dal campo o premi Invio (evita un "annulla" per ogni lettera). */
 export function TestoDifferito({ value, onCommit, multiline, placeholder, className, id, mono, rows = 3 }) {
@@ -94,7 +95,7 @@ export function InserisciDato({ campi, onInserisci }) {
     <div ref={box} className="relative inline-block">
       <button type="button" onClick={() => setAperto(!aperto)}
               className="inline-flex items-center gap-1 text-[13px] font-medium text-verde-700 hover:underline">
-        <Braces className="size-3.5" /> Inserisci un dato della pratica
+        <Braces className="size-3.5" /> Inserisci un dato {gl('pratica', 'del')}
       </button>
       {aperto && (
         <ul className="absolute left-0 z-30 mt-1 max-h-64 w-64 overflow-y-auto rounded-campo border border-linea bg-white py-1 shadow-sollevato">

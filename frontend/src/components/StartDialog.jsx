@@ -5,6 +5,7 @@ import { api } from '../api.js'
 import { prossimaAttivita } from '../lib/prosegui.js'
 import DynamicForm from './DynamicForm.jsx'
 import { Button, Caricamento, Dialogo, Errore, Vuoto, useToast } from './ui.jsx'
+import { gl, nuovaPratica } from '../lib/glossario.js'
 
 /** "Nuova pratica": scelta del processo, poi il suo form di avvio (con eventuali allegati). */
 export default function StartDialog({ aperto, onClose, chiaveIniziale }) {
@@ -33,10 +34,10 @@ export default function StartDialog({ aperto, onClose, chiaveIniziale }) {
       const prossima = await prossimaAttivita(r.id)
       onClose()
       if (prossima) {
-        toast.ok(`Pratica "${r.name}" avviata: prosegui con "${prossima.name}"`)
+        toast.ok(`${gl('pratica', 'Nome')} "${r.name}" ${gl.agg('pratica', 'avviat')}: prosegui con "${prossima.name}"`)
         navigate(`/attivita/${prossima.id}`)
       } else {
-        toast.ok(`Pratica "${r.name}" avviata`)
+        toast.ok(`${gl('pratica', 'Nome')} "${r.name}" ${gl.agg('pratica', 'avviat')}`)
         navigate(`/pratiche/${r.id}`)
       }
     } catch (e) {
@@ -48,8 +49,8 @@ export default function StartDialog({ aperto, onClose, chiaveIniziale }) {
 
   return (
     <Dialogo aperto={aperto} onClose={onClose}
-             titolo={scelto ? (scelto.startForm?.title || scelto.name) : 'Nuova pratica'}
-             sottotitolo={scelto ? scelto.name : 'Scegli il tipo di pratica da avviare'}>
+             titolo={scelto ? (scelto.startForm?.title || scelto.name) : nuovaPratica()}
+             sottotitolo={scelto ? scelto.name : `Scegli il tipo di ${gl('pratica', 'nome')} da avviare`}>
       {!processi && !errore && <Caricamento />}
       {errore && !scelto && <Errore>{errore}</Errore>}
 

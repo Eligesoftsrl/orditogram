@@ -13,7 +13,8 @@ public enum Termine {
     UFFICIO("ufficio", "Il personale visto da fuori",
         "Il nome con cui gli utenti esterni vedono le azioni del personale. Es. Ufficio, Assistenza, Segreteria",
         "Ufficio", "Uffici", "M"),
-    ESTERNO("esterno", "Chi entra da fuori", "Es. cittadino, cliente, fornitore, socio", "cittadino", "cittadini", "M");
+    ESTERNO("esterno", "Chi entra da fuori", "Es. cittadino, cliente, fornitore, socio", "cittadino", "cittadini", "M"),
+    PRATICA("pratica", "Il caso che si lavora", "Es. pratica, richiesta, ticket, ordine, caso", "pratica", "pratiche", "F");
 
     private final String chiave;
     private final String nome;

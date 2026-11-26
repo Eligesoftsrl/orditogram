@@ -46,8 +46,11 @@ public class NotificaConnector implements Connector, ConnettoreOrditogram {
     private final NotificaService notifiche;
     private final StoricoService storico;
     private final SupportoConnettori supporto;
+    private final com.eligesoft.orditogram.glossario.GlossarioService glossario;
 
-    public NotificaConnector(NotificaService notifiche, StoricoService storico, SupportoConnettori supporto) {
+    public NotificaConnector(NotificaService notifiche, StoricoService storico, SupportoConnettori supporto,
+                             com.eligesoft.orditogram.glossario.GlossarioService glossario) {
+        this.glossario = glossario;
         this.notifiche = notifiche;
         this.storico = storico;
         this.supporto = supporto;
@@ -59,7 +62,7 @@ public class NotificaConnector implements Connector, ConnettoreOrditogram {
         Map<String, Object> vars = SupportoConnettori.dati(ctx);
         String pi = ctx.getProcessInstanceId();
 
-        String titolo = SupportoConnettori.sostituisci(campi.getOrDefault("titolo", "Aggiornamento pratica"), vars);
+        String titolo = SupportoConnettori.sostituisci(campi.getOrDefault("titolo", "Aggiornamento: " + glossario.singolare(com.eligesoft.orditogram.glossario.Termine.PRATICA)), vars);
         String messaggio = SupportoConnettori.sostituisci(campi.getOrDefault("messaggio", ""), vars);
 
         Set<String> destinatari = new LinkedHashSet<>();

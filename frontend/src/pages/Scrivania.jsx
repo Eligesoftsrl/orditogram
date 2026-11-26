@@ -12,6 +12,7 @@ import GraficiScrivania from '../components/GraficiScrivania.jsx'
 import { useAvvio } from '../components/Shell.jsx'
 import { Badge, Button, Caricamento, Cassetto, Errore, Pannello, Tessera, Vuoto, useToast } from '../components/ui.jsx'
 import { BadgeScadenza, principale } from '../components/Scadenza.jsx'
+import { gl, nuovaPratica, senzaTitolo } from '../lib/glossario.js'
 
 /** Ctrl/Cmd, Maiusc o clic centrale: il collegamento si apre come pagina, non nel pannello. */
 const apreLaPagina = (e) => e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0
@@ -74,7 +75,7 @@ export default function Scrivania() {
   const apriAttivita = (e, t) => {
     if (apreLaPagina(e)) return
     e.preventDefault()
-    setAperta({ titolo: t.pratica || 'Pratica senza titolo', processo: t.processo, idPratica: t.processInstanceId, attivita: t })
+    setAperta({ titolo: t.pratica || senzaTitolo(), processo: t.processo, idPratica: t.processInstanceId, attivita: t })
   }
   const apriPratica = (e, p) => {
     if (apreLaPagina(e)) return
@@ -90,7 +91,7 @@ export default function Scrivania() {
           <h1 className="mt-1 text-[36px] font-bold leading-tight tracking-tight">{saluto()}, {nome}</h1>
           <p className="mt-1.5 max-w-2xl text-[17px] text-pino-800">{riassunto(mie.length, libere.length)}</p>
         </div>
-        <Button variante="primario" misura="lg" icona={Plus} className="hidden lg:inline-flex" onClick={() => apriAvvio()}>Nuova pratica</Button>
+        <Button variante="primario" misura="lg" icona={Plus} className="hidden lg:inline-flex" onClick={() => apriAvvio()}>{nuovaPratica()}</Button>
       </header>
 
       {/* bento: la tessera blu grande e quattro tessere di tinte diverse */}
@@ -106,7 +107,7 @@ export default function Scrivania() {
                         className="flex items-center justify-between gap-3 rounded-blocco bg-white/12 px-4 py-3 text-white transition-[background-color,transform] duration-200 hover:translate-x-0.5 hover:bg-white/20">
                     <span className="min-w-0">
                       <span className="block truncate font-semibold">{t.name}</span>
-                      <span className="block truncate text-sm text-verde-50">{t.pratica || 'Pratica senza titolo'}</span>
+                      <span className="block truncate text-sm text-verde-50">{t.pratica || senzaTitolo()}</span>
                     </span>
                     <PastigliaScadenza t={t} />
                   </Link>
@@ -121,7 +122,7 @@ export default function Scrivania() {
                  nota={conteggi.vicine ? 'entro 2 giorni' : 'nulla nei prossimi 2 giorni'} />
         <Tessera tono={conteggi.scadute ? 'rosa' : 'neutro'} icona={CircleAlert} etichetta="Scadute" valore={conteggi.scadute}
                  nota={conteggi.scadute ? 'da recuperare' : 'tutto nei tempi'} />
-        <Tessera tono="ambra" icona={FolderOpen} etichetta="Pratiche in corso" valore={totalePratiche}
+        <Tessera tono="ambra" icona={FolderOpen} etichetta={`${gl('pratica', 'Nomi')} in corso`} valore={totalePratiche}
                  nota="che puoi vedere" as={Link} to="/pratiche" />
       </div>
 
@@ -152,12 +153,12 @@ export default function Scrivania() {
           </Pannello>
         </div>
 
-        <Pannello titolo={<Titolo testo="Pratiche in corso" n={totalePratiche} />}
-                  azioni={<Link to="/pratiche" className="text-sm font-semibold text-verde-700 hover:underline">Tutte le pratiche</Link>}
+        <Pannello titolo={<Titolo testo={`${gl('pratica', 'Nomi')} in corso`} n={totalePratiche} />}
+                  azioni={<Link to="/pratiche" className="text-sm font-semibold text-verde-700 hover:underline">Tutt{gl.agg('pratica', '', true)} {gl('pratica', 'i')}</Link>}
                   corpoClassName="p-0">
           {pratiche.length === 0
-            ? <Vuoto icona={Route} titolo="Nessuna pratica in corso" azione={<Button misura="sm" icona={Plus} onClick={() => apriAvvio()}>Avvia una pratica</Button>}>
-                Le pratiche che avvii o su cui lavori compaiono qui, con il loro percorso.
+            ? <Vuoto icona={Route} titolo={`${gl('pratica', 'Nessun')} in corso`} azione={<Button misura="sm" icona={Plus} onClick={() => apriAvvio()}>Avvia {gl('pratica', 'un')}</Button>}>
+                {gl('pratica', 'I')} che avvii o su cui lavori compaiono qui, con il loro percorso.
               </Vuoto>
             : (
               <ul className="in-sequenza divide-y divide-linea">
@@ -200,7 +201,7 @@ export default function Scrivania() {
 }
 
 function riassunto(mie, libere) {
-  if (mie === 0 && libere === 0) return 'Non hai attività in sospeso. Puoi avviare una nuova pratica o consultare quelle in corso.'
+  if (mie === 0 && libere === 0) return `Non hai attività in sospeso. Puoi avviare ${gl('pratica', 'un')} o consultare quell${gl.agg('pratica', '', true)} in corso.`
   const a = mie === 1 ? 'un\'attività in carico' : `${mie} attività in carico`
   const b = libere === 1 ? 'una disponibile per il tuo gruppo' : `${libere} disponibili per il tuo gruppo`
   if (mie === 0) return `Hai ${b.replace('una disponibile', 'un\'attività disponibile')}.`
@@ -232,7 +233,7 @@ function RigaAttivita({ t, azione, onApri }) {
     <li>
       <Link to={`/attivita/${t.id}`} onClick={(e) => onApri(e, t)} className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-verde-50/60">
         <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold text-pino-900">{t.pratica || 'Pratica senza titolo'}</p>
+          <p className="truncate font-semibold text-pino-900">{t.pratica || senzaTitolo()}</p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <Badge tono={t.mine ? 'blu' : 'neutro'}>{t.name}</Badge>
             <BadgeScadenza s={principale(t.scadenze)} />

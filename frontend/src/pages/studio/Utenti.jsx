@@ -8,6 +8,7 @@ import Esporta from '../../components/Esporta.jsx'
 import Gruppi from '../../components/Gruppi.jsx'
 import { alberoStrutture } from '../../lib/permessi.js'
 import { useGlossario } from '../../lib/useGlossario.jsx'
+import { gl } from '../../lib/glossario.js'
 
 const VUOTO = { id: null, username: '', firstName: '', lastName: '', email: '', enabled: true, tipo: 'INTERNO', ruoli: [], groups: [], organizzazioni: [], password: '' }
 
@@ -139,8 +140,8 @@ export default function Utenti() {
                 <fieldset>
                   <legend className="etichetta">Tipo di utente</legend>
                   <div className="grid gap-2 sm:grid-cols-2">
-                    {[['INTERNO', 'Personale', `Lavora le pratiche ${g('ente', 'del')}`],
-                      ['ESTERNO', 'Esterno', `${g('esterno', 'Nome')} o referente di un'organizzazione: vede solo le sue pratiche`]].map(([v, t, d]) => (
+                    {[['INTERNO', 'Personale', `Lavora ${g('pratica', 'i')} ${g('ente', 'del')}`],
+                      ['ESTERNO', 'Esterno', `${g('esterno', 'Nome')} o referente di un'organizzazione: vede solo ${g('pratica', 'i')} in cui è parte`]].map(([v, t, d]) => (
                       <label key={v} className={cx('flex cursor-pointer items-start gap-2 rounded-campo border px-3 py-2.5',
                         (edit.tipo || 'INTERNO') === v ? 'border-verde-500 bg-verde-50/60' : 'border-linea')}>
                         <input type="radio" name={`${uid}-tipo`} className="mt-1 accent-verde-600" checked={(edit.tipo || 'INTERNO') === v}

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { api } from '../api.js'
-import { creaGlossario } from './glossario.js'
+import { creaGlossario, impostaGlossario } from './glossario.js'
 
 const GlossarioContext = createContext({ g: creaGlossario(null), info: null, ricarica: () => {} })
 
@@ -10,7 +10,7 @@ const GlossarioContext = createContext({ g: creaGlossario(null), info: null, ric
  */
 export function GlossarioProvider({ children }) {
   const [info, setInfo] = useState(null)
-  const ricarica = () => api.info().then(setInfo).catch(() => {})
+  const ricarica = () => api.info().then(i => { impostaGlossario(i?.glossario); setInfo(i) }).catch(() => {})
   useEffect(() => { ricarica() }, [])
   const valore = useMemo(() => ({ g: creaGlossario(info?.glossario), info, ricarica }), [info])
   return <GlossarioContext.Provider value={valore}>{children}</GlossarioContext.Provider>

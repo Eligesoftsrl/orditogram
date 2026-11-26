@@ -4,6 +4,7 @@ import { api } from '../../api.js'
 import { cx, fa, giorno, quando } from '../../lib/format.js'
 import { Badge, Button, Caricamento, Dialogo, Errore, Vuoto, useToast } from '../ui.jsx'
 import { Caselle, Codice, Copia, SceltaProcessi } from './comuni.jsx'
+import { gl } from '../../lib/glossario.js'
 
 function stato(c) {
   if (c.revocata) return ['Revocata', 'mattone']
@@ -48,7 +49,7 @@ export default function ChiaviApi({ panoramica }) {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <p className="max-w-2xl text-grafite">
           Ogni sistema che usa l'API (portale, gestionale, app) ha la sua chiave, con i permessi che servono e,
-          se vuoi, solo per alcuni processi. Nello storico delle pratiche compare il nome del sistema.
+          se vuoi, solo per alcuni processi. Nello storico {gl('pratica', 'dei')} compare il nome del sistema.
         </p>
         <Button variante="primario" icona={Plus} onClick={() => setModifica({ nuova: true })}>Nuova chiave</Button>
       </div>
@@ -59,7 +60,7 @@ export default function ChiaviApi({ panoramica }) {
         <div className="rounded-pannello border border-dashed border-linea bg-white">
           <Vuoto icona={KeyRound} titolo="Nessuna chiave"
                  azione={<Button variante="primario" icona={Plus} onClick={() => setModifica({ nuova: true })}>Crea la prima chiave</Button>}>
-            Crea una chiave per il primo sistema che deve avviare pratiche o leggerne lo stato.
+            Crea una chiave per il primo sistema che deve avviare {gl('pratica', 'nomi')} o leggerne lo stato.
           </Vuoto>
         </div>
       )}
@@ -182,7 +183,7 @@ function DialogoChiave({ chiave, panoramica, onClose, onSalvata }) {
             <span className="etichetta">Nome del sistema</span>
             <input className="campo font-mono" value={nome} onChange={e => setNome(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
                    placeholder="portale-clienti" required autoFocus maxLength={60} />
-            <span className="mt-1 block text-xs text-grafite">Minuscole, numeri e trattini. Compare nello storico delle pratiche.</span>
+            <span className="mt-1 block text-xs text-grafite">Minuscole, numeri e trattini. Compare nello storico {gl('pratica', 'dei')}.</span>
           </label>
         )}
         <label className="block">

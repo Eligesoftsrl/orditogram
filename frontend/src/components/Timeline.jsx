@@ -1,9 +1,10 @@
 import { Bell, CircleCheck, FileText, Hand, Inbox, Mail, Play, Timer, TriangleAlert, Undo2, UserPlus, Webhook } from 'lucide-react'
 import { cx, quando } from '../lib/format.js'
 import { Vuoto } from './ui.jsx'
+import { gl } from '../lib/glossario.js'
 
 const stile = {
-  AVVIO:           { icona: Play,        colore: 'bg-pino-900 text-white',           verbo: 'ha avviato la pratica' },
+  AVVIO:           { icona: Play,        colore: 'bg-pino-900 text-white',           get verbo() { return `ha avviato ${gl('pratica', 'il')}` } },
   PRESA_IN_CARICO: { icona: Hand,        colore: 'bg-zafferano-100 text-zafferano-800', verbo: 'ha preso in carico' },
   RILASCIO:        { icona: Undo2,       colore: 'bg-carta text-grafite',            verbo: 'ha rilasciato' },
   COMPLETAMENTO:   { icona: CircleCheck, colore: 'bg-verde-50 text-verde-700',       verbo: 'ha completato' },
