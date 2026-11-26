@@ -134,7 +134,7 @@ Orditogram e ogni soluzione consegnata ai clienti. Obiettivo dichiarato: un effe
   pratica, non per gli esterni), `GraficiScrivania` (riquadri con *Tabella*), `AnteprimaPratica`. Prima di crearne uno nuovo,
   usa o estendi questi.
 - **Aperture laterali**: un elemento di un elenco si apre nel `Cassetto` con il riassunto e l'azione principale;
-  Ctrl/Cmd + clic apre la pagina; i documenti si vedono nel cassetto con `AnteprimaDocumento`. Le decisioni importanti si confermano in un `Dialogo` che dice cosa succede e
+  Ctrl/Cmd + clic apre la pagina; documenti e storico di attività e pratica sono capsule (`Approfondimenti`) che aprono il cassetto, il form ha tutta la larghezza; i documenti si vedono nel cassetto con `AnteprimaDocumento`. Le decisioni importanti si confermano in un `Dialogo` che dice cosa succede e
   che resta nello storico.
 - **Flusso e grafici**: il diagramma BPMN vero è sempre in vista nella pratica e nell'attività; il passo dove è ferma
   pulsa (`.bpmn-corrente`), i passi fatti si accendono in fila, ogni 8 secondi un segnalino giallo percorre il
