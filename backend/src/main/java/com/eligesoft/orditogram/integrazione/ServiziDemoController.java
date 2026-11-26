@@ -30,8 +30,11 @@ public class ServiziDemoController {
     private final Credenziali credenziali;
     private final RicevitoreProva ricevitore;
 
+    private final com.eligesoft.orditogram.modulo.ModuliService moduli;
+
     public ServiziDemoController(@Value("${app.demo.servizi:true}") boolean attivi, Credenziali credenziali,
-                                 RicevitoreProva ricevitore) {
+                                 RicevitoreProva ricevitore, com.eligesoft.orditogram.modulo.ModuliService moduli) {
+        this.moduli = moduli;
         this.attivi = attivi;
         this.credenziali = credenziali;
         this.ricevitore = ricevitore;
@@ -58,7 +61,8 @@ public class ServiziDemoController {
     public ResponseEntity<Map<String, Object>> protocolla(@RequestBody(required = false) Map<String, Object> corpo,
                                                           @RequestHeader(value = "X-API-Key", required = false) String chiave,
                                                           @RequestParam(required = false) String simula) {
-        if (!attivi) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        // il protocollo di prova fa parte del pacchetto della PA
+        if (!attivi || !moduli.acceso(com.eligesoft.orditogram.modulo.Modulo.PA)) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         String attesa = credenziali.trova("protocollo-demo").map(Credenziali.Credenziale::getValore).orElse(null);
         if (attesa != null && !attesa.equals(chiave))
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("errore", "Chiave API non valida"));

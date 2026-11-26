@@ -39,6 +39,22 @@ public class FormService {
         this.mapper = mapper;
     }
 
+    /** Formati di paese ammessi nei form nuovi o modificati (codice fiscale & co. solo con il modulo Italia). */
+    private java.util.function.Predicate<String> formatoAmmesso = formato -> true;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setModuli(com.eligesoft.orditogram.modulo.ModuliService moduli) {
+        this.formatoAmmesso = formato -> !RegoleCampo.FORMATI_ITALIA.contains(formato)
+            || moduli.acceso(com.eligesoft.orditogram.modulo.Modulo.ITALIA);
+    }
+
+    /** Il formato del campo richiede un modulo spento: messaggio, oppure null. */
+    private String formatoNonAmmesso(JsonNode campo) {
+        String formato = campo.path("formato").asText("");
+        return formato.isEmpty() || formatoAmmesso.test(formato) ? null
+            : "il formato \"" + formato + "\" richiede il modulo Italia, spento in questa installazione (Studio → Moduli)";
+    }
+
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     void setTipiAnagrafica(com.eligesoft.orditogram.anagrafica.TipoAnagraficaRepository tipi) {
         this.anagraficaEsiste = tipi::existsByCodice;
@@ -164,6 +180,7 @@ public class FormService {
                 throw bad("Campo \"" + name + "\": un select deve avere \"options\"");
             List<String> regole = RegoleCampo.problemi(f, type);
             if (!regole.isEmpty()) throw bad("Campo \"" + name + "\": " + regole.get(0));
+            if (formatoNonAmmesso(f) != null) throw bad("Campo \"" + name + "\": " + formatoNonAmmesso(f));
             if (ValoriForm.TABELLA.equals(type)) validaTabella(name, f);
             if (ValoriForm.ANAGRAFICA.equals(type) && !f.path("tipoAnagrafica").asText("").matches("[a-z][a-z0-9-]{1,59}"))
                 throw bad("Campo \"" + name + "\": indica il codice dell'anagrafica da cui scegliere (tipoAnagrafica)");
@@ -236,6 +253,7 @@ public class FormService {
                 throw bad(campo + "colonna \"" + nome + "\": una scelta deve avere le opzioni");
             List<String> regole = RegoleCampo.problemi(c, tipo);
             if (!regole.isEmpty()) throw bad(campo + "colonna \"" + nome + "\": " + regole.get(0));
+            if (formatoNonAmmesso(c) != null) throw bad(campo + "colonna \"" + nome + "\": " + formatoNonAmmesso(c));
         }
         Integer min = RegoleCampo.intero(f.get("minRighe")), max = RegoleCampo.intero(f.get("maxRighe"));
         if (f.has("minRighe") && (min == null || min < 0)) throw bad(campo + "le righe minime devono essere un numero intero");

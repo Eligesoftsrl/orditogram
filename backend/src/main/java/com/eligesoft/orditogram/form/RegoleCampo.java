@@ -39,6 +39,8 @@ public final class RegoleCampo {
     }
 
     public static final Set<String> FORMATI = Set.of("email", "codiceFiscale", "partitaIva", "cap", "telefono", "iban", "espressione");
+    /** Formati italiani: nei form nuovi o modificati solo con il modulo Italia acceso (i valori si controllano sempre). */
+    public static final Set<String> FORMATI_ITALIA = Set.of("codiceFiscale", "partitaIva", "cap", "telefono");
 
     /** Lunghezza massima di un'espressione scritta dall'analista e di un testo su cui la si prova. */
     static final int MAX_ESPRESSIONE = 300;

@@ -194,6 +194,8 @@ export const api = {
   info: () => call('GET', '/api/info'),
   glossario: () => call('GET', '/api/admin/glossario'),
   salvaGlossario: (termini) => call('PUT', '/api/admin/glossario', termini),
+  moduli: () => call('GET', '/api/admin/moduli'),
+  impostaModulo: (codice, acceso) => call('PUT', `/api/admin/moduli/${encodeURIComponent(codice)}`, { acceso }),
 
   // integrazioni (Studio): chiavi dell'API pubblica, webhook, documentazione
   integrazioni: () => call('GET', '/api/admin/integrazioni/panoramica'),

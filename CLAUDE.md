@@ -41,6 +41,7 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
 | `auth`, `user` | utenti locali, OIDC (Keycloak, Entra ID), utente corrente |
 | `accesso` | ruoli e permessi applicativi (`Permesso`, `Ruolo`, `PermessiService`), regole anti-escalation, permessi per processo (`PermessoProcesso`: AVVIA, VEDE con ambito, ESPORTA), strutture (`Organizzazione` in albero), organizzazioni esterne, utenti esterni (`AccessoEsterni`: solo API del portale), parti della pratica (`PartiService`, `AscoltatoreParti`), referenti delle organizzazioni (`ReferentiService`, portale `/api/organizzazione`) |
 | `anagrafica` | anagrafiche configurabili: tipi definiti dall'analista (`DefinizioneAnagrafica`, formato dei form + chiave, cercabile, relazioni), schede con indice, versioni e cessazione, permessi per tipo (`AccessoAnagrafiche`, unico punto di controllo) |
+| `modulo` | moduli di settore accendibili (`Modulo`: italia, firma-digitale, pa; `ModuliService`, tabella `modulo_spento`) |
 | `glossario` | parole dell'installazione per ente, ufficio, utenti esterni e pratica (`Termine`, `GlossarioService`); predefiniti della PA |
 | `registro` | registro delle azioni di amministrazione e accessi negati |
 | `api` | **API pubblica `/api/v1`** con chiavi, OpenAPI generata dai processi, Studio → Integrazioni |
@@ -94,6 +95,9 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
   aggettivi con `gl.agg('pratica', 'conclus')` → "conclusa"/"concluso", e `nuovaPratica()`, `senzaTitolo()`.
   `App` si iscrive al glossario, così i testi con `gl` si ridisegnano. Costanti con testi: getter o funzioni.
   Nel backend `GlossarioService.singolare/conArticolo/accorda(Termine...)` per i messaggi alle persone (non per l'API pubblica). Un termine nuovo: enum `Termine` + `PREDEFINITO` in `lib/glossario.js`.
+- **Moduli**: ciò che vale solo per l'Italia o la PA va dietro un modulo (`modulo/Modulo`), controllato con
+  `ModuliService.acceso(...)` nel backend e `moduloAcceso(info, codice)` (`lib/moduli.js`) nel frontend. Il nucleo
+  resta generico; un modulo nuovo: voce in `Modulo` con descrizione e `porta`, effetti nei servizi, riga nel README.
 - **Storico → eventi**: `StoricoService.registra` pubblica `EventoStorico`; i webhook lo ascoltano nella stessa transazione.
 
 ## Interfaccia

@@ -117,6 +117,20 @@ Le parole valgono subito, anche nella pagina di accesso (`GET /api/info` → `gl
 leggono quella scelta al posto di "Ufficio" nello storico e nei documenti. Le modifiche vanno nel registro.
 Svuotando un termine si torna al predefinito.
 
+## Moduli (Studio → Moduli)
+
+Il nucleo di Orditogram vale per ogni settore; quello che serve solo in Italia o nella PA sta in moduli che
+l'amministratore accende o spegne in Studio → *Moduli*. Sono tutti accesi per default.
+
+| Modulo | Cosa porta | Spento |
+|---|---|---|
+| Italia | festività nazionali (Pasqua, 25 aprile...), formati codice fiscale, partita IVA, CAP, telefono | calendario con i soli fine settimana e le chiusure configurate; i form nuovi o modificati con quei formati sono rifiutati |
+| Firma digitale | verifica delle firme dei documenti caricati (.p7m, PDF firmati) | i documenti si caricano senza verifica |
+| PA | servizi dimostrativi della PA (protocollo) | il servizio risponde 404 |
+
+Spegnere un modulo non tocca i dati già salvati: i form pubblicati restano validi finché non si modificano.
+Ogni cambio si conferma e va nel registro. `GET /api/info` elenca i moduli accesi.
+
 ## Ruoli e permessi (Studio → Ruoli)
 
 Chi può fare che cosa nello Studio e nell'amministrazione si decide con i **ruoli**, insiemi di permessi:

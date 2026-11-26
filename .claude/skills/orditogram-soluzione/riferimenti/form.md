@@ -47,6 +47,10 @@ Fonte di verità: `form/FormService.validate`, `form/ValoriForm`, `form/RegoleCa
 | `visibileAlleParti: true` | il dato lo vedono anche gli utenti esterni parti della pratica |
 | `ruoliVisibili` | `["dirigente"]`: dato riservato al personale con uno di questi ruoli |
 
+I formati `codiceFiscale`, `partitaIva`, `cap` e `telefono` richiedono il modulo *Italia* (acceso per default): se
+l'installazione lo ha spento, il backend rifiuta il form con "il formato \"X\" richiede il modulo Italia". Per
+clienti fuori dall'Italia usa `espressione`.
+
 **Sezioni** (non sono dati): `{ "type": "sezione", "label": "Dati dell'evento", "help": "..." }`. Niente condizioni.
 
 **Tabelle di righe**:
