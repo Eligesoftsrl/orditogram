@@ -14,7 +14,7 @@ export default function Anagrafiche() {
   useEffect(() => { api.tipiAnagrafica().then(setTipi).catch(e => setErrore(e.message)) }, [])
 
   return (
-    <div className="space-y-6">
+    <div className="in-sequenza space-y-6">
       <IntestazionePagina percorso={[{ label: 'Anagrafiche' }]}>
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Anagrafiche</h1>

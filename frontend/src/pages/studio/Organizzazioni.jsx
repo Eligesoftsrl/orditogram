@@ -64,7 +64,7 @@ export default function Organizzazioni() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="in-sequenza space-y-6">
       <IntestazionePagina percorso={[{ label: 'Studio' }, { label: 'Organizzazioni' }]}>
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Organizzazioni</h1>

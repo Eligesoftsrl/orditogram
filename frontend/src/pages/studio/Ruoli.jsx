@@ -54,7 +54,7 @@ export default function Ruoli() {
   const permesso = (codice, si) => set('permessi', si ? [...edit.permessi, codice] : edit.permessi.filter(c => c !== codice))
 
   return (
-    <div className="space-y-6">
+    <div className="in-sequenza space-y-6">
       <IntestazionePagina percorso={[{ label: 'Studio' }, { label: 'Ruoli' }]}>
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Ruoli</h1>

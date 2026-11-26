@@ -141,10 +141,12 @@ Orditogram e ogni soluzione consegnata ai clienti. Obiettivo dichiarato: un effe
   cammino fatto (`lib/percorsoBpmn.js`). Grafici: un solo tono di blu per le grandezze, due serie al massimo con
   legenda, barre che crescono dalla base (`.cresce-y`, `.cresce-x`), valori scritti, `aria-label` con i numeri e
   pulsante *Tabella* con gli stessi valori. Indicatori dal server solo sulle pratiche visibili (`IndicatoriPratiche`).
-- **Movimento**: solo opacità e spostamento (le barre crescono in scala), 160–320 ms, `--ease-morbido`; numeri
-  che contano fino al valore (700 ms), menu che scendono (`animate-menu`). Elenchi e tessere entrano in sequenza con
-  `.in-sequenza` (massimo 8 passi da 50 ms), il cassetto scorre da destra, le finestre si aprono con `animate-entra`,
-  "adesso" pulsa con `animate-respiro`. Con "riduci il movimento" tutto è fermo (regola globale in `index.css`).
+- **Movimento**: solo opacità e spostamento (le barre crescono in scala), 160–500 ms, `--ease-morbido`; numeri
+  che contano fino al valore (700 ms), menu che scendono (`animate-menu`). Pagine (`animate-pagina`), elenchi e tessere entrano a
+  cascata con `.in-sequenza` (dal basso, 500 ms, `--ease-cascata`, fino a 10 passi da 60 ms; anche il contenitore
+  della pagina), le voci dei menu con `.menu-sequenza`, il cassetto scorre da destra, le finestre si aprono con `animate-entra`,
+  "adesso" pulsa con `animate-respiro`, le forme delle tessere principali fluttuano piano (`animate-fluttua`),
+  i selettori a capsula scorrono, nel disegno del benvenuto (`Ordito`) i passi compaiono in fila e un segnalino giallo percorre il filo. Con "riduci il movimento" tutto è fermo (regola globale in `index.css`).
 - **Accessibilità** (WCAG 2.1 AA): focus giallo `#FFB000` spesso 3px, link "Vai al contenuto", finestre con Esc,
   focus dentro all'apertura e di ritorno alla chiusura, `aria-label` sui pulsanti con sola icona, nessuno
   scorrimento orizzontale a 400px.

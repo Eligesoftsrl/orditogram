@@ -86,11 +86,11 @@ export default function Scrivania() {
   }
 
   return (
-    <div className="space-y-7">
+    <div className="in-sequenza space-y-7">
       {/* bento: il benvenuto blu (tessera doppia) con le attività in primo piano, poi quattro tessere di tinte diverse */}
       <div className="in-sequenza grid grid-cols-2 gap-4 lg:grid-cols-4" aria-label="Riepilogo">
         <section aria-labelledby="benvenuto" className="relative isolate col-span-2 flex flex-col overflow-hidden rounded-pannello bg-verde-600 p-6 text-white shadow-[0_18px_40px_-20px_rgb(0_102_204/0.9)] sm:p-7 lg:row-span-2">
-          <Forme tono="blu" className="-right-16 -top-20 size-64" />
+          <Forme tono="blu" fluttua className="-right-16 -top-20 size-64" />
           <Ordito className="pointer-events-none absolute right-4 top-5 -z-10 hidden w-[210px] sm:block" />
           <div className="sm:pr-56">
             <p className="text-[15px] text-verde-50">{giorno(new Date())}</p>

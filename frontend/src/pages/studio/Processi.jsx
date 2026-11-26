@@ -64,7 +64,7 @@ export default function Processi() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="in-sequenza space-y-6">
       <IntestazionePagina percorso={[{ label: 'Studio' }, { label: 'Processi' }]}>
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Processi</h1>

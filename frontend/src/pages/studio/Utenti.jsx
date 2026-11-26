@@ -63,7 +63,7 @@ export default function Utenti() {
   const set = (k, v) => setEdit(p => ({ ...p, [k]: v }))
 
   return (
-    <div className="space-y-6">
+    <div className="in-sequenza space-y-6">
       <IntestazionePagina percorso={[{ label: 'Studio' }, { label: 'Utenti' }]}>
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Utenti</h1>

@@ -26,7 +26,7 @@ export default function Integrazioni() {
   useEffect(() => { api.integrazioni().then(setPanoramica).catch(e => setErrore(e.message)) }, [])
 
   return (
-    <div className="space-y-6">
+    <div className="in-sequenza space-y-6">
       <IntestazionePagina percorso={[{ label: 'Studio' }, { label: 'Integrazioni' }]}>
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Integrazioni</h1>

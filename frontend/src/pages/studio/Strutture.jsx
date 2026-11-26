@@ -59,7 +59,7 @@ export default function Strutture() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="in-sequenza space-y-6">
       <IntestazionePagina percorso={[{ label: 'Studio' }, { label: 'Strutture' }]}>
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Strutture</h1>

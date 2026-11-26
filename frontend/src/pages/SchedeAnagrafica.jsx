@@ -54,7 +54,7 @@ export default function SchedeAnagrafica() {
   const pagine = Math.max(1, Math.ceil(totale / DIMENSIONE))
 
   return (
-    <div className="space-y-6">
+    <div className="in-sequenza space-y-6">
       <Indietro />
       <IntestazionePagina percorso={[{ label: 'Anagrafiche', to: '/anagrafiche' }, { label: tipo.nome }]}>
         <div>

@@ -264,11 +264,11 @@ export function Tessera({ tono = 'neutro', icona: Icona, etichetta, valore, past
 }
 
 /** Le due forme morbide nell'angolo in alto a destra di una tessera (decorative, dietro al contenuto). */
-export function Forme({ tono = 'neutro', className }) {
+export function Forme({ tono = 'neutro', fluttua, className }) {
   const colore = formeTessera[tono] || formeTessera.neutro
   return (
     <span aria-hidden="true" className={cx('pointer-events-none absolute -right-10 -top-12 -z-10 size-36 transition-transform duration-300 ease-[var(--ease-morbido)] group-hover:scale-105', className)}>
-      <span className={cx('absolute inset-0 rounded-[42%_58%_55%_45%/48%_42%_58%_52%]', colore)} />
+      <span className={cx('absolute inset-0 rounded-[42%_58%_55%_45%/48%_42%_58%_52%]', fluttua && 'animate-fluttua', colore)} />
       <span className={cx('absolute -bottom-6 left-2 size-16 rounded-full opacity-70', colore)} />
     </span>
   )
@@ -289,7 +289,7 @@ export function TesseraFiltro({ tono = 'acqua', icona: Icona, etichetta, valore,
         <span className="numeri block text-[28px] font-bold leading-none">{valore == null ? '–' : <Contatore valore={valore} />}</span>
         <span className="mt-1 block truncate text-sm font-semibold text-pino-800">{etichetta}</span>
       </span>
-      {attiva && <CircleCheck className="ml-auto size-5 shrink-0 text-verde-700" aria-hidden="true" />}
+      {attiva && <CircleCheck className="ml-auto size-5 shrink-0 animate-entra text-verde-700" aria-hidden="true" />}
     </button>
   )
 }
@@ -303,7 +303,7 @@ export function TesseraFiltro({ tono = 'acqua', icona: Icona, etichetta, valore,
 export function IntestazionePagina({ percorso = [], className, children }) {
   return (
     <header className={cx('relative isolate overflow-hidden rounded-pannello border border-linea bg-white px-5 py-5 shadow-pannello sm:px-7', className)}>
-      <Forme tono="chiaro" className="-right-6 -top-14 size-44" />
+      <Forme tono="chiaro" fluttua className="-right-6 -top-14 size-44" />
       {percorso.length > 0 && <Percorso voci={percorso} />}
       <div className="flex flex-wrap items-end justify-between gap-4 [&_h1]:text-[30px] [&_h1]:font-bold [&_h1]:tracking-tight">{children}</div>
     </header>
@@ -339,12 +339,16 @@ export function Percorso({ voci }) {
  * voci: [{ id, label, icona }]; la voce scelta è una capsula bianca su fondo carta.
  */
 export function Selettore({ voci, attiva, onChange, etichetta, className }) {
+  const indice = Math.max(0, voci.findIndex(v => v.id === attiva))
   return (
-    <div role="group" aria-label={etichetta} className={cx('inline-flex shrink-0 items-center gap-0.5 rounded-full bg-carta p-1', className)}>
+    <div role="group" aria-label={etichetta} className={cx('relative inline-grid shrink-0 auto-cols-fr grid-flow-col rounded-full bg-carta p-1', className)}>
+      {/* la capsula bianca scorre sotto la voce scelta */}
+      <span aria-hidden="true" className="absolute inset-y-1 left-1 rounded-full bg-white shadow-[0_1px_3px_rgb(0_40_80/0.15)] transition-transform duration-300 ease-[var(--ease-morbido)]"
+            style={{ width: `calc((100% - 0.5rem) / ${voci.length})`, transform: `translateX(${indice * 100}%)` }} />
       {voci.map(v => (
         <button key={v.id} type="button" aria-pressed={attiva === v.id} onClick={() => onChange(v.id)}
-                className={cx('inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold transition-[background-color,color,box-shadow] duration-200',
-                  attiva === v.id ? 'bg-white text-verde-700 shadow-[0_1px_3px_rgb(0_40_80/0.15)]' : 'text-grafite hover:text-pino-900')}>
+                className={cx('relative inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold transition-colors duration-200',
+                  attiva === v.id ? 'text-verde-700' : 'text-grafite hover:text-pino-900')}>
           {v.icona && <v.icona className="size-4" aria-hidden="true" />}
           {v.label}
         </button>
@@ -406,9 +410,9 @@ export function Menu({ etichetta, icona: Icona, voci, allinea = 'destra', varian
               onClick={() => setAperto(a => !a)}>{etichetta}</Button>
       {aperto && (
         <div role="menu" aria-label={etichetta}
-             className={cx('absolute z-40 mt-2 w-64 origin-top animate-menu rounded-blocco border border-linea bg-white p-1.5 shadow-sollevato', allinea === 'destra' ? 'right-0' : 'left-0')}>
+             className={cx('menu-sequenza absolute z-40 mt-2 w-64 origin-top animate-menu rounded-blocco border border-linea bg-white p-1.5 shadow-sollevato', allinea === 'destra' ? 'right-0' : 'left-0')}>
           {voci.map((v, i) => (
-            <button key={i} role="menuitem" type="button" disabled={v.disabled}
+            <button key={i} role="menuitem" type="button" disabled={v.disabled} style={{ '--i': i }}
                     onClick={() => { setAperto(false); v.onClick?.() }}
                     className={cx('flex w-full items-center gap-2.5 rounded-campo px-3 py-2.5 text-left text-[15px] transition-colors disabled:opacity-50',
                       v.pericolo ? 'text-mattone-700 hover:bg-mattone-50 focus:bg-mattone-50' : 'text-pino-900 hover:bg-verde-50 focus:bg-verde-50')}>

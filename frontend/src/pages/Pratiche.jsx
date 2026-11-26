@@ -83,7 +83,7 @@ export default function Pratiche() {
   const pagine = Math.max(1, Math.ceil(totale / dimensione))
 
   return (
-    <div className="space-y-6">
+    <div className="in-sequenza space-y-6">
       <IntestazionePagina percorso={[{ label: gl('pratica', 'Nomi') }]}>
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">{gl('pratica', 'Nomi')}</h1>

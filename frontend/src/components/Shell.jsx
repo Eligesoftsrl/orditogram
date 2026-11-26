@@ -142,7 +142,7 @@ export default function Shell() {
         )}
 
         <main id="contenuto" tabIndex={-1} key={location.pathname}
-              className={location.pathname.startsWith('/studio/editor') ? 'outline-none' : 'mx-auto max-w-[1280px] px-4 pb-16 pt-7 outline-none sm:px-8'}>
+              className={location.pathname.startsWith('/studio/editor') ? 'outline-none' : 'mx-auto max-w-[1280px] animate-pagina px-4 pb-16 pt-7 outline-none sm:px-8'}>
           <Outlet />
         </main>
       </div>

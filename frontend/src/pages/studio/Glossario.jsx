@@ -44,7 +44,7 @@ export default function Glossario() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="in-sequenza space-y-6">
       <IntestazionePagina percorso={[{ label: 'Studio' }, { label: 'Glossario' }]}>
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Glossario</h1>

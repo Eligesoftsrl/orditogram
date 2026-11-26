@@ -22,7 +22,7 @@ export default function MiaOrganizzazione() {
 
   if (!lista) return errore ? <Errore>{errore}</Errore> : <Caricamento />
   return (
-    <div className="space-y-6">
+    <div className="in-sequenza space-y-6">
       <IntestazionePagina percorso={[{ label: 'La mia organizzazione' }]}>
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">La mia organizzazione</h1>

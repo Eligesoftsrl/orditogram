@@ -28,7 +28,7 @@ export default function FormStudio() {
   const alterna = (g) => setChiusi(s => { const n = new Set(s); n.has(g) ? n.delete(g) : n.add(g); return n })
 
   return (
-    <div className="space-y-6">
+    <div className="in-sequenza space-y-6">
       <IntestazionePagina percorso={[{ label: 'Studio' }, { label: 'Form' }]}>
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Form</h1>

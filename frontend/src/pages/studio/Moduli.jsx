@@ -34,7 +34,7 @@ export default function Moduli() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="in-sequenza space-y-6">
       <IntestazionePagina percorso={[{ label: 'Studio' }, { label: 'Moduli' }]}>
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Moduli</h1>

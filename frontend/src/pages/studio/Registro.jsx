@@ -39,7 +39,7 @@ function usePagine(carica, filtri) {
 export default function Registro() {
   const [scheda, setScheda] = useState('azioni')
   return (
-    <div className="space-y-6">
+    <div className="in-sequenza space-y-6">
       <IntestazionePagina percorso={[{ label: 'Studio' }, { label: 'Registro' }]}>
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Registro</h1>

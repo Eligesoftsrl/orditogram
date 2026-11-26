@@ -50,7 +50,7 @@ export default function AnagraficheStudio() {
   )
 
   return (
-    <div className="space-y-6">
+    <div className="in-sequenza space-y-6">
       <IntestazionePagina percorso={[{ label: 'Studio' }, { label: 'Anagrafiche' }]}>
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Anagrafiche</h1>
