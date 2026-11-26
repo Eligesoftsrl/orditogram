@@ -213,6 +213,8 @@ il riferimento in `riferimenti/`, la regola in `script/verifica.py` (stesso mess
   10) documentazione automatica del processo; 11) assistente IA per analisti.
 - **0.12** (novembre 2026): form avanzati (sezioni, campi condizionali, regole, tabelle di righe), processi richiamati,
   ruoli e permessi granulari, utenti esterni e referenti, anagrafiche configurabili, grafica "bento a colori".
+- **0.13** (26 novembre 2026): glossario e moduli di settore, profilo di produzione, versioni dei form, registro di
+  letture, accessi ed errori, test end-to-end con Playwright.
 
 ## Obiettivo: piattaforma enterprise
 
