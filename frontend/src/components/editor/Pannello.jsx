@@ -12,6 +12,7 @@ import { CALENDARI, componiTimer, descriviTimer, scomponiTimer, tipoBordo, UNITA
 import { api } from '../../api.js'
 import { aggiungiBordo, bordiDi, puoFallire } from './bordo.js'
 import { chiaveDaNome } from '../../lib/bpmn/orditogramModeler.js'
+import { useGlossario } from '../../lib/useGlossario.jsx'
 
 /**
  * Pannello guidato dell'editor: mostra e modifica le proprietà dell'elemento selezionato
@@ -393,7 +394,7 @@ function FragmentoRiga({ r, onDato, onPercorso, onBlur, onTogli }) {
   const errato = r.dato && !NOME_DATO.test(r.dato)
   return (
     <>
-      <input className={cx('campo h-9 font-mono text-sm', errato && 'border-mattone-600')} value={r.dato} placeholder="numeroProtocollo"
+      <input className={cx('campo h-9 font-mono text-sm', errato && 'border-mattone-600')} value={r.dato} placeholder="numeroRegistrazione"
              aria-label="Dato della pratica" onChange={e => onDato(e.target.value)} onBlur={onBlur} />
       <span className="text-grafite">=</span>
       <input className="campo h-9 font-mono text-sm" value={r.percorso} placeholder="numero" aria-label="Percorso nella risposta"
@@ -466,7 +467,7 @@ function EditorDestinatari({ valore, dati, onChange }) {
           )}
           {(tipo === 'utente' || tipo === 'email') && (
             <input className="campo h-9" value={v} onChange={e => setV(e.target.value)}
-                   placeholder={tipo === 'utente' ? 'Nome utente, es. laura' : 'ufficio@ente.it'}
+                   placeholder={tipo === 'utente' ? 'Nome utente, es. laura' : 'ufficio@esempio.it'}
                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); aggiungi() } }} />
           )}
           <button type="button" onClick={aggiungi}
@@ -539,6 +540,7 @@ function BottoneBordo({ icona: Icona, onClick, children }) {
 
 /** Evento agganciato al bordo: scadenza, sollecito o strada di errore. */
 function Bordo(ctx) {
+  const g = useGlossario()
   const { elemento, bo, modeling, onSeleziona } = ctx
   const tipo = tipoBordo(bo)
   const host = elemento.host
@@ -557,7 +559,7 @@ function Bordo(ctx) {
   return (
     <>
       <Sezione>
-        <Nome {...ctx} placeholder={tipo === 'errore' ? 'Es. Protocollo non disponibile' : 'Es. Termine di 30 giorni'} />
+        <Nome {...ctx} placeholder={tipo === 'errore' ? 'Es. Gestionale non disponibile' : 'Es. Termine di 30 giorni'} />
         {host && (
           <p className="text-[13px] text-grafite">
             Sul bordo di <button type="button" onClick={() => onSeleziona(host)} className="font-medium text-verde-700 hover:underline">{host.businessObject.name || 'attività senza nome'}</button>
@@ -584,7 +586,7 @@ function Bordo(ctx) {
           <Sezione titolo="Cosa succede quando arriva">
             <div className="space-y-2" role="radiogroup">
               <Opzione attiva={interrompente} onClick={() => modeling.updateProperties(elemento, { cancelActivity: true })} icona={Mail}
-                       titolo="Chiude l'attività" testo="Es. il cittadino rinuncia: l'attività si chiude e la pratica segue la freccia che parte da qui." />
+                       titolo="Chiude l'attività" testo={`Es. ${g('esterno', 'il')} rinuncia: l'attività si chiude e la pratica segue la freccia che parte da qui.`} />
               <Opzione attiva={!interrompente} onClick={() => modeling.updateProperties(elemento, { cancelActivity: false })} icona={BellRing}
                        titolo="Lascia l'attività aperta" testo="Es. arriva un documento in più: si avvisa qualcuno, l'attività resta da completare." />
             </div>
@@ -741,18 +743,19 @@ function AnteprimaTermine({ giorni, modo }) {
 }
 
 function Festivita() {
+  const g = useGlossario()
   const [aperto, setAperto] = useState(false)
   const [cal, setCal] = useState(null)
   useEffect(() => { if (aperto && !cal) api.calendario().then(setCal).catch(() => {}) }, [aperto, cal])
   const fmt = new Intl.DateTimeFormat('it-IT', { weekday: 'short', day: 'numeric', month: 'long' })
   return (
     <details className="mt-1" onToggle={e => setAperto(e.currentTarget.open)}>
-      <summary className="cursor-pointer font-medium text-verde-700">Giorni non lavorativi dell'ente</summary>
+      <summary className="cursor-pointer font-medium text-verde-700">Giorni non lavorativi {g('ente', 'del')}</summary>
       {cal && (
         <ul className="mt-1 space-y-0.5">
-          <li>Ogni {cal.giorniNonLavorativi.map(g => ({ SATURDAY: 'sabato', SUNDAY: 'domenica' }[g] || g.toLowerCase())).join(' e ')}</li>
+          <li>Ogni {cal.giorniNonLavorativi.map(d => ({ SATURDAY: 'sabato', SUNDAY: 'domenica' }[d] || d.toLowerCase())).join(' e ')}</li>
           {cal.festivita.map(f => <li key={f.data}>{fmt.format(new Date(f.data + 'T12:00:00'))}: {f.nome}</li>)}
-          <li className="pt-1 text-nebbia">Le festività dell'ente si aggiungono in application.yml (app.calendario.festivita).</li>
+          <li className="pt-1 text-nebbia">Le chiusure {g('ente', 'del')} si aggiungono in application.yml (app.calendario.festivita).</li>
         </ul>
       )}
     </details>
@@ -819,7 +822,7 @@ Content-Type: application/json
         </div>
         <div>
           <Etichetta htmlFor="msg-dati">Dati che porta (facoltativo)</Etichetta>
-          <TestoDifferito id="msg-dati" mono value={datiTesto} placeholder="esitoPagamento, notaCittadino" onCommit={impostaDati} />
+          <TestoDifferito id="msg-dati" mono value={datiTesto} placeholder="esitoPagamento, notaRichiedente" onCommit={impostaDati} />
           <p className="mt-1 text-[13px] text-grafite">Diventano dati della pratica: puoi usarli nei form, nei testi e nelle decisioni.</p>
         </div>
       </Sezione>

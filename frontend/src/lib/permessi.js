@@ -29,10 +29,12 @@ export const SEZIONI_STUDIO = [
   { chiave: 'strutture', to: '/studio/strutture', label: 'Strutture', permessi: [PERMESSI.utenti] },
   { chiave: 'organizzazioni', to: '/studio/organizzazioni', label: 'Organizzazioni', permessi: [PERMESSI.organizzazioni] },
   { chiave: 'integrazioni', to: '/studio/integrazioni', label: 'Integrazioni', permessi: [PERMESSI.integrazioni] },
-  { chiave: 'registro', to: '/studio/registro', label: 'Registro', permessi: [PERMESSI.registro] }
+  { chiave: 'registro', to: '/studio/registro', label: 'Registro', permessi: [PERMESSI.registro] },
+  // impostazioni dell'installazione: solo l'amministratore (regola generale di /api/admin/** nel backend)
+  { chiave: 'glossario', to: '/studio/glossario', label: 'Glossario', soloAdmin: true, permessi: [] }
 ]
 
-export const sezioniStudio = (me) => SEZIONI_STUDIO.filter(s => puo(me, ...s.permessi))
+export const sezioniStudio = (me) => SEZIONI_STUDIO.filter(s => s.soloAdmin ? !!me?.admin : puo(me, ...s.permessi))
 
 /** Come presentare l'utente sotto il nome: amministratore, i suoi ruoli o i suoi gruppi. */
 export function descriviUtente(me) {

@@ -30,6 +30,8 @@ import ProcessEditor from './pages/studio/ProcessEditor.jsx'
 import CambioPassword from './pages/CambioPassword.jsx'
 import MiaOrganizzazione from './pages/MiaOrganizzazione.jsx'
 import AnagraficheStudio from './pages/studio/Anagrafiche.jsx'
+import Glossario from './pages/studio/Glossario.jsx'
+import { GlossarioProvider } from './lib/useGlossario.jsx'
 import Anagrafiche from './pages/Anagrafiche.jsx'
 import SchedeAnagrafica from './pages/SchedeAnagrafica.jsx'
 import SchedaAnagrafica from './pages/SchedaAnagrafica.jsx'
@@ -68,6 +70,7 @@ function App() {
         {puo(me, PERMESSI.organizzazioni) && <Route path="studio/organizzazioni" element={<Organizzazioni />} />}
         {puo(me, PERMESSI.registro) && <Route path="studio/registro" element={<Registro />} />}
         {puo(me, PERMESSI.integrazioni) && <Route path="studio/integrazioni" element={<Integrazioni />} />}
+        {me.admin && <Route path="studio/glossario" element={<Glossario />} />}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
@@ -78,9 +81,11 @@ createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <HashRouter>
       <ToastProvider>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
+        <GlossarioProvider>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </GlossarioProvider>
       </ToastProvider>
     </HashRouter>
   </React.StrictMode>

@@ -41,6 +41,7 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
 | `auth`, `user` | utenti locali, OIDC (Keycloak, Entra ID), utente corrente |
 | `accesso` | ruoli e permessi applicativi (`Permesso`, `Ruolo`, `PermessiService`), regole anti-escalation, permessi per processo (`PermessoProcesso`: AVVIA, VEDE con ambito, ESPORTA), strutture (`Organizzazione` in albero), organizzazioni esterne, utenti esterni (`AccessoEsterni`: solo API del portale), parti della pratica (`PartiService`, `AscoltatoreParti`), referenti delle organizzazioni (`ReferentiService`, portale `/api/organizzazione`) |
 | `anagrafica` | anagrafiche configurabili: tipi definiti dall'analista (`DefinizioneAnagrafica`, formato dei form + chiave, cercabile, relazioni), schede con indice, versioni e cessazione, permessi per tipo (`AccessoAnagrafiche`, unico punto di controllo) |
+| `glossario` | parole dell'installazione per ente, ufficio e utenti esterni (`Termine`, `GlossarioService`); predefiniti della PA |
 | `registro` | registro delle azioni di amministrazione e accessi negati |
 | `api` | **API pubblica `/api/v1`** con chiavi, OpenAPI generata dai processi, Studio → Integrazioni |
 | `webhook` | avvisi firmati verso sistemi esterni: coda nel DB, invio con ripetizioni |
@@ -87,6 +88,10 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
   nessuno), `AccessoAnagrafiche.sistema(...)` dà al sistema VEDE/SCEGLIE (+MODIFICA con `anagrafiche:scrivi`) solo su
   quelli, mai ESPORTA né campi riservati; `SchedeService.controllaConcedibili` impedisce di dare più di quanto si vede.
   Campo con `creaScheda: true`: *Nuova scheda* in `CampoAnagrafica` (form annidato in un portale, `prefissoId`).
+- **Glossario**: mai scrivere "ente", "Ufficio", "cittadino" nei testi dell'interfaccia; usa
+  `const g = useGlossario()` e `g('ente', 'del')` → "dell'ente" / "dell'azienda" (forme in `lib/glossario.js`:
+  nome, nomi, il, i, del, dei, al, ai, dal, dai; con la maiuscola, es. `'Nome'`, la parola inizia maiuscola).
+  Nel backend `GlossarioService.singolare(Termine...)`. Un termine nuovo: enum `Termine` + `PREDEFINITO` in `lib/glossario.js`.
 - **Storico → eventi**: `StoricoService.registra` pubblica `EventoStorico`; i webhook lo ascoltano nella stessa transazione.
 
 ## Interfaccia

@@ -181,7 +181,7 @@ function DialogoChiave({ chiave, panoramica, onClose, onSalvata }) {
           <label className="block">
             <span className="etichetta">Nome del sistema</span>
             <input className="campo font-mono" value={nome} onChange={e => setNome(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
-                   placeholder="portale-cittadino" required autoFocus maxLength={60} />
+                   placeholder="portale-clienti" required autoFocus maxLength={60} />
             <span className="mt-1 block text-xs text-grafite">Minuscole, numeri e trattini. Compare nello storico delle pratiche.</span>
           </label>
         )}

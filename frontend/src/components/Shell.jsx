@@ -1,8 +1,9 @@
 import { api } from '../api.js'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { BookUser, Building2, Briefcase, Database, FolderOpen, Inbox, KeyRound, ListChecks, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Plug, Plus, ScrollText, ShieldCheck, Users, Workflow, X } from 'lucide-react'
+import { BookA, BookUser, Building2, Briefcase, Database, FolderOpen, Inbox, KeyRound, ListChecks, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Plug, Plus, ScrollText, ShieldCheck, Users, Workflow, X } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
+import { useInfo } from '../lib/useGlossario.jsx'
 import { cx } from '../lib/format.js'
 import { descriviUtente, sezioniStudio } from '../lib/permessi.js'
 import Logo from './Logo.jsx'
@@ -15,8 +16,7 @@ const AvvioContext = createContext(() => {})
 export const useAvvio = () => useContext(AvvioContext)
 
 export default function Shell() {
-  const [versione, setVersione] = useState(null)
-  useEffect(() => { api.info().then(setVersione).catch(() => {}) }, [])
+  const { info: versione } = useInfo()
   const { me, modo, logout } = useAuth()
   // la sezione Anagrafiche compare a chi vede almeno un tipo (il server decide; gli esterni ricevono 403)
   const [conAnagrafiche, setConAnagrafiche] = useState(false)
@@ -39,7 +39,7 @@ export default function Shell() {
     // il referente gestisce le persone della sua organizzazione
     ...(me.referenteDi?.length ? [{ to: '/organizzazione', label: 'La mia organizzazione', icona: Briefcase }] : [])
   ]
-  const icone = { processi: Workflow, form: ListChecks, anagrafiche: Database, utenti: Users, ruoli: ShieldCheck, strutture: Building2, organizzazioni: Briefcase, integrazioni: Plug, registro: ScrollText }
+  const icone = { processi: Workflow, form: ListChecks, anagrafiche: Database, utenti: Users, ruoli: ShieldCheck, strutture: Building2, organizzazioni: Briefcase, integrazioni: Plug, registro: ScrollText, glossario: BookA }
   const studio = sezioniStudio(me).map(s => ({ ...s, icona: icone[s.chiave] }))
 
   // `ridotta`: solo l'icona, con il nome come etichetta accessibile e suggerimento

@@ -181,7 +181,7 @@ public class AdminUserController {
         // il personale sta nelle strutture dell'ente, gli utenti esterni nelle organizzazioni esterne
         if (trovate.stream().anyMatch(o -> o.isEsterna() != esterno))
             throw bad(esterno ? "Un utente esterno può appartenere solo a organizzazioni esterne"
-                : "Un utente interno può appartenere solo a strutture dell'ente");
+                : "Un utente interno può appartenere solo a strutture interne");
         u.setOrganizzazioni(strutture);
         Set<String> groups = new HashSet<>();
         if (dto.groups() != null) dto.groups().stream()

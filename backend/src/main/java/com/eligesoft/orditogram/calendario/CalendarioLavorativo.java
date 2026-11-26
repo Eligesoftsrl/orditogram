@@ -59,7 +59,7 @@ public final class CalendarioLavorativo {
             String r = riga.trim();
             int sp = r.indexOf(' ');
             String data = sp < 0 ? r : r.substring(0, sp);
-            String nome = sp < 0 ? "Festività dell'ente" : r.substring(sp + 1).trim();
+            String nome = sp < 0 ? "Chiusura" : r.substring(sp + 1).trim();
             try {
                 if (data.length() == 5) ric.put(MonthDay.parse("--" + data), nome);
                 else dt.put(LocalDate.parse(data), nome);

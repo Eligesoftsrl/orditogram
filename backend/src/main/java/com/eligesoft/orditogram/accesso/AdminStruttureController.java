@@ -97,7 +97,7 @@ public class AdminStruttureController {
         o.setCodiceFiscale(cf.isEmpty() ? null : cf);
         if (dto.padreId() != null) {
             Organizzazione padre = trova(dto.padreId());
-            if (!Organizzazione.STRUTTURA.equals(padre.getTipo())) throw bad("La struttura sopra non è una struttura dell'ente");
+            if (!Organizzazione.STRUTTURA.equals(padre.getTipo())) throw bad("La struttura sopra non è una struttura interna");
             if (o.getId() != null && strutture.creaCiclo(o.getId(), padre.getId()))
                 throw bad("Una struttura non può stare sotto sé stessa o sotto una delle sue");
         }

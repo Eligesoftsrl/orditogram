@@ -5,6 +5,7 @@ import { cx } from '../../lib/format.js'
 import { codiceDa } from '../../lib/permessi.js'
 import { Badge, Button, Caricamento, Errore, Pannello, Vuoto, useToast } from '../../components/ui.jsx'
 import Gruppi from '../../components/Gruppi.jsx'
+import { useGlossario } from '../../lib/useGlossario.jsx'
 
 const VUOTO = { id: null, codice: '', nome: '', descrizione: '', permessi: [], gruppi: [], predefinito: false, bloccato: false }
 
@@ -13,6 +14,7 @@ const VUOTO = { id: null, codice: '', nome: '', descrizione: '', permessi: [], g
  * o a un gruppo, anche del provider di accesso dell'ente: chi è nel gruppo riceve il ruolo.
  */
 export default function Ruoli() {
+  const g = useGlossario()
   const uid = useId()
   const toast = useToast()
   const [lista, setLista] = useState(null)
@@ -58,7 +60,7 @@ export default function Ruoli() {
           <h1 className="text-[34px] font-semibold leading-tight">Ruoli</h1>
           <p className="mt-1 max-w-2xl text-grafite">
             Che cosa può fare chi lavora nello Studio e nell'amministrazione. Assegna un ruolo alle persone dalla pagina
-            Utenti, oppure a un gruppo: chi è nel gruppo lo riceve, anche se arriva dal sistema di accesso dell'ente.
+            Utenti, oppure a un gruppo: chi è nel gruppo lo riceve, anche se arriva dal sistema di accesso {g('ente', 'del')}.
           </p>
         </div>
         <Button variante="primario" icona={Plus} onClick={() => { setErrore(''); setEdit({ ...VUOTO }) }}>Nuovo ruolo</Button>

@@ -187,11 +187,11 @@ function DialogoWebhook({ webhook, panoramica, onClose, onSalvato }) {
         <div className="grid gap-4 sm:grid-cols-[1fr_2fr]">
           <label className="block">
             <span className="etichetta">Nome</span>
-            <input className="campo" value={nome} onChange={e => setNome(e.target.value)} placeholder="Gestionale protocollo" required maxLength={80} autoFocus={!webhook} />
+            <input className="campo" value={nome} onChange={e => setNome(e.target.value)} placeholder="Gestionale" required maxLength={80} autoFocus={!webhook} />
           </label>
           <label className="block">
             <span className="etichetta">Indirizzo</span>
-            <input className="campo font-mono text-[14px]" value={url} onChange={e => setUrl(e.target.value)} placeholder="https://gestionale.ente.it/orditogram/eventi" required />
+            <input className="campo font-mono text-[14px]" value={url} onChange={e => setUrl(e.target.value)} placeholder="https://gestionale.esempio.it/orditogram/eventi" required />
             {panoramica.ricevitoreProva && (
               <button type="button" onClick={() => setUrl(panoramica.ricevitoreProva)} className="mt-1 text-xs font-medium text-verde-700 hover:underline">
                 Usa il ricevitore di prova di Orditogram

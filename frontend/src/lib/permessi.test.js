@@ -16,7 +16,11 @@ describe('permessi', () => {
   it('lo Studio mostra solo le sezioni permesse', () => {
     expect(sezioniStudio(analista).map(s => s.chiave)).toEqual(['processi', 'form'])
     expect(sezioniStudio(operatore)).toEqual([])
-    expect(sezioniStudio(admin).map(s => s.chiave)).toEqual(['processi', 'form', 'utenti', 'ruoli', 'strutture', 'integrazioni', 'registro'])
+    expect(sezioniStudio(admin).map(s => s.chiave)).toEqual(['processi', 'form', 'utenti', 'ruoli', 'strutture', 'integrazioni', 'registro', 'glossario'])
+  })
+
+  it('il glossario è solo per l\'amministratore, anche con tutti gli altri permessi', () => {
+    expect(sezioniStudio({ ...admin, admin: false }).map(s => s.chiave)).not.toContain('glossario')
   })
 
   it("descrive l'utente con ruoli o gruppi", () => {

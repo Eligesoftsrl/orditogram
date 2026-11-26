@@ -32,10 +32,13 @@ public class DocumentoService {
     private final StoricoService storico;
     private final CurrentUserService currentUser;
     private final ObjectMapper mapper;
+    private final com.eligesoft.orditogram.glossario.GlossarioService glossario;
 
     public DocumentoService(DocumentoRepository documenti, DocumentoVersioneRepository versioni,
                             ArchivioDocumenti storage, FirmaService firme, StoricoService storico,
-                            CurrentUserService currentUser, ObjectMapper mapper) {
+                            CurrentUserService currentUser, ObjectMapper mapper,
+                            com.eligesoft.orditogram.glossario.GlossarioService glossario) {
+        this.glossario = glossario;
         this.documenti = documenti;
         this.versioni = versioni;
         this.storage = storage;
@@ -144,6 +147,7 @@ public class DocumentoService {
     /** I documenti della pratica; soloParti: solo quelli visibili agli utenti esterni. */
     @Transactional(readOnly = true)
     public List<Map<String, Object>> elenco(String processInstanceId, boolean soloParti) {
+        String ufficio = soloParti ? glossario.singolare(com.eligesoft.orditogram.glossario.Termine.UFFICIO) : null;
         List<Map<String, Object>> out = new ArrayList<>();
         for (Documento d : documenti.findByProcessInstanceIdOrderByIdAsc(processInstanceId)) {
             if (soloParti && !d.visibileAlleParti()) continue;
@@ -154,8 +158,8 @@ public class DocumentoService {
             m.put("versioneCorrente", d.getVersioneCorrente());
             m.put("versioni", d.getVersioni().stream().map(v -> {
                 Map<String, Object> x = toMap(v);
-                // per gli utenti esterni chi del personale ha caricato la versione resta "Ufficio", come nello storico
-                if (soloParti && !Objects.equals(currentUser.username(), v.getCaricatoDa())) x.put("caricatoDa", "Ufficio");
+                // per gli utenti esterni chi del personale ha caricato la versione resta "Ufficio" (glossario), come nello storico
+                if (soloParti && !Objects.equals(currentUser.username(), v.getCaricatoDa())) x.put("caricatoDa", ufficio);
                 return x;
             }).toList());
             out.add(m);

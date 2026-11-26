@@ -4,6 +4,7 @@ import { api } from '../../api.js'
 import { cx } from '../../lib/format.js'
 import { alberoStrutture, codiceDa } from '../../lib/permessi.js'
 import { Badge, Button, Caricamento, Errore, Pannello, Vuoto, useToast } from '../../components/ui.jsx'
+import { useGlossario } from '../../lib/useGlossario.jsx'
 
 const VUOTA = { id: null, codice: '', nome: '', codiceFiscale: '', padreId: null, attiva: true }
 
@@ -13,6 +14,7 @@ const VUOTA = { id: null, codice: '', nome: '', codiceFiscale: '', padreId: null
  * "della propria struttura" e "anche di quelle sotto" seguono questo albero.
  */
 export default function Strutture() {
+  const g = useGlossario()
   const uid = useId()
   const toast = useToast()
   const [lista, setLista] = useState(null)
@@ -61,7 +63,7 @@ export default function Strutture() {
         <div>
           <h1 className="text-[34px] font-semibold leading-tight">Strutture</h1>
           <p className="mt-1 max-w-2xl text-grafite">
-            Gli uffici dell'ente, uno dentro l'altro. Servono a dire chi vede le pratiche della propria struttura
+            Gli uffici {g('ente', 'del')}, uno dentro l'altro. Servono a dire chi vede le pratiche della propria struttura
             (o anche di quelle sotto) nell'accesso di un processo.
           </p>
         </div>
@@ -98,7 +100,7 @@ export default function Strutture() {
                 <div>
                   <label className="etichetta" htmlFor={`${uid}-n`}>Nome *</label>
                   <input id={`${uid}-n`} className="campo" required value={edit.nome} onChange={e => set('nome', e.target.value)}
-                         placeholder="Es. Ufficio protocollo" />
+                         placeholder="Es. Amministrazione" />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>

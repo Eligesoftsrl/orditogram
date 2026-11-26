@@ -23,6 +23,7 @@ const perTipo = (tipo, f = {}) => ({
   ...(tipo === 'tabella' ? { colonne: f.colonne?.length ? f.colonne : [colonnaIniziale()], titolo: undefined } : {})
 })
 import { Badge, Button, Caricamento, Errore, Pannello, Vuoto, useToast } from './ui.jsx'
+import { useGlossario } from '../lib/useGlossario.jsx'
 
 const TIPI = [
   { id: 'text', label: 'Testo', icona: Type },
@@ -335,6 +336,7 @@ function pulisci(form) {
 }
 
 function CampoEditor({ f, i, n, catalogo, campi, modo, tipiAnagrafica, onChange, onSu, onGiu, onTogli, onDuplica }) {
+  const g = useGlossario()
   const uid = useId()
   const [aperto, setAperto] = useState(!!f._aperto)
   if (eSezione(f)) return <SezioneEditor {...{ f, i, n, onChange, onSu, onGiu, onTogli, aperto, setAperto }} />
@@ -456,7 +458,7 @@ function CampoEditor({ f, i, n, catalogo, campi, modo, tipiAnagrafica, onChange,
             <p className="text-[13px] font-medium text-pino-900">{modo === 'anagrafica' ? 'Chi vede questo dato nella scheda' : 'Chi vede questo dato nella pratica'}</p>
             {modo === 'form' && f.type !== 'anagrafica' && (
               <Spunta checked={!!f.visibileAlleParti} onChange={v => onChange({ visibileAlleParti: v || undefined })}>
-                Anche le parti esterne (cittadini, organizzazioni)
+                Anche le parti esterne ({g('esterno', 'nomi')}, organizzazioni)
               </Spunta>
             )}
             <div>
