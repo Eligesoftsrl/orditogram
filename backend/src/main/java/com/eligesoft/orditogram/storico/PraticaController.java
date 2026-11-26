@@ -250,7 +250,7 @@ public class PraticaController {
         return out;
     }
 
-    /** Diagramma con step attivi (in corso) e step già percorsi. */
+    /** Diagramma con step attivi (in corso) e step già percorsi, nell'ordine in cui sono iniziati. */
     @GetMapping("/{pi}/diagramma")
     public Map<String, Object> diagramma(@PathVariable String pi) {
         access.checkView(pi);
@@ -260,7 +260,7 @@ public class PraticaController {
         List<String> attivi = h.getEndTime() == null ? runtimeService.getActiveActivityIds(pi) : List.of();
         Set<String> percorsi = new LinkedHashSet<>();
         for (HistoricActivityInstance a : historyService.createHistoricActivityInstanceQuery()
-                .processInstanceId(pi).finished().list()) {
+                .processInstanceId(pi).finished().orderByHistoricActivityInstanceStartTime().asc().list()) {
             percorsi.add(a.getActivityId());
         }
         return Map.of("xml", bpmn.xml(h.getProcessDefinitionId()), "activeIds", attivi,
