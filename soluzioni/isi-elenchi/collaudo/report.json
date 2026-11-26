@@ -6,7 +6,7 @@
       "descrizione": "Anteprima calcolata sulle domande inviate allo sportello nel collaudo di isiDomanda, poi pubblicata.",
       "esito": "superato",
       "errore": null,
-      "pratica": "fb9feb86-e9b5-11f1-a473-02fc00000001",
+      "pratica": "619c699f-e9bc-11f1-9114-02fc00000001",
       "secondi": 0.6,
       "passi": [
         {
@@ -35,8 +35,8 @@
       "descrizione": "",
       "esito": "superato",
       "errore": null,
-      "pratica": "fbf53798-e9b5-11f1-a473-02fc00000001",
-      "secondi": 0.4,
+      "pratica": "61f9a4f1-e9bc-11f1-9114-02fc00000001",
+      "secondi": 0.5,
       "passi": [
         {
           "passo": "collaudo-direzione-isi avvia la pratica \"NCD\"",
@@ -59,7 +59,7 @@
       "descrizione": "",
       "esito": "superato",
       "errore": null,
-      "pratica": "fc479d79-e9b5-11f1-a473-02fc00000001",
+      "pratica": "62595142-e9bc-11f1-9114-02fc00000001",
       "secondi": 0.5,
       "passi": [
         {
@@ -78,8 +78,8 @@
       "descrizione": "",
       "esito": "superato",
       "errore": null,
-      "pratica": "fc8e6a8f-e9b5-11f1-a473-02fc00000001",
-      "secondi": 0.7,
+      "pratica": "62a65fe8-e9bc-11f1-9114-02fc00000001",
+      "secondi": 0.8,
       "passi": [
         {
           "passo": "collaudo-direzione-isi avvia la pratica \"DEFINITIVO\"",

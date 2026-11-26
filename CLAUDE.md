@@ -170,6 +170,7 @@ laura, paolo, chiara, giulia: password `password`.
 - Nomi di classi, metodi, variabili, messaggi e commenti **in italiano**; termini tecnici standard restano in inglese.
 - Testi dell'interfaccia brevi e concreti, rivolti a persone non tecniche (operatori, analisti).
 - Ogni nuova funzione: test (JUnit 5 nel backend, Vitest nel frontend), voce nel `CHANGELOG.md`, sezione nel `README.md`.
+- Codice delle soluzioni dei clienti (`soluzioni/`, livello 2): solo **Java 21 e Spring Boot** alla versione del backend, Maven Wrapper, JUnit 5, Flyway; mai Python, Node o altri runtime (regole in `.claude/skills/orditogram-soluzione/riferimenti/servizio-soluzione.md`).
 - Le azioni di amministrazione vanno nel registro (`RegistroService.registra`). Un endpoint nuovo che apre una
   pratica, un documento o una scheda ha `@RegistraLettura(value, oggetto)`. Gli errori imprevisti non mostrano
   dettagli: passano da `RegistroErrori.registra` e la risposta porta solo il codice.

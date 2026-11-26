@@ -30,6 +30,7 @@ Lingua: italiano, in tutto (nomi, etichette, testi, documenti). Testi per person
   anagrafiche/<codice>.json   se servono
   permessi.json               chi avvia, vede, esporta (viaggia nel pacchetto)
   permessi-anagrafiche.json   chi vede, modifica, sceglie le schede (si applica con installa.py)
+  servizio-<nome>/            solo se serve codice del cliente: Spring Boot (riferimenti/servizio-soluzione.md)
   collaudo/scenari.json  collaudo/checklist.md  collaudo/report.md
   documentazione/             fase 7
   <chiave>.orditogram.zip     il pacchetto
@@ -37,7 +38,8 @@ Lingua: italiano, in tutto (nomi, etichette, testi, documenti). Testi per person
 
 Leggi il riferimento giusto prima di scrivere ogni artefatto: `riferimenti/bpmn.md`, `riferimenti/form.md`,
 `riferimenti/anagrafiche-e-accessi.md`, `riferimenti/collaudo.md`, `riferimenti/documentazione.md`,
-`riferimenti/interfaccia.md` (nomi delle parti dell'interfaccia e regole per le schermate dei manuali).
+`riferimenti/interfaccia.md` (nomi delle parti dell'interfaccia e regole per le schermate dei manuali),
+`riferimenti/servizio-soluzione.md` (codice del cliente, solo Java e Spring Boot).
 Un esempio completo e collaudato è in `esempio/` (specifica di partenza compresa): imitane la forma.
 
 ## Fase 1. Capire e verificare le specifiche
@@ -71,6 +73,12 @@ Se arriva un BPMN dell'analista: tienine id, nomi e disegno; correggi solo ciò 
   ogni opzione dei `select` scritta esattamente come nelle condizioni.
 - **Anagrafiche e permessi** (`riferimenti/anagrafiche-e-accessi.md`): solo se la specifica ha soggetti ricorrenti
   o regole di visibilità. Ricordati SCEGLIE per chi compila i form con campi anagrafica.
+- **Codice del cliente** (`riferimenti/servizio-soluzione.md`): solo quando la configurazione non basta (calcoli,
+  registri, regole del dominio), come servizio chiamato dai connettori `apiConnector`. **Sempre Java 21 e Spring
+  Boot alla stessa versione di Orditogram, Maven Wrapper, JUnit 5, Flyway**: è quello che il cliente sa installare
+  e mantenere. Mai Python, Node, Go o altri runtime nel codice consegnato, nemmeno per un prototipo (gli script
+  della skill sono strumenti dell'analista e non si consegnano). Le regole che cambiano ogni anno stanno in file
+  JSON fuori dal codice.
 
 ## Fase 3. Verifica statica (ripeti finché non ci sono errori)
 

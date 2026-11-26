@@ -10,7 +10,7 @@ Ogni requisito è stato messo al livello più basso che lo realizza davvero:
 
 1. **Configurazione** (Studio): BPMN, form, permessi, termini, email. Nessun codice.
 2. **Soluzione del cliente**: codice che vale solo per ISI, consegnato con la soluzione e chiamato dai connettori
-   (`motore/`, il *servizio ISI*). Non entra in Orditogram.
+   (`servizio-isi/`, il *servizio ISI*: Java 21 e Spring Boot 3.5 come Orditogram). Non entra in Orditogram.
 3. **Modulo**: funzione di settore accendibile, riusabile da altri clienti (oggi `italia`, `firma-digitale`, `pa`).
 4. **Nucleo**: Orditogram stesso. Qui **non è stato toccato niente**: le richieste sono elencate sotto.
 
@@ -21,8 +21,8 @@ Ogni requisito è stato messo al livello più basso che lo realizza davvero:
 | Comunicazioni PEC (ricevuta, decadenza, integrazione, preavviso, provvedimento) | 1 | `emailConnector` verso `campo:pec`; senza server di posta restano "non inviate" nello storico (il mock di RF-73) |
 | Firma digitale dei documenti caricati | 1 + 3 | verifica delle firme di Orditogram (modulo `firma-digitale`) |
 | Registro di audit (RF-59) | 1 | registro di Orditogram: letture, azioni, accessi, storico della pratica |
-| Punteggio, importi, assi ammessi, errori bloccanti, documenti richiesti (cap. 9) | 2 | `motore/calcolo.py`, modulo puro con il dettaglio e il codice regola di ogni valore (RNF-ARC-02) |
-| Tabelle del capitolo 9 per annualità (soglie, punteggi, ATECO, stanziamenti, calendario) | 2 | `motore/configurazione/2025.json`: dati, mai codice; la versione delle regole finisce nella fotografia |
+| Punteggio, importi, assi ammessi, errori bloccanti, documenti richiesti (cap. 9) | 2 | `servizio-isi/…/Calcolo.java`, classe pura con il dettaglio e il codice regola di ogni valore (RNF-ARC-02) |
+| Tabelle del capitolo 9 per annualità (soglie, punteggi, ATECO, stanziamenti, calendario) | 2 | `servizio-isi/configurazione/2025.json`: dati, mai codice; la versione delle regole finisce nella fotografia |
 | Una sola domanda per impresa e annualità, garantita dal database (RF-05) | 2 | `UNIQUE (impresa, annualita)` nel registro del servizio ISI; provato anche con 8 registrazioni in contemporanea |
 | Fotografia immutabile alla registrazione con hash e versione delle regole (RF-20 CA-04) | 2 | tabella `domanda` del servizio ISI |
 | Codice identificativo, ora di arrivo dal server al millisecondo, codice usato una volta (RF-21, RF-25) | 2 | `/codice`, `/sportello` |

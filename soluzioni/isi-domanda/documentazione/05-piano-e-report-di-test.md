@@ -4,7 +4,7 @@
 
 | Livello | Strumento | Cosa prova |
 |---|---|---|
-| Regole del bando | `motore/test_calcolo.py`, `motore/test_servizio.py` (37 test) | casi del capitolo 11 della specifica (TC-01 … TC-24): punteggio, importi, massimali, assi ammessi, errori bloccanti, unicità, codice, sportello, elenchi, termini dell'istruttoria |
+| Regole del bando | `servizio-isi/src/test` (JUnit 5, 37 test: `CalcoloTest`, `RegistroTest`, `ServizioHttpTest`) | casi del capitolo 11 della specifica (TC-01 … TC-24): punteggio, importi, massimali, assi ammessi, errori bloccanti, unicità, codice, sportello, elenchi, termini dell'istruttoria |
 | Verifica statica | `verifica.py` della skill (stesse regole della pubblicazione) | BPMN, form, permessi di `isiDomanda` e `isiElenchi` |
 | Collaudo automatico | `collaudo.py` della skill, sulle API di un Orditogram avviato | 16 scenari della domanda e 4 degli elenchi, con il servizio ISI vero |
 | Collaudo manuale | [`../collaudo/checklist.md`](../collaudo/checklist.md) | le schermate, gli allegati, la consegna degli esiti dal servizio |
@@ -12,7 +12,7 @@
 
 ## 2. Ambiente
 
-Orditogram 0.13.0 (jar) su PostgreSQL 16, 26 novembre 2026. Servizio ISI sulla stessa macchina (porta 8095) con
+Orditogram 0.13.0 (jar) su PostgreSQL 16, 26 novembre 2026. Servizio ISI (jar Spring Boot) sulla stessa macchina (porta 8095) con
 `ISI_CALENDARIO_LIBERO=1`, `ISI_CALENDARIO_FILE=dati-prova/calendario-collaudo.json` (fasi nel 2027, così i timer
 non scattano da soli) e un database nuovo a ogni collaudo. Credenziale `servizio-isi` di tipo bearer. Utenti di prova
 di Orditogram e utenti creati dal collaudo: marco (impresa), elena (tecnico, studio come organizzazione esterna),
@@ -50,7 +50,7 @@ operatori di `sede-toscana`, `sede-campania`, `sede-lombardia`, `supporto-isi`, 
 
 ## 4. Esito
 
-- **Test delle regole**: 37 su 37 superati.
+- **Test delle regole**: 37 su 37 superati (`./mvnw verify` in `servizio-isi/`).
 - **Verifica statica**: 0 errori per entrambi i processi. Avvisi: la notifica a un gruppo (`direzione-isi`), voluta;
   sul server di verifica la credenziale `servizio-isi` non era configurata, avviso che sparisce quando la si configura.
 - **Collaudo della domanda**: **16 scenari su 16 superati**, copertura 92 passi su 97. Dettaglio passo per passo in

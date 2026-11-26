@@ -9,10 +9,11 @@ la MAGGIORE quando un aggiornamento richiede interventi (indicati qui sotto).
 - `soluzioni/isi-domanda` e `soluzioni/isi-elenchi`, costruite con la skill `orditogram-soluzione` dalla specifica
   `Requisiti_ISI_Domanda_v1`: domanda di finanziamento (compilazione, registrazione, codice e sportello, documenti e
   perizia del tecnico, istruttoria della sede) ed elenchi cronologici. Il calcolo del bando è un servizio della
-  soluzione (`motore/`, Python, 37 test), chiamato dai connettori API. Collaudo: 16 scenari su 16 e 4 su 4.
+  soluzione (`servizio-isi/`, Java 21 e Spring Boot 3.5, 37 test JUnit), chiamato dai connettori API. Collaudo: 16 scenari su 16 e 4 su 4.
 - Richieste di sviluppo per il nucleo emerse dal caso (N1-N15) in `soluzioni/isi-domanda/analisi.md`.
 - Skill: nel collaudo `@dato:<nome>` riusa nei dati di un'attività un valore della pratica (es. il codice rilasciato);
-  tre errori frequenti in più (riunione parallela, caselle booleane, date nei connettori).
+  tre errori frequenti in più (riunione parallela, caselle booleane, date nei connettori);
+  il codice consegnato al cliente è sempre Java e Spring Boot, mai Python o altri runtime.
 
 ## 0.13.0 (26 novembre 2026)
 

@@ -1,8 +1,9 @@
 # Checklist di collaudo per l'analista: Bando ISI
 
 Il collaudo automatico (`report.md`) ha provato il motore e le regole passando dalle API. Qui si prova quello che
-vede una persona. Preparazione: Orditogram avviato con gli utenti di prova, servizio ISI avviato con
-`ISI_CALENDARIO_LIBERO=1 ISI_CALENDARIO_FILE=dati-prova/calendario-collaudo.json` e un database nuovo, pacchetti
+vede una persona. Preparazione: Orditogram avviato con gli utenti di prova, servizio ISI avviato
+(`java -jar target/servizio-isi.jar` in `servizio-isi/`) con `ISI_CALENDARIO_LIBERO=1 ISI_CALENDARIO_FILE=dati-prova/calendario-collaudo.json`
+e un database nuovo, pacchetti
 importati, credenziale `servizio-isi` configurata, utenti dei gruppi `sede-toscana`, `supporto-isi`, `direzione-isi`.
 
 | # | Entra come | Fai | Devi vedere | ✓ |

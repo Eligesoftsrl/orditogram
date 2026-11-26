@@ -1,15 +1,15 @@
 # Report di collaudo: Bando ISI: elenchi cronologici
 
-Eseguito il 26/11/2026 alle 16:25 su http://localhost:8080.
+Eseguito il 26/11/2026 alle 17:11 su http://localhost:8080.
 
 **4 scenari su 4 superati.** Copertura del diagramma: 10 passi su 10.
 
 | Scenario | Esito | Durata | Pratica |
 |---|---|---|---|
-| Elenco provvisorio pubblicato | ✅ superato | 0.6 s | `fb9feb86-e9b5-11f1-a473-02fc00000001` |
-| Elenco NCD non pubblicato | ✅ superato | 0.4 s | `fbf53798-e9b5-11f1-a473-02fc00000001` |
-| Servizio ISI non disponibile | ✅ superato | 0.5 s | `fc479d79-e9b5-11f1-a473-02fc00000001` |
-| Pubblicazione non riuscita | ✅ superato | 0.7 s | `fc8e6a8f-e9b5-11f1-a473-02fc00000001` |
+| Elenco provvisorio pubblicato | ✅ superato | 0.6 s | `619c699f-e9bc-11f1-9114-02fc00000001` |
+| Elenco NCD non pubblicato | ✅ superato | 0.5 s | `61f9a4f1-e9bc-11f1-9114-02fc00000001` |
+| Servizio ISI non disponibile | ✅ superato | 0.5 s | `62595142-e9bc-11f1-9114-02fc00000001` |
+| Pubblicazione non riuscita | ✅ superato | 0.8 s | `62a65fe8-e9bc-11f1-9114-02fc00000001` |
 
 ## Elenco provvisorio pubblicato
 

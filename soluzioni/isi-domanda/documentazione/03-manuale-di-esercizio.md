@@ -3,35 +3,49 @@
 ## 1. Cosa si installa
 
 1. **Orditogram 0.13** (vedi il README di Orditogram: Docker o Java 21 + PostgreSQL).
-2. **Servizio ISI** (`motore/`): Python 3.11 o successivo, solo libreria standard, un file SQLite per i registri.
+2. **Servizio ISI** (`servizio-isi/`): un'applicazione Spring Boot 3.5 su Java 21, come Orditogram. Si costruisce
+   con `./mvnw verify` (compila e fa girare i 37 test) e si avvia come un jar. I registri del bando stanno in
+   PostgreSQL (lo stesso server di Orditogram, con un database suo); lo schema lo crea Flyway al primo avvio.
 3. I pacchetti `isiDomanda.orditogram.zip` e `isiElenchi.orditogram.zip`.
 
 ## 2. Servizio ISI
 
 ```bash
-cd motore
+cd servizio-isi
+./mvnw -B verify                       # target/servizio-isi.jar
+psql postgres -c "CREATE USER isi WITH PASSWORD '<password>';"
+psql postgres -c "CREATE DATABASE isi OWNER isi;"
+
 ISI_TOKEN=<segreto lungo> \
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost/isi SPRING_DATASOURCE_USERNAME=isi SPRING_DATASOURCE_PASSWORD=<password> \
 ORDITOGRAM_URL=https://orditogram.ente.it ORDITOGRAM_CHIAVE=<chiave API con messaggi:invia> \
-python3 servizio.py --porta 8095 --db /var/lib/isi/isi.sqlite --annualita 2025
+java -jar target/servizio-isi.jar
 ```
+
+Va avviato dalla cartella `servizio-isi/` (legge `configurazione/` e `dati-prova/` da lì) oppure con
+`ISI_CONFIGURAZIONE` e `ISI_DATI_PROVA` che puntano alle cartelle. Come servizio di sistema si usa un'unità
+systemd con le stesse variabili.
 
 | Variabile | A cosa serve |
 |---|---|
 | `ISI_TOKEN` | segreto che Orditogram manda come `Authorization: Bearer`; senza, il servizio risponde a chiunque (solo sviluppo) |
+| `SPRING_DATASOURCE_URL`, `_USERNAME`, `_PASSWORD` | database dei registri; senza, un file H2 in `dati/` (solo sviluppo e collaudo) |
 | `ORDITOGRAM_URL`, `ORDITOGRAM_CHIAVE` | per avvisare le pratiche dell'esito degli elenchi (messaggio `esitoElenco`); la chiave API va creata in Studio → Integrazioni con l'ambito `messaggi:invia` |
-| `ISI_ANNUALITA` | annualità delle regole (`configurazione/<anno>.json`) |
+| `ISI_ANNUALITA` | annualità delle regole (`configurazione/<anno>.json`), predefinita 2025 |
+| `ISI_PORTA`, `ISI_INDIRIZZO` | porta (8095) e indirizzo di ascolto (127.0.0.1) |
 | `ISI_CALENDARIO_LIBERO=1` | **solo collaudo**: lo sportello accetta invii a qualsiasi ora |
 | `ISI_CALENDARIO_FILE` | **solo collaudo**: un calendario con date diverse da quelle dell'annualità |
 
-Il servizio ascolta solo su `127.0.0.1`: va sulla stessa macchina di Orditogram o dietro un proxy HTTPS. Il file
-SQLite va nel backup insieme al database di Orditogram. I log sono una riga JSON per richiesta.
+Il servizio ascolta solo su `127.0.0.1`: va sulla stessa macchina di Orditogram o dietro un proxy HTTPS. Il
+database dei registri va nel backup insieme a quello di Orditogram. I log hanno una riga JSON per richiesta
+(logger `richieste`); gli errori imprevisti rispondono con il solo codice `E-…`, il dettaglio è nel log.
 
 ### Regole dell'annualità
-Tutte le tabelle del capitolo 9 sono in `motore/configurazione/2025.json`: soglie e parametri, assi, fasce di
+Tutte le tabelle del capitolo 9 sono in `servizio-isi/configurazione/2025.json`: soglie e parametri, assi, fasce di
 dimensione e tasso, tipologie, misure e fattori dell'Asse 5, ATECO dell'Asse 4, bonus regionali, macrosettori e
 valore parametrico dell'Asse 1.2, dichiarazioni, documenti, stanziamenti per Regione e Asse, sedi per Regione,
 calendario, festività. Per una nuova annualità copia il file (`2026.json`), cambia `annualita` e `versioneRegole`, e
-avvia il servizio con `--annualita 2026`. Dopo l'apertura della compilazione una correzione va fatta cambiando
+avvia il servizio con `ISI_ANNUALITA=2026`. Dopo l'apertura della compilazione una correzione va fatta cambiando
 `versioneRegole`: le domande registrate tengono la versione della loro fotografia.
 
 ## 3. Orditogram

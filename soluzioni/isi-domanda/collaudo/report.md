@@ -1,27 +1,27 @@
 # Report di collaudo: Bando ISI: domanda di finanziamento
 
-Eseguito il 26/11/2026 alle 16:25 su http://localhost:8080.
+Eseguito il 26/11/2026 alle 17:11 su http://localhost:8080.
 
 **16 scenari su 16 superati.** Copertura del diagramma: 92 passi su 97.
 
 | Scenario | Esito | Durata | Pratica |
 |---|---|---|---|
-| Asse 2 in posizione utile e ammessa (TC-01) | ✅ superato | 12.8 s | `6ff8e176-e9b5-11f1-a473-02fc00000001` |
-| Sotto soglia, poi bozza annullata (TC-02) | ✅ superato | 1.0 s | `77a2b42d-e9b5-11f1-a473-02fc00000001` |
-| Seconda domanda della stessa impresa (TC-19) e chiusura della compilazione | ✅ superato | 7.2 s | `783270f5-e9b5-11f1-a473-02fc00000001` |
-| Asse 1.2 subentrata, decaduta, revoca accolta, integrazione e preavviso (TC-05) | ✅ superato | 22.1 s | `7c80bc71-e9b5-11f1-a473-02fc00000001` |
-| Asse 4 fuori dai fondi e senza subentro (TC-13) | ✅ superato | 9.0 s | `89a94471-e9b5-11f1-a473-02fc00000001` |
-| NCD, tecnico non ammesso, revoca respinta | ✅ superato | 9.2 s | `8f08d958-e9b5-11f1-a473-02fc00000001` |
-| Istanza di revoca non presentata | ✅ superato | 29.7 s | `947da331-e9b5-11f1-a473-02fc00000001` |
-| Codice non acquisito nei termini | ✅ superato | 19.7 s | `a62ceb36-e9b5-11f1-a473-02fc00000001` |
-| Codice sbagliato, poi sportello chiuso (TC-21) | ✅ superato | 19.9 s | `b1eae685-e9b5-11f1-a473-02fc00000001` |
-| Elenchi mai pubblicati | ✅ superato | 20.2 s | `bdcd3279-e9b5-11f1-a473-02fc00000001` |
-| Respinta, con termini scaduti e avvisi dell'istruttoria | ✅ superato | 50.7 s | `c9d49340-e9b5-11f1-a473-02fc00000001` |
-| Rinuncia durante l'istruttoria | ✅ superato | 11.6 s | `e80bb5fc-e9b5-11f1-a473-02fc00000001` |
-| Rinuncia prima dello sportello | ✅ superato | 8.4 s | `eefa4fa0-e9b5-11f1-a473-02fc00000001` |
-| Rinuncia durante il caricamento dei documenti | ✅ superato | 10.7 s | `f40003ae-e9b5-11f1-a473-02fc00000001` |
-| Anagrafica INAIL non disponibile | ✅ superato | 0.9 s | `fa6bb136-e9b5-11f1-a473-02fc00000001` |
-| Servizio di calcolo non disponibile | ✅ superato | 1.1 s | `faee9d14-e9b5-11f1-a473-02fc00000001` |
+| Asse 2 in posizione utile e ammessa (TC-01) | ✅ superato | 12.7 s | `d6e035bf-e9bb-11f1-9114-02fc00000001` |
+| Sotto soglia, poi bozza annullata (TC-02) | ✅ superato | 1.3 s | `de7239b6-e9bb-11f1-9114-02fc00000001` |
+| Seconda domanda della stessa impresa (TC-19) e chiusura della compilazione | ✅ superato | 5.4 s | `df327d5e-e9bb-11f1-9114-02fc00000001` |
+| Asse 1.2 subentrata, decaduta, revoca accolta, integrazione e preavviso (TC-05) | ✅ superato | 22.3 s | `e26f7fea-e9bb-11f1-9114-02fc00000001` |
+| Asse 4 fuori dai fondi e senza subentro (TC-13) | ✅ superato | 8.7 s | `efbad12a-e9bb-11f1-9114-02fc00000001` |
+| NCD, tecnico non ammesso, revoca respinta | ✅ superato | 9.4 s | `f4e6d2f1-e9bb-11f1-9114-02fc00000001` |
+| Istanza di revoca non presentata | ✅ superato | 29.1 s | `fa7b0baa-e9bb-11f1-9114-02fc00000001` |
+| Codice non acquisito nei termini | ✅ superato | 20.7 s | `0bdad41f-e9bc-11f1-9114-02fc00000001` |
+| Codice sbagliato, poi sportello chiuso (TC-21) | ✅ superato | 19.4 s | `182b727e-e9bc-11f1-9114-02fc00000001` |
+| Elenchi mai pubblicati | ✅ superato | 20.4 s | `23be66f2-e9bc-11f1-9114-02fc00000001` |
+| Respinta, con termini scaduti e avvisi dell'istruttoria | ✅ superato | 50.5 s | `2fe18c19-e9bc-11f1-9114-02fc00000001` |
+| Rinuncia durante l'istruttoria | ✅ superato | 11.9 s | `4df65ac5-e9bc-11f1-9114-02fc00000001` |
+| Rinuncia prima dello sportello | ✅ superato | 7.7 s | `55094449-e9bc-11f1-9114-02fc00000001` |
+| Rinuncia durante il caricamento dei documenti | ✅ superato | 10.9 s | `59a512f7-e9bc-11f1-9114-02fc00000001` |
+| Anagrafica INAIL non disponibile | ✅ superato | 1.1 s | `6041947f-e9bc-11f1-9114-02fc00000001` |
+| Servizio di calcolo non disponibile | ✅ superato | 1.2 s | `60e01ead-e9bc-11f1-9114-02fc00000001` |
 
 ## Asse 2 in posizione utile e ammessa (TC-01)
 
