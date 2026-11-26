@@ -19,6 +19,10 @@ import java.util.*;
  * Gestione dei form.
  * Ordine di ricerca: prima Postgres (tabella form_definition), poi classpath (resources/forms/*.json).
  * Così i form forniti col progetto fanno da default e quelli salvati da interfaccia li sostituiscono.
+ *
+ * Versioni: ogni salvataggio che cambia il form aggiunge una riga a form_versione. Una pratica legge i form con
+ * {@link #perPratica(String, String)}: la versione fissata al suo avvio (pratica_form, vedi VersioniForm), oppure
+ * l'ultima se non ne ha una (form del progetto, pratiche avviate prima delle versioni).
  */
 @Service
 public class FormService {
@@ -37,6 +41,15 @@ public class FormService {
     public FormService(FormDefinitionRepository repo, ObjectMapper mapper) {
         this.repo = repo;
         this.mapper = mapper;
+    }
+
+    private FormVersioneRepository versioni;
+    private PraticaFormRepository fissate;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setVersioni(FormVersioneRepository versioni, PraticaFormRepository fissate) {
+        this.versioni = versioni;
+        this.fissate = fissate;
     }
 
     /** Formati di paese ammessi nei form nuovi o modificati (codice fiscale & co. solo con il modulo Italia). */
@@ -73,6 +86,41 @@ public class FormService {
         }
     }
 
+    /**
+     * Il form come lo vede una pratica: la versione fissata al suo avvio, altrimenti l'ultima.
+     * Usalo per tutto ciò che riguarda una pratica esistente (attività, scheda, documenti, chi vede cosa);
+     * {@link #load(String)} resta per lo Studio e per le pratiche che stanno per partire.
+     */
+    public JsonNode perPratica(String processInstanceId, String formKey) {
+        if (processInstanceId == null || formKey == null || formKey.isBlank() || fissate == null) return load(formKey);
+        Optional<PraticaForm> fissata = fissate.findByProcessInstanceIdAndFormKey(processInstanceId, formKey);
+        if (fissata.isEmpty()) return load(formKey);
+        try {
+            Optional<FormVersione> v = versioni.findByFormKeyAndVersione(formKey, fissata.get().getVersione());
+            return v.isPresent() ? mapper.readTree(v.get().getJson()) : load(formKey);
+        } catch (IOException e) {
+            throw new IllegalStateException("Form non leggibile: " + formKey, e);
+        }
+    }
+
+    /**
+     * Fissa per la pratica l'ultima versione dei form indicati (quelli salvati nello Studio; i form del progetto non
+     * hanno versioni). Non cambia quelle già fissate.
+     */
+    @Transactional
+    public void fissa(String processInstanceId, Collection<String> formKeys) {
+        if (fissate == null || processInstanceId == null) return;
+        for (String fk : new LinkedHashSet<>(formKeys)) {
+            if (fk == null || fk.isBlank() || fissate.findByProcessInstanceIdAndFormKey(processInstanceId, fk).isPresent()) continue;
+            repo.findByFormKey(fk).ifPresent(f -> fissate.save(new PraticaForm(processInstanceId, fk, f.getVersione())));
+        }
+    }
+
+    /** Le versioni salvate di un form, dalla più recente. */
+    public List<FormVersione> versioni(String formKey) {
+        return versioni == null ? List.of() : versioni.findByFormKeyOrderByVersioneDesc(formKey);
+    }
+
     public boolean exists(String formKey) {
         return load(formKey) != null;
     }
@@ -89,6 +137,7 @@ public class FormService {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("formKey", f.getFormKey());
             m.put("source", "database");
+            m.put("versione", f.getVersione());
             m.put("updatedAt", f.getUpdatedAt());
             m.put("updatedBy", f.getUpdatedBy());
             out.put(f.getFormKey(), m);
@@ -102,15 +151,28 @@ public class FormService {
         validateKey(formKey);
         JsonNode node = validate(formKey, json);
         FormDefinition f = repo.findByFormKey(formKey).orElseGet(FormDefinition::new);
+        String testo = node.toPrettyString();
+        // stesso contenuto (es. un pacchetto importato di nuovo): nessuna versione nuova
+        if (f.getId() != null && testo.equals(f.getJson())) return node;
+        OffsetDateTime adesso = OffsetDateTime.now();
         f.setFormKey(formKey);
-        f.setJson(node.toPrettyString());
-        f.setUpdatedAt(OffsetDateTime.now());
+        f.setJson(testo);
+        f.setUpdatedAt(adesso);
         f.setUpdatedBy(user);
+        if (versioni != null) {
+            // dopo l'ultima mai salvata, anche se il form era stato eliminato: le pratiche vecchie la usano ancora
+            int nuova = versioni.findTopByFormKeyOrderByVersioneDesc(formKey).map(v -> v.getVersione() + 1).orElse(1);
+            f.setVersione(nuova);
+            versioni.save(new FormVersione(formKey, nuova, testo, adesso, user));
+        }
         repo.save(f);
         return node;
     }
 
-    /** Elimina la versione su database: se esiste nel progetto, torna attiva quella. */
+    /**
+     * Elimina il form su database: se esiste nel progetto, torna attivo quello. Le versioni restano, perché le
+     * pratiche avviate con loro continuano a usarle.
+     */
     @Transactional
     public void delete(String formKey) {
         repo.findByFormKey(formKey).ifPresent(repo::delete);

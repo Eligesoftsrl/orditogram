@@ -52,7 +52,7 @@ public class DocumentoController {
                                         @RequestParam("file") MultipartFile file,
                                         @RequestParam(value = "nota", required = false) String nota) {
         var task = access.checkEditDocumenti(pi);
-        var form = forms.load(task.getFormKey());
+        var form = forms.perPratica(pi, task.getFormKey());
         boolean perLeParti = form != null && "parti".equals(form.path("documentiVisibilita").asText());
         var v = documenti.aggiungi(pi, file, nota, task.getName(), perLeParti);
         return Map.of("id", v.getId(), "firmaEsito", v.getFirmaEsito());

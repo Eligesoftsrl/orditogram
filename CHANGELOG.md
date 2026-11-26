@@ -35,6 +35,11 @@ Verso un Orditogram per ogni settore: il nucleo non parla più solo la lingua de
   Nuova sezione "Installazione in produzione" nel README (HTTPS, backup pianificato, aggiornamenti, risorse). La porta
   di PostgreSQL in Docker Compose ora è aperta solo sul server stesso (`127.0.0.1`). **Aggiornamento**: il `.env`
   d'esempio attiva il profilo; chi lo copia per una demo svuota `ORDITOGRAM_PROFILO`.
+- **Versioni dei form**: ogni salvataggio che cambia un form ne crea una versione; le pratiche nuove usano l'ultima,
+  quelle già avviate restano su quella del loro avvio (attività, completamento, scheda, documenti, campi visibili).
+  Un campo obbligatorio aggiunto non blocca più le attività in corso. Colonna *Versione* in Studio → Form, API
+  `GET /api/admin/forms/{formKey}/versioni`, versione nel registro (`FORM_SALVATO`), migrazione `V13`. Al primo avvio
+  dopo l'aggiornamento le pratiche in corso ricevono le versioni attuali dei loro form.
 - Esempi nei campi dello Studio senza riferimenti alla PA ("Richiesta d'acquisto", "portale-clienti",
   `numeroRegistrazione`).
 

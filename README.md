@@ -561,6 +561,13 @@ all'altra; chi può vedere la madre vede anche le figlie. La pubblicazione è ri
 
 ### Nei form (Studio → Form, costruttore visuale)
 
+**Versioni**: ogni salvataggio che cambia un form ne crea una versione nuova (colonna *Versione* nell'elenco,
+`GET /api/admin/forms/{formKey}/versioni`). Le pratiche nuove usano l'ultima; quelle già avviate restano sulla versione
+con cui sono partite fino alla fine, per le attività, la scheda e chi vede quali campi. Così un campo obbligatorio
+aggiunto non blocca le attività in corso e un campo tolto non sparisce dalla scheda di chi l'aveva compilato.
+Eliminare un form non tocca le pratiche già avviate. Al primo avvio dopo l'aggiornamento le pratiche in corso
+ricevono le versioni attuali.
+
 | Proprietà del form | Effetto |
 |---|---|
 | `documenti: "carica"` | nel form di avvio: area per allegare i documenti |

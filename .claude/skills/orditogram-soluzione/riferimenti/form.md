@@ -4,6 +4,10 @@ Fonte di verità: `form/FormService.validate`, `form/ValoriForm`, `form/RegoleCa
 `components/DynamicForm.jsx`, `lib/formRegole.js`, `lib/formCondizioni.js` (frontend). Un file per form:
 `form/<formKey>.json`, dove `formKey` (lettere, numeri, `-`, `_`) è quello del BPMN.
 
+Ogni form salvato (dallo Studio o importando un pacchetto) diventa una versione nuova se il contenuto cambia: le
+pratiche già avviate restano sulla versione del loro avvio. Nel collaudo, dopo aver corretto un form, avvia una
+pratica nuova per vedere la correzione.
+
 ## Struttura
 
 ```json
