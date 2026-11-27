@@ -80,7 +80,7 @@ export default function TaskPage() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Approfondimenti pratica={pratica} richiesti={!!task.form?.documentiObbligatori && modoDocumenti === 'modifica'} onDocumenti={carica} />
+            <Approfondimenti pratica={pratica} aggiorna={task.assignee || ''} richiesti={!!task.form?.documentiObbligatori && modoDocumenti === 'modifica'} onDocumenti={carica} />
             {!task.assignee && (
               <Button variante="fantasma" icona={Hand} attesa={attesa} title="Riservala a te: i colleghi la vedono in carico a te"
                       onClick={() => azione(() => api.claim(task.id), 'Attività riservata a te')}>

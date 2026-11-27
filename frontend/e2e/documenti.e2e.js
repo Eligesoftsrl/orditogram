@@ -18,13 +18,12 @@ async function accedi(page, utente) {
   await expect(page.getByRole('button', { name: 'Esci' })).toBeVisible()
 }
 
-/** I documenti possono stare in una colonna o dietro un pulsante che apre il pannello: si apre se serve. */
+/** I documenti possono stare in una colonna o dietro la capsula "Documenti" che apre il pannello: si apre se serve. */
 async function documenti(page, testo) {
   const voce = page.getByText(testo).first()
-  if (!(await voce.isVisible())) {
-    const pulsante = page.getByRole('button', { name: /^Documenti/ }).first()
-    if (await pulsante.count()) await pulsante.click()
-  }
+  const capsula = page.getByRole('button', { name: /^Documenti/ }).first()
+  await expect(voce.or(capsula).first()).toBeVisible()
+  if (!(await voce.isVisible())) await capsula.click()
   return voce
 }
 
@@ -61,6 +60,8 @@ test('attività con data e allegato → scheda della pratica leggibile', async (
   await operatore.locator('input[type=file]').last().setInputFiles(path.join(dati, 'allegato-prova.txt'))
   await operatore.getByRole('button', { name: 'Carica', exact: true }).click()
   await expect(operatore.getByText('allegato-prova.txt').first()).toBeVisible()
+  // se i documenti stanno nel pannello laterale, si chiude per tornare al form
+  if (await operatore.getByRole('dialog').count()) await operatore.keyboard.press('Escape')
   await operatore.getByLabel('Data di costituzione').fill('2010-03-01')
   await operatore.getByLabel('Oggetto').fill(rivisto)
   await operatore.getByRole('button', { name: 'Conferma' }).click()
