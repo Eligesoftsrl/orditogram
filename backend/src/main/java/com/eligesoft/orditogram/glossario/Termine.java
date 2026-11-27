@@ -14,7 +14,10 @@ public enum Termine {
         "Il nome con cui gli utenti esterni vedono le azioni del personale. Es. Ufficio, Assistenza, Segreteria",
         "Ufficio", "Uffici", "M"),
     ESTERNO("esterno", "Chi entra da fuori", "Es. cittadino, cliente, fornitore, socio", "cittadino", "cittadini", "M"),
-    PRATICA("pratica", "Il caso che si lavora", "Es. pratica, richiesta, ticket, ordine, caso", "pratica", "pratiche", "F");
+    PRATICA("pratica", "Il caso che si lavora", "Es. pratica, richiesta, domanda, ticket, ordine, caso", "pratica", "pratiche", "F"),
+    PROCESSO("processo", "Il modello da cui nasce",
+        "Il nome dei processi pubblicati nelle schermate di chi li usa. Es. processo, bando, servizio, procedimento",
+        "processo", "processi", "M");
 
     private final String chiave;
     private final String nome;

@@ -71,3 +71,13 @@ describe('pratica', () => {
     expect(creaGlossario({ pratica: { singolare: 'ordine', plurale: 'ordini', genere: 'M' } })('pratica', 'un')).toBe('un ordine')
   })
 })
+
+describe('termine processo', () => {
+  it('vale "processo" finché l\'installazione non sceglie, poi la parola scelta con i suoi articoli', () => {
+    expect(creaGlossario(null)('processo', 'nessun')).toBe('nessun processo')
+    const bando = creaGlossario({ processo: { singolare: 'bando', plurale: 'bandi', genere: 'M' } })
+    expect(bando('processo', 'Nomi')).toBe('Bandi')
+    expect(bando('processo', 'del')).toBe('del bando')
+    expect(bando.agg('processo', 'altr', true)).toBe('altri')
+  })
+})

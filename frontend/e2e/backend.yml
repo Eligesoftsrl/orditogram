@@ -11,6 +11,7 @@ app:
   demo:
     utenti: true
     servizi: true
+    processi: true
   sicurezza:
     chiave-cifratura: chiave-solo-per-i-test-end-to-end
   api:

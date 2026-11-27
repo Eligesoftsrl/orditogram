@@ -127,6 +127,39 @@ public class GlossarioService {
         return termini();
     }
 
+    /**
+     * Parole portate da un pacchetto (glossario.json): valgono solo per i termini che qui sono ancora quelli
+     * predefiniti, così un pacchetto non cambia le scelte già fatte dall'installazione. Restituisce che cosa è
+     * successo, in parole.
+     */
+    @Transactional
+    public String importaDalPacchetto(Map<String, Map<String, String>> delPacchetto) {
+        if (delPacchetto == null || delPacchetto.isEmpty()) return "";
+        Map<String, Map<String, String>> nuove = new LinkedHashMap<>();
+        List<String> tenute = new ArrayList<>();
+        for (var voce : delPacchetto.entrySet()) {
+            if (Termine.da(voce.getKey()).isEmpty()) continue;
+            if (repo.existsById(voce.getKey())) tenute.add(voce.getKey());
+            else nuove.put(voce.getKey(), voce.getValue());
+        }
+        if (!nuove.isEmpty()) salva(nuove);
+        List<String> applicate = nuove.entrySet().stream()
+            .filter(v -> repo.existsById(v.getKey()))
+            .map(v -> v.getKey() + " = " + repo.findById(v.getKey()).map(TermineGlossario::getSingolare).orElse("")).toList();
+        return (applicate.isEmpty() ? "nessuna parola nuova" : "parole applicate: " + String.join(", ", applicate))
+            + (tenute.isEmpty() ? "" : "; tenute quelle già scelte qui: " + String.join(", ", tenute));
+    }
+
+    /** Solo i termini scelti dall'installazione, per esportarli in un pacchetto. */
+    @Transactional(readOnly = true)
+    public Map<String, Map<String, String>> scelti() {
+        Map<String, Map<String, String>> out = new LinkedHashMap<>();
+        for (Termine t : Termine.values())
+            repo.findById(t.chiave()).ifPresent(s -> out.put(t.chiave(),
+                Map.of("singolare", s.getSingolare(), "plurale", s.getPlurale(), "genere", s.getGenere())));
+        return out;
+    }
+
     private static String pulisci(String s) {
         return s == null ? "" : s.strip().replaceAll("\\s+", " ");
     }

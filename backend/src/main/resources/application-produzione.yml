@@ -12,3 +12,4 @@ app:
   demo:
     utenti: false                     # niente utenti di prova con password nota
     servizi: false                    # niente servizi dimostrativi (/api/demo/**)
+    processi: false                   # niente processi di esempio

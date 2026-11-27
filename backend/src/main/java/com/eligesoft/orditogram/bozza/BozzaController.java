@@ -52,12 +52,17 @@ public class BozzaController {
     private final ObjectMapper mapper;
     private final RegolePermessiProcesso permessiProcesso;
     private final TipiAnagraficaService anagrafiche;
+    private final com.eligesoft.orditogram.glossario.GlossarioService glossario;
+    private final com.eligesoft.orditogram.user.UtentiProvaService utentiProva;
 
     public BozzaController(ProcessoBozzaRepository bozze, RepositoryService repositoryService, BpmnResourceService bpmn,
                            FormService forms, CurrentUserService currentUser, ObjectMapper mapper,
             com.eligesoft.orditogram.registro.RegistroService registro, RegolePermessiProcesso permessiProcesso,
-            TipiAnagraficaService anagrafiche) {
+            TipiAnagraficaService anagrafiche, com.eligesoft.orditogram.glossario.GlossarioService glossario,
+            com.eligesoft.orditogram.user.UtentiProvaService utentiProva) {
+        this.utentiProva = utentiProva;
         this.anagrafiche = anagrafiche;
+        this.glossario = glossario;
         this.permessiProcesso = permessiProcesso;
         this.registro = registro;
         this.bozze = bozze;
@@ -163,6 +168,12 @@ public class BozzaController {
             // chi avvia, vede ed esporta: le regole dello Studio, se ci sono
             List<RegolePermessiProcesso.Regola> regole = permessiProcesso.elenco(chiave);
             if (!regole.isEmpty()) scrivi(zip, "permessi.json", mapper.writerWithDefaultPrettyPrinter().writeValueAsString(regole));
+            // le parole scelte qui (es. "domanda" al posto di "pratica"): le applica l'importazione dove mancano
+            Map<String, Map<String, String>> parole = glossario.scelti();
+            if (!parole.isEmpty()) scrivi(zip, "glossario.json", mapper.writerWithDefaultPrettyPrinter().writeValueAsString(parole));
+            // gli attori della demo di questa soluzione (si ricreano solo dove gli utenti di prova sono accesi)
+            List<com.eligesoft.orditogram.user.UtentiProvaService.Attore> attori = utentiProva.diSoluzione(chiave);
+            if (!attori.isEmpty()) scrivi(zip, "utenti-prova.json", mapper.writerWithDefaultPrettyPrinter().writeValueAsString(attori));
             ObjectNode manifest = mapper.createObjectNode();
             manifest.put("formato", 1);
             manifest.put("chiave", chiave);
@@ -192,6 +203,8 @@ public class BozzaController {
                                                        @RequestParam(defaultValue = "false") boolean sovrascrivi) throws IOException {
         String xml = null;
         String permessiJson = null;
+        String glossarioJson = null;
+        String utentiProvaJson = null;
         Map<String, String> formFiles = new LinkedHashMap<>();
         List<TipiAnagraficaService.Tipo> anagraficheDelPacchetto = new ArrayList<>();
         int n = 0;
@@ -213,6 +226,10 @@ public class BozzaController {
                     xml = testo;
                 } else if ("permessi.json".equals(nome)) {
                     permessiJson = testo;
+                } else if ("glossario.json".equals(nome)) {
+                    glossarioJson = testo;
+                } else if ("utenti-prova.json".equals(nome)) {
+                    utentiProvaJson = testo;
                 } else if (nome.startsWith("anagrafiche/") && base.endsWith(".json")) {
                     try {
                         anagraficheDelPacchetto.add(mapper.readValue(testo, TipiAnagraficaService.Tipo.class));
@@ -268,15 +285,19 @@ public class BozzaController {
         bozze.save(b);
 
         String permessi = importaPermessi(p.getId(), permessiJson);
+        String parole = importaGlossario(glossarioJson);
+        String attori = importaUtentiProva(utentiProvaJson, p.getId());
 
         registro.registra("PACCHETTO_IMPORTATO", p.getId(),
             "Form: " + (validi.isEmpty() ? "nessuno" : String.join(", ", validi.keySet()))
                 + (conflitti.isEmpty() ? "" : "; sovrascritti: " + String.join(", ", conflitti))
                 + (permessi.isEmpty() ? "" : "; permessi: " + permessi)
+                + (parole.isEmpty() ? "" : "; glossario: " + parole)
+                + (attori.isEmpty() ? "" : "; utenti di prova: " + attori)
                 + (anagraficheImportate.isEmpty() ? "" : "; anagrafiche: " + anagraficheImportate));
         return ResponseEntity.ok(Map.of("chiave", p.getId(), "nome", b.getNome(),
             "formSalvati", validi.keySet(), "sovrascritti", conflitti, "permessi", permessi,
-            "anagrafiche", anagraficheImportate));
+            "anagrafiche", anagraficheImportate, "glossario", parole, "utentiProva", attori));
     }
 
     // ================================================================= supporto
@@ -302,6 +323,40 @@ public class BozzaController {
         permessiProcesso.sostituisci(chiave, applicabili);
         return applicabili.size() + " regole applicate"
             + (mancanti.isEmpty() ? "" : ", tralasciate quelle dei ruoli che qui non esistono: " + String.join(", ", mancanti));
+    }
+
+    /**
+     * Parole del pacchetto (glossario.json): le applica solo l'amministratore, che è l'unico a cambiare il
+     * glossario, e solo sui termini ancora predefiniti. Chi importa senza esserlo lo legge nella risposta.
+     */
+    private String importaGlossario(String json) {
+        if (json == null) return "";
+        Map<String, Map<String, String>> parole;
+        try {
+            parole = mapper.readValue(json, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Map<String, String>>>() {});
+        } catch (IOException e) {
+            throw bad("Il file glossario.json del pacchetto non è valido");
+        }
+        if (!currentUser.isAdmin())
+            return "non applicato: le parole del pacchetto le applica l'amministratore (Studio → Glossario)";
+        return glossario.importaDalPacchetto(parole);
+    }
+
+    /** Attori della demo (utenti-prova.json): creare utenti è cosa dell'amministratore, come nella gestione utenti. */
+    private String importaUtentiProva(String json, String chiave) {
+        if (json == null) return "";
+        List<com.eligesoft.orditogram.user.UtentiProvaService.Attore> attori;
+        try {
+            attori = mapper.readValue(json, new com.fasterxml.jackson.core.type.TypeReference<List<com.eligesoft.orditogram.user.UtentiProvaService.Attore>>() {});
+        } catch (IOException e) {
+            throw bad("Il file utenti-prova.json del pacchetto non è valido");
+        }
+        if (!currentUser.isAdmin()) return "non creati: gli utenti di prova li crea l'amministratore";
+        try {
+            return utentiProva.importa(attori, chiave);
+        } catch (IllegalArgumentException e) {
+            throw bad(e.getMessage());
+        }
     }
 
     private Map<String, Object> riepilogo(ProcessoBozza b) {

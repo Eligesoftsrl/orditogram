@@ -25,7 +25,7 @@ class ControlloProduzioneTest {
 
     private ControlloProduzione controllo(boolean utentiProva, boolean serviziProva, String passwordDb,
                                           String passwordAdmin, String chiave) {
-        return new ControlloProduzione(utenti, encoder, utentiProva, serviziProva, true, passwordDb, passwordAdmin,
+        return new ControlloProduzione(utenti, encoder, utentiProva, serviziProva, false, true, passwordDb, passwordAdmin,
             chiave, "smtp.azienda.it", "orditogram@azienda.it");
     }
 
@@ -94,8 +94,16 @@ class ControlloProduzioneTest {
     }
 
     @Test
+    void processiDiEsempioNonPartono() {
+        when(utenti.count()).thenReturn(0L);
+        ControlloProduzione conEsempi = new ControlloProduzione(utenti, encoder, false, false, true, true, PASSWORD_BUONA,
+            PASSWORD_BUONA, CHIAVE_BUONA, "smtp.azienda.it", "orditogram@azienda.it");
+        assertThat(conEsempi.problemi()).singleElement().satisfies(p -> assertThat(p).contains("PROCESSI_DI_PROVA"));
+    }
+
+    @Test
     void senzaAccessoLocaleLePasswordDegliUtentiNonContano() {
-        ControlloProduzione soloOidc = new ControlloProduzione(utenti, encoder, false, false, false, PASSWORD_BUONA,
+        ControlloProduzione soloOidc = new ControlloProduzione(utenti, encoder, false, false, false, false, PASSWORD_BUONA,
             "admin", CHIAVE_BUONA, "smtp.azienda.it", "orditogram@azienda.it");
         assertThat(soloOidc.problemi()).isEmpty();
     }
@@ -103,7 +111,7 @@ class ControlloProduzioneTest {
     @Test
     void emailMancanteEUnAvvisoNonUnBlocco() {
         when(utenti.count()).thenReturn(0L);
-        ControlloProduzione senzaEmail = new ControlloProduzione(utenti, encoder, false, false, true, PASSWORD_BUONA,
+        ControlloProduzione senzaEmail = new ControlloProduzione(utenti, encoder, false, false, false, true, PASSWORD_BUONA,
             PASSWORD_BUONA, CHIAVE_BUONA, "", "noreply@example.com");
         assertThat(senzaEmail.problemi()).isEmpty();
         assertThat(senzaEmail.avvisi()).hasSize(2);

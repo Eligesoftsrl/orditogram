@@ -5,7 +5,7 @@ import { api } from '../api.js'
 import { prossimaAttivita } from '../lib/prosegui.js'
 import DynamicForm from './DynamicForm.jsx'
 import { Button, Caricamento, Dialogo, Errore, Vuoto, useToast } from './ui.jsx'
-import { gl, nuovaPratica } from '../lib/glossario.js'
+import { gl, maiuscola, nuovaPratica } from '../lib/glossario.js'
 
 /** "Nuova pratica": scelta del processo, poi il suo form di avvio (con eventuali allegati). */
 export default function StartDialog({ aperto, onClose, chiaveIniziale }) {
@@ -56,7 +56,7 @@ export default function StartDialog({ aperto, onClose, chiaveIniziale }) {
 
       {processi && !scelto && (
         processi.length === 0
-          ? <Vuoto icona={Workflow} titolo="Nessun processo da avviare">Non ci sono processi che il tuo profilo può avviare. Chiedi all'amministratore di abilitarti.</Vuoto>
+          ? <Vuoto icona={Workflow} titolo={`${maiuscola(gl('processo', 'nessun'))} da avviare`}>Non ci sono {gl('processo', 'nomi')} che il tuo profilo può avviare. Chiedi all'amministratore di abilitarti.</Vuoto>
           : (
             <ul className="divide-y divide-linea overflow-hidden rounded-pannello border border-linea">
               {processi.map(p => (
@@ -83,7 +83,7 @@ export default function StartDialog({ aperto, onClose, chiaveIniziale }) {
         <div className="space-y-4">
           {processi?.length > 1 && (
             <button onClick={() => setScelto(null)} className="inline-flex items-center gap-1 text-sm font-medium text-grafite hover:text-pino-900">
-              <ArrowLeft className="size-4" /> Altri processi
+              <ArrowLeft className="size-4" /> {maiuscola(gl.agg('processo', 'altr', true))} {gl('processo', 'nomi')}
             </button>
           )}
           {errore && <Errore>{errore}</Errore>}
@@ -91,7 +91,7 @@ export default function StartDialog({ aperto, onClose, chiaveIniziale }) {
             ? <DynamicForm key={scelto.key} form={{ ...scelto.startForm, title: null }} avvio busy={attesa} onSubmit={avvia} />
             : (
               <div className="flex items-center justify-between gap-4 rounded-pannello bg-carta px-4 py-4">
-                <p className="text-[15px] text-pino-900">Questo processo non richiede dati iniziali.</p>
+                <p className="text-[15px] text-pino-900">{maiuscola(gl.agg('processo', 'quest'))} {gl('processo')} non richiede dati iniziali.</p>
                 <Button variante="primario" attesa={attesa} onClick={() => avvia({}, [])}>Avvia</Button>
               </div>
             )}

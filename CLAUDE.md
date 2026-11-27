@@ -42,7 +42,8 @@ Proprietario: Eligesoft. Lingua del prodotto, del codice e delle risposte all'ut
 | `accesso` | ruoli e permessi applicativi (`Permesso`, `Ruolo`, `PermessiService`), regole anti-escalation, permessi per processo (`PermessoProcesso`: AVVIA, VEDE con ambito, ESPORTA), strutture (`Organizzazione` in albero), organizzazioni esterne, utenti esterni (`AccessoEsterni`: solo API del portale), parti della pratica (`PartiService`, `AscoltatoreParti`), referenti delle organizzazioni (`ReferentiService`, portale `/api/organizzazione`) |
 | `anagrafica` | anagrafiche configurabili: tipi definiti dall'analista (`DefinizioneAnagrafica`, formato dei form + chiave, cercabile, relazioni), schede con indice, versioni e cessazione, permessi per tipo (`AccessoAnagrafiche`, unico punto di controllo) |
 | `modulo` | moduli di settore accendibili (`Modulo`: italia, firma-digitale, pa; `ModuliService`, tabella `modulo_spento`) |
-| `glossario` | parole dell'installazione per ente, ufficio, utenti esterni e pratica (`Termine`, `GlossarioService`); predefiniti della PA |
+| `glossario` | parole dell'installazione per ente, ufficio, utenti esterni, pratica e processo (`Termine`, `GlossarioService`); predefiniti della PA; anche da `glossario.json` dei pacchetti |
+| `personalizzazione` | nome e logo del cliente (`PersonalizzazioneService`, `/api/info/logo`) |
 | `registro` | registro delle azioni di amministrazione, degli accessi (`EventiSicurezza`), delle letture (`@RegistraLettura` + `AspettoLetture`, anche negate) e degli errori imprevisti con codice `E-…` (`RegistroErrori`, `GestoreErroriImprevisti`, `AscoltatoreErroriMotore`); pulizia notturna |
 | `api` | **API pubblica `/api/v1`** con chiavi, OpenAPI generata dai processi, Studio → Integrazioni |
 | `webhook` | avvisi firmati verso sistemi esterni: coda nel DB, invio con ripetizioni |

@@ -1,0 +1,5 @@
+{
+  "pratica": { "singolare": "domanda", "plurale": "domande", "genere": "F" },
+  "processo": { "singolare": "bando", "plurale": "bandi", "genere": "M" },
+  "esterno": { "singolare": "impresa", "plurale": "imprese", "genere": "F" }
+}

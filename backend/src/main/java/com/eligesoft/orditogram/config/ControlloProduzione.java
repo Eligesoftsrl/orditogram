@@ -47,12 +47,14 @@ public class ControlloProduzione {
     private final String passwordDatabase;
     private final String passwordAdmin;
     private final String chiaveCifratura;
+    private final boolean processiProva;
     private final String hostEmail;
     private final String mittente;
 
     public ControlloProduzione(AppUserRepository utenti, PasswordEncoder encoder,
                                @Value("${app.demo.utenti:false}") boolean utentiProva,
                                @Value("${app.demo.servizi:true}") boolean serviziProva,
+                               @Value("${app.demo.processi:false}") boolean processiProva,
                                @Value("${app.login.locale:true}") boolean loginLocale,
                                @Value("${spring.datasource.password:}") String passwordDatabase,
                                @Value("${app.admin.password-iniziale:admin}") String passwordAdmin,
@@ -63,6 +65,7 @@ public class ControlloProduzione {
         this.encoder = encoder;
         this.utentiProva = utentiProva;
         this.serviziProva = serviziProva;
+        this.processiProva = processiProva;
         this.loginLocale = loginLocale;
         this.passwordDatabase = passwordDatabase;
         this.passwordAdmin = passwordAdmin;
@@ -92,6 +95,8 @@ public class ControlloProduzione {
             problemi.add("gli utenti di prova sono attivi (app.demo.utenti; nel .env UTENTI_DI_PROVA=false).");
         if (serviziProva)
             problemi.add("i servizi di prova sono attivi (app.demo.servizi; nel .env SERVIZI_DI_PROVA=false).");
+        if (processiProva)
+            problemi.add("i processi di esempio sono attivi (app.demo.processi; nel .env PROCESSI_DI_PROVA=false).");
         if (debole(passwordDatabase))
             problemi.add("la password del database è predefinita o più corta di " + LUNGHEZZA_MINIMA_PASSWORD
                 + " caratteri (DB_PASSWORD).");

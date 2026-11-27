@@ -29,7 +29,8 @@ Se il codice e questo file non coincidono, vale il codice: aggiorna questo file.
   Usa camelCase descrittivo (`contributiEventi`). Non cambiarla dopo il primo rilascio: è l'identità del processo.
 - `name` è quello che vedono gli utenti ("Nuova pratica → …").
 - `activiti:candidateStarterGroups` = chi può avviare (più gruppi separati da virgola). Se mancano e non ci sono
-  regole AVVIA in `permessi.json`, avviano tutti. Le regole AVVIA, se ci sono, vincono sul BPMN.
+  regole AVVIA in `permessi.json`, avvia tutto il personale ma nessun utente esterno: per aprire il processo
+  agli esterni metti il gruppo `esterni` (o `org:<id>`). Le regole AVVIA, se ci sono, vincono sul BPMN.
 
 ## Elementi ammessi (tutto il resto è un errore)
 

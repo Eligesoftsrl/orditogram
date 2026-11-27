@@ -198,6 +198,10 @@ export const api = {
   info: () => call('GET', '/api/info'),
   glossario: () => call('GET', '/api/admin/glossario'),
   salvaGlossario: (termini) => call('PUT', '/api/admin/glossario', termini),
+  personalizzazione: () => call('GET', '/api/admin/personalizzazione'),
+  salvaNomeApplicazione: (nome) => call('PUT', '/api/admin/personalizzazione/nome', { nome }),
+  caricaLogo: (file) => { const fd = new FormData(); fd.append('file', file); return call('POST', '/api/admin/personalizzazione/logo', fd) },
+  togliLogo: () => call('DELETE', '/api/admin/personalizzazione/logo'),
   moduli: () => call('GET', '/api/admin/moduli'),
   impostaModulo: (codice, acceso) => call('PUT', `/api/admin/moduli/${encodeURIComponent(codice)}`, { acceso }),
 

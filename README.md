@@ -36,7 +36,7 @@ di sessione solo su HTTPS e **si rifiuta di partire** finché trova impostazioni
 
 | Controllo all'avvio | Cosa impostare |
 |---|---|
-| Utenti o servizi di prova accesi | `UTENTI_DI_PROVA=false`, `SERVIZI_DI_PROVA=false` |
+| Utenti, servizi o processi di prova accesi | `UTENTI_DI_PROVA=false`, `SERVIZI_DI_PROVA=false`, `PROCESSI_DI_PROVA=false` |
 | Password del database predefinita o sotto i 12 caratteri | `DB_PASSWORD` |
 | Chiave di cifratura dei segreti assente o sotto i 32 caratteri | `ORDITOGRAM_CHIAVE_CIFRATURA` (`openssl rand -base64 32`, poi non cambiarla più) |
 | Primo avvio con password dell'amministratore predefinita o sotto i 12 caratteri | `ADMIN_PASSWORD_INIZIALE` |
@@ -150,23 +150,51 @@ alle tabelle, Orditogram non parte e il log dice quale colonna manca, invece di 
 - Un database creato da Orditogram 0.12 (o precedente, aggiornato prima alla 0.12) si aggiorna da solo: la prima
   migrazione trova le tabelle già presenti e non le tocca.
 
-## Glossario (Studio → Glossario)
+## Glossario e logo (Studio → Glossario e logo)
 
-Orditogram serve aziende, enti pubblici e studi: ognuno chiama le cose a modo suo. L'amministratore sceglie in
-Studio → *Glossario* le parole per quattro concetti, con singolare, plurale e genere (maschile o femminile):
+Orditogram serve aziende, enti pubblici e studi: ognuno chiama le cose a modo suo, e il software consegnato porta
+il nome e il logo del cliente. L'amministratore li sceglie in Studio → *Glossario e logo*.
+
+**Nome e logo.** Il nome dell'applicazione compare nel menu, nella pagina di accesso e nel titolo della finestra; il
+logo è un'immagine PNG, JPEG o WebP fino a 512 KB (il tipo si legge dal contenuto; niente SVG, che può contenere
+codice). Senza, restano Orditogram e il suo marchio. Li legge chiunque da `GET /api/info` (`nome`, `logo`) e
+`GET /api/info/logo`; ogni modifica va nel registro.
+
+**Parole.** Cinque concetti, con singolare, plurale e genere (maschile o femminile):
 
 | Termine | Predefinito | Esempi |
 |---|---|---|
 | Chi usa Orditogram | ente | azienda, società, studio, comune |
 | Il personale visto da fuori | Ufficio | Assistenza, Segreteria, Servizio clienti |
-| Chi entra da fuori | cittadino | cliente, fornitore, socio |
-| Il caso che si lavora | pratica | richiesta, ticket, ordine, caso |
+| Chi entra da fuori | cittadino | cliente, impresa, fornitore, socio |
+| Il caso che si lavora | pratica | domanda, richiesta, ticket, ordine, caso |
+| Il modello da cui nasce | processo | bando, servizio, procedimento |
 
-L'interfaccia compone da sola articoli e aggettivi ("Entra con l'account dell'azienda", "Nuovo ticket",
-"la richiesta conclusa"). I nomi tecnici dell'API restano quelli (`/api/pratiche`, `pratica.avviata`).
+L'interfaccia compone da sola articoli e aggettivi ("Entra con l'account dell'azienda", "Nuova domanda",
+"Nessun bando da avviare"). I nomi tecnici dell'API restano quelli (`/api/pratiche`, `pratica.avviata`).
 Le parole valgono subito, anche nella pagina di accesso (`GET /api/info` → `glossario`), e gli utenti esterni
 leggono quella scelta al posto di "Ufficio" nello storico e nei documenti. Le modifiche vanno nel registro.
 Svuotando un termine si torna al predefinito.
+
+Un pacchetto `.orditogram.zip` può portare le parole della sua soluzione (`glossario.json`, esportato con le parole
+scelte qui): all'importazione dell'amministratore valgono solo per i termini ancora predefiniti, così un pacchetto
+non cambia le scelte già fatte.
+
+## Esempi e utenti di prova
+
+Le impostazioni di base servono per provare Orditogram. Da un cliente niente di questo si vede:
+
+- **Processi di esempio** ("Hello World BPMN", "Pratica"): solo con `app.demo.processi: true` (`PROCESSI_DI_PROVA`
+  in Docker), spento di base e vietato in produzione. Un'installazione che li aveva li toglie all'avvio: si
+  cancellano se non hanno mai avuto pratiche, altrimenti non si avviano più e quelle aperte proseguono.
+- **Chi avvia un processo senza indicazioni** (né `candidateStarterGroups` né regole *Chi può avviarlo*): tutto il
+  personale, nessun utente esterno. Un portale per cittadini o imprese apre il processo al gruppo `esterni`.
+- **Attori della demo**: un pacchetto può portare `utenti-prova.json` (nome utente, nome, ruolo, gruppi, esterno).
+  L'importazione dell'amministratore crea gli utenti mancanti con la password `password`, solo se gli utenti di
+  prova sono accesi (`app.demo.utenti`); chi esiste già resta com'è.
+- **Accessi rapidi**: la pagina di accesso mostra un pulsante per ogni attore (un clic ed entri con quel ruolo)
+  solo se valgono insieme utenti di prova accesi, accesso con password, profilo non di produzione e indirizzo
+  `localhost`. Senza attori dei pacchetti mostra gli utenti di prova di Orditogram.
 
 ## Moduli (Studio → Moduli)
 
