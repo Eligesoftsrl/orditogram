@@ -1,0 +1,8 @@
+{
+  "title": "Verifica",
+  "fields": [
+    { "name": "costituzione", "label": "Data di costituzione", "type": "date", "readonly": true },
+    { "name": "esito", "label": "Esito", "type": "select", "options": ["Accolta", "Respinta"] }
+  ],
+  "documenti": "lettura"
+}

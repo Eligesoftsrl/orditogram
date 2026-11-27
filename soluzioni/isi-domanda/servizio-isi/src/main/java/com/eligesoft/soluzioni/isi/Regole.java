@@ -10,6 +10,9 @@ import java.io.UncheckedIOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Clock;
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 
 /**
  * Le regole di un'annualità ({@code configurazione/<anno>.json}): tutte le tabelle del capitolo 9 della specifica,
@@ -27,9 +30,18 @@ public final class Regole {
     /** Legge {@code <cartella>/<annualita>.json}; con {@code calendario} sostituisce il calendario (solo collaudo). */
     public static Regole carica(Path cartella, String annualita, Path calendario) {
         try {
+            return conCalendario(cartella, annualita, calendario == null ? null : JSON.readTree(Files.readString(calendario)));
+        } catch (IOException e) {
+            throw new UncheckedIOException("Calendario " + calendario + " non leggibile", e);
+        }
+    }
+
+    /** Come sopra, con il calendario già letto (o costruito, per la demo). */
+    public static Regole conCalendario(Path cartella, String annualita, JsonNode calendario) {
+        try {
             JsonNode r = JSON.readTree(Files.readString(cartella.resolve(annualita + ".json")));
             if (calendario != null) {
-                ((ObjectNode) r).set("calendario", JSON.readTree(Files.readString(calendario)));
+                ((ObjectNode) r).set("calendario", calendario);
             }
             return new Regole(r);
         } catch (IOException e) {
@@ -63,6 +75,31 @@ public final class Regole {
 
     public BigDecimal parametro(String nome) {
         return num("parametri", nome);
+    }
+
+    /**
+     * Calendario della demo: compilazione, codice e sportello aperti da ieri per 60 giorni, elenchi pubblicabili
+     * subito. Così una dimostrazione funziona in qualsiasi giorno dell'anno, anche fuori dal periodo del bando.
+     */
+    public static ObjectNode calendarioDemo(Clock orologio) {
+        OffsetDateTime ieri = OffsetDateTime.now(orologio).minusDays(1).truncatedTo(ChronoUnit.HOURS);
+        OffsetDateTime fine = ieri.plusDays(61);
+        ObjectNode c = JSON.createObjectNode();
+        c.put("aperturaCompilazione", ieri.toString());
+        c.put("chiusuraCompilazione", fine.toString());
+        c.put("aperturaCodice", ieri.toString());
+        c.put("chiusuraCodice", fine.toString());
+        c.put("aperturaSportello", ieri.toString());
+        c.put("chiusuraSportello", fine.toString());
+        c.put("pubblicazioneElenchi", ieri.toString());
+        c.put("giorniCaricamentoDocumenti", 30);
+        return c;
+    }
+
+    /** Vero se {@code adesso} è nel periodo di compilazione. */
+    public boolean compilazioneAperta(OffsetDateTime adesso) {
+        return !adesso.isBefore(OffsetDateTime.parse(testo("calendario", "aperturaCompilazione")))
+                && adesso.isBefore(OffsetDateTime.parse(testo("calendario", "chiusuraCompilazione")));
     }
 
     public String annualita() { return testo("annualita"); }

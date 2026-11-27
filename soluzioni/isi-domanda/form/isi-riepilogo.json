@@ -1,0 +1,139 @@
+{
+  "title": "Rivedi e registra la domanda",
+  "description": "Controlla punteggio, contributo e documenti da preparare. Dopo la registrazione la domanda non si modifica più: se serve, torna prima al passo da correggere.",
+  "fields": [
+    {
+      "name": "messaggioRegistrazione",
+      "label": "Esito dell'ultima registrazione",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "riepilogo",
+      "label": "Punteggio e contributo",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "ragioneSociale",
+      "label": "Impresa",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "asse",
+      "label": "Asse",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "titoloProgetto",
+      "label": "Progetto",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "erroriBloccanti",
+      "label": "Errori che bloccano la registrazione",
+      "type": "textarea",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "avvisiCalcolo",
+      "label": "Avvisi del calcolo",
+      "type": "textarea",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "dettaglioPunteggio",
+      "label": "Punteggio per criterio",
+      "type": "textarea",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "dettaglioImporti",
+      "label": "Calcolo degli importi voce per voce",
+      "type": "textarea",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "documentiRichiesti",
+      "label": "Documenti da preparare",
+      "type": "textarea",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "type": "sezione",
+      "label": "Cosa vuoi fare"
+    },
+    {
+      "name": "azione",
+      "label": "Azione",
+      "type": "select",
+      "options": [
+        "Registra la domanda",
+        "Modifica un passo",
+        "Annulla la bozza"
+      ],
+      "required": true,
+      "default": "Registra la domanda",
+      "precompila": false
+    },
+    {
+      "name": "passoDaModificare",
+      "label": "Passo da modificare",
+      "type": "select",
+      "options": [
+        "Impresa e dimensione",
+        "Asse e progetto",
+        "Punteggio e piano economico",
+        "Dichiarazioni"
+      ],
+      "required": true,
+      "precompila": false,
+      "visibileSe": {
+        "campo": "azione",
+        "valori": [
+          "Modifica un passo"
+        ]
+      }
+    },
+    {
+      "name": "confermaRegistrazione",
+      "label": "Ho capito: dopo la registrazione la domanda non sarà più modificabile",
+      "type": "checkbox",
+      "required": true,
+      "visibileSe": {
+        "campo": "azione",
+        "valori": [
+          "Registra la domanda"
+        ]
+      },
+      "precompila": false
+    },
+    {
+      "name": "confermaAnnullamento",
+      "label": "Ho capito: la bozza annullata non si recupera",
+      "type": "checkbox",
+      "required": true,
+      "visibileSe": {
+        "campo": "azione",
+        "valori": [
+          "Annulla la bozza"
+        ]
+      },
+      "precompila": false
+    }
+  ],
+  "submitLabel": "Conferma"
+}

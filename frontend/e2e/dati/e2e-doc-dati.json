@@ -1,0 +1,9 @@
+{
+  "title": "Dati e documenti",
+  "fields": [
+    { "name": "costituzione", "label": "Data di costituzione", "type": "date", "required": true },
+    { "name": "oggetto", "label": "Oggetto", "type": "text", "required": true, "titolo": true }
+  ],
+  "documenti": "modifica",
+  "submitLabel": "Conferma"
+}

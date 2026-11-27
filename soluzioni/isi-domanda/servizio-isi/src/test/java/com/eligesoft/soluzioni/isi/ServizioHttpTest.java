@@ -38,12 +38,16 @@ class ServizioHttpTest {
         assertThat(r.getBody().get("contributoTotaleTesto")).isEqualTo("70.200,00 €");
         assertThat(r.getBody().get("modelloPerizia")).isEqualTo("B2");
 
-        r = chiama(HttpMethod.GET, "/impresa?codiceFiscale=01234560789", null, "segreto-di-prova");
+        r = chiama(HttpMethod.GET, "/impresa?codiceFiscale=01234560785", null, "segreto-di-prova");
         assertThat(r.getBody().get("ragioneSociale")).isEqualTo("Carpenterie Rossi S.r.l.");
 
         r = chiama(HttpMethod.POST, "/calcola", d, "sbagliato");
         assertThat(r.getStatusCode().value()).isEqualTo(401);
         assertThat((Map<String, Object>) r.getBody().get("errore")).containsEntry("codice", "NON_AUTORIZZATO");
+
+        r = chiama(HttpMethod.GET, "/calendario", null, "segreto-di-prova");
+        assertThat(r.getBody().get("compilazioneAperta")).isEqualTo("No");
+        assertThat((String) r.getBody().get("messaggioCalendario")).contains("oggi non si possono creare domande");
 
         assertThat(chiama(HttpMethod.GET, "/salute", null, null).getStatusCode().value()).isEqualTo(200);
         assertThat(chiama(HttpMethod.POST, "/calcola?simula=errore", d, "segreto-di-prova").getStatusCode().value()).isEqualTo(503);

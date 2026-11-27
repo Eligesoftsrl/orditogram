@@ -629,7 +629,7 @@ ricevono le versioni attuali.
 | `ruoliVisibili: ["auditor"]` | tra il personale, nella scheda della pratica lo vede solo chi ha uno di quei ruoli |
 | `required` / `readonly` | obbligatorio / mostrato nel riepilogo in sola lettura |
 | `precompila: false` | non ripropone il valore precedente (utile nei cicli verifica ↔ revisione) |
-| `titolo: true` | il valore diventa il titolo della pratica |
+| `titolo: true` | il valore diventa il titolo della pratica; in un form di attività lo aggiorna (anche nelle ricerche e nello storico) |
 | stesso `name` in più form | è lo stesso dato della pratica |
 | `visibileSe: { campo, valori }` | il campo compare solo se l'altro campo ha uno dei valori indicati |
 | `min`, `max` | numero: valori ammessi; data: `AAAA-MM-GG` oppure `oggi` |

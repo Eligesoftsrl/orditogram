@@ -65,6 +65,10 @@ Se arriva un BPMN dell'analista: tienine id, nomi e disegno; correggi solo ciò 
 
 ## Fase 2. Generare gli artefatti
 
+- **BPMN di livello enterprise, sempre** (`riferimenti/bpmn.md`, "Processi di livello"): un'attività per passo con
+  il suo form, calcoli e controlli come attività automatiche tra i passi, decisioni esplicite con i ritorni al
+  passo da correggere, riepilogo prima di ogni azione che non si annulla, scadenze che avvisano invece di chiudere
+  in silenzio. Mai una o due attività con tutto in una schermata: il diagramma deve raccontare il lavoro.
 - **BPMN** (`riferimenti/bpmn.md`): chiave del processo stabile e leggibile, ogni elemento con un nome italiano,
   `documentation` sul processo, decisioni con la freccia "altrimenti", ogni API con la strada di errore,
   scadenze sulle fasi (sottoprocessi), messaggi dichiarati. Niente segreti nel BPMN.
@@ -127,6 +131,11 @@ produzione. Poi riassumi all'utente: cosa hai costruito, esito del collaudo (sce
 domande aperte, richieste di sviluppo per Orditogram, dove sono pacchetto, checklist e documentazione.
 
 ## Errori frequenti
+
+- `"documenti": "carica"` nel form di un'attività: vale solo all'avvio, nell'attività non si allega niente. Usa `"modifica"`.
+- Date di prova o codici fiscali/partite IVA di prova non validi: i form li rifiutano (`formato: "partitaIva"`).
+  Usa valori con la cifra di controllo giusta.
+- Processo "compitino": una sola attività con un form lunghissimo e la scelta dell'azione in fondo. Dividi in passi.
 
 - Opzione di un `select` scritta diversamente nella condizione (`'Accolta'` vs `'Accolto'`): la strada non si prende mai.
 - Numeri confrontati come testo: usa `${importo > 5000.0}`.

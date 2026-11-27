@@ -601,6 +601,31 @@ def analizza_bpmn(path, forms, pb, credenziali, processi_pubblicati):
             pb.errore("Il form \"%s\" non esiste: crealo o scegline un altro" % fk, el)
     for fk in forms:
         if fk not in definizioni: pb.avviso("Il form \"%s\" non è usato dal processo: non finirà nel pacchetto" % fk)
+    # "carica" funziona solo nel form di avvio: in un'attività la persona non vedrebbe dove allegare i file
+    for t in compiti:
+        d = definizioni.get(t.el.get(q(ACT, "formKey")))
+        if d and d.get("documenti") == "carica":
+            pb.avviso(t.descrivi() + ": \"documenti\": \"carica\" vale solo nel form di avvio, qui non si potrebbe "
+                      "allegare niente. Usa \"modifica\"", t.id)
+    # processo di livello: un'attività per passo, mai tutto in una schermata (regola della skill, non del backend)
+    for t in compiti:
+        d = definizioni.get(t.el.get(q(ACT, "formKey")))
+        if not d: continue
+        campi_f = d.get("fields", [])
+        # contano le sezioni che si vedono sempre: quelle con almeno un campo senza condizione
+        gruppi_s, sezioni = [], 0
+        for x in campi_f:
+            if x.get("type") == "sezione": gruppi_s.append([])
+            elif gruppi_s: gruppi_s[-1].append(x)
+        sezioni = sum(1 for g in gruppi_s if any("visibileSe" not in x for x in g))
+        sempre = sum(1 for x in campi_f if x.get("type") != "sezione" and not x.get("readonly") and "visibileSe" not in x)
+        if sempre > MAX_CAMPI_ATTIVITA or sezioni > MAX_SEZIONI_ATTIVITA:
+            pb.avviso(t.descrivi() + ": il form ha %d campi e %d sezioni sempre visibili. Un'attività è un passo: dividila "
+                      "in più attività in sequenza, con le decisioni e i ritorni nel BPMN (vedi riferimenti/bpmn.md, "
+                      "\"Processi di livello\")" % (sempre, sezioni), t.id)
+    if len(compiti) == 1 and len(definizioni.get(compiti[0].el.get(q(ACT, "formKey")), {}).get("fields", [])) > 15:
+        pb.avviso("Il processo ha una sola attività di persone con un form lungo: il BPMN non racconta il lavoro. "
+                  "Modella i passi come attività separate (vedi riferimenti/bpmn.md, \"Processi di livello\")")
 
     parti = {"richiedente"}
     for d in definizioni.values():
@@ -726,13 +751,18 @@ def testo_condizione(f):
     return c.text if c is not None else None
 
 
+MAX_CAMPI_ATTIVITA, MAX_SEZIONI_ATTIVITA = 30, 6
+
+
 def confronta_opzioni(f, cond, definizioni, pb):
-    """campo == 'Valore' con un valore che il select non offre: la strada non verrebbe mai presa."""
+    """campo == 'Valore' con un valore che nessun select con quel nome offre: la strada non verrebbe mai presa.
+    Lo stesso campo può stare in più form con scelte diverse (es. "azione" in ogni passo): vale l'unione."""
     opzioni = {}
     for d in definizioni.values():
         for x in d.get("fields", []):
             if x.get("type") == "select" and isinstance(x.get("options"), list):
-                opzioni[x["name"]] = x["options"]
+                visti = opzioni.setdefault(x["name"], [])
+                visti.extend(o for o in x["options"] if o not in visti)
     for m in re.finditer(r"([a-zA-Z_]\w*)\s*(?:==|eq|!=|ne)\s*'([^']*)'", cond):
         campo, valore = m.group(1), m.group(2)
         if campo in opzioni and valore not in opzioni[campo]:

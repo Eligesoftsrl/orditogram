@@ -10,7 +10,7 @@
         <activiti:field name="metodo" stringValue="GET" />
         <activiti:field name="url" stringValue="http://localhost:8095/calendario" />
         <activiti:field name="credenziale" stringValue="servizio-isi" />
-        <activiti:field name="risposta" stringValue="chiusuraCompilazione = chiusuraCompilazione&#10;aperturaCodice = aperturaCodice&#10;chiusuraCodice = chiusuraCodice&#10;aperturaSportello = aperturaSportello&#10;chiusuraSportello = chiusuraSportello" />
+        <activiti:field name="risposta" stringValue="compilazioneAperta = compilazioneAperta&#10;messaggioCalendario = messaggioCalendario&#10;chiusuraCompilazione = chiusuraCompilazione&#10;aperturaCodice = aperturaCodice&#10;chiusuraCodice = chiusuraCodice&#10;aperturaSportello = aperturaSportello&#10;chiusuraSportello = chiusuraSportello" />
         <activiti:field name="timeout" stringValue="20" />
         <activiti:field name="inErrore" stringValue="Blocca e riprova più tardi" />
       </extensionElements>
@@ -29,19 +29,97 @@
       <errorEventDefinition />
     </boundaryEvent>
     <sequenceFlow id="f1" sourceRef="inizio" targetRef="leggiCalendario" />
-    <sequenceFlow id="f2" sourceRef="leggiCalendario" targetRef="leggiAnagrafica" />
+    <exclusiveGateway id="periodoGw" name="Compilazione aperta?" default="fFuoriPeriodo" />
+    <sequenceFlow id="f2" sourceRef="leggiCalendario" targetRef="periodoGw" />
+    <sequenceFlow id="fInPeriodo" name="Sì" sourceRef="periodoGw" targetRef="leggiAnagrafica">
+      <conditionExpression xsi:type="tFormalExpression">${compilazioneAperta == 'Sì'}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="fFuoriPeriodo" name="No" sourceRef="periodoGw" targetRef="avvisaFuoriPeriodo" />
+    <serviceTask id="avvisaFuoriPeriodo" name="Avvisa che il bando è chiuso" implementation="notificaConnector">
+      <extensionElements>
+        <activiti:field name="destinatario" stringValue="iniziatore" />
+        <activiti:field name="titolo" stringValue="Bando ISI: compilazione chiusa" />
+        <activiti:field name="messaggio" stringValue="${messaggioCalendario}" />
+      </extensionElements>
+    </serviceTask>
+    <endEvent id="fineFuoriPeriodo" name="Fuori dal periodo di compilazione" />
+    <sequenceFlow id="fFuori2" sourceRef="avvisaFuoriPeriodo" targetRef="fineFuoriPeriodo" />
     <sequenceFlow id="f3" sourceRef="leggiAnagrafica" targetRef="compilazione" />
     <sequenceFlow id="f4" sourceRef="leggiAnagraficaErrore" targetRef="compilazione" />
     <subProcess id="compilazione" name="Compilazione della domanda">
+      <documentation>Cinque attività dell'impresa, due calcoli del servizio ISI e la registrazione. Da ogni passo si torna al precedente; dopo il calcolo di punteggio e importi la domanda torna da sola al primo passo con errori, con il motivo scritto in cima al form.</documentation>
       <startEvent id="cInizio" />
-      <userTask id="compila" name="Compila la domanda" activiti:candidateGroups="parte:richiedente" activiti:formKey="isi-domanda" />
+      <endEvent id="cFineRegistrata" name="Domanda registrata" />
+      <sequenceFlow id="c1" sourceRef="cInizio" targetRef="passoImpresa" />
+      <userTask id="passoImpresa" name="Controlla i dati dell'impresa" activiti:candidateGroups="parte:richiedente" activiti:formKey="isi-impresa" />
+      <exclusiveGateway id="passoImpresaGw" name="Come prosegue?" default="passoImpresaGwAvanti" />
+      <sequenceFlow id="passoImpresaEsce" sourceRef="passoImpresa" targetRef="passoImpresaGw" />
+      <sequenceFlow id="passoImpresaGwAvanti" name="Continua" sourceRef="passoImpresaGw" targetRef="calcolaAssi" />
+      <endEvent id="passoImpresaAnnullata" name="Bozza annullata" />
+      <sequenceFlow id="passoImpresaGwAnnulla" name="Annulla" sourceRef="passoImpresaGw" targetRef="passoImpresaAnnullata">
+        <conditionExpression xsi:type="tFormalExpression">${azione == 'Annulla la bozza'}</conditionExpression>
+      </sequenceFlow>
+      <serviceTask id="calcolaAssi" name="Calcola gli assi ammessi" implementation="apiConnector">
+        <extensionElements>
+          <activiti:field name="metodo" stringValue="POST" />
+          <activiti:field name="url" stringValue="http://localhost:8095/calcola" />
+          <activiti:field name="credenziale" stringValue="servizio-isi" />
+          <activiti:field name="corpo" stringValue="{&#10;  &quot;ragioneSociale&quot;: &quot;${ragioneSociale}&quot;,&#10;  &quot;partitaIva&quot;: &quot;${partitaIva}&quot;,&#10;  &quot;formaGiuridica&quot;: &quot;${formaGiuridica}&quot;,&#10;  &quot;ateco&quot;: &quot;${ateco}&quot;,&#10;  &quot;dataCostituzione&quot;: &quot;${dataCostituzione}&quot;,&#10;  &quot;dataIscrizioneCciaa&quot;: &quot;${dataIscrizioneCciaa}&quot;,&#10;  &quot;sedeLegale&quot;: &quot;${sedeLegale}&quot;,&#10;  &quot;codiceDitta&quot;: &quot;${codiceDitta}&quot;,&#10;  &quot;pec&quot;: &quot;${pec}&quot;,&#10;  &quot;tipoSoggetto&quot;: &quot;${tipoSoggetto}&quot;,&#10;  &quot;agricolaPrimaria&quot;: &quot;${agricolaPrimaria}&quot;,&#10;  &quot;iap&quot;: &quot;${iap}&quot;,&#10;  &quot;associataCollegata&quot;: &quot;${associataCollegata}&quot;,&#10;  &quot;rapportoAssicurativo&quot;: &quot;${rapportoAssicurativo}&quot;,&#10;  &quot;dataAssociazionePortale&quot;: &quot;${dataAssociazionePortale}&quot;,&#10;  &quot;indirizzoUnita&quot;: &quot;${indirizzoUnita}&quot;,&#10;  &quot;regione&quot;: &quot;${regione}&quot;,&#10;  &quot;ula&quot;: &quot;${ula}&quot;,&#10;  &quot;fatturato&quot;: &quot;${fatturato}&quot;,&#10;  &quot;totaleBilancio&quot;: &quot;${totaleBilancio}&quot;,&#10;  &quot;dipendentiImpresa&quot;: &quot;${dipendentiImpresa}&quot;,&#10;  &quot;dipendentiUnita&quot;: &quot;${dipendentiUnita}&quot;,&#10;  &quot;attivitaStagionale&quot;: &quot;${attivitaStagionale}&quot;,&#10;  &quot;dataInizioAttivita&quot;: &quot;${dataInizioAttivita}&quot;,&#10;  &quot;dittaSenzaDipendenti&quot;: &quot;${dittaSenzaDipendenti}&quot;,&#10;  &quot;asse&quot;: &quot;${asse}&quot;,&#10;  &quot;tipologia11&quot;: &quot;${tipologia11}&quot;,&#10;  &quot;tipologia12&quot;: &quot;${tipologia12}&quot;,&#10;  &quot;tipologia2&quot;: &quot;${tipologia2}&quot;,&#10;  &quot;tipologia3&quot;: &quot;${tipologia3}&quot;,&#10;  &quot;tipologia4a&quot;: &quot;${tipologia4a}&quot;,&#10;  &quot;tipologia4b&quot;: &quot;${tipologia4b}&quot;,&#10;  &quot;tipologia4c&quot;: &quot;${tipologia4c}&quot;,&#10;  &quot;aggiuntivo11&quot;: &quot;${aggiuntivo11}&quot;,&#10;  &quot;aggiuntivo2&quot;: &quot;${aggiuntivo2}&quot;,&#10;  &quot;aggiuntivo3&quot;: &quot;${aggiuntivo3}&quot;,&#10;  &quot;aggiuntivo4&quot;: &quot;${aggiuntivo4}&quot;,&#10;  &quot;bene1Tipo&quot;: &quot;${bene1Tipo}&quot;,&#10;  &quot;bene1Misura&quot;: &quot;${bene1Misura}&quot;,&#10;  &quot;bene1Fattore&quot;: &quot;${bene1Fattore}&quot;,&#10;  &quot;bene1Preventivo&quot;: &quot;${bene1Preventivo}&quot;,&#10;  &quot;bene1Listino&quot;: &quot;${bene1Listino}&quot;,&#10;  &quot;bene1PotenzaKw&quot;: &quot;${bene1PotenzaKw}&quot;,&#10;  &quot;bene1AnnoSostituito&quot;: &quot;${bene1AnnoSostituito}&quot;,&#10;  &quot;bene1Modalita&quot;: &quot;${bene1Modalita}&quot;,&#10;  &quot;bene1RicavoPermuta&quot;: &quot;${bene1RicavoPermuta}&quot;,&#10;  &quot;secondoBene&quot;: &quot;${secondoBene}&quot;,&#10;  &quot;bene2Tipo&quot;: &quot;${bene2Tipo}&quot;,&#10;  &quot;bene2Misura&quot;: &quot;${bene2Misura}&quot;,&#10;  &quot;bene2Fattore&quot;: &quot;${bene2Fattore}&quot;,&#10;  &quot;bene2Preventivo&quot;: &quot;${bene2Preventivo}&quot;,&#10;  &quot;bene2Listino&quot;: &quot;${bene2Listino}&quot;,&#10;  &quot;bene2PotenzaKw&quot;: &quot;${bene2PotenzaKw}&quot;,&#10;  &quot;bene2AnnoSostituito&quot;: &quot;${bene2AnnoSostituito}&quot;,&#10;  &quot;bene2Modalita&quot;: &quot;${bene2Modalita}&quot;,&#10;  &quot;bene2RicavoPermuta&quot;: &quot;${bene2RicavoPermuta}&quot;,&#10;  &quot;noleggioPattoAcquisto&quot;: &quot;${noleggioPattoAcquisto}&quot;,&#10;  &quot;giovaneEta&quot;: &quot;${giovaneEta}&quot;,&#10;  &quot;giovaneFormazione&quot;: &quot;${giovaneFormazione}&quot;,&#10;  &quot;giovaneCapoAzienda&quot;: &quot;${giovaneCapoAzienda}&quot;,&#10;  &quot;titoloProgetto&quot;: &quot;${titoloProgetto}&quot;,&#10;  &quot;descrizioneProgetto&quot;: &quot;${descrizioneProgetto}&quot;,&#10;  &quot;lavorazioneRischio&quot;: &quot;${lavorazioneRischio}&quot;,&#10;  &quot;macchina1Descrizione&quot;: &quot;${macchina1Descrizione}&quot;,&#10;  &quot;macchina1MarcaModello&quot;: &quot;${macchina1MarcaModello}&quot;,&#10;  &quot;macchina1Preventivo&quot;: &quot;${macchina1Preventivo}&quot;,&#10;  &quot;macchina1Listino&quot;: &quot;${macchina1Listino}&quot;,&#10;  &quot;macchina1Trattore&quot;: &quot;${macchina1Trattore}&quot;,&#10;  &quot;macchina1ListinoAccessori&quot;: &quot;${macchina1ListinoAccessori}&quot;,&#10;  &quot;macchina1PotenzaKw&quot;: &quot;${macchina1PotenzaKw}&quot;,&#10;  &quot;macchina1AnnoSostituito&quot;: &quot;${macchina1AnnoSostituito}&quot;,&#10;  &quot;macchina1Modalita&quot;: &quot;${macchina1Modalita}&quot;,&#10;  &quot;secondaMacchina&quot;: &quot;${secondaMacchina}&quot;,&#10;  &quot;macchina2Descrizione&quot;: &quot;${macchina2Descrizione}&quot;,&#10;  &quot;macchina2MarcaModello&quot;: &quot;${macchina2MarcaModello}&quot;,&#10;  &quot;macchina2Preventivo&quot;: &quot;${macchina2Preventivo}&quot;,&#10;  &quot;macchina2Listino&quot;: &quot;${macchina2Listino}&quot;,&#10;  &quot;macchina2Trattore&quot;: &quot;${macchina2Trattore}&quot;,&#10;  &quot;macchina2ListinoAccessori&quot;: &quot;${macchina2ListinoAccessori}&quot;,&#10;  &quot;macchina2PotenzaKw&quot;: &quot;${macchina2PotenzaKw}&quot;,&#10;  &quot;macchina2AnnoSostituito&quot;: &quot;${macchina2AnnoSostituito}&quot;,&#10;  &quot;macchina2Modalita&quot;: &quot;${macchina2Modalita}&quot;,&#10;  &quot;mqCopertura&quot;: &quot;${mqCopertura}&quot;,&#10;  &quot;speseCopertura&quot;: &quot;${speseCopertura}&quot;,&#10;  &quot;mqControsoffitto&quot;: &quot;${mqControsoffitto}&quot;,&#10;  &quot;speseControsoffitto&quot;: &quot;${speseControsoffitto}&quot;,&#10;  &quot;speseAccessorie&quot;: &quot;${speseAccessorie}&quot;,&#10;  &quot;immobileLocato&quot;: &quot;${immobileLocato}&quot;,&#10;  &quot;quotaImmobile&quot;: &quot;${quotaImmobile}&quot;,&#10;  &quot;sgslUltimi3Anni&quot;: &quot;${sgslUltimi3Anni}&quot;,&#10;  &quot;concessione12Precedenti&quot;: &quot;${concessione12Precedenti}&quot;,&#10;  &quot;tassoMedio&quot;: &quot;${tassoMedio}&quot;,&#10;  &quot;partiSociali&quot;: &quot;${partiSociali}&quot;,&#10;  &quot;rls&quot;: &quot;${rls}&quot;,&#10;  &quot;certIso45001&quot;: &quot;${certIso45001}&quot;,&#10;  &quot;certIso14001&quot;: &quot;${certIso14001}&quot;,&#10;  &quot;certEmas&quot;: &quot;${certEmas}&quot;,&#10;  &quot;certIso39001&quot;: &quot;${certIso39001}&quot;,&#10;  &quot;certMog&quot;: &quot;${certMog}&quot;,&#10;  &quot;certRlaq&quot;: &quot;${certRlaq}&quot;,&#10;  &quot;ratingLegalita&quot;: &quot;${ratingLegalita}&quot;,&#10;  &quot;speseProgetto&quot;: &quot;${speseProgetto}&quot;,&#10;  &quot;speseTecniche&quot;: &quot;${speseTecniche}&quot;,&#10;  &quot;costoPerizia&quot;: &quot;${costoPerizia}&quot;,&#10;  &quot;speseAggiuntivo&quot;: &quot;${speseAggiuntivo}&quot;,&#10;  &quot;ivaNonRecuperabile&quot;: &quot;${ivaNonRecuperabile}&quot;,&#10;  &quot;motivazioneIva&quot;: &quot;${motivazioneIva}&quot;,&#10;  &quot;anticipo&quot;: &quot;${anticipo}&quot;,&#10;  &quot;nessunaSpesaNonAmmessa&quot;: &quot;${nessunaSpesaNonAmmessa}&quot;,&#10;  &quot;dichR02&quot;: &quot;${dichR02}&quot;,&#10;  &quot;dichR03&quot;: &quot;${dichR03}&quot;,&#10;  &quot;dichR05&quot;: &quot;${dichR05}&quot;,&#10;  &quot;dichR06&quot;: &quot;${dichR06}&quot;,&#10;  &quot;dichR07&quot;: &quot;${dichR07}&quot;,&#10;  &quot;dichR08&quot;: &quot;${dichR08}&quot;,&#10;  &quot;dichR09&quot;: &quot;${dichR09}&quot;,&#10;  &quot;dichR10&quot;: &quot;${dichR10}&quot;,&#10;  &quot;dichR11&quot;: &quot;${dichR11}&quot;,&#10;  &quot;dichR12&quot;: &quot;${dichR12}&quot;,&#10;  &quot;dichR15&quot;: &quot;${dichR15}&quot;,&#10;  &quot;dichR16&quot;: &quot;${dichR16}&quot;,&#10;  &quot;dichR17&quot;: &quot;${dichR17}&quot;,&#10;  &quot;dichR18&quot;: &quot;${dichR18}&quot;,&#10;  &quot;finanziamentiPrecedenti&quot;: &quot;${finanziamentiPrecedenti}&quot;,&#10;  &quot;assePrecedente&quot;: &quot;${assePrecedente}&quot;,&#10;  &quot;rinunciaPec&quot;: &quot;${rinunciaPec}&quot;,&#10;  &quot;codiceFiscaleImpresa&quot;: &quot;${codiceFiscaleImpresa}&quot;,&#10;  &quot;annualita&quot;: &quot;2025&quot;&#10;}" />
+          <activiti:field name="risposta" stringValue="riepilogo = riepilogo&#10;punteggio = punteggio&#10;registrabile = registrabile&#10;erroriBloccanti = erroriBloccanti&#10;avvisiCalcolo = avvisiCalcolo&#10;dettaglioPunteggio = dettaglioPunteggio&#10;dettaglioImporti = dettaglioImporti&#10;assiAmmessi = assiAmmessi&#10;assiNonAmmessi = assiNonAmmessi&#10;documentiRichiesti = documentiRichiesti&#10;contributoTotale = contributoTotale&#10;contributoTotaleTesto = contributoTotaleTesto&#10;importoAnticipo = anticipo&#10;fideiussione = fideiussione&#10;ulaCalcolate = ula&#10;versioneRegole = versioneRegole&#10;modelloPerizia = modelloPerizia&#10;gruppoSede = gruppoSede&#10;passoDaCorreggere = passoDaCorreggere&#10;erroriImpresa = erroriImpresa&#10;erroriProgetto = erroriProgetto&#10;erroriPunteggio = erroriPunteggio&#10;erroriDichiarazioni = erroriDichiarazioni" />
+          <activiti:field name="timeout" stringValue="20" />
+          <activiti:field name="inErrore" stringValue="Segui la strada di errore" />
+        </extensionElements>
+      </serviceTask>
+      <boundaryEvent id="calcolaAssiErrore" name="Servizio ISI non disponibile" attachedToRef="calcolaAssi">
+        <errorEventDefinition />
+      </boundaryEvent>
+      <sequenceFlow id="cAssiErrore" sourceRef="calcolaAssiErrore" targetRef="passoImpresa" />
+      <exclusiveGateway id="impresaGw" name="Impresa ammessa?" default="cImpresaOk" />
+      <sequenceFlow id="cAssi" sourceRef="calcolaAssi" targetRef="impresaGw" />
+      <sequenceFlow id="cImpresaNo" name="No, da correggere" sourceRef="impresaGw" targetRef="passoImpresa">
+        <conditionExpression xsi:type="tFormalExpression">${passoDaCorreggere == 'impresa'}</conditionExpression>
+      </sequenceFlow>
+      <sequenceFlow id="cImpresaOk" name="Sì" sourceRef="impresaGw" targetRef="passoProgetto" />
+      <userTask id="passoProgetto" name="Scegli asse e progetto" activiti:candidateGroups="parte:richiedente" activiti:formKey="isi-progetto" />
+      <exclusiveGateway id="passoProgettoGw" name="Come prosegue?" default="passoProgettoGwAvanti" />
+      <sequenceFlow id="passoProgettoEsce" sourceRef="passoProgetto" targetRef="passoProgettoGw" />
+      <sequenceFlow id="passoProgettoGwAvanti" name="Continua" sourceRef="passoProgettoGw" targetRef="passoPunteggio" />
+      <endEvent id="passoProgettoAnnullata" name="Bozza annullata" />
+      <sequenceFlow id="passoProgettoGwAnnulla" name="Annulla" sourceRef="passoProgettoGw" targetRef="passoProgettoAnnullata">
+        <conditionExpression xsi:type="tFormalExpression">${azione == 'Annulla la bozza'}</conditionExpression>
+      </sequenceFlow>
+      <sequenceFlow id="passoProgettoGwIndietro" name="Torna indietro" sourceRef="passoProgettoGw" targetRef="passoImpresa">
+        <conditionExpression xsi:type="tFormalExpression">${azione == 'Torna al passo precedente'}</conditionExpression>
+      </sequenceFlow>
+      <userTask id="passoPunteggio" name="Criteri di punteggio e piano economico" activiti:candidateGroups="parte:richiedente" activiti:formKey="isi-punteggio" />
+      <exclusiveGateway id="passoPunteggioGw" name="Come prosegue?" default="passoPunteggioGwAvanti" />
+      <sequenceFlow id="passoPunteggioEsce" sourceRef="passoPunteggio" targetRef="passoPunteggioGw" />
+      <sequenceFlow id="passoPunteggioGwAvanti" name="Continua" sourceRef="passoPunteggioGw" targetRef="passoDichiarazioni" />
+      <endEvent id="passoPunteggioAnnullata" name="Bozza annullata" />
+      <sequenceFlow id="passoPunteggioGwAnnulla" name="Annulla" sourceRef="passoPunteggioGw" targetRef="passoPunteggioAnnullata">
+        <conditionExpression xsi:type="tFormalExpression">${azione == 'Annulla la bozza'}</conditionExpression>
+      </sequenceFlow>
+      <sequenceFlow id="passoPunteggioGwIndietro" name="Torna indietro" sourceRef="passoPunteggioGw" targetRef="passoProgetto">
+        <conditionExpression xsi:type="tFormalExpression">${azione == 'Torna al passo precedente'}</conditionExpression>
+      </sequenceFlow>
+      <userTask id="passoDichiarazioni" name="Firma le dichiarazioni" activiti:candidateGroups="parte:richiedente" activiti:formKey="isi-dichiarazioni" />
+      <exclusiveGateway id="passoDichiarazioniGw" name="Come prosegue?" default="passoDichiarazioniGwAvanti" />
+      <sequenceFlow id="passoDichiarazioniEsce" sourceRef="passoDichiarazioni" targetRef="passoDichiarazioniGw" />
+      <sequenceFlow id="passoDichiarazioniGwAvanti" name="Continua" sourceRef="passoDichiarazioniGw" targetRef="calcola" />
+      <endEvent id="passoDichiarazioniAnnullata" name="Bozza annullata" />
+      <sequenceFlow id="passoDichiarazioniGwAnnulla" name="Annulla" sourceRef="passoDichiarazioniGw" targetRef="passoDichiarazioniAnnullata">
+        <conditionExpression xsi:type="tFormalExpression">${azione == 'Annulla la bozza'}</conditionExpression>
+      </sequenceFlow>
+      <sequenceFlow id="passoDichiarazioniGwIndietro" name="Torna indietro" sourceRef="passoDichiarazioniGw" targetRef="passoPunteggio">
+        <conditionExpression xsi:type="tFormalExpression">${azione == 'Torna al passo precedente'}</conditionExpression>
+      </sequenceFlow>
       <serviceTask id="calcola" name="Calcola punteggio e importi" implementation="apiConnector">
         <extensionElements>
           <activiti:field name="metodo" stringValue="POST" />
           <activiti:field name="url" stringValue="http://localhost:8095/calcola" />
           <activiti:field name="credenziale" stringValue="servizio-isi" />
-          <activiti:field name="corpo" stringValue="{&#10;  &quot;ragioneSociale&quot;: &quot;${ragioneSociale}&quot;,&#10;  &quot;partitaIva&quot;: &quot;${partitaIva}&quot;,&#10;  &quot;formaGiuridica&quot;: &quot;${formaGiuridica}&quot;,&#10;  &quot;ateco&quot;: &quot;${ateco}&quot;,&#10;  &quot;dataCostituzione&quot;: &quot;${dataCostituzione}&quot;,&#10;  &quot;dataIscrizioneCciaa&quot;: &quot;${dataIscrizioneCciaa}&quot;,&#10;  &quot;sedeLegale&quot;: &quot;${sedeLegale}&quot;,&#10;  &quot;codiceDitta&quot;: &quot;${codiceDitta}&quot;,&#10;  &quot;pec&quot;: &quot;${pec}&quot;,&#10;  &quot;tipoSoggetto&quot;: &quot;${tipoSoggetto}&quot;,&#10;  &quot;agricolaPrimaria&quot;: &quot;${agricolaPrimaria}&quot;,&#10;  &quot;iap&quot;: &quot;${iap}&quot;,&#10;  &quot;associataCollegata&quot;: &quot;${associataCollegata}&quot;,&#10;  &quot;rapportoAssicurativo&quot;: &quot;${rapportoAssicurativo}&quot;,&#10;  &quot;dataAssociazionePortale&quot;: &quot;${dataAssociazionePortale}&quot;,&#10;  &quot;indirizzoUnita&quot;: &quot;${indirizzoUnita}&quot;,&#10;  &quot;regione&quot;: &quot;${regione}&quot;,&#10;  &quot;ula&quot;: &quot;${ula}&quot;,&#10;  &quot;fatturato&quot;: &quot;${fatturato}&quot;,&#10;  &quot;totaleBilancio&quot;: &quot;${totaleBilancio}&quot;,&#10;  &quot;dipendentiImpresa&quot;: &quot;${dipendentiImpresa}&quot;,&#10;  &quot;dipendentiUnita&quot;: &quot;${dipendentiUnita}&quot;,&#10;  &quot;attivitaStagionale&quot;: &quot;${attivitaStagionale}&quot;,&#10;  &quot;dataInizioAttivita&quot;: &quot;${dataInizioAttivita}&quot;,&#10;  &quot;dittaSenzaDipendenti&quot;: &quot;${dittaSenzaDipendenti}&quot;,&#10;  &quot;asse&quot;: &quot;${asse}&quot;,&#10;  &quot;tipologia11&quot;: &quot;${tipologia11}&quot;,&#10;  &quot;tipologia12&quot;: &quot;${tipologia12}&quot;,&#10;  &quot;tipologia2&quot;: &quot;${tipologia2}&quot;,&#10;  &quot;tipologia3&quot;: &quot;${tipologia3}&quot;,&#10;  &quot;tipologia4a&quot;: &quot;${tipologia4a}&quot;,&#10;  &quot;tipologia4b&quot;: &quot;${tipologia4b}&quot;,&#10;  &quot;tipologia4c&quot;: &quot;${tipologia4c}&quot;,&#10;  &quot;aggiuntivo11&quot;: &quot;${aggiuntivo11}&quot;,&#10;  &quot;aggiuntivo2&quot;: &quot;${aggiuntivo2}&quot;,&#10;  &quot;aggiuntivo3&quot;: &quot;${aggiuntivo3}&quot;,&#10;  &quot;aggiuntivo4&quot;: &quot;${aggiuntivo4}&quot;,&#10;  &quot;bene1Tipo&quot;: &quot;${bene1Tipo}&quot;,&#10;  &quot;bene1Misura&quot;: &quot;${bene1Misura}&quot;,&#10;  &quot;bene1Fattore&quot;: &quot;${bene1Fattore}&quot;,&#10;  &quot;bene1Preventivo&quot;: &quot;${bene1Preventivo}&quot;,&#10;  &quot;bene1Listino&quot;: &quot;${bene1Listino}&quot;,&#10;  &quot;bene1PotenzaKw&quot;: &quot;${bene1PotenzaKw}&quot;,&#10;  &quot;bene1AnnoSostituito&quot;: &quot;${bene1AnnoSostituito}&quot;,&#10;  &quot;bene1Modalita&quot;: &quot;${bene1Modalita}&quot;,&#10;  &quot;bene1RicavoPermuta&quot;: &quot;${bene1RicavoPermuta}&quot;,&#10;  &quot;secondoBene&quot;: &quot;${secondoBene}&quot;,&#10;  &quot;bene2Tipo&quot;: &quot;${bene2Tipo}&quot;,&#10;  &quot;bene2Misura&quot;: &quot;${bene2Misura}&quot;,&#10;  &quot;bene2Fattore&quot;: &quot;${bene2Fattore}&quot;,&#10;  &quot;bene2Preventivo&quot;: &quot;${bene2Preventivo}&quot;,&#10;  &quot;bene2Listino&quot;: &quot;${bene2Listino}&quot;,&#10;  &quot;bene2PotenzaKw&quot;: &quot;${bene2PotenzaKw}&quot;,&#10;  &quot;bene2AnnoSostituito&quot;: &quot;${bene2AnnoSostituito}&quot;,&#10;  &quot;bene2Modalita&quot;: &quot;${bene2Modalita}&quot;,&#10;  &quot;bene2RicavoPermuta&quot;: &quot;${bene2RicavoPermuta}&quot;,&#10;  &quot;noleggioPattoAcquisto&quot;: &quot;${noleggioPattoAcquisto}&quot;,&#10;  &quot;giovaneEta&quot;: &quot;${giovaneEta}&quot;,&#10;  &quot;giovaneFormazione&quot;: &quot;${giovaneFormazione}&quot;,&#10;  &quot;giovaneCapoAzienda&quot;: &quot;${giovaneCapoAzienda}&quot;,&#10;  &quot;titoloProgetto&quot;: &quot;${titoloProgetto}&quot;,&#10;  &quot;descrizioneProgetto&quot;: &quot;${descrizioneProgetto}&quot;,&#10;  &quot;lavorazioneRischio&quot;: &quot;${lavorazioneRischio}&quot;,&#10;  &quot;macchina1Descrizione&quot;: &quot;${macchina1Descrizione}&quot;,&#10;  &quot;macchina1MarcaModello&quot;: &quot;${macchina1MarcaModello}&quot;,&#10;  &quot;macchina1Preventivo&quot;: &quot;${macchina1Preventivo}&quot;,&#10;  &quot;macchina1Listino&quot;: &quot;${macchina1Listino}&quot;,&#10;  &quot;macchina1Trattore&quot;: &quot;${macchina1Trattore}&quot;,&#10;  &quot;macchina1ListinoAccessori&quot;: &quot;${macchina1ListinoAccessori}&quot;,&#10;  &quot;macchina1PotenzaKw&quot;: &quot;${macchina1PotenzaKw}&quot;,&#10;  &quot;macchina1AnnoSostituito&quot;: &quot;${macchina1AnnoSostituito}&quot;,&#10;  &quot;macchina1Modalita&quot;: &quot;${macchina1Modalita}&quot;,&#10;  &quot;secondaMacchina&quot;: &quot;${secondaMacchina}&quot;,&#10;  &quot;macchina2Descrizione&quot;: &quot;${macchina2Descrizione}&quot;,&#10;  &quot;macchina2MarcaModello&quot;: &quot;${macchina2MarcaModello}&quot;,&#10;  &quot;macchina2Preventivo&quot;: &quot;${macchina2Preventivo}&quot;,&#10;  &quot;macchina2Listino&quot;: &quot;${macchina2Listino}&quot;,&#10;  &quot;macchina2Trattore&quot;: &quot;${macchina2Trattore}&quot;,&#10;  &quot;macchina2ListinoAccessori&quot;: &quot;${macchina2ListinoAccessori}&quot;,&#10;  &quot;macchina2PotenzaKw&quot;: &quot;${macchina2PotenzaKw}&quot;,&#10;  &quot;macchina2AnnoSostituito&quot;: &quot;${macchina2AnnoSostituito}&quot;,&#10;  &quot;macchina2Modalita&quot;: &quot;${macchina2Modalita}&quot;,&#10;  &quot;mqCopertura&quot;: &quot;${mqCopertura}&quot;,&#10;  &quot;speseCopertura&quot;: &quot;${speseCopertura}&quot;,&#10;  &quot;mqControsoffitto&quot;: &quot;${mqControsoffitto}&quot;,&#10;  &quot;speseControsoffitto&quot;: &quot;${speseControsoffitto}&quot;,&#10;  &quot;speseAccessorie&quot;: &quot;${speseAccessorie}&quot;,&#10;  &quot;immobileLocato&quot;: &quot;${immobileLocato}&quot;,&#10;  &quot;quotaImmobile&quot;: &quot;${quotaImmobile}&quot;,&#10;  &quot;sgslUltimi3Anni&quot;: &quot;${sgslUltimi3Anni}&quot;,&#10;  &quot;concessione12Precedenti&quot;: &quot;${concessione12Precedenti}&quot;,&#10;  &quot;tassoMedio&quot;: &quot;${tassoMedio}&quot;,&#10;  &quot;partiSociali&quot;: &quot;${partiSociali}&quot;,&#10;  &quot;rls&quot;: &quot;${rls}&quot;,&#10;  &quot;certIso45001&quot;: &quot;${certIso45001}&quot;,&#10;  &quot;certIso14001&quot;: &quot;${certIso14001}&quot;,&#10;  &quot;certEmas&quot;: &quot;${certEmas}&quot;,&#10;  &quot;certIso39001&quot;: &quot;${certIso39001}&quot;,&#10;  &quot;certMog&quot;: &quot;${certMog}&quot;,&#10;  &quot;certRlaq&quot;: &quot;${certRlaq}&quot;,&#10;  &quot;ratingLegalita&quot;: &quot;${ratingLegalita}&quot;,&#10;  &quot;speseProgetto&quot;: &quot;${speseProgetto}&quot;,&#10;  &quot;speseTecniche&quot;: &quot;${speseTecniche}&quot;,&#10;  &quot;costoPerizia&quot;: &quot;${costoPerizia}&quot;,&#10;  &quot;speseAggiuntivo&quot;: &quot;${speseAggiuntivo}&quot;,&#10;  &quot;ivaNonRecuperabile&quot;: &quot;${ivaNonRecuperabile}&quot;,&#10;  &quot;motivazioneIva&quot;: &quot;${motivazioneIva}&quot;,&#10;  &quot;anticipo&quot;: &quot;${anticipo}&quot;,&#10;  &quot;nessunaSpesaNonAmmessa&quot;: &quot;${nessunaSpesaNonAmmessa}&quot;,&#10;  &quot;dichR02&quot;: &quot;${dichR02}&quot;,&#10;  &quot;dichR03&quot;: &quot;${dichR03}&quot;,&#10;  &quot;dichR05&quot;: &quot;${dichR05}&quot;,&#10;  &quot;dichR06&quot;: &quot;${dichR06}&quot;,&#10;  &quot;dichR07&quot;: &quot;${dichR07}&quot;,&#10;  &quot;dichR08&quot;: &quot;${dichR08}&quot;,&#10;  &quot;dichR09&quot;: &quot;${dichR09}&quot;,&#10;  &quot;dichR10&quot;: &quot;${dichR10}&quot;,&#10;  &quot;dichR11&quot;: &quot;${dichR11}&quot;,&#10;  &quot;dichR12&quot;: &quot;${dichR12}&quot;,&#10;  &quot;dichR15&quot;: &quot;${dichR15}&quot;,&#10;  &quot;dichR16&quot;: &quot;${dichR16}&quot;,&#10;  &quot;dichR17&quot;: &quot;${dichR17}&quot;,&#10;  &quot;dichR18&quot;: &quot;${dichR18}&quot;,&#10;  &quot;finanziamentiPrecedenti&quot;: &quot;${finanziamentiPrecedenti}&quot;,&#10;  &quot;assePrecedente&quot;: &quot;${assePrecedente}&quot;,&#10;  &quot;rinunciaPec&quot;: &quot;${rinunciaPec}&quot;,&#10;  &quot;azione&quot;: &quot;${azione}&quot;,&#10;  &quot;confermaRegistrazione&quot;: &quot;${confermaRegistrazione}&quot;,&#10;  &quot;confermaAnnullamento&quot;: &quot;${confermaAnnullamento}&quot;,&#10;  &quot;codiceFiscaleImpresa&quot;: &quot;${codiceFiscaleImpresa}&quot;,&#10;  &quot;annualita&quot;: &quot;2025&quot;&#10;}" />
-          <activiti:field name="risposta" stringValue="riepilogo = riepilogo&#10;punteggio = punteggio&#10;registrabile = registrabile&#10;erroriBloccanti = erroriBloccanti&#10;avvisiCalcolo = avvisiCalcolo&#10;dettaglioPunteggio = dettaglioPunteggio&#10;dettaglioImporti = dettaglioImporti&#10;assiAmmessi = assiAmmessi&#10;assiNonAmmessi = assiNonAmmessi&#10;documentiRichiesti = documentiRichiesti&#10;contributoTotale = contributoTotale&#10;contributoTotaleTesto = contributoTotaleTesto&#10;importoAnticipo = anticipo&#10;fideiussione = fideiussione&#10;ulaCalcolate = ula&#10;versioneRegole = versioneRegole&#10;modelloPerizia = modelloPerizia&#10;gruppoSede = gruppoSede" />
+          <activiti:field name="corpo" stringValue="{&#10;  &quot;ragioneSociale&quot;: &quot;${ragioneSociale}&quot;,&#10;  &quot;partitaIva&quot;: &quot;${partitaIva}&quot;,&#10;  &quot;formaGiuridica&quot;: &quot;${formaGiuridica}&quot;,&#10;  &quot;ateco&quot;: &quot;${ateco}&quot;,&#10;  &quot;dataCostituzione&quot;: &quot;${dataCostituzione}&quot;,&#10;  &quot;dataIscrizioneCciaa&quot;: &quot;${dataIscrizioneCciaa}&quot;,&#10;  &quot;sedeLegale&quot;: &quot;${sedeLegale}&quot;,&#10;  &quot;codiceDitta&quot;: &quot;${codiceDitta}&quot;,&#10;  &quot;pec&quot;: &quot;${pec}&quot;,&#10;  &quot;tipoSoggetto&quot;: &quot;${tipoSoggetto}&quot;,&#10;  &quot;agricolaPrimaria&quot;: &quot;${agricolaPrimaria}&quot;,&#10;  &quot;iap&quot;: &quot;${iap}&quot;,&#10;  &quot;associataCollegata&quot;: &quot;${associataCollegata}&quot;,&#10;  &quot;rapportoAssicurativo&quot;: &quot;${rapportoAssicurativo}&quot;,&#10;  &quot;dataAssociazionePortale&quot;: &quot;${dataAssociazionePortale}&quot;,&#10;  &quot;indirizzoUnita&quot;: &quot;${indirizzoUnita}&quot;,&#10;  &quot;regione&quot;: &quot;${regione}&quot;,&#10;  &quot;ula&quot;: &quot;${ula}&quot;,&#10;  &quot;fatturato&quot;: &quot;${fatturato}&quot;,&#10;  &quot;totaleBilancio&quot;: &quot;${totaleBilancio}&quot;,&#10;  &quot;dipendentiImpresa&quot;: &quot;${dipendentiImpresa}&quot;,&#10;  &quot;dipendentiUnita&quot;: &quot;${dipendentiUnita}&quot;,&#10;  &quot;attivitaStagionale&quot;: &quot;${attivitaStagionale}&quot;,&#10;  &quot;dataInizioAttivita&quot;: &quot;${dataInizioAttivita}&quot;,&#10;  &quot;dittaSenzaDipendenti&quot;: &quot;${dittaSenzaDipendenti}&quot;,&#10;  &quot;asse&quot;: &quot;${asse}&quot;,&#10;  &quot;tipologia11&quot;: &quot;${tipologia11}&quot;,&#10;  &quot;tipologia12&quot;: &quot;${tipologia12}&quot;,&#10;  &quot;tipologia2&quot;: &quot;${tipologia2}&quot;,&#10;  &quot;tipologia3&quot;: &quot;${tipologia3}&quot;,&#10;  &quot;tipologia4a&quot;: &quot;${tipologia4a}&quot;,&#10;  &quot;tipologia4b&quot;: &quot;${tipologia4b}&quot;,&#10;  &quot;tipologia4c&quot;: &quot;${tipologia4c}&quot;,&#10;  &quot;aggiuntivo11&quot;: &quot;${aggiuntivo11}&quot;,&#10;  &quot;aggiuntivo2&quot;: &quot;${aggiuntivo2}&quot;,&#10;  &quot;aggiuntivo3&quot;: &quot;${aggiuntivo3}&quot;,&#10;  &quot;aggiuntivo4&quot;: &quot;${aggiuntivo4}&quot;,&#10;  &quot;bene1Tipo&quot;: &quot;${bene1Tipo}&quot;,&#10;  &quot;bene1Misura&quot;: &quot;${bene1Misura}&quot;,&#10;  &quot;bene1Fattore&quot;: &quot;${bene1Fattore}&quot;,&#10;  &quot;bene1Preventivo&quot;: &quot;${bene1Preventivo}&quot;,&#10;  &quot;bene1Listino&quot;: &quot;${bene1Listino}&quot;,&#10;  &quot;bene1PotenzaKw&quot;: &quot;${bene1PotenzaKw}&quot;,&#10;  &quot;bene1AnnoSostituito&quot;: &quot;${bene1AnnoSostituito}&quot;,&#10;  &quot;bene1Modalita&quot;: &quot;${bene1Modalita}&quot;,&#10;  &quot;bene1RicavoPermuta&quot;: &quot;${bene1RicavoPermuta}&quot;,&#10;  &quot;secondoBene&quot;: &quot;${secondoBene}&quot;,&#10;  &quot;bene2Tipo&quot;: &quot;${bene2Tipo}&quot;,&#10;  &quot;bene2Misura&quot;: &quot;${bene2Misura}&quot;,&#10;  &quot;bene2Fattore&quot;: &quot;${bene2Fattore}&quot;,&#10;  &quot;bene2Preventivo&quot;: &quot;${bene2Preventivo}&quot;,&#10;  &quot;bene2Listino&quot;: &quot;${bene2Listino}&quot;,&#10;  &quot;bene2PotenzaKw&quot;: &quot;${bene2PotenzaKw}&quot;,&#10;  &quot;bene2AnnoSostituito&quot;: &quot;${bene2AnnoSostituito}&quot;,&#10;  &quot;bene2Modalita&quot;: &quot;${bene2Modalita}&quot;,&#10;  &quot;bene2RicavoPermuta&quot;: &quot;${bene2RicavoPermuta}&quot;,&#10;  &quot;noleggioPattoAcquisto&quot;: &quot;${noleggioPattoAcquisto}&quot;,&#10;  &quot;giovaneEta&quot;: &quot;${giovaneEta}&quot;,&#10;  &quot;giovaneFormazione&quot;: &quot;${giovaneFormazione}&quot;,&#10;  &quot;giovaneCapoAzienda&quot;: &quot;${giovaneCapoAzienda}&quot;,&#10;  &quot;titoloProgetto&quot;: &quot;${titoloProgetto}&quot;,&#10;  &quot;descrizioneProgetto&quot;: &quot;${descrizioneProgetto}&quot;,&#10;  &quot;lavorazioneRischio&quot;: &quot;${lavorazioneRischio}&quot;,&#10;  &quot;macchina1Descrizione&quot;: &quot;${macchina1Descrizione}&quot;,&#10;  &quot;macchina1MarcaModello&quot;: &quot;${macchina1MarcaModello}&quot;,&#10;  &quot;macchina1Preventivo&quot;: &quot;${macchina1Preventivo}&quot;,&#10;  &quot;macchina1Listino&quot;: &quot;${macchina1Listino}&quot;,&#10;  &quot;macchina1Trattore&quot;: &quot;${macchina1Trattore}&quot;,&#10;  &quot;macchina1ListinoAccessori&quot;: &quot;${macchina1ListinoAccessori}&quot;,&#10;  &quot;macchina1PotenzaKw&quot;: &quot;${macchina1PotenzaKw}&quot;,&#10;  &quot;macchina1AnnoSostituito&quot;: &quot;${macchina1AnnoSostituito}&quot;,&#10;  &quot;macchina1Modalita&quot;: &quot;${macchina1Modalita}&quot;,&#10;  &quot;secondaMacchina&quot;: &quot;${secondaMacchina}&quot;,&#10;  &quot;macchina2Descrizione&quot;: &quot;${macchina2Descrizione}&quot;,&#10;  &quot;macchina2MarcaModello&quot;: &quot;${macchina2MarcaModello}&quot;,&#10;  &quot;macchina2Preventivo&quot;: &quot;${macchina2Preventivo}&quot;,&#10;  &quot;macchina2Listino&quot;: &quot;${macchina2Listino}&quot;,&#10;  &quot;macchina2Trattore&quot;: &quot;${macchina2Trattore}&quot;,&#10;  &quot;macchina2ListinoAccessori&quot;: &quot;${macchina2ListinoAccessori}&quot;,&#10;  &quot;macchina2PotenzaKw&quot;: &quot;${macchina2PotenzaKw}&quot;,&#10;  &quot;macchina2AnnoSostituito&quot;: &quot;${macchina2AnnoSostituito}&quot;,&#10;  &quot;macchina2Modalita&quot;: &quot;${macchina2Modalita}&quot;,&#10;  &quot;mqCopertura&quot;: &quot;${mqCopertura}&quot;,&#10;  &quot;speseCopertura&quot;: &quot;${speseCopertura}&quot;,&#10;  &quot;mqControsoffitto&quot;: &quot;${mqControsoffitto}&quot;,&#10;  &quot;speseControsoffitto&quot;: &quot;${speseControsoffitto}&quot;,&#10;  &quot;speseAccessorie&quot;: &quot;${speseAccessorie}&quot;,&#10;  &quot;immobileLocato&quot;: &quot;${immobileLocato}&quot;,&#10;  &quot;quotaImmobile&quot;: &quot;${quotaImmobile}&quot;,&#10;  &quot;sgslUltimi3Anni&quot;: &quot;${sgslUltimi3Anni}&quot;,&#10;  &quot;concessione12Precedenti&quot;: &quot;${concessione12Precedenti}&quot;,&#10;  &quot;tassoMedio&quot;: &quot;${tassoMedio}&quot;,&#10;  &quot;partiSociali&quot;: &quot;${partiSociali}&quot;,&#10;  &quot;rls&quot;: &quot;${rls}&quot;,&#10;  &quot;certIso45001&quot;: &quot;${certIso45001}&quot;,&#10;  &quot;certIso14001&quot;: &quot;${certIso14001}&quot;,&#10;  &quot;certEmas&quot;: &quot;${certEmas}&quot;,&#10;  &quot;certIso39001&quot;: &quot;${certIso39001}&quot;,&#10;  &quot;certMog&quot;: &quot;${certMog}&quot;,&#10;  &quot;certRlaq&quot;: &quot;${certRlaq}&quot;,&#10;  &quot;ratingLegalita&quot;: &quot;${ratingLegalita}&quot;,&#10;  &quot;speseProgetto&quot;: &quot;${speseProgetto}&quot;,&#10;  &quot;speseTecniche&quot;: &quot;${speseTecniche}&quot;,&#10;  &quot;costoPerizia&quot;: &quot;${costoPerizia}&quot;,&#10;  &quot;speseAggiuntivo&quot;: &quot;${speseAggiuntivo}&quot;,&#10;  &quot;ivaNonRecuperabile&quot;: &quot;${ivaNonRecuperabile}&quot;,&#10;  &quot;motivazioneIva&quot;: &quot;${motivazioneIva}&quot;,&#10;  &quot;anticipo&quot;: &quot;${anticipo}&quot;,&#10;  &quot;nessunaSpesaNonAmmessa&quot;: &quot;${nessunaSpesaNonAmmessa}&quot;,&#10;  &quot;dichR02&quot;: &quot;${dichR02}&quot;,&#10;  &quot;dichR03&quot;: &quot;${dichR03}&quot;,&#10;  &quot;dichR05&quot;: &quot;${dichR05}&quot;,&#10;  &quot;dichR06&quot;: &quot;${dichR06}&quot;,&#10;  &quot;dichR07&quot;: &quot;${dichR07}&quot;,&#10;  &quot;dichR08&quot;: &quot;${dichR08}&quot;,&#10;  &quot;dichR09&quot;: &quot;${dichR09}&quot;,&#10;  &quot;dichR10&quot;: &quot;${dichR10}&quot;,&#10;  &quot;dichR11&quot;: &quot;${dichR11}&quot;,&#10;  &quot;dichR12&quot;: &quot;${dichR12}&quot;,&#10;  &quot;dichR15&quot;: &quot;${dichR15}&quot;,&#10;  &quot;dichR16&quot;: &quot;${dichR16}&quot;,&#10;  &quot;dichR17&quot;: &quot;${dichR17}&quot;,&#10;  &quot;dichR18&quot;: &quot;${dichR18}&quot;,&#10;  &quot;finanziamentiPrecedenti&quot;: &quot;${finanziamentiPrecedenti}&quot;,&#10;  &quot;assePrecedente&quot;: &quot;${assePrecedente}&quot;,&#10;  &quot;rinunciaPec&quot;: &quot;${rinunciaPec}&quot;,&#10;  &quot;codiceFiscaleImpresa&quot;: &quot;${codiceFiscaleImpresa}&quot;,&#10;  &quot;annualita&quot;: &quot;2025&quot;&#10;}" />
+          <activiti:field name="risposta" stringValue="riepilogo = riepilogo&#10;punteggio = punteggio&#10;registrabile = registrabile&#10;erroriBloccanti = erroriBloccanti&#10;avvisiCalcolo = avvisiCalcolo&#10;dettaglioPunteggio = dettaglioPunteggio&#10;dettaglioImporti = dettaglioImporti&#10;assiAmmessi = assiAmmessi&#10;assiNonAmmessi = assiNonAmmessi&#10;documentiRichiesti = documentiRichiesti&#10;contributoTotale = contributoTotale&#10;contributoTotaleTesto = contributoTotaleTesto&#10;importoAnticipo = anticipo&#10;fideiussione = fideiussione&#10;ulaCalcolate = ula&#10;versioneRegole = versioneRegole&#10;modelloPerizia = modelloPerizia&#10;gruppoSede = gruppoSede&#10;passoDaCorreggere = passoDaCorreggere&#10;erroriImpresa = erroriImpresa&#10;erroriProgetto = erroriProgetto&#10;erroriPunteggio = erroriPunteggio&#10;erroriDichiarazioni = erroriDichiarazioni" />
           <activiti:field name="timeout" stringValue="20" />
           <activiti:field name="inErrore" stringValue="Segui la strada di errore" />
         </extensionElements>
@@ -49,13 +127,50 @@
       <boundaryEvent id="calcolaErrore" name="Servizio ISI non disponibile" attachedToRef="calcola">
         <errorEventDefinition />
       </boundaryEvent>
-      <exclusiveGateway id="cosaFare" name="Cosa ha scelto l'impresa?" default="cSalva" />
+      <sequenceFlow id="cCalcolaErrore" sourceRef="calcolaErrore" targetRef="passoDichiarazioni" />
+      <exclusiveGateway id="erroriGw" name="Ci sono errori?" default="cNessunErrore" />
+      <sequenceFlow id="cCalcolo" sourceRef="calcola" targetRef="erroriGw" />
+      <sequenceFlow id="cNessunErrore" name="Nessun errore" sourceRef="erroriGw" targetRef="riepilogo" />
+      <sequenceFlow id="cErrImpresa" name="Nei dati dell'impresa" sourceRef="erroriGw" targetRef="passoImpresa">
+        <conditionExpression xsi:type="tFormalExpression">${passoDaCorreggere == 'impresa'}</conditionExpression>
+      </sequenceFlow>
+      <sequenceFlow id="cErrProgetto" name="Nell'asse o nel progetto" sourceRef="erroriGw" targetRef="passoProgetto">
+        <conditionExpression xsi:type="tFormalExpression">${passoDaCorreggere == 'progetto'}</conditionExpression>
+      </sequenceFlow>
+      <sequenceFlow id="cErrPunteggio" name="Nel punteggio o nelle spese" sourceRef="erroriGw" targetRef="passoPunteggio">
+        <conditionExpression xsi:type="tFormalExpression">${passoDaCorreggere == 'punteggio'}</conditionExpression>
+      </sequenceFlow>
+      <sequenceFlow id="cErrDichiarazioni" name="Nelle dichiarazioni" sourceRef="erroriGw" targetRef="passoDichiarazioni">
+        <conditionExpression xsi:type="tFormalExpression">${passoDaCorreggere == 'dichiarazioni'}</conditionExpression>
+      </sequenceFlow>
+      <userTask id="riepilogo" name="Rivedi e registra la domanda" activiti:candidateGroups="parte:richiedente" activiti:formKey="isi-riepilogo" />
+      <exclusiveGateway id="riepilogoGw" name="Cosa ha scelto l'impresa?" default="cRegistra" />
+      <sequenceFlow id="cRiepilogo" sourceRef="riepilogo" targetRef="riepilogoGw" />
+      <sequenceFlow id="cRegistra" name="Registra" sourceRef="riepilogoGw" targetRef="registra" />
+      <endEvent id="riepilogoAnnullata" name="Bozza annullata" />
+      <sequenceFlow id="cRiepAnnulla" name="Annulla" sourceRef="riepilogoGw" targetRef="riepilogoAnnullata">
+        <conditionExpression xsi:type="tFormalExpression">${azione == 'Annulla la bozza'}</conditionExpression>
+      </sequenceFlow>
+      <sequenceFlow id="cRiepModifica" name="Modifica un passo" sourceRef="riepilogoGw" targetRef="qualePassoGw">
+        <conditionExpression xsi:type="tFormalExpression">${azione == 'Modifica un passo'}</conditionExpression>
+      </sequenceFlow>
+      <exclusiveGateway id="qualePassoGw" name="Quale passo?" default="cModImpresa" />
+      <sequenceFlow id="cModImpresa" name="Impresa" sourceRef="qualePassoGw" targetRef="passoImpresa" />
+      <sequenceFlow id="cModProgetto" name="Asse e progetto" sourceRef="qualePassoGw" targetRef="passoProgetto">
+        <conditionExpression xsi:type="tFormalExpression">${passoDaModificare == 'Asse e progetto'}</conditionExpression>
+      </sequenceFlow>
+      <sequenceFlow id="cModPunteggio" name="Punteggio" sourceRef="qualePassoGw" targetRef="passoPunteggio">
+        <conditionExpression xsi:type="tFormalExpression">${passoDaModificare == 'Punteggio e piano economico'}</conditionExpression>
+      </sequenceFlow>
+      <sequenceFlow id="cModDichiarazioni" name="Dichiarazioni" sourceRef="qualePassoGw" targetRef="passoDichiarazioni">
+        <conditionExpression xsi:type="tFormalExpression">${passoDaModificare == 'Dichiarazioni'}</conditionExpression>
+      </sequenceFlow>
       <serviceTask id="registra" name="Registra la domanda" implementation="apiConnector">
         <extensionElements>
           <activiti:field name="metodo" stringValue="POST" />
           <activiti:field name="url" stringValue="http://localhost:8095/registra" />
           <activiti:field name="credenziale" stringValue="servizio-isi" />
-          <activiti:field name="corpo" stringValue="{&#10;  &quot;ragioneSociale&quot;: &quot;${ragioneSociale}&quot;,&#10;  &quot;partitaIva&quot;: &quot;${partitaIva}&quot;,&#10;  &quot;formaGiuridica&quot;: &quot;${formaGiuridica}&quot;,&#10;  &quot;ateco&quot;: &quot;${ateco}&quot;,&#10;  &quot;dataCostituzione&quot;: &quot;${dataCostituzione}&quot;,&#10;  &quot;dataIscrizioneCciaa&quot;: &quot;${dataIscrizioneCciaa}&quot;,&#10;  &quot;sedeLegale&quot;: &quot;${sedeLegale}&quot;,&#10;  &quot;codiceDitta&quot;: &quot;${codiceDitta}&quot;,&#10;  &quot;pec&quot;: &quot;${pec}&quot;,&#10;  &quot;tipoSoggetto&quot;: &quot;${tipoSoggetto}&quot;,&#10;  &quot;agricolaPrimaria&quot;: &quot;${agricolaPrimaria}&quot;,&#10;  &quot;iap&quot;: &quot;${iap}&quot;,&#10;  &quot;associataCollegata&quot;: &quot;${associataCollegata}&quot;,&#10;  &quot;rapportoAssicurativo&quot;: &quot;${rapportoAssicurativo}&quot;,&#10;  &quot;dataAssociazionePortale&quot;: &quot;${dataAssociazionePortale}&quot;,&#10;  &quot;indirizzoUnita&quot;: &quot;${indirizzoUnita}&quot;,&#10;  &quot;regione&quot;: &quot;${regione}&quot;,&#10;  &quot;ula&quot;: &quot;${ula}&quot;,&#10;  &quot;fatturato&quot;: &quot;${fatturato}&quot;,&#10;  &quot;totaleBilancio&quot;: &quot;${totaleBilancio}&quot;,&#10;  &quot;dipendentiImpresa&quot;: &quot;${dipendentiImpresa}&quot;,&#10;  &quot;dipendentiUnita&quot;: &quot;${dipendentiUnita}&quot;,&#10;  &quot;attivitaStagionale&quot;: &quot;${attivitaStagionale}&quot;,&#10;  &quot;dataInizioAttivita&quot;: &quot;${dataInizioAttivita}&quot;,&#10;  &quot;dittaSenzaDipendenti&quot;: &quot;${dittaSenzaDipendenti}&quot;,&#10;  &quot;asse&quot;: &quot;${asse}&quot;,&#10;  &quot;tipologia11&quot;: &quot;${tipologia11}&quot;,&#10;  &quot;tipologia12&quot;: &quot;${tipologia12}&quot;,&#10;  &quot;tipologia2&quot;: &quot;${tipologia2}&quot;,&#10;  &quot;tipologia3&quot;: &quot;${tipologia3}&quot;,&#10;  &quot;tipologia4a&quot;: &quot;${tipologia4a}&quot;,&#10;  &quot;tipologia4b&quot;: &quot;${tipologia4b}&quot;,&#10;  &quot;tipologia4c&quot;: &quot;${tipologia4c}&quot;,&#10;  &quot;aggiuntivo11&quot;: &quot;${aggiuntivo11}&quot;,&#10;  &quot;aggiuntivo2&quot;: &quot;${aggiuntivo2}&quot;,&#10;  &quot;aggiuntivo3&quot;: &quot;${aggiuntivo3}&quot;,&#10;  &quot;aggiuntivo4&quot;: &quot;${aggiuntivo4}&quot;,&#10;  &quot;bene1Tipo&quot;: &quot;${bene1Tipo}&quot;,&#10;  &quot;bene1Misura&quot;: &quot;${bene1Misura}&quot;,&#10;  &quot;bene1Fattore&quot;: &quot;${bene1Fattore}&quot;,&#10;  &quot;bene1Preventivo&quot;: &quot;${bene1Preventivo}&quot;,&#10;  &quot;bene1Listino&quot;: &quot;${bene1Listino}&quot;,&#10;  &quot;bene1PotenzaKw&quot;: &quot;${bene1PotenzaKw}&quot;,&#10;  &quot;bene1AnnoSostituito&quot;: &quot;${bene1AnnoSostituito}&quot;,&#10;  &quot;bene1Modalita&quot;: &quot;${bene1Modalita}&quot;,&#10;  &quot;bene1RicavoPermuta&quot;: &quot;${bene1RicavoPermuta}&quot;,&#10;  &quot;secondoBene&quot;: &quot;${secondoBene}&quot;,&#10;  &quot;bene2Tipo&quot;: &quot;${bene2Tipo}&quot;,&#10;  &quot;bene2Misura&quot;: &quot;${bene2Misura}&quot;,&#10;  &quot;bene2Fattore&quot;: &quot;${bene2Fattore}&quot;,&#10;  &quot;bene2Preventivo&quot;: &quot;${bene2Preventivo}&quot;,&#10;  &quot;bene2Listino&quot;: &quot;${bene2Listino}&quot;,&#10;  &quot;bene2PotenzaKw&quot;: &quot;${bene2PotenzaKw}&quot;,&#10;  &quot;bene2AnnoSostituito&quot;: &quot;${bene2AnnoSostituito}&quot;,&#10;  &quot;bene2Modalita&quot;: &quot;${bene2Modalita}&quot;,&#10;  &quot;bene2RicavoPermuta&quot;: &quot;${bene2RicavoPermuta}&quot;,&#10;  &quot;noleggioPattoAcquisto&quot;: &quot;${noleggioPattoAcquisto}&quot;,&#10;  &quot;giovaneEta&quot;: &quot;${giovaneEta}&quot;,&#10;  &quot;giovaneFormazione&quot;: &quot;${giovaneFormazione}&quot;,&#10;  &quot;giovaneCapoAzienda&quot;: &quot;${giovaneCapoAzienda}&quot;,&#10;  &quot;titoloProgetto&quot;: &quot;${titoloProgetto}&quot;,&#10;  &quot;descrizioneProgetto&quot;: &quot;${descrizioneProgetto}&quot;,&#10;  &quot;lavorazioneRischio&quot;: &quot;${lavorazioneRischio}&quot;,&#10;  &quot;macchina1Descrizione&quot;: &quot;${macchina1Descrizione}&quot;,&#10;  &quot;macchina1MarcaModello&quot;: &quot;${macchina1MarcaModello}&quot;,&#10;  &quot;macchina1Preventivo&quot;: &quot;${macchina1Preventivo}&quot;,&#10;  &quot;macchina1Listino&quot;: &quot;${macchina1Listino}&quot;,&#10;  &quot;macchina1Trattore&quot;: &quot;${macchina1Trattore}&quot;,&#10;  &quot;macchina1ListinoAccessori&quot;: &quot;${macchina1ListinoAccessori}&quot;,&#10;  &quot;macchina1PotenzaKw&quot;: &quot;${macchina1PotenzaKw}&quot;,&#10;  &quot;macchina1AnnoSostituito&quot;: &quot;${macchina1AnnoSostituito}&quot;,&#10;  &quot;macchina1Modalita&quot;: &quot;${macchina1Modalita}&quot;,&#10;  &quot;secondaMacchina&quot;: &quot;${secondaMacchina}&quot;,&#10;  &quot;macchina2Descrizione&quot;: &quot;${macchina2Descrizione}&quot;,&#10;  &quot;macchina2MarcaModello&quot;: &quot;${macchina2MarcaModello}&quot;,&#10;  &quot;macchina2Preventivo&quot;: &quot;${macchina2Preventivo}&quot;,&#10;  &quot;macchina2Listino&quot;: &quot;${macchina2Listino}&quot;,&#10;  &quot;macchina2Trattore&quot;: &quot;${macchina2Trattore}&quot;,&#10;  &quot;macchina2ListinoAccessori&quot;: &quot;${macchina2ListinoAccessori}&quot;,&#10;  &quot;macchina2PotenzaKw&quot;: &quot;${macchina2PotenzaKw}&quot;,&#10;  &quot;macchina2AnnoSostituito&quot;: &quot;${macchina2AnnoSostituito}&quot;,&#10;  &quot;macchina2Modalita&quot;: &quot;${macchina2Modalita}&quot;,&#10;  &quot;mqCopertura&quot;: &quot;${mqCopertura}&quot;,&#10;  &quot;speseCopertura&quot;: &quot;${speseCopertura}&quot;,&#10;  &quot;mqControsoffitto&quot;: &quot;${mqControsoffitto}&quot;,&#10;  &quot;speseControsoffitto&quot;: &quot;${speseControsoffitto}&quot;,&#10;  &quot;speseAccessorie&quot;: &quot;${speseAccessorie}&quot;,&#10;  &quot;immobileLocato&quot;: &quot;${immobileLocato}&quot;,&#10;  &quot;quotaImmobile&quot;: &quot;${quotaImmobile}&quot;,&#10;  &quot;sgslUltimi3Anni&quot;: &quot;${sgslUltimi3Anni}&quot;,&#10;  &quot;concessione12Precedenti&quot;: &quot;${concessione12Precedenti}&quot;,&#10;  &quot;tassoMedio&quot;: &quot;${tassoMedio}&quot;,&#10;  &quot;partiSociali&quot;: &quot;${partiSociali}&quot;,&#10;  &quot;rls&quot;: &quot;${rls}&quot;,&#10;  &quot;certIso45001&quot;: &quot;${certIso45001}&quot;,&#10;  &quot;certIso14001&quot;: &quot;${certIso14001}&quot;,&#10;  &quot;certEmas&quot;: &quot;${certEmas}&quot;,&#10;  &quot;certIso39001&quot;: &quot;${certIso39001}&quot;,&#10;  &quot;certMog&quot;: &quot;${certMog}&quot;,&#10;  &quot;certRlaq&quot;: &quot;${certRlaq}&quot;,&#10;  &quot;ratingLegalita&quot;: &quot;${ratingLegalita}&quot;,&#10;  &quot;speseProgetto&quot;: &quot;${speseProgetto}&quot;,&#10;  &quot;speseTecniche&quot;: &quot;${speseTecniche}&quot;,&#10;  &quot;costoPerizia&quot;: &quot;${costoPerizia}&quot;,&#10;  &quot;speseAggiuntivo&quot;: &quot;${speseAggiuntivo}&quot;,&#10;  &quot;ivaNonRecuperabile&quot;: &quot;${ivaNonRecuperabile}&quot;,&#10;  &quot;motivazioneIva&quot;: &quot;${motivazioneIva}&quot;,&#10;  &quot;anticipo&quot;: &quot;${anticipo}&quot;,&#10;  &quot;nessunaSpesaNonAmmessa&quot;: &quot;${nessunaSpesaNonAmmessa}&quot;,&#10;  &quot;dichR02&quot;: &quot;${dichR02}&quot;,&#10;  &quot;dichR03&quot;: &quot;${dichR03}&quot;,&#10;  &quot;dichR05&quot;: &quot;${dichR05}&quot;,&#10;  &quot;dichR06&quot;: &quot;${dichR06}&quot;,&#10;  &quot;dichR07&quot;: &quot;${dichR07}&quot;,&#10;  &quot;dichR08&quot;: &quot;${dichR08}&quot;,&#10;  &quot;dichR09&quot;: &quot;${dichR09}&quot;,&#10;  &quot;dichR10&quot;: &quot;${dichR10}&quot;,&#10;  &quot;dichR11&quot;: &quot;${dichR11}&quot;,&#10;  &quot;dichR12&quot;: &quot;${dichR12}&quot;,&#10;  &quot;dichR15&quot;: &quot;${dichR15}&quot;,&#10;  &quot;dichR16&quot;: &quot;${dichR16}&quot;,&#10;  &quot;dichR17&quot;: &quot;${dichR17}&quot;,&#10;  &quot;dichR18&quot;: &quot;${dichR18}&quot;,&#10;  &quot;finanziamentiPrecedenti&quot;: &quot;${finanziamentiPrecedenti}&quot;,&#10;  &quot;assePrecedente&quot;: &quot;${assePrecedente}&quot;,&#10;  &quot;rinunciaPec&quot;: &quot;${rinunciaPec}&quot;,&#10;  &quot;azione&quot;: &quot;${azione}&quot;,&#10;  &quot;confermaRegistrazione&quot;: &quot;${confermaRegistrazione}&quot;,&#10;  &quot;confermaAnnullamento&quot;: &quot;${confermaAnnullamento}&quot;,&#10;  &quot;codiceFiscaleImpresa&quot;: &quot;${codiceFiscaleImpresa}&quot;,&#10;  &quot;annualita&quot;: &quot;2025&quot;&#10;}" />
+          <activiti:field name="corpo" stringValue="{&#10;  &quot;ragioneSociale&quot;: &quot;${ragioneSociale}&quot;,&#10;  &quot;partitaIva&quot;: &quot;${partitaIva}&quot;,&#10;  &quot;formaGiuridica&quot;: &quot;${formaGiuridica}&quot;,&#10;  &quot;ateco&quot;: &quot;${ateco}&quot;,&#10;  &quot;dataCostituzione&quot;: &quot;${dataCostituzione}&quot;,&#10;  &quot;dataIscrizioneCciaa&quot;: &quot;${dataIscrizioneCciaa}&quot;,&#10;  &quot;sedeLegale&quot;: &quot;${sedeLegale}&quot;,&#10;  &quot;codiceDitta&quot;: &quot;${codiceDitta}&quot;,&#10;  &quot;pec&quot;: &quot;${pec}&quot;,&#10;  &quot;tipoSoggetto&quot;: &quot;${tipoSoggetto}&quot;,&#10;  &quot;agricolaPrimaria&quot;: &quot;${agricolaPrimaria}&quot;,&#10;  &quot;iap&quot;: &quot;${iap}&quot;,&#10;  &quot;associataCollegata&quot;: &quot;${associataCollegata}&quot;,&#10;  &quot;rapportoAssicurativo&quot;: &quot;${rapportoAssicurativo}&quot;,&#10;  &quot;dataAssociazionePortale&quot;: &quot;${dataAssociazionePortale}&quot;,&#10;  &quot;indirizzoUnita&quot;: &quot;${indirizzoUnita}&quot;,&#10;  &quot;regione&quot;: &quot;${regione}&quot;,&#10;  &quot;ula&quot;: &quot;${ula}&quot;,&#10;  &quot;fatturato&quot;: &quot;${fatturato}&quot;,&#10;  &quot;totaleBilancio&quot;: &quot;${totaleBilancio}&quot;,&#10;  &quot;dipendentiImpresa&quot;: &quot;${dipendentiImpresa}&quot;,&#10;  &quot;dipendentiUnita&quot;: &quot;${dipendentiUnita}&quot;,&#10;  &quot;attivitaStagionale&quot;: &quot;${attivitaStagionale}&quot;,&#10;  &quot;dataInizioAttivita&quot;: &quot;${dataInizioAttivita}&quot;,&#10;  &quot;dittaSenzaDipendenti&quot;: &quot;${dittaSenzaDipendenti}&quot;,&#10;  &quot;asse&quot;: &quot;${asse}&quot;,&#10;  &quot;tipologia11&quot;: &quot;${tipologia11}&quot;,&#10;  &quot;tipologia12&quot;: &quot;${tipologia12}&quot;,&#10;  &quot;tipologia2&quot;: &quot;${tipologia2}&quot;,&#10;  &quot;tipologia3&quot;: &quot;${tipologia3}&quot;,&#10;  &quot;tipologia4a&quot;: &quot;${tipologia4a}&quot;,&#10;  &quot;tipologia4b&quot;: &quot;${tipologia4b}&quot;,&#10;  &quot;tipologia4c&quot;: &quot;${tipologia4c}&quot;,&#10;  &quot;aggiuntivo11&quot;: &quot;${aggiuntivo11}&quot;,&#10;  &quot;aggiuntivo2&quot;: &quot;${aggiuntivo2}&quot;,&#10;  &quot;aggiuntivo3&quot;: &quot;${aggiuntivo3}&quot;,&#10;  &quot;aggiuntivo4&quot;: &quot;${aggiuntivo4}&quot;,&#10;  &quot;bene1Tipo&quot;: &quot;${bene1Tipo}&quot;,&#10;  &quot;bene1Misura&quot;: &quot;${bene1Misura}&quot;,&#10;  &quot;bene1Fattore&quot;: &quot;${bene1Fattore}&quot;,&#10;  &quot;bene1Preventivo&quot;: &quot;${bene1Preventivo}&quot;,&#10;  &quot;bene1Listino&quot;: &quot;${bene1Listino}&quot;,&#10;  &quot;bene1PotenzaKw&quot;: &quot;${bene1PotenzaKw}&quot;,&#10;  &quot;bene1AnnoSostituito&quot;: &quot;${bene1AnnoSostituito}&quot;,&#10;  &quot;bene1Modalita&quot;: &quot;${bene1Modalita}&quot;,&#10;  &quot;bene1RicavoPermuta&quot;: &quot;${bene1RicavoPermuta}&quot;,&#10;  &quot;secondoBene&quot;: &quot;${secondoBene}&quot;,&#10;  &quot;bene2Tipo&quot;: &quot;${bene2Tipo}&quot;,&#10;  &quot;bene2Misura&quot;: &quot;${bene2Misura}&quot;,&#10;  &quot;bene2Fattore&quot;: &quot;${bene2Fattore}&quot;,&#10;  &quot;bene2Preventivo&quot;: &quot;${bene2Preventivo}&quot;,&#10;  &quot;bene2Listino&quot;: &quot;${bene2Listino}&quot;,&#10;  &quot;bene2PotenzaKw&quot;: &quot;${bene2PotenzaKw}&quot;,&#10;  &quot;bene2AnnoSostituito&quot;: &quot;${bene2AnnoSostituito}&quot;,&#10;  &quot;bene2Modalita&quot;: &quot;${bene2Modalita}&quot;,&#10;  &quot;bene2RicavoPermuta&quot;: &quot;${bene2RicavoPermuta}&quot;,&#10;  &quot;noleggioPattoAcquisto&quot;: &quot;${noleggioPattoAcquisto}&quot;,&#10;  &quot;giovaneEta&quot;: &quot;${giovaneEta}&quot;,&#10;  &quot;giovaneFormazione&quot;: &quot;${giovaneFormazione}&quot;,&#10;  &quot;giovaneCapoAzienda&quot;: &quot;${giovaneCapoAzienda}&quot;,&#10;  &quot;titoloProgetto&quot;: &quot;${titoloProgetto}&quot;,&#10;  &quot;descrizioneProgetto&quot;: &quot;${descrizioneProgetto}&quot;,&#10;  &quot;lavorazioneRischio&quot;: &quot;${lavorazioneRischio}&quot;,&#10;  &quot;macchina1Descrizione&quot;: &quot;${macchina1Descrizione}&quot;,&#10;  &quot;macchina1MarcaModello&quot;: &quot;${macchina1MarcaModello}&quot;,&#10;  &quot;macchina1Preventivo&quot;: &quot;${macchina1Preventivo}&quot;,&#10;  &quot;macchina1Listino&quot;: &quot;${macchina1Listino}&quot;,&#10;  &quot;macchina1Trattore&quot;: &quot;${macchina1Trattore}&quot;,&#10;  &quot;macchina1ListinoAccessori&quot;: &quot;${macchina1ListinoAccessori}&quot;,&#10;  &quot;macchina1PotenzaKw&quot;: &quot;${macchina1PotenzaKw}&quot;,&#10;  &quot;macchina1AnnoSostituito&quot;: &quot;${macchina1AnnoSostituito}&quot;,&#10;  &quot;macchina1Modalita&quot;: &quot;${macchina1Modalita}&quot;,&#10;  &quot;secondaMacchina&quot;: &quot;${secondaMacchina}&quot;,&#10;  &quot;macchina2Descrizione&quot;: &quot;${macchina2Descrizione}&quot;,&#10;  &quot;macchina2MarcaModello&quot;: &quot;${macchina2MarcaModello}&quot;,&#10;  &quot;macchina2Preventivo&quot;: &quot;${macchina2Preventivo}&quot;,&#10;  &quot;macchina2Listino&quot;: &quot;${macchina2Listino}&quot;,&#10;  &quot;macchina2Trattore&quot;: &quot;${macchina2Trattore}&quot;,&#10;  &quot;macchina2ListinoAccessori&quot;: &quot;${macchina2ListinoAccessori}&quot;,&#10;  &quot;macchina2PotenzaKw&quot;: &quot;${macchina2PotenzaKw}&quot;,&#10;  &quot;macchina2AnnoSostituito&quot;: &quot;${macchina2AnnoSostituito}&quot;,&#10;  &quot;macchina2Modalita&quot;: &quot;${macchina2Modalita}&quot;,&#10;  &quot;mqCopertura&quot;: &quot;${mqCopertura}&quot;,&#10;  &quot;speseCopertura&quot;: &quot;${speseCopertura}&quot;,&#10;  &quot;mqControsoffitto&quot;: &quot;${mqControsoffitto}&quot;,&#10;  &quot;speseControsoffitto&quot;: &quot;${speseControsoffitto}&quot;,&#10;  &quot;speseAccessorie&quot;: &quot;${speseAccessorie}&quot;,&#10;  &quot;immobileLocato&quot;: &quot;${immobileLocato}&quot;,&#10;  &quot;quotaImmobile&quot;: &quot;${quotaImmobile}&quot;,&#10;  &quot;sgslUltimi3Anni&quot;: &quot;${sgslUltimi3Anni}&quot;,&#10;  &quot;concessione12Precedenti&quot;: &quot;${concessione12Precedenti}&quot;,&#10;  &quot;tassoMedio&quot;: &quot;${tassoMedio}&quot;,&#10;  &quot;partiSociali&quot;: &quot;${partiSociali}&quot;,&#10;  &quot;rls&quot;: &quot;${rls}&quot;,&#10;  &quot;certIso45001&quot;: &quot;${certIso45001}&quot;,&#10;  &quot;certIso14001&quot;: &quot;${certIso14001}&quot;,&#10;  &quot;certEmas&quot;: &quot;${certEmas}&quot;,&#10;  &quot;certIso39001&quot;: &quot;${certIso39001}&quot;,&#10;  &quot;certMog&quot;: &quot;${certMog}&quot;,&#10;  &quot;certRlaq&quot;: &quot;${certRlaq}&quot;,&#10;  &quot;ratingLegalita&quot;: &quot;${ratingLegalita}&quot;,&#10;  &quot;speseProgetto&quot;: &quot;${speseProgetto}&quot;,&#10;  &quot;speseTecniche&quot;: &quot;${speseTecniche}&quot;,&#10;  &quot;costoPerizia&quot;: &quot;${costoPerizia}&quot;,&#10;  &quot;speseAggiuntivo&quot;: &quot;${speseAggiuntivo}&quot;,&#10;  &quot;ivaNonRecuperabile&quot;: &quot;${ivaNonRecuperabile}&quot;,&#10;  &quot;motivazioneIva&quot;: &quot;${motivazioneIva}&quot;,&#10;  &quot;anticipo&quot;: &quot;${anticipo}&quot;,&#10;  &quot;nessunaSpesaNonAmmessa&quot;: &quot;${nessunaSpesaNonAmmessa}&quot;,&#10;  &quot;dichR02&quot;: &quot;${dichR02}&quot;,&#10;  &quot;dichR03&quot;: &quot;${dichR03}&quot;,&#10;  &quot;dichR05&quot;: &quot;${dichR05}&quot;,&#10;  &quot;dichR06&quot;: &quot;${dichR06}&quot;,&#10;  &quot;dichR07&quot;: &quot;${dichR07}&quot;,&#10;  &quot;dichR08&quot;: &quot;${dichR08}&quot;,&#10;  &quot;dichR09&quot;: &quot;${dichR09}&quot;,&#10;  &quot;dichR10&quot;: &quot;${dichR10}&quot;,&#10;  &quot;dichR11&quot;: &quot;${dichR11}&quot;,&#10;  &quot;dichR12&quot;: &quot;${dichR12}&quot;,&#10;  &quot;dichR15&quot;: &quot;${dichR15}&quot;,&#10;  &quot;dichR16&quot;: &quot;${dichR16}&quot;,&#10;  &quot;dichR17&quot;: &quot;${dichR17}&quot;,&#10;  &quot;dichR18&quot;: &quot;${dichR18}&quot;,&#10;  &quot;finanziamentiPrecedenti&quot;: &quot;${finanziamentiPrecedenti}&quot;,&#10;  &quot;assePrecedente&quot;: &quot;${assePrecedente}&quot;,&#10;  &quot;rinunciaPec&quot;: &quot;${rinunciaPec}&quot;,&#10;  &quot;codiceFiscaleImpresa&quot;: &quot;${codiceFiscaleImpresa}&quot;,&#10;  &quot;annualita&quot;: &quot;2025&quot;&#10;}" />
           <activiti:field name="risposta" stringValue="esitoRegistrazione = esitoRegistrazione&#10;messaggioRegistrazione = messaggioRegistrazione&#10;numeroDomanda = numeroDomanda&#10;dataOraRegistrazione = dataOraRegistrazione&#10;gruppoSede = gruppoSede&#10;esitoElenco = esitoElenco" />
           <activiti:field name="timeout" stringValue="20" />
           <activiti:field name="inErrore" stringValue="Segui la strada di errore" />
@@ -64,36 +179,29 @@
       <boundaryEvent id="registraErrore" name="Servizio ISI non disponibile" attachedToRef="registra">
         <errorEventDefinition />
       </boundaryEvent>
+      <sequenceFlow id="cRegistraErrore" sourceRef="registraErrore" targetRef="riepilogo" />
       <exclusiveGateway id="registrata" name="Registrata?" default="cNonRegistrata" />
-      <endEvent id="cFineRegistrata" name="Domanda registrata" />
-      <endEvent id="cFineAnnullata" name="Bozza annullata" />
-      <exclusiveGateway id="annullaGw" name="Annulla la bozza?" default="cCalcola" />
-      <sequenceFlow id="c1" sourceRef="cInizio" targetRef="compila" />
-      <sequenceFlow id="c2" sourceRef="compila" targetRef="annullaGw" />
-      <sequenceFlow id="cAnnulla" name="Sì" sourceRef="annullaGw" targetRef="cFineAnnullata">
-        <conditionExpression xsi:type="tFormalExpression">${azione == 'Annulla la bozza'}</conditionExpression>
-      </sequenceFlow>
-      <sequenceFlow id="cCalcola" name="No" sourceRef="annullaGw" targetRef="calcola" />
-      <sequenceFlow id="c3" sourceRef="calcola" targetRef="cosaFare" />
-      <sequenceFlow id="c4" sourceRef="calcolaErrore" targetRef="compila" />
-      <sequenceFlow id="cSalva" name="Calcola e salva" sourceRef="cosaFare" targetRef="compila" />
-      <sequenceFlow id="cRegistra" name="Registra, senza errori" sourceRef="cosaFare" targetRef="registra">
-        <conditionExpression xsi:type="tFormalExpression">${azione == 'Registra la domanda' &amp;&amp; registrabile == 'Sì'}</conditionExpression>
-      </sequenceFlow>
-      <sequenceFlow id="c5" sourceRef="registra" targetRef="registrata" />
-      <sequenceFlow id="c6" sourceRef="registraErrore" targetRef="compila" />
+      <sequenceFlow id="cRegistrazione" sourceRef="registra" targetRef="registrata" />
       <sequenceFlow id="cOk" name="Sì" sourceRef="registrata" targetRef="cFineRegistrata">
         <conditionExpression xsi:type="tFormalExpression">${esitoRegistrazione == 'REGISTRATA'}</conditionExpression>
       </sequenceFlow>
-      <sequenceFlow id="cNonRegistrata" name="No" sourceRef="registrata" targetRef="compila" />
+      <sequenceFlow id="cNonRegistrata" name="No, già registrata o con errori" sourceRef="registrata" targetRef="riepilogo" />
     </subProcess>
     <boundaryEvent id="chiusuraCompilazioneTimer" name="Chiusura della compilazione" attachedToRef="compilazione">
       <timerEventDefinition>
         <timeDate>${chiusuraCompilazione}</timeDate>
       </timerEventDefinition>
     </boundaryEvent>
+    <serviceTask id="avvisaChiusura" name="Avvisa della chiusura della compilazione" implementation="notificaConnector">
+      <extensionElements>
+        <activiti:field name="destinatario" stringValue="iniziatore" />
+        <activiti:field name="titolo" stringValue="Bando ISI: compilazione chiusa" />
+        <activiti:field name="messaggio" stringValue="La compilazione del Bando ISI si è chiusa il ${chiusuraCompilazione}: la bozza &quot;${titoloProgetto}&quot; non è stata registrata e non si può più registrare." />
+      </extensionElements>
+    </serviceTask>
     <endEvent id="fineNonRegistrata" name="Non registrata entro il termine" />
-    <sequenceFlow id="f5" sourceRef="chiusuraCompilazioneTimer" targetRef="fineNonRegistrata" />
+    <sequenceFlow id="f5" sourceRef="chiusuraCompilazioneTimer" targetRef="avvisaChiusura" />
+    <sequenceFlow id="f5b" sourceRef="avvisaChiusura" targetRef="fineNonRegistrata" />
     <exclusiveGateway id="dopoCompilazione" name="Domanda registrata?" default="fAnnullata" />
     <endEvent id="fineAnnullata" name="Bozza annullata" />
     <sequenceFlow id="f6" sourceRef="compilazione" targetRef="dopoCompilazione" />
@@ -366,8 +474,8 @@
           <activiti:field name="metodo" stringValue="POST" />
           <activiti:field name="url" stringValue="http://localhost:8095/calcola" />
           <activiti:field name="credenziale" stringValue="servizio-isi" />
-          <activiti:field name="corpo" stringValue="{&#10;  &quot;ragioneSociale&quot;: &quot;${ragioneSociale}&quot;,&#10;  &quot;partitaIva&quot;: &quot;${partitaIva}&quot;,&#10;  &quot;formaGiuridica&quot;: &quot;${formaGiuridica}&quot;,&#10;  &quot;ateco&quot;: &quot;${ateco}&quot;,&#10;  &quot;dataCostituzione&quot;: &quot;${dataCostituzione}&quot;,&#10;  &quot;dataIscrizioneCciaa&quot;: &quot;${dataIscrizioneCciaa}&quot;,&#10;  &quot;sedeLegale&quot;: &quot;${sedeLegale}&quot;,&#10;  &quot;codiceDitta&quot;: &quot;${codiceDitta}&quot;,&#10;  &quot;pec&quot;: &quot;${pec}&quot;,&#10;  &quot;tipoSoggetto&quot;: &quot;${tipoSoggetto}&quot;,&#10;  &quot;agricolaPrimaria&quot;: &quot;${agricolaPrimaria}&quot;,&#10;  &quot;iap&quot;: &quot;${iap}&quot;,&#10;  &quot;associataCollegata&quot;: &quot;${associataCollegata}&quot;,&#10;  &quot;rapportoAssicurativo&quot;: &quot;${rapportoAssicurativo}&quot;,&#10;  &quot;dataAssociazionePortale&quot;: &quot;${dataAssociazionePortale}&quot;,&#10;  &quot;indirizzoUnita&quot;: &quot;${indirizzoUnita}&quot;,&#10;  &quot;regione&quot;: &quot;${regione}&quot;,&#10;  &quot;ula&quot;: &quot;${ula}&quot;,&#10;  &quot;fatturato&quot;: &quot;${fatturato}&quot;,&#10;  &quot;totaleBilancio&quot;: &quot;${totaleBilancio}&quot;,&#10;  &quot;dipendentiImpresa&quot;: &quot;${dipendentiImpresa}&quot;,&#10;  &quot;dipendentiUnita&quot;: &quot;${dipendentiUnita}&quot;,&#10;  &quot;attivitaStagionale&quot;: &quot;${attivitaStagionale}&quot;,&#10;  &quot;dataInizioAttivita&quot;: &quot;${dataInizioAttivita}&quot;,&#10;  &quot;dittaSenzaDipendenti&quot;: &quot;${dittaSenzaDipendenti}&quot;,&#10;  &quot;asse&quot;: &quot;${asse}&quot;,&#10;  &quot;tipologia11&quot;: &quot;${tipologia11}&quot;,&#10;  &quot;tipologia12&quot;: &quot;${tipologia12}&quot;,&#10;  &quot;tipologia2&quot;: &quot;${tipologia2}&quot;,&#10;  &quot;tipologia3&quot;: &quot;${tipologia3}&quot;,&#10;  &quot;tipologia4a&quot;: &quot;${tipologia4a}&quot;,&#10;  &quot;tipologia4b&quot;: &quot;${tipologia4b}&quot;,&#10;  &quot;tipologia4c&quot;: &quot;${tipologia4c}&quot;,&#10;  &quot;aggiuntivo11&quot;: &quot;${aggiuntivo11}&quot;,&#10;  &quot;aggiuntivo2&quot;: &quot;${aggiuntivo2}&quot;,&#10;  &quot;aggiuntivo3&quot;: &quot;${aggiuntivo3}&quot;,&#10;  &quot;aggiuntivo4&quot;: &quot;${aggiuntivo4}&quot;,&#10;  &quot;bene1Tipo&quot;: &quot;${bene1Tipo}&quot;,&#10;  &quot;bene1Misura&quot;: &quot;${bene1Misura}&quot;,&#10;  &quot;bene1Fattore&quot;: &quot;${bene1Fattore}&quot;,&#10;  &quot;bene1Preventivo&quot;: &quot;${bene1Preventivo}&quot;,&#10;  &quot;bene1Listino&quot;: &quot;${bene1Listino}&quot;,&#10;  &quot;bene1PotenzaKw&quot;: &quot;${bene1PotenzaKw}&quot;,&#10;  &quot;bene1AnnoSostituito&quot;: &quot;${bene1AnnoSostituito}&quot;,&#10;  &quot;bene1Modalita&quot;: &quot;${bene1Modalita}&quot;,&#10;  &quot;bene1RicavoPermuta&quot;: &quot;${bene1RicavoPermuta}&quot;,&#10;  &quot;secondoBene&quot;: &quot;${secondoBene}&quot;,&#10;  &quot;bene2Tipo&quot;: &quot;${bene2Tipo}&quot;,&#10;  &quot;bene2Misura&quot;: &quot;${bene2Misura}&quot;,&#10;  &quot;bene2Fattore&quot;: &quot;${bene2Fattore}&quot;,&#10;  &quot;bene2Preventivo&quot;: &quot;${bene2Preventivo}&quot;,&#10;  &quot;bene2Listino&quot;: &quot;${bene2Listino}&quot;,&#10;  &quot;bene2PotenzaKw&quot;: &quot;${bene2PotenzaKw}&quot;,&#10;  &quot;bene2AnnoSostituito&quot;: &quot;${bene2AnnoSostituito}&quot;,&#10;  &quot;bene2Modalita&quot;: &quot;${bene2Modalita}&quot;,&#10;  &quot;bene2RicavoPermuta&quot;: &quot;${bene2RicavoPermuta}&quot;,&#10;  &quot;noleggioPattoAcquisto&quot;: &quot;${noleggioPattoAcquisto}&quot;,&#10;  &quot;giovaneEta&quot;: &quot;${giovaneEta}&quot;,&#10;  &quot;giovaneFormazione&quot;: &quot;${giovaneFormazione}&quot;,&#10;  &quot;giovaneCapoAzienda&quot;: &quot;${giovaneCapoAzienda}&quot;,&#10;  &quot;titoloProgetto&quot;: &quot;${titoloProgetto}&quot;,&#10;  &quot;descrizioneProgetto&quot;: &quot;${descrizioneProgetto}&quot;,&#10;  &quot;lavorazioneRischio&quot;: &quot;${lavorazioneRischio}&quot;,&#10;  &quot;macchina1Descrizione&quot;: &quot;${macchina1Descrizione}&quot;,&#10;  &quot;macchina1MarcaModello&quot;: &quot;${macchina1MarcaModello}&quot;,&#10;  &quot;macchina1Preventivo&quot;: &quot;${macchina1Preventivo}&quot;,&#10;  &quot;macchina1Listino&quot;: &quot;${macchina1Listino}&quot;,&#10;  &quot;macchina1Trattore&quot;: &quot;${macchina1Trattore}&quot;,&#10;  &quot;macchina1ListinoAccessori&quot;: &quot;${macchina1ListinoAccessori}&quot;,&#10;  &quot;macchina1PotenzaKw&quot;: &quot;${macchina1PotenzaKw}&quot;,&#10;  &quot;macchina1AnnoSostituito&quot;: &quot;${macchina1AnnoSostituito}&quot;,&#10;  &quot;macchina1Modalita&quot;: &quot;${macchina1Modalita}&quot;,&#10;  &quot;secondaMacchina&quot;: &quot;${secondaMacchina}&quot;,&#10;  &quot;macchina2Descrizione&quot;: &quot;${macchina2Descrizione}&quot;,&#10;  &quot;macchina2MarcaModello&quot;: &quot;${macchina2MarcaModello}&quot;,&#10;  &quot;macchina2Preventivo&quot;: &quot;${macchina2Preventivo}&quot;,&#10;  &quot;macchina2Listino&quot;: &quot;${macchina2Listino}&quot;,&#10;  &quot;macchina2Trattore&quot;: &quot;${macchina2Trattore}&quot;,&#10;  &quot;macchina2ListinoAccessori&quot;: &quot;${macchina2ListinoAccessori}&quot;,&#10;  &quot;macchina2PotenzaKw&quot;: &quot;${macchina2PotenzaKw}&quot;,&#10;  &quot;macchina2AnnoSostituito&quot;: &quot;${macchina2AnnoSostituito}&quot;,&#10;  &quot;macchina2Modalita&quot;: &quot;${macchina2Modalita}&quot;,&#10;  &quot;mqCopertura&quot;: &quot;${mqCopertura}&quot;,&#10;  &quot;speseCopertura&quot;: &quot;${speseCopertura}&quot;,&#10;  &quot;mqControsoffitto&quot;: &quot;${mqControsoffitto}&quot;,&#10;  &quot;speseControsoffitto&quot;: &quot;${speseControsoffitto}&quot;,&#10;  &quot;speseAccessorie&quot;: &quot;${speseAccessorie}&quot;,&#10;  &quot;immobileLocato&quot;: &quot;${immobileLocato}&quot;,&#10;  &quot;quotaImmobile&quot;: &quot;${quotaImmobile}&quot;,&#10;  &quot;sgslUltimi3Anni&quot;: &quot;${sgslUltimi3Anni}&quot;,&#10;  &quot;concessione12Precedenti&quot;: &quot;${concessione12Precedenti}&quot;,&#10;  &quot;tassoMedio&quot;: &quot;${tassoMedio}&quot;,&#10;  &quot;partiSociali&quot;: &quot;${partiSociali}&quot;,&#10;  &quot;rls&quot;: &quot;${rls}&quot;,&#10;  &quot;certIso45001&quot;: &quot;${certIso45001}&quot;,&#10;  &quot;certIso14001&quot;: &quot;${certIso14001}&quot;,&#10;  &quot;certEmas&quot;: &quot;${certEmas}&quot;,&#10;  &quot;certIso39001&quot;: &quot;${certIso39001}&quot;,&#10;  &quot;certMog&quot;: &quot;${certMog}&quot;,&#10;  &quot;certRlaq&quot;: &quot;${certRlaq}&quot;,&#10;  &quot;ratingLegalita&quot;: &quot;${ratingLegalita}&quot;,&#10;  &quot;speseProgetto&quot;: &quot;${speseProgetto}&quot;,&#10;  &quot;speseTecniche&quot;: &quot;${speseTecniche}&quot;,&#10;  &quot;costoPerizia&quot;: &quot;${costoPerizia}&quot;,&#10;  &quot;speseAggiuntivo&quot;: &quot;${speseAggiuntivo}&quot;,&#10;  &quot;ivaNonRecuperabile&quot;: &quot;${ivaNonRecuperabile}&quot;,&#10;  &quot;motivazioneIva&quot;: &quot;${motivazioneIva}&quot;,&#10;  &quot;anticipo&quot;: &quot;${anticipo}&quot;,&#10;  &quot;nessunaSpesaNonAmmessa&quot;: &quot;${nessunaSpesaNonAmmessa}&quot;,&#10;  &quot;dichR02&quot;: &quot;${dichR02}&quot;,&#10;  &quot;dichR03&quot;: &quot;${dichR03}&quot;,&#10;  &quot;dichR05&quot;: &quot;${dichR05}&quot;,&#10;  &quot;dichR06&quot;: &quot;${dichR06}&quot;,&#10;  &quot;dichR07&quot;: &quot;${dichR07}&quot;,&#10;  &quot;dichR08&quot;: &quot;${dichR08}&quot;,&#10;  &quot;dichR09&quot;: &quot;${dichR09}&quot;,&#10;  &quot;dichR10&quot;: &quot;${dichR10}&quot;,&#10;  &quot;dichR11&quot;: &quot;${dichR11}&quot;,&#10;  &quot;dichR12&quot;: &quot;${dichR12}&quot;,&#10;  &quot;dichR15&quot;: &quot;${dichR15}&quot;,&#10;  &quot;dichR16&quot;: &quot;${dichR16}&quot;,&#10;  &quot;dichR17&quot;: &quot;${dichR17}&quot;,&#10;  &quot;dichR18&quot;: &quot;${dichR18}&quot;,&#10;  &quot;finanziamentiPrecedenti&quot;: &quot;${finanziamentiPrecedenti}&quot;,&#10;  &quot;assePrecedente&quot;: &quot;${assePrecedente}&quot;,&#10;  &quot;rinunciaPec&quot;: &quot;${rinunciaPec}&quot;,&#10;  &quot;azione&quot;: &quot;${azione}&quot;,&#10;  &quot;confermaRegistrazione&quot;: &quot;${confermaRegistrazione}&quot;,&#10;  &quot;confermaAnnullamento&quot;: &quot;${confermaAnnullamento}&quot;,&#10;  &quot;codiceFiscaleImpresa&quot;: &quot;${codiceFiscaleImpresa}&quot;,&#10;  &quot;annualita&quot;: &quot;2025&quot;&#10;}" />
-          <activiti:field name="risposta" stringValue="riepilogo = riepilogo&#10;punteggio = punteggio&#10;registrabile = registrabile&#10;erroriBloccanti = erroriBloccanti&#10;avvisiCalcolo = avvisiCalcolo&#10;dettaglioPunteggio = dettaglioPunteggio&#10;dettaglioImporti = dettaglioImporti&#10;assiAmmessi = assiAmmessi&#10;assiNonAmmessi = assiNonAmmessi&#10;documentiRichiesti = documentiRichiesti&#10;contributoTotale = contributoTotale&#10;contributoTotaleTesto = contributoTotaleTesto&#10;importoAnticipo = anticipo&#10;fideiussione = fideiussione&#10;ulaCalcolate = ula&#10;versioneRegole = versioneRegole&#10;modelloPerizia = modelloPerizia&#10;gruppoSede = gruppoSede" />
+          <activiti:field name="corpo" stringValue="{&#10;  &quot;ragioneSociale&quot;: &quot;${ragioneSociale}&quot;,&#10;  &quot;partitaIva&quot;: &quot;${partitaIva}&quot;,&#10;  &quot;formaGiuridica&quot;: &quot;${formaGiuridica}&quot;,&#10;  &quot;ateco&quot;: &quot;${ateco}&quot;,&#10;  &quot;dataCostituzione&quot;: &quot;${dataCostituzione}&quot;,&#10;  &quot;dataIscrizioneCciaa&quot;: &quot;${dataIscrizioneCciaa}&quot;,&#10;  &quot;sedeLegale&quot;: &quot;${sedeLegale}&quot;,&#10;  &quot;codiceDitta&quot;: &quot;${codiceDitta}&quot;,&#10;  &quot;pec&quot;: &quot;${pec}&quot;,&#10;  &quot;tipoSoggetto&quot;: &quot;${tipoSoggetto}&quot;,&#10;  &quot;agricolaPrimaria&quot;: &quot;${agricolaPrimaria}&quot;,&#10;  &quot;iap&quot;: &quot;${iap}&quot;,&#10;  &quot;associataCollegata&quot;: &quot;${associataCollegata}&quot;,&#10;  &quot;rapportoAssicurativo&quot;: &quot;${rapportoAssicurativo}&quot;,&#10;  &quot;dataAssociazionePortale&quot;: &quot;${dataAssociazionePortale}&quot;,&#10;  &quot;indirizzoUnita&quot;: &quot;${indirizzoUnita}&quot;,&#10;  &quot;regione&quot;: &quot;${regione}&quot;,&#10;  &quot;ula&quot;: &quot;${ula}&quot;,&#10;  &quot;fatturato&quot;: &quot;${fatturato}&quot;,&#10;  &quot;totaleBilancio&quot;: &quot;${totaleBilancio}&quot;,&#10;  &quot;dipendentiImpresa&quot;: &quot;${dipendentiImpresa}&quot;,&#10;  &quot;dipendentiUnita&quot;: &quot;${dipendentiUnita}&quot;,&#10;  &quot;attivitaStagionale&quot;: &quot;${attivitaStagionale}&quot;,&#10;  &quot;dataInizioAttivita&quot;: &quot;${dataInizioAttivita}&quot;,&#10;  &quot;dittaSenzaDipendenti&quot;: &quot;${dittaSenzaDipendenti}&quot;,&#10;  &quot;asse&quot;: &quot;${asse}&quot;,&#10;  &quot;tipologia11&quot;: &quot;${tipologia11}&quot;,&#10;  &quot;tipologia12&quot;: &quot;${tipologia12}&quot;,&#10;  &quot;tipologia2&quot;: &quot;${tipologia2}&quot;,&#10;  &quot;tipologia3&quot;: &quot;${tipologia3}&quot;,&#10;  &quot;tipologia4a&quot;: &quot;${tipologia4a}&quot;,&#10;  &quot;tipologia4b&quot;: &quot;${tipologia4b}&quot;,&#10;  &quot;tipologia4c&quot;: &quot;${tipologia4c}&quot;,&#10;  &quot;aggiuntivo11&quot;: &quot;${aggiuntivo11}&quot;,&#10;  &quot;aggiuntivo2&quot;: &quot;${aggiuntivo2}&quot;,&#10;  &quot;aggiuntivo3&quot;: &quot;${aggiuntivo3}&quot;,&#10;  &quot;aggiuntivo4&quot;: &quot;${aggiuntivo4}&quot;,&#10;  &quot;bene1Tipo&quot;: &quot;${bene1Tipo}&quot;,&#10;  &quot;bene1Misura&quot;: &quot;${bene1Misura}&quot;,&#10;  &quot;bene1Fattore&quot;: &quot;${bene1Fattore}&quot;,&#10;  &quot;bene1Preventivo&quot;: &quot;${bene1Preventivo}&quot;,&#10;  &quot;bene1Listino&quot;: &quot;${bene1Listino}&quot;,&#10;  &quot;bene1PotenzaKw&quot;: &quot;${bene1PotenzaKw}&quot;,&#10;  &quot;bene1AnnoSostituito&quot;: &quot;${bene1AnnoSostituito}&quot;,&#10;  &quot;bene1Modalita&quot;: &quot;${bene1Modalita}&quot;,&#10;  &quot;bene1RicavoPermuta&quot;: &quot;${bene1RicavoPermuta}&quot;,&#10;  &quot;secondoBene&quot;: &quot;${secondoBene}&quot;,&#10;  &quot;bene2Tipo&quot;: &quot;${bene2Tipo}&quot;,&#10;  &quot;bene2Misura&quot;: &quot;${bene2Misura}&quot;,&#10;  &quot;bene2Fattore&quot;: &quot;${bene2Fattore}&quot;,&#10;  &quot;bene2Preventivo&quot;: &quot;${bene2Preventivo}&quot;,&#10;  &quot;bene2Listino&quot;: &quot;${bene2Listino}&quot;,&#10;  &quot;bene2PotenzaKw&quot;: &quot;${bene2PotenzaKw}&quot;,&#10;  &quot;bene2AnnoSostituito&quot;: &quot;${bene2AnnoSostituito}&quot;,&#10;  &quot;bene2Modalita&quot;: &quot;${bene2Modalita}&quot;,&#10;  &quot;bene2RicavoPermuta&quot;: &quot;${bene2RicavoPermuta}&quot;,&#10;  &quot;noleggioPattoAcquisto&quot;: &quot;${noleggioPattoAcquisto}&quot;,&#10;  &quot;giovaneEta&quot;: &quot;${giovaneEta}&quot;,&#10;  &quot;giovaneFormazione&quot;: &quot;${giovaneFormazione}&quot;,&#10;  &quot;giovaneCapoAzienda&quot;: &quot;${giovaneCapoAzienda}&quot;,&#10;  &quot;titoloProgetto&quot;: &quot;${titoloProgetto}&quot;,&#10;  &quot;descrizioneProgetto&quot;: &quot;${descrizioneProgetto}&quot;,&#10;  &quot;lavorazioneRischio&quot;: &quot;${lavorazioneRischio}&quot;,&#10;  &quot;macchina1Descrizione&quot;: &quot;${macchina1Descrizione}&quot;,&#10;  &quot;macchina1MarcaModello&quot;: &quot;${macchina1MarcaModello}&quot;,&#10;  &quot;macchina1Preventivo&quot;: &quot;${macchina1Preventivo}&quot;,&#10;  &quot;macchina1Listino&quot;: &quot;${macchina1Listino}&quot;,&#10;  &quot;macchina1Trattore&quot;: &quot;${macchina1Trattore}&quot;,&#10;  &quot;macchina1ListinoAccessori&quot;: &quot;${macchina1ListinoAccessori}&quot;,&#10;  &quot;macchina1PotenzaKw&quot;: &quot;${macchina1PotenzaKw}&quot;,&#10;  &quot;macchina1AnnoSostituito&quot;: &quot;${macchina1AnnoSostituito}&quot;,&#10;  &quot;macchina1Modalita&quot;: &quot;${macchina1Modalita}&quot;,&#10;  &quot;secondaMacchina&quot;: &quot;${secondaMacchina}&quot;,&#10;  &quot;macchina2Descrizione&quot;: &quot;${macchina2Descrizione}&quot;,&#10;  &quot;macchina2MarcaModello&quot;: &quot;${macchina2MarcaModello}&quot;,&#10;  &quot;macchina2Preventivo&quot;: &quot;${macchina2Preventivo}&quot;,&#10;  &quot;macchina2Listino&quot;: &quot;${macchina2Listino}&quot;,&#10;  &quot;macchina2Trattore&quot;: &quot;${macchina2Trattore}&quot;,&#10;  &quot;macchina2ListinoAccessori&quot;: &quot;${macchina2ListinoAccessori}&quot;,&#10;  &quot;macchina2PotenzaKw&quot;: &quot;${macchina2PotenzaKw}&quot;,&#10;  &quot;macchina2AnnoSostituito&quot;: &quot;${macchina2AnnoSostituito}&quot;,&#10;  &quot;macchina2Modalita&quot;: &quot;${macchina2Modalita}&quot;,&#10;  &quot;mqCopertura&quot;: &quot;${mqCopertura}&quot;,&#10;  &quot;speseCopertura&quot;: &quot;${speseCopertura}&quot;,&#10;  &quot;mqControsoffitto&quot;: &quot;${mqControsoffitto}&quot;,&#10;  &quot;speseControsoffitto&quot;: &quot;${speseControsoffitto}&quot;,&#10;  &quot;speseAccessorie&quot;: &quot;${speseAccessorie}&quot;,&#10;  &quot;immobileLocato&quot;: &quot;${immobileLocato}&quot;,&#10;  &quot;quotaImmobile&quot;: &quot;${quotaImmobile}&quot;,&#10;  &quot;sgslUltimi3Anni&quot;: &quot;${sgslUltimi3Anni}&quot;,&#10;  &quot;concessione12Precedenti&quot;: &quot;${concessione12Precedenti}&quot;,&#10;  &quot;tassoMedio&quot;: &quot;${tassoMedio}&quot;,&#10;  &quot;partiSociali&quot;: &quot;${partiSociali}&quot;,&#10;  &quot;rls&quot;: &quot;${rls}&quot;,&#10;  &quot;certIso45001&quot;: &quot;${certIso45001}&quot;,&#10;  &quot;certIso14001&quot;: &quot;${certIso14001}&quot;,&#10;  &quot;certEmas&quot;: &quot;${certEmas}&quot;,&#10;  &quot;certIso39001&quot;: &quot;${certIso39001}&quot;,&#10;  &quot;certMog&quot;: &quot;${certMog}&quot;,&#10;  &quot;certRlaq&quot;: &quot;${certRlaq}&quot;,&#10;  &quot;ratingLegalita&quot;: &quot;${ratingLegalita}&quot;,&#10;  &quot;speseProgetto&quot;: &quot;${speseProgetto}&quot;,&#10;  &quot;speseTecniche&quot;: &quot;${speseTecniche}&quot;,&#10;  &quot;costoPerizia&quot;: &quot;${costoPerizia}&quot;,&#10;  &quot;speseAggiuntivo&quot;: &quot;${speseAggiuntivo}&quot;,&#10;  &quot;ivaNonRecuperabile&quot;: &quot;${ivaNonRecuperabile}&quot;,&#10;  &quot;motivazioneIva&quot;: &quot;${motivazioneIva}&quot;,&#10;  &quot;anticipo&quot;: &quot;${anticipo}&quot;,&#10;  &quot;nessunaSpesaNonAmmessa&quot;: &quot;${nessunaSpesaNonAmmessa}&quot;,&#10;  &quot;dichR02&quot;: &quot;${dichR02}&quot;,&#10;  &quot;dichR03&quot;: &quot;${dichR03}&quot;,&#10;  &quot;dichR05&quot;: &quot;${dichR05}&quot;,&#10;  &quot;dichR06&quot;: &quot;${dichR06}&quot;,&#10;  &quot;dichR07&quot;: &quot;${dichR07}&quot;,&#10;  &quot;dichR08&quot;: &quot;${dichR08}&quot;,&#10;  &quot;dichR09&quot;: &quot;${dichR09}&quot;,&#10;  &quot;dichR10&quot;: &quot;${dichR10}&quot;,&#10;  &quot;dichR11&quot;: &quot;${dichR11}&quot;,&#10;  &quot;dichR12&quot;: &quot;${dichR12}&quot;,&#10;  &quot;dichR15&quot;: &quot;${dichR15}&quot;,&#10;  &quot;dichR16&quot;: &quot;${dichR16}&quot;,&#10;  &quot;dichR17&quot;: &quot;${dichR17}&quot;,&#10;  &quot;dichR18&quot;: &quot;${dichR18}&quot;,&#10;  &quot;finanziamentiPrecedenti&quot;: &quot;${finanziamentiPrecedenti}&quot;,&#10;  &quot;assePrecedente&quot;: &quot;${assePrecedente}&quot;,&#10;  &quot;rinunciaPec&quot;: &quot;${rinunciaPec}&quot;,&#10;  &quot;codiceFiscaleImpresa&quot;: &quot;${codiceFiscaleImpresa}&quot;,&#10;  &quot;annualita&quot;: &quot;2025&quot;&#10;}" />
+          <activiti:field name="risposta" stringValue="riepilogo = riepilogo&#10;punteggio = punteggio&#10;registrabile = registrabile&#10;erroriBloccanti = erroriBloccanti&#10;avvisiCalcolo = avvisiCalcolo&#10;dettaglioPunteggio = dettaglioPunteggio&#10;dettaglioImporti = dettaglioImporti&#10;assiAmmessi = assiAmmessi&#10;assiNonAmmessi = assiNonAmmessi&#10;documentiRichiesti = documentiRichiesti&#10;contributoTotale = contributoTotale&#10;contributoTotaleTesto = contributoTotaleTesto&#10;importoAnticipo = anticipo&#10;fideiussione = fideiussione&#10;ulaCalcolate = ula&#10;versioneRegole = versioneRegole&#10;modelloPerizia = modelloPerizia&#10;gruppoSede = gruppoSede&#10;passoDaCorreggere = passoDaCorreggere&#10;erroriImpresa = erroriImpresa&#10;erroriProgetto = erroriProgetto&#10;erroriPunteggio = erroriPunteggio&#10;erroriDichiarazioni = erroriDichiarazioni" />
           <activiti:field name="timeout" stringValue="20" />
           <activiti:field name="inErrore" stringValue="Segui la strada di errore" />
         </extensionElements>
@@ -539,840 +647,1085 @@
   <bpmndi:BPMNDiagram id="Diagram_isiDomanda">
     <bpmndi:BPMNPlane id="Plane_isiDomanda" bpmnElement="isiDomanda">
       <bpmndi:BPMNShape id="s_compilazione" bpmnElement="compilazione" isExpanded="true">
-        <dc:Bounds x="526" y="80" width="1092" height="370" />
+        <dc:Bounds x="646" y="80" width="2542" height="670" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_sportello" bpmnElement="sportello" isExpanded="true">
-        <dc:Bounds x="1978" y="520" width="1234" height="326" />
+        <dc:Bounds x="3598" y="820" width="1234" height="368" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_documenti" bpmnElement="documenti" isExpanded="true">
-        <dc:Bounds x="3628" y="916" width="1552" height="370" />
+        <dc:Bounds x="5248" y="1258" width="1552" height="398" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_istruttoria" bpmnElement="istruttoria" isExpanded="true">
-        <dc:Bounds x="6560" y="991" width="682" height="220" />
+        <dc:Bounds x="8180" y="1333" width="682" height="248" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_inizio" bpmnElement="inizio">
-        <dc:Bounds x="80" y="247" width="36" height="36" />
+        <dc:Bounds x="80" y="397" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_leggiCalendario" bpmnElement="leggiCalendario">
-        <dc:Bounds x="186" y="225" width="100" height="80" />
+        <dc:Bounds x="186" y="375" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_leggiAnagrafica" bpmnElement="leggiAnagrafica">
-        <dc:Bounds x="356" y="225" width="100" height="80" />
+        <dc:Bounds x="476" y="375" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_leggiAnagraficaErrore" bpmnElement="leggiAnagraficaErrore">
-        <dc:Bounds x="410" y="287" width="36" height="36" />
+        <dc:Bounds x="530" y="437" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_periodoGw" bpmnElement="periodoGw" isMarkerVisible="true">
+        <dc:Bounds x="356" y="390" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_avvisaFuoriPeriodo" bpmnElement="avvisaFuoriPeriodo">
+        <dc:Bounds x="476" y="964" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fineFuoriPeriodo" bpmnElement="fineFuoriPeriodo">
+        <dc:Bounds x="1899" y="986" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_chiusuraCompilazioneTimer" bpmnElement="chiusuraCompilazioneTimer">
-        <dc:Bounds x="556" y="432" width="36" height="36" />
+        <dc:Bounds x="676" y="732" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_avvisaChiusura" bpmnElement="avvisaChiusura">
+        <dc:Bounds x="3258" y="964" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_fineNonRegistrata" bpmnElement="fineNonRegistrata">
-        <dc:Bounds x="1695" y="665" width="36" height="36" />
+        <dc:Bounds x="3460" y="1439" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_dopoCompilazione" bpmnElement="dopoCompilazione" isMarkerVisible="true">
-        <dc:Bounds x="1688" y="240" width="50" height="50" />
+        <dc:Bounds x="3283" y="390" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_fineAnnullata" bpmnElement="fineAnnullata">
-        <dc:Bounds x="1840" y="247" width="36" height="36" />
+        <dc:Bounds x="3460" y="397" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_ricevutaRegistrazione" bpmnElement="ricevutaRegistrazione">
-        <dc:Bounds x="1808" y="643" width="100" height="80" />
+        <dc:Bounds x="3428" y="964" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_esitoElencoArrivato" bpmnElement="esitoElencoArrivato">
-        <dc:Bounds x="2008" y="828" width="36" height="36" />
+        <dc:Bounds x="3628" y="1170" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_rinunciaSportello" bpmnElement="rinunciaSportello">
-        <dc:Bounds x="2068" y="828" width="36" height="36" />
+        <dc:Bounds x="3688" y="1170" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_esitoGw" bpmnElement="esitoGw" isMarkerVisible="true">
-        <dc:Bounds x="3282" y="1076" width="50" height="50" />
+        <dc:Bounds x="4902" y="1432" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_fineSenzaEsito" bpmnElement="fineSenzaEsito">
-        <dc:Bounds x="3402" y="1083" width="36" height="36" />
+        <dc:Bounds x="5022" y="1439" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_attesaRedistribuzione" bpmnElement="attesaRedistribuzione">
-        <dc:Bounds x="3402" y="1378" width="36" height="36" />
+        <dc:Bounds x="5022" y="1748" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_subentrataGw" bpmnElement="subentrataGw" isMarkerVisible="true">
-        <dc:Bounds x="3508" y="1371" width="50" height="50" />
+        <dc:Bounds x="5128" y="1741" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_fineFuoriFondi" bpmnElement="fineFuoriFondi">
-        <dc:Bounds x="4386" y="1378" width="36" height="36" />
+        <dc:Bounds x="6006" y="1748" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_termineDocumentiTimer" bpmnElement="termineDocumentiTimer">
-        <dc:Bounds x="3658" y="1268" width="36" height="36" />
+        <dc:Bounds x="5278" y="1638" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_rinunciaDocumenti" bpmnElement="rinunciaDocumenti">
-        <dc:Bounds x="3718" y="1268" width="36" height="36" />
+        <dc:Bounds x="5338" y="1638" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_statoDocumentiInviati" bpmnElement="statoDocumentiInviati">
-        <dc:Bounds x="6050" y="1061" width="100" height="80" />
+        <dc:Bounds x="7670" y="1417" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_ricevutaDocumenti" bpmnElement="ricevutaDocumenti">
-        <dc:Bounds x="6220" y="1061" width="100" height="80" />
+        <dc:Bounds x="7840" y="1417" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_comunicaDecadenza" bpmnElement="comunicaDecadenza">
-        <dc:Bounds x="5250" y="1356" width="100" height="80" />
+        <dc:Bounds x="6870" y="1726" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_statoDecaduta" bpmnElement="statoDecaduta">
-        <dc:Bounds x="5420" y="1356" width="100" height="80" />
+        <dc:Bounds x="7040" y="1726" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_istanzaRevoca" bpmnElement="istanzaRevoca">
-        <dc:Bounds x="5590" y="1356" width="100" height="80" />
+        <dc:Bounds x="7210" y="1726" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_termineRevoca" bpmnElement="termineRevoca">
-        <dc:Bounds x="5644" y="1418" width="36" height="36" />
+        <dc:Bounds x="7264" y="1788" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_valutaRevoca" bpmnElement="valutaRevoca">
-        <dc:Bounds x="5760" y="1356" width="100" height="80" />
+        <dc:Bounds x="7380" y="1726" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_revocaGw" bpmnElement="revocaGw" isMarkerVisible="true">
-        <dc:Bounds x="5930" y="1371" width="50" height="50" />
+        <dc:Bounds x="7550" y="1741" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_comunicaRevocaRespinta" bpmnElement="comunicaRevocaRespinta">
-        <dc:Bounds x="6050" y="1356" width="100" height="80" />
+        <dc:Bounds x="7670" y="1726" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_fineDecaduta" bpmnElement="fineDecaduta">
-        <dc:Bounds x="6252" y="1528" width="36" height="36" />
+        <dc:Bounds x="7872" y="1898" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_avviaIstruttoria" bpmnElement="avviaIstruttoria">
-        <dc:Bounds x="6390" y="1061" width="100" height="80" />
+        <dc:Bounds x="8010" y="1417" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_avviso100" bpmnElement="avviso100">
-        <dc:Bounds x="6590" y="1193" width="36" height="36" />
+        <dc:Bounds x="8210" y="1563" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_termine120" bpmnElement="termine120">
-        <dc:Bounds x="6650" y="1193" width="36" height="36" />
+        <dc:Bounds x="8270" y="1563" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_rinunciaIstruttoria" bpmnElement="rinunciaIstruttoria">
-        <dc:Bounds x="6710" y="1193" width="36" height="36" />
+        <dc:Bounds x="8330" y="1563" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_notificaAvviso100" bpmnElement="notificaAvviso100">
-        <dc:Bounds x="7312" y="1356" width="100" height="80" />
+        <dc:Bounds x="8932" y="1726" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_fineAvviso100" bpmnElement="fineAvviso100">
-        <dc:Bounds x="7514" y="1378" width="36" height="36" />
+        <dc:Bounds x="9134" y="1748" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_notificaTermine120" bpmnElement="notificaTermine120">
-        <dc:Bounds x="7312" y="1506" width="100" height="80" />
+        <dc:Bounds x="8932" y="1876" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_fineTermine120" bpmnElement="fineTermine120">
-        <dc:Bounds x="7514" y="1528" width="36" height="36" />
+        <dc:Bounds x="9134" y="1898" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_dopoIstruttoria" bpmnElement="dopoIstruttoria" isMarkerVisible="true">
-        <dc:Bounds x="7337" y="1671" width="50" height="50" />
+        <dc:Bounds x="8957" y="2041" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_sospendiIstruttoria" bpmnElement="sospendiIstruttoria">
-        <dc:Bounds x="7482" y="1656" width="100" height="80" />
+        <dc:Bounds x="9102" y="2026" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_chiediIntegrazione" bpmnElement="chiediIntegrazione">
-        <dc:Bounds x="7652" y="1656" width="100" height="80" />
+        <dc:Bounds x="9272" y="2026" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_rispondiIntegrazione" bpmnElement="rispondiIntegrazione">
-        <dc:Bounds x="7822" y="1656" width="100" height="80" />
+        <dc:Bounds x="9442" y="2026" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_termineIntegrazione" bpmnElement="termineIntegrazione">
-        <dc:Bounds x="7876" y="1718" width="36" height="36" />
+        <dc:Bounds x="9496" y="2088" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_riprendiIstruttoria" bpmnElement="riprendiIstruttoria">
-        <dc:Bounds x="7992" y="1656" width="100" height="80" />
+        <dc:Bounds x="9612" y="2026" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_comunicaPreavviso" bpmnElement="comunicaPreavviso">
-        <dc:Bounds x="7482" y="1806" width="100" height="80" />
+        <dc:Bounds x="9102" y="2176" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_presentaOsservazioni" bpmnElement="presentaOsservazioni">
-        <dc:Bounds x="7652" y="1806" width="100" height="80" />
+        <dc:Bounds x="9272" y="2176" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_termineOsservazioni" bpmnElement="termineOsservazioni">
-        <dc:Bounds x="7706" y="1868" width="36" height="36" />
+        <dc:Bounds x="9326" y="2238" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_statoEsito" bpmnElement="statoEsito">
-        <dc:Bounds x="7482" y="1956" width="100" height="80" />
+        <dc:Bounds x="9102" y="2326" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_comunicaProvvedimento" bpmnElement="comunicaProvvedimento">
-        <dc:Bounds x="7652" y="1956" width="100" height="80" />
+        <dc:Bounds x="9272" y="2326" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_esitoFinaleGw" bpmnElement="esitoFinaleGw" isMarkerVisible="true">
-        <dc:Bounds x="7847" y="1971" width="50" height="50" />
+        <dc:Bounds x="9467" y="2341" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_fineAmmessa" bpmnElement="fineAmmessa">
-        <dc:Bounds x="8024" y="1978" width="36" height="36" />
+        <dc:Bounds x="9644" y="2348" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_fineAmmessaParz" bpmnElement="fineAmmessaParz">
-        <dc:Bounds x="8024" y="2106" width="36" height="36" />
+        <dc:Bounds x="9644" y="2476" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_fineRespinta" bpmnElement="fineRespinta">
-        <dc:Bounds x="8024" y="2212" width="36" height="36" />
+        <dc:Bounds x="9644" y="2582" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_registraRinuncia" bpmnElement="registraRinuncia">
-        <dc:Bounds x="7312" y="1061" width="100" height="80" />
+        <dc:Bounds x="8932" y="1417" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_fineRinuncia" bpmnElement="fineRinuncia">
-        <dc:Bounds x="7514" y="1083" width="36" height="36" />
+        <dc:Bounds x="9134" y="1439" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_cInizio" bpmnElement="cInizio">
-        <dc:Bounds x="566" y="142" width="36" height="36" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="s_compila" bpmnElement="compila">
-        <dc:Bounds x="672" y="120" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="s_calcola" bpmnElement="calcola">
-        <dc:Bounds x="962" y="270" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="s_calcolaErrore" bpmnElement="calcolaErrore">
-        <dc:Bounds x="1016" y="332" width="36" height="36" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="s_cosaFare" bpmnElement="cosaFare" isMarkerVisible="true">
-        <dc:Bounds x="1132" y="285" width="50" height="50" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="s_registra" bpmnElement="registra">
-        <dc:Bounds x="1252" y="270" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="s_registraErrore" bpmnElement="registraErrore">
-        <dc:Bounds x="1306" y="332" width="36" height="36" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="s_registrata" bpmnElement="registrata" isMarkerVisible="true">
-        <dc:Bounds x="1422" y="285" width="50" height="50" />
+        <dc:Bounds x="686" y="142" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_cFineRegistrata" bpmnElement="cFineRegistrata">
-        <dc:Bounds x="1542" y="292" width="36" height="36" />
+        <dc:Bounds x="3112" y="142" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="s_cFineAnnullata" bpmnElement="cFineAnnullata">
-        <dc:Bounds x="994" y="142" width="36" height="36" />
+      <bpmndi:BPMNShape id="s_passoImpresa" bpmnElement="passoImpresa">
+        <dc:Bounds x="792" y="120" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="s_annullaGw" bpmnElement="annullaGw" isMarkerVisible="true">
-        <dc:Bounds x="842" y="135" width="50" height="50" />
+      <bpmndi:BPMNShape id="s_passoImpresaGw" bpmnElement="passoImpresaGw" isMarkerVisible="true">
+        <dc:Bounds x="962" y="135" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_passoImpresaAnnullata" bpmnElement="passoImpresaAnnullata">
+        <dc:Bounds x="1114" y="270" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_calcolaAssi" bpmnElement="calcolaAssi">
+        <dc:Bounds x="1082" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_calcolaAssiErrore" bpmnElement="calcolaAssiErrore">
+        <dc:Bounds x="1136" y="182" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_impresaGw" bpmnElement="impresaGw" isMarkerVisible="true">
+        <dc:Bounds x="1252" y="135" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_passoProgetto" bpmnElement="passoProgetto">
+        <dc:Bounds x="1372" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_passoProgettoGw" bpmnElement="passoProgettoGw" isMarkerVisible="true">
+        <dc:Bounds x="1542" y="135" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_passoProgettoAnnullata" bpmnElement="passoProgettoAnnullata">
+        <dc:Bounds x="1694" y="270" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_passoPunteggio" bpmnElement="passoPunteggio">
+        <dc:Bounds x="1662" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_passoPunteggioGw" bpmnElement="passoPunteggioGw" isMarkerVisible="true">
+        <dc:Bounds x="1832" y="135" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_passoPunteggioAnnullata" bpmnElement="passoPunteggioAnnullata">
+        <dc:Bounds x="1984" y="270" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_passoDichiarazioni" bpmnElement="passoDichiarazioni">
+        <dc:Bounds x="1952" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_passoDichiarazioniGw" bpmnElement="passoDichiarazioniGw" isMarkerVisible="true">
+        <dc:Bounds x="2122" y="135" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_passoDichiarazioniAnnullata" bpmnElement="passoDichiarazioniAnnullata">
+        <dc:Bounds x="2274" y="270" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_calcola" bpmnElement="calcola">
+        <dc:Bounds x="2242" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_calcolaErrore" bpmnElement="calcolaErrore">
+        <dc:Bounds x="2296" y="182" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_erroriGw" bpmnElement="erroriGw" isMarkerVisible="true">
+        <dc:Bounds x="2412" y="135" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_riepilogo" bpmnElement="riepilogo">
+        <dc:Bounds x="2532" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_riepilogoGw" bpmnElement="riepilogoGw" isMarkerVisible="true">
+        <dc:Bounds x="2702" y="135" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_riepilogoAnnullata" bpmnElement="riepilogoAnnullata">
+        <dc:Bounds x="2854" y="270" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_qualePassoGw" bpmnElement="qualePassoGw" isMarkerVisible="true">
+        <dc:Bounds x="2847" y="376" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_registra" bpmnElement="registra">
+        <dc:Bounds x="2822" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_registraErrore" bpmnElement="registraErrore">
+        <dc:Bounds x="2876" y="182" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_registrata" bpmnElement="registrata" isMarkerVisible="true">
+        <dc:Bounds x="2992" y="135" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_sInizio" bpmnElement="sInizio">
-        <dc:Bounds x="2018" y="582" width="36" height="36" />
+        <dc:Bounds x="3638" y="882" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_attesaCodice" bpmnElement="attesaCodice">
-        <dc:Bounds x="2124" y="582" width="36" height="36" />
+        <dc:Bounds x="3744" y="882" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_acquisisciCodice" bpmnElement="acquisisciCodice">
-        <dc:Bounds x="2230" y="560" width="100" height="80" />
+        <dc:Bounds x="3850" y="860" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_chiusuraCodiceTimer" bpmnElement="chiusuraCodiceTimer">
-        <dc:Bounds x="2284" y="622" width="36" height="36" />
+        <dc:Bounds x="3904" y="922" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_generaCodice" bpmnElement="generaCodice">
-        <dc:Bounds x="2400" y="560" width="100" height="80" />
+        <dc:Bounds x="4020" y="860" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_generaCodiceErrore" bpmnElement="generaCodiceErrore">
-        <dc:Bounds x="2454" y="622" width="36" height="36" />
+        <dc:Bounds x="4074" y="922" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_inviaSportello" bpmnElement="inviaSportello">
-        <dc:Bounds x="2570" y="560" width="100" height="80" />
+        <dc:Bounds x="4190" y="860" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_chiusuraSportelloTimer" bpmnElement="chiusuraSportelloTimer">
-        <dc:Bounds x="2624" y="622" width="36" height="36" />
+        <dc:Bounds x="4244" y="922" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_registraInvio" bpmnElement="registraInvio">
-        <dc:Bounds x="2740" y="560" width="100" height="80" />
+        <dc:Bounds x="4360" y="860" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_registraInvioErrore" bpmnElement="registraInvioErrore">
-        <dc:Bounds x="2794" y="622" width="36" height="36" />
+        <dc:Bounds x="4414" y="922" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_invioOk" bpmnElement="invioOk" isMarkerVisible="true">
-        <dc:Bounds x="2910" y="575" width="50" height="50" />
+        <dc:Bounds x="4530" y="875" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_attesaElenchi" bpmnElement="attesaElenchi">
-        <dc:Bounds x="3030" y="582" width="36" height="36" />
+        <dc:Bounds x="4650" y="882" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_sFineSenzaCodice" bpmnElement="sFineSenzaCodice">
-        <dc:Bounds x="2432" y="710" width="36" height="36" />
+        <dc:Bounds x="4052" y="1010" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_sFineNonInviata" bpmnElement="sFineNonInviata">
-        <dc:Bounds x="2772" y="710" width="36" height="36" />
+        <dc:Bounds x="4392" y="1010" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_sFineSenzaElenchi" bpmnElement="sFineSenzaElenchi">
-        <dc:Bounds x="3136" y="582" width="36" height="36" />
+        <dc:Bounds x="4756" y="882" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_dInizio" bpmnElement="dInizio">
-        <dc:Bounds x="3668" y="978" width="36" height="36" />
+        <dc:Bounds x="5288" y="1320" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_dApri" bpmnElement="dApri">
-        <dc:Bounds x="3774" y="971" width="50" height="50" />
+        <dc:Bounds x="5394" y="1313" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_caricaDocumenti" bpmnElement="caricaDocumenti">
-        <dc:Bounds x="3894" y="956" width="100" height="80" />
+        <dc:Bounds x="5514" y="1298" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_serveperizia" bpmnElement="serveperizia" isMarkerVisible="true">
-        <dc:Bounds x="3919" y="1121" width="50" height="50" />
+        <dc:Bounds x="5539" y="1463" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_incaricaTecnico" bpmnElement="incaricaTecnico">
-        <dc:Bounds x="4064" y="1106" width="100" height="80" />
+        <dc:Bounds x="5684" y="1448" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_verificaIncarico" bpmnElement="verificaIncarico">
-        <dc:Bounds x="4234" y="1106" width="100" height="80" />
+        <dc:Bounds x="5854" y="1448" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_verificaIncaricoErrore" bpmnElement="verificaIncaricoErrore">
-        <dc:Bounds x="4288" y="1168" width="36" height="36" />
+        <dc:Bounds x="5908" y="1510" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_incaricoOk" bpmnElement="incaricoOk" isMarkerVisible="true">
-        <dc:Bounds x="4404" y="1121" width="50" height="50" />
+        <dc:Bounds x="6024" y="1463" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_abilitaTecnico" bpmnElement="abilitaTecnico">
-        <dc:Bounds x="4524" y="1106" width="100" height="80" />
+        <dc:Bounds x="6144" y="1448" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_compilaPerizia" bpmnElement="compilaPerizia">
-        <dc:Bounds x="4694" y="1106" width="100" height="80" />
+        <dc:Bounds x="6314" y="1448" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_periziaPronta" bpmnElement="periziaPronta" isMarkerVisible="true">
-        <dc:Bounds x="4864" y="1121" width="50" height="50" />
+        <dc:Bounds x="6484" y="1463" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_dChiudi" bpmnElement="dChiudi">
-        <dc:Bounds x="4984" y="1121" width="50" height="50" />
+        <dc:Bounds x="6604" y="1463" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_dFine" bpmnElement="dFine">
-        <dc:Bounds x="5104" y="1128" width="36" height="36" />
+        <dc:Bounds x="6724" y="1470" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_iInizio" bpmnElement="iInizio">
-        <dc:Bounds x="6600" y="1053" width="36" height="36" />
+        <dc:Bounds x="8220" y="1395" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_svolgiIstruttoria" bpmnElement="svolgiIstruttoria">
-        <dc:Bounds x="6706" y="1031" width="100" height="80" />
+        <dc:Bounds x="8326" y="1373" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_ricalcola" bpmnElement="ricalcola">
-        <dc:Bounds x="6876" y="1031" width="100" height="80" />
+        <dc:Bounds x="8496" y="1373" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_ricalcolaErrore" bpmnElement="ricalcolaErrore">
-        <dc:Bounds x="6930" y="1093" width="36" height="36" />
+        <dc:Bounds x="8550" y="1435" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_esitoIstruttoriaGw" bpmnElement="esitoIstruttoriaGw" isMarkerVisible="true">
-        <dc:Bounds x="7046" y="1046" width="50" height="50" />
+        <dc:Bounds x="8666" y="1388" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="s_iFine" bpmnElement="iFine">
-        <dc:Bounds x="7166" y="1053" width="36" height="36" />
+        <dc:Bounds x="8786" y="1395" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="e_f1" bpmnElement="f1">
-        <di:waypoint x="116" y="265" />
-        <di:waypoint x="186" y="265" />
+        <di:waypoint x="116" y="415" />
+        <di:waypoint x="186" y="415" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f2" bpmnElement="f2">
-        <di:waypoint x="286" y="265" />
-        <di:waypoint x="356" y="265" />
+        <di:waypoint x="286" y="415" />
+        <di:waypoint x="356" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fInPeriodo" bpmnElement="fInPeriodo">
+        <di:waypoint x="406" y="415" />
+        <di:waypoint x="476" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fFuoriPeriodo" bpmnElement="fFuoriPeriodo">
+        <di:waypoint x="406" y="415" />
+        <di:waypoint x="447" y="415" />
+        <di:waypoint x="447" y="1004" />
+        <di:waypoint x="476" y="1004" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fFuori2" bpmnElement="fFuori2">
+        <di:waypoint x="576" y="1004" />
+        <di:waypoint x="1899" y="1004" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f3" bpmnElement="f3">
-        <di:waypoint x="456" y="265" />
-        <di:waypoint x="526" y="265" />
+        <di:waypoint x="576" y="415" />
+        <di:waypoint x="646" y="415" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f4" bpmnElement="f4">
-        <di:waypoint x="428" y="323" />
-        <di:waypoint x="428" y="491" />
-        <di:waypoint x="497" y="491" />
-        <di:waypoint x="497" y="265" />
-        <di:waypoint x="526" y="265" />
+        <di:waypoint x="548" y="473" />
+        <di:waypoint x="548" y="779" />
+        <di:waypoint x="605" y="779" />
+        <di:waypoint x="605" y="415" />
+        <di:waypoint x="646" y="415" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_c1" bpmnElement="c1">
-        <di:waypoint x="602" y="160" />
-        <di:waypoint x="672" y="160" />
+        <di:waypoint x="722" y="160" />
+        <di:waypoint x="792" y="160" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="e_c2" bpmnElement="c2">
-        <di:waypoint x="772" y="160" />
-        <di:waypoint x="842" y="160" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="e_cAnnulla" bpmnElement="cAnnulla">
+      <bpmndi:BPMNEdge id="e_passoImpresaEsce" bpmnElement="passoImpresaEsce">
         <di:waypoint x="892" y="160" />
-        <di:waypoint x="994" y="160" />
+        <di:waypoint x="962" y="160" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="e_cCalcola" bpmnElement="cCalcola">
-        <di:waypoint x="892" y="160" />
-        <di:waypoint x="933" y="160" />
-        <di:waypoint x="933" y="310" />
-        <di:waypoint x="962" y="310" />
+      <bpmndi:BPMNEdge id="e_passoImpresaGwAvanti" bpmnElement="passoImpresaGwAvanti">
+        <di:waypoint x="1012" y="160" />
+        <di:waypoint x="1082" y="160" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="e_c3" bpmnElement="c3">
-        <di:waypoint x="1062" y="310" />
-        <di:waypoint x="1132" y="310" />
+      <bpmndi:BPMNEdge id="e_passoImpresaGwAnnulla" bpmnElement="passoImpresaGwAnnulla">
+        <di:waypoint x="1012" y="160" />
+        <di:waypoint x="1053" y="160" />
+        <di:waypoint x="1053" y="288" />
+        <di:waypoint x="1114" y="288" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="e_c4" bpmnElement="c4">
-        <di:waypoint x="1034" y="368" />
-        <di:waypoint x="1034" y="363" />
-        <di:waypoint x="625" y="363" />
-        <di:waypoint x="625" y="160" />
-        <di:waypoint x="672" y="160" />
+      <bpmndi:BPMNEdge id="e_cAssiErrore" bpmnElement="cAssiErrore">
+        <di:waypoint x="1154" y="218" />
+        <di:waypoint x="1154" y="451" />
+        <di:waypoint x="737" y="451" />
+        <di:waypoint x="737" y="160" />
+        <di:waypoint x="792" y="160" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="e_cSalva" bpmnElement="cSalva">
-        <di:waypoint x="1182" y="310" />
-        <di:waypoint x="1211" y="310" />
-        <di:waypoint x="1211" y="369" />
-        <di:waypoint x="631" y="369" />
-        <di:waypoint x="631" y="160" />
-        <di:waypoint x="672" y="160" />
+      <bpmndi:BPMNEdge id="e_cAssi" bpmnElement="cAssi">
+        <di:waypoint x="1182" y="160" />
+        <di:waypoint x="1252" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cImpresaNo" bpmnElement="cImpresaNo">
+        <di:waypoint x="1302" y="160" />
+        <di:waypoint x="1337" y="160" />
+        <di:waypoint x="1337" y="493" />
+        <di:waypoint x="747" y="493" />
+        <di:waypoint x="747" y="160" />
+        <di:waypoint x="792" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cImpresaOk" bpmnElement="cImpresaOk">
+        <di:waypoint x="1302" y="160" />
+        <di:waypoint x="1372" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_passoProgettoEsce" bpmnElement="passoProgettoEsce">
+        <di:waypoint x="1472" y="160" />
+        <di:waypoint x="1542" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_passoProgettoGwAvanti" bpmnElement="passoProgettoGwAvanti">
+        <di:waypoint x="1592" y="160" />
+        <di:waypoint x="1662" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_passoProgettoGwAnnulla" bpmnElement="passoProgettoGwAnnulla">
+        <di:waypoint x="1592" y="160" />
+        <di:waypoint x="1615" y="160" />
+        <di:waypoint x="1615" y="288" />
+        <di:waypoint x="1694" y="288" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_passoProgettoGwIndietro" bpmnElement="passoProgettoGwIndietro">
+        <di:waypoint x="1592" y="160" />
+        <di:waypoint x="1627" y="160" />
+        <di:waypoint x="1627" y="563" />
+        <di:waypoint x="757" y="563" />
+        <di:waypoint x="757" y="160" />
+        <di:waypoint x="792" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_passoPunteggioEsce" bpmnElement="passoPunteggioEsce">
+        <di:waypoint x="1762" y="160" />
+        <di:waypoint x="1832" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_passoPunteggioGwAvanti" bpmnElement="passoPunteggioGwAvanti">
+        <di:waypoint x="1882" y="160" />
+        <di:waypoint x="1952" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_passoPunteggioGwAnnulla" bpmnElement="passoPunteggioGwAnnulla">
+        <di:waypoint x="1882" y="160" />
+        <di:waypoint x="1929" y="160" />
+        <di:waypoint x="1929" y="288" />
+        <di:waypoint x="1984" y="288" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_passoPunteggioGwIndietro" bpmnElement="passoPunteggioGwIndietro">
+        <di:waypoint x="1882" y="160" />
+        <di:waypoint x="1917" y="160" />
+        <di:waypoint x="1917" y="507" />
+        <di:waypoint x="1327" y="507" />
+        <di:waypoint x="1327" y="160" />
+        <di:waypoint x="1372" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_passoDichiarazioniEsce" bpmnElement="passoDichiarazioniEsce">
+        <di:waypoint x="2052" y="160" />
+        <di:waypoint x="2122" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_passoDichiarazioniGwAvanti" bpmnElement="passoDichiarazioniGwAvanti">
+        <di:waypoint x="2172" y="160" />
+        <di:waypoint x="2242" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_passoDichiarazioniGwAnnulla" bpmnElement="passoDichiarazioniGwAnnulla">
+        <di:waypoint x="2172" y="160" />
+        <di:waypoint x="2213" y="160" />
+        <di:waypoint x="2213" y="288" />
+        <di:waypoint x="2274" y="288" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_passoDichiarazioniGwIndietro" bpmnElement="passoDichiarazioniGwIndietro">
+        <di:waypoint x="2172" y="160" />
+        <di:waypoint x="2207" y="160" />
+        <di:waypoint x="2207" y="521" />
+        <di:waypoint x="1617" y="521" />
+        <di:waypoint x="1617" y="160" />
+        <di:waypoint x="1662" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cCalcolaErrore" bpmnElement="cCalcolaErrore">
+        <di:waypoint x="2314" y="218" />
+        <di:waypoint x="2314" y="465" />
+        <di:waypoint x="1907" y="465" />
+        <di:waypoint x="1907" y="160" />
+        <di:waypoint x="1952" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cCalcolo" bpmnElement="cCalcolo">
+        <di:waypoint x="2342" y="160" />
+        <di:waypoint x="2412" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cNessunErrore" bpmnElement="cNessunErrore">
+        <di:waypoint x="2462" y="160" />
+        <di:waypoint x="2532" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cErrImpresa" bpmnElement="cErrImpresa">
+        <di:waypoint x="2462" y="160" />
+        <di:waypoint x="2512" y="160" />
+        <di:waypoint x="2512" y="647" />
+        <di:waypoint x="767" y="647" />
+        <di:waypoint x="767" y="160" />
+        <di:waypoint x="792" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cErrProgetto" bpmnElement="cErrProgetto">
+        <di:waypoint x="2462" y="160" />
+        <di:waypoint x="2502" y="160" />
+        <di:waypoint x="2502" y="605" />
+        <di:waypoint x="1337" y="605" />
+        <di:waypoint x="1337" y="160" />
+        <di:waypoint x="1372" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cErrPunteggio" bpmnElement="cErrPunteggio">
+        <di:waypoint x="2462" y="160" />
+        <di:waypoint x="2492" y="160" />
+        <di:waypoint x="2492" y="577" />
+        <di:waypoint x="1627" y="577" />
+        <di:waypoint x="1627" y="160" />
+        <di:waypoint x="1662" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cErrDichiarazioni" bpmnElement="cErrDichiarazioni">
+        <di:waypoint x="2462" y="160" />
+        <di:waypoint x="2482" y="160" />
+        <di:waypoint x="2482" y="535" />
+        <di:waypoint x="1917" y="535" />
+        <di:waypoint x="1917" y="160" />
+        <di:waypoint x="1952" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cRiepilogo" bpmnElement="cRiepilogo">
+        <di:waypoint x="2632" y="160" />
+        <di:waypoint x="2702" y="160" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_cRegistra" bpmnElement="cRegistra">
-        <di:waypoint x="1182" y="310" />
-        <di:waypoint x="1252" y="310" />
+        <di:waypoint x="2752" y="160" />
+        <di:waypoint x="2822" y="160" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="e_c5" bpmnElement="c5">
-        <di:waypoint x="1352" y="310" />
-        <di:waypoint x="1422" y="310" />
+      <bpmndi:BPMNEdge id="e_cRiepAnnulla" bpmnElement="cRiepAnnulla">
+        <di:waypoint x="2752" y="160" />
+        <di:waypoint x="2799" y="160" />
+        <di:waypoint x="2799" y="288" />
+        <di:waypoint x="2854" y="288" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="e_c6" bpmnElement="c6">
-        <di:waypoint x="1324" y="368" />
-        <di:waypoint x="1324" y="387" />
-        <di:waypoint x="649" y="387" />
-        <di:waypoint x="649" y="160" />
-        <di:waypoint x="672" y="160" />
+      <bpmndi:BPMNEdge id="e_cRiepModifica" bpmnElement="cRiepModifica">
+        <di:waypoint x="2752" y="160" />
+        <di:waypoint x="2775" y="160" />
+        <di:waypoint x="2775" y="401" />
+        <di:waypoint x="2847" y="401" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cModImpresa" bpmnElement="cModImpresa">
+        <di:waypoint x="2897" y="401" />
+        <di:waypoint x="2977" y="401" />
+        <di:waypoint x="2977" y="661" />
+        <di:waypoint x="777" y="661" />
+        <di:waypoint x="777" y="160" />
+        <di:waypoint x="792" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cModProgetto" bpmnElement="cModProgetto">
+        <di:waypoint x="2897" y="401" />
+        <di:waypoint x="2967" y="401" />
+        <di:waypoint x="2967" y="633" />
+        <di:waypoint x="1347" y="633" />
+        <di:waypoint x="1347" y="160" />
+        <di:waypoint x="1372" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cModPunteggio" bpmnElement="cModPunteggio">
+        <di:waypoint x="2897" y="401" />
+        <di:waypoint x="2957" y="401" />
+        <di:waypoint x="2957" y="619" />
+        <di:waypoint x="1637" y="619" />
+        <di:waypoint x="1637" y="160" />
+        <di:waypoint x="1662" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cModDichiarazioni" bpmnElement="cModDichiarazioni">
+        <di:waypoint x="2897" y="401" />
+        <di:waypoint x="2947" y="401" />
+        <di:waypoint x="2947" y="591" />
+        <di:waypoint x="1927" y="591" />
+        <di:waypoint x="1927" y="160" />
+        <di:waypoint x="1952" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cRegistraErrore" bpmnElement="cRegistraErrore">
+        <di:waypoint x="2894" y="218" />
+        <di:waypoint x="2894" y="479" />
+        <di:waypoint x="2492" y="479" />
+        <di:waypoint x="2492" y="160" />
+        <di:waypoint x="2532" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cRegistrazione" bpmnElement="cRegistrazione">
+        <di:waypoint x="2922" y="160" />
+        <di:waypoint x="2992" y="160" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_cOk" bpmnElement="cOk">
-        <di:waypoint x="1472" y="310" />
-        <di:waypoint x="1542" y="310" />
+        <di:waypoint x="3042" y="160" />
+        <di:waypoint x="3112" y="160" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_cNonRegistrata" bpmnElement="cNonRegistrata">
-        <di:waypoint x="1472" y="310" />
-        <di:waypoint x="1501" y="310" />
-        <di:waypoint x="1501" y="369" />
-        <di:waypoint x="631" y="369" />
-        <di:waypoint x="631" y="160" />
-        <di:waypoint x="672" y="160" />
+        <di:waypoint x="3042" y="160" />
+        <di:waypoint x="3077" y="160" />
+        <di:waypoint x="3077" y="549" />
+        <di:waypoint x="2502" y="549" />
+        <di:waypoint x="2502" y="160" />
+        <di:waypoint x="2532" y="160" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f5" bpmnElement="f5">
-        <di:waypoint x="574" y="468" />
-        <di:waypoint x="574" y="497" />
-        <di:waypoint x="1665" y="497" />
-        <di:waypoint x="1665" y="683" />
-        <di:waypoint x="1695" y="683" />
+        <di:waypoint x="694" y="768" />
+        <di:waypoint x="694" y="785" />
+        <di:waypoint x="3223" y="785" />
+        <di:waypoint x="3223" y="1004" />
+        <di:waypoint x="3258" y="1004" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_f5b" bpmnElement="f5b">
+        <di:waypoint x="3358" y="1004" />
+        <di:waypoint x="3399" y="1004" />
+        <di:waypoint x="3399" y="1457" />
+        <di:waypoint x="3460" y="1457" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f6" bpmnElement="f6">
-        <di:waypoint x="1618" y="265" />
-        <di:waypoint x="1688" y="265" />
+        <di:waypoint x="3188" y="415" />
+        <di:waypoint x="3283" y="415" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_fAnnullata" bpmnElement="fAnnullata">
-        <di:waypoint x="1738" y="265" />
-        <di:waypoint x="1840" y="265" />
+        <di:waypoint x="3333" y="415" />
+        <di:waypoint x="3460" y="415" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_fRegistrata" bpmnElement="fRegistrata">
-        <di:waypoint x="1738" y="265" />
-        <di:waypoint x="1773" y="265" />
-        <di:waypoint x="1773" y="683" />
-        <di:waypoint x="1808" y="683" />
+        <di:waypoint x="3333" y="415" />
+        <di:waypoint x="3387" y="415" />
+        <di:waypoint x="3387" y="1004" />
+        <di:waypoint x="3428" y="1004" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f7" bpmnElement="f7">
-        <di:waypoint x="1908" y="683" />
-        <di:waypoint x="1978" y="683" />
+        <di:waypoint x="3528" y="1004" />
+        <di:waypoint x="3598" y="1004" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_s1" bpmnElement="s1">
-        <di:waypoint x="2054" y="600" />
-        <di:waypoint x="2124" y="600" />
+        <di:waypoint x="3674" y="900" />
+        <di:waypoint x="3744" y="900" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_s2" bpmnElement="s2">
-        <di:waypoint x="2160" y="600" />
-        <di:waypoint x="2230" y="600" />
+        <di:waypoint x="3780" y="900" />
+        <di:waypoint x="3850" y="900" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_s3" bpmnElement="s3">
-        <di:waypoint x="2330" y="600" />
-        <di:waypoint x="2400" y="600" />
+        <di:waypoint x="3950" y="900" />
+        <di:waypoint x="4020" y="900" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_s4" bpmnElement="s4">
-        <di:waypoint x="2472" y="658" />
-        <di:waypoint x="2472" y="777" />
-        <di:waypoint x="2201" y="777" />
-        <di:waypoint x="2201" y="600" />
-        <di:waypoint x="2230" y="600" />
+        <di:waypoint x="4092" y="958" />
+        <di:waypoint x="4092" y="1071" />
+        <di:waypoint x="3815" y="1071" />
+        <di:waypoint x="3815" y="900" />
+        <di:waypoint x="3850" y="900" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_s5" bpmnElement="s5">
-        <di:waypoint x="2500" y="600" />
-        <di:waypoint x="2570" y="600" />
+        <di:waypoint x="4120" y="900" />
+        <di:waypoint x="4190" y="900" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_s6" bpmnElement="s6">
-        <di:waypoint x="2302" y="658" />
-        <di:waypoint x="2302" y="663" />
-        <di:waypoint x="2353" y="663" />
-        <di:waypoint x="2353" y="728" />
-        <di:waypoint x="2432" y="728" />
+        <di:waypoint x="3922" y="958" />
+        <di:waypoint x="3922" y="963" />
+        <di:waypoint x="3973" y="963" />
+        <di:waypoint x="3973" y="1028" />
+        <di:waypoint x="4052" y="1028" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_s7" bpmnElement="s7">
-        <di:waypoint x="2670" y="600" />
-        <di:waypoint x="2740" y="600" />
+        <di:waypoint x="4290" y="900" />
+        <di:waypoint x="4360" y="900" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_s8" bpmnElement="s8">
-        <di:waypoint x="2812" y="658" />
-        <di:waypoint x="2812" y="771" />
-        <di:waypoint x="2535" y="771" />
-        <di:waypoint x="2535" y="600" />
-        <di:waypoint x="2570" y="600" />
+        <di:waypoint x="4432" y="958" />
+        <di:waypoint x="4432" y="1085" />
+        <di:waypoint x="4150" y="1085" />
+        <di:waypoint x="4150" y="900" />
+        <di:waypoint x="4190" y="900" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_s9" bpmnElement="s9">
-        <di:waypoint x="2840" y="600" />
-        <di:waypoint x="2910" y="600" />
+        <di:waypoint x="4460" y="900" />
+        <di:waypoint x="4530" y="900" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_sInviato" bpmnElement="sInviato">
-        <di:waypoint x="2960" y="600" />
-        <di:waypoint x="3030" y="600" />
+        <di:waypoint x="4580" y="900" />
+        <di:waypoint x="4650" y="900" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_sRifiutato" bpmnElement="sRifiutato">
-        <di:waypoint x="2960" y="600" />
-        <di:waypoint x="2983" y="600" />
-        <di:waypoint x="2983" y="759" />
-        <di:waypoint x="2523" y="759" />
-        <di:waypoint x="2523" y="600" />
-        <di:waypoint x="2570" y="600" />
+        <di:waypoint x="4580" y="900" />
+        <di:waypoint x="4615" y="900" />
+        <di:waypoint x="4615" y="1099" />
+        <di:waypoint x="4160" y="1099" />
+        <di:waypoint x="4160" y="900" />
+        <di:waypoint x="4190" y="900" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_s10" bpmnElement="s10">
-        <di:waypoint x="2642" y="658" />
-        <di:waypoint x="2642" y="669" />
-        <di:waypoint x="2699" y="669" />
-        <di:waypoint x="2699" y="728" />
-        <di:waypoint x="2772" y="728" />
+        <di:waypoint x="4262" y="958" />
+        <di:waypoint x="4262" y="969" />
+        <di:waypoint x="4319" y="969" />
+        <di:waypoint x="4319" y="1028" />
+        <di:waypoint x="4392" y="1028" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_s11" bpmnElement="s11">
-        <di:waypoint x="3066" y="600" />
-        <di:waypoint x="3136" y="600" />
+        <di:waypoint x="4686" y="900" />
+        <di:waypoint x="4756" y="900" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f8" bpmnElement="f8">
-        <di:waypoint x="2026" y="864" />
-        <di:waypoint x="2026" y="893" />
-        <di:waypoint x="3259" y="893" />
-        <di:waypoint x="3259" y="1101" />
-        <di:waypoint x="3282" y="1101" />
+        <di:waypoint x="3646" y="1206" />
+        <di:waypoint x="3646" y="1229" />
+        <di:waypoint x="4873" y="1229" />
+        <di:waypoint x="4873" y="1457" />
+        <di:waypoint x="4902" y="1457" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f9" bpmnElement="f9">
-        <di:waypoint x="3212" y="683" />
-        <di:waypoint x="3235" y="683" />
-        <di:waypoint x="3235" y="1101" />
-        <di:waypoint x="3282" y="1101" />
+        <di:waypoint x="4832" y="1004" />
+        <di:waypoint x="4879" y="1004" />
+        <di:waypoint x="4879" y="1457" />
+        <di:waypoint x="4902" y="1457" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f10" bpmnElement="f10">
-        <di:waypoint x="2086" y="864" />
-        <di:waypoint x="2086" y="875" />
-        <di:waypoint x="7271" y="875" />
-        <di:waypoint x="7271" y="1101" />
-        <di:waypoint x="7312" y="1101" />
+        <di:waypoint x="3706" y="1206" />
+        <di:waypoint x="3706" y="1211" />
+        <di:waypoint x="8885" y="1211" />
+        <di:waypoint x="8885" y="1457" />
+        <di:waypoint x="8932" y="1457" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_fSenzaEsito" bpmnElement="fSenzaEsito">
-        <di:waypoint x="3332" y="1101" />
-        <di:waypoint x="3402" y="1101" />
+        <di:waypoint x="4952" y="1457" />
+        <di:waypoint x="5022" y="1457" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_fPosizioneUtile" bpmnElement="fPosizioneUtile">
-        <di:waypoint x="3332" y="1101" />
-        <di:waypoint x="3373" y="1101" />
-        <di:waypoint x="3373" y="1327" />
-        <di:waypoint x="3599" y="1327" />
-        <di:waypoint x="3599" y="1101" />
-        <di:waypoint x="3628" y="1101" />
+        <di:waypoint x="4952" y="1457" />
+        <di:waypoint x="4987" y="1457" />
+        <di:waypoint x="4987" y="1691" />
+        <di:waypoint x="5213" y="1691" />
+        <di:waypoint x="5213" y="1457" />
+        <di:waypoint x="5248" y="1457" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_fFuoriFondi" bpmnElement="fFuoriFondi">
-        <di:waypoint x="3332" y="1101" />
-        <di:waypoint x="3379" y="1101" />
-        <di:waypoint x="3379" y="1396" />
-        <di:waypoint x="3402" y="1396" />
+        <di:waypoint x="4952" y="1457" />
+        <di:waypoint x="4993" y="1457" />
+        <di:waypoint x="4993" y="1766" />
+        <di:waypoint x="5022" y="1766" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f11" bpmnElement="f11">
-        <di:waypoint x="3438" y="1396" />
-        <di:waypoint x="3508" y="1396" />
+        <di:waypoint x="5058" y="1766" />
+        <di:waypoint x="5128" y="1766" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_fSubentrata" bpmnElement="fSubentrata">
-        <di:waypoint x="3558" y="1396" />
-        <di:waypoint x="3587" y="1396" />
-        <di:waypoint x="3587" y="1101" />
-        <di:waypoint x="3628" y="1101" />
+        <di:waypoint x="5178" y="1766" />
+        <di:waypoint x="5201" y="1766" />
+        <di:waypoint x="5201" y="1457" />
+        <di:waypoint x="5248" y="1457" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_fNonSubentrata" bpmnElement="fNonSubentrata">
-        <di:waypoint x="3558" y="1396" />
-        <di:waypoint x="4386" y="1396" />
+        <di:waypoint x="5178" y="1766" />
+        <di:waypoint x="6006" y="1766" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_d1" bpmnElement="d1">
-        <di:waypoint x="3704" y="996" />
-        <di:waypoint x="3774" y="996" />
+        <di:waypoint x="5324" y="1338" />
+        <di:waypoint x="5394" y="1338" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_d2" bpmnElement="d2">
-        <di:waypoint x="3824" y="996" />
-        <di:waypoint x="3894" y="996" />
+        <di:waypoint x="5444" y="1338" />
+        <di:waypoint x="5514" y="1338" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_d3" bpmnElement="d3">
-        <di:waypoint x="3824" y="996" />
-        <di:waypoint x="3859" y="996" />
-        <di:waypoint x="3859" y="1146" />
-        <di:waypoint x="3919" y="1146" />
+        <di:waypoint x="5444" y="1338" />
+        <di:waypoint x="5479" y="1338" />
+        <di:waypoint x="5479" y="1488" />
+        <di:waypoint x="5539" y="1488" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_d4" bpmnElement="d4">
-        <di:waypoint x="3994" y="996" />
-        <di:waypoint x="4035" y="996" />
-        <di:waypoint x="4035" y="1077" />
-        <di:waypoint x="4955" y="1077" />
-        <di:waypoint x="4955" y="1146" />
-        <di:waypoint x="4984" y="1146" />
+        <di:waypoint x="5614" y="1338" />
+        <di:waypoint x="5655" y="1338" />
+        <di:waypoint x="5655" y="1419" />
+        <di:waypoint x="6575" y="1419" />
+        <di:waypoint x="6575" y="1488" />
+        <di:waypoint x="6604" y="1488" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_dNoPerizia" bpmnElement="dNoPerizia">
-        <di:waypoint x="3969" y="1146" />
-        <di:waypoint x="4041" y="1146" />
-        <di:waypoint x="4041" y="1233" />
-        <di:waypoint x="4841" y="1233" />
-        <di:waypoint x="4841" y="1146" />
-        <di:waypoint x="4864" y="1146" />
+        <di:waypoint x="5589" y="1488" />
+        <di:waypoint x="5661" y="1488" />
+        <di:waypoint x="5661" y="1575" />
+        <di:waypoint x="6461" y="1575" />
+        <di:waypoint x="6461" y="1488" />
+        <di:waypoint x="6484" y="1488" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_dPerizia" bpmnElement="dPerizia">
-        <di:waypoint x="3969" y="1146" />
-        <di:waypoint x="4064" y="1146" />
+        <di:waypoint x="5589" y="1488" />
+        <di:waypoint x="5684" y="1488" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_d5" bpmnElement="d5">
-        <di:waypoint x="4164" y="1146" />
-        <di:waypoint x="4234" y="1146" />
+        <di:waypoint x="5784" y="1488" />
+        <di:waypoint x="5854" y="1488" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_d6" bpmnElement="d6">
-        <di:waypoint x="4306" y="1204" />
-        <di:waypoint x="4306" y="1211" />
-        <di:waypoint x="4029" y="1211" />
-        <di:waypoint x="4029" y="1146" />
-        <di:waypoint x="4064" y="1146" />
+        <di:waypoint x="5926" y="1546" />
+        <di:waypoint x="5926" y="1553" />
+        <di:waypoint x="5644" y="1553" />
+        <di:waypoint x="5644" y="1488" />
+        <di:waypoint x="5684" y="1488" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_d7" bpmnElement="d7">
-        <di:waypoint x="4334" y="1146" />
-        <di:waypoint x="4404" y="1146" />
+        <di:waypoint x="5954" y="1488" />
+        <di:waypoint x="6024" y="1488" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_dTecnicoSi" bpmnElement="dTecnicoSi">
-        <di:waypoint x="4454" y="1146" />
-        <di:waypoint x="4524" y="1146" />
+        <di:waypoint x="6074" y="1488" />
+        <di:waypoint x="6144" y="1488" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_dTecnicoNo" bpmnElement="dTecnicoNo">
-        <di:waypoint x="4454" y="1146" />
-        <di:waypoint x="4477" y="1146" />
-        <di:waypoint x="4477" y="1199" />
-        <di:waypoint x="4017" y="1199" />
-        <di:waypoint x="4017" y="1146" />
-        <di:waypoint x="4064" y="1146" />
+        <di:waypoint x="6074" y="1488" />
+        <di:waypoint x="6109" y="1488" />
+        <di:waypoint x="6109" y="1567" />
+        <di:waypoint x="5654" y="1567" />
+        <di:waypoint x="5654" y="1488" />
+        <di:waypoint x="5684" y="1488" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_d8" bpmnElement="d8">
-        <di:waypoint x="4624" y="1146" />
-        <di:waypoint x="4694" y="1146" />
+        <di:waypoint x="6244" y="1488" />
+        <di:waypoint x="6314" y="1488" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_d9" bpmnElement="d9">
-        <di:waypoint x="4794" y="1146" />
-        <di:waypoint x="4864" y="1146" />
+        <di:waypoint x="6414" y="1488" />
+        <di:waypoint x="6484" y="1488" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_d11" bpmnElement="d11">
-        <di:waypoint x="4914" y="1146" />
-        <di:waypoint x="4984" y="1146" />
+        <di:waypoint x="6534" y="1488" />
+        <di:waypoint x="6604" y="1488" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_d10" bpmnElement="d10">
-        <di:waypoint x="5034" y="1146" />
-        <di:waypoint x="5104" y="1146" />
+        <di:waypoint x="6654" y="1488" />
+        <di:waypoint x="6724" y="1488" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f12" bpmnElement="f12">
-        <di:waypoint x="5180" y="1101" />
-        <di:waypoint x="6050" y="1101" />
+        <di:waypoint x="6800" y="1457" />
+        <di:waypoint x="7670" y="1457" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f13" bpmnElement="f13">
-        <di:waypoint x="3736" y="1304" />
-        <di:waypoint x="3736" y="1333" />
-        <di:waypoint x="7289" y="1333" />
-        <di:waypoint x="7289" y="1101" />
-        <di:waypoint x="7312" y="1101" />
+        <di:waypoint x="5356" y="1674" />
+        <di:waypoint x="5356" y="1697" />
+        <di:waypoint x="8903" y="1697" />
+        <di:waypoint x="8903" y="1457" />
+        <di:waypoint x="8932" y="1457" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f14" bpmnElement="f14">
-        <di:waypoint x="6150" y="1101" />
-        <di:waypoint x="6220" y="1101" />
+        <di:waypoint x="7770" y="1457" />
+        <di:waypoint x="7840" y="1457" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f15" bpmnElement="f15">
-        <di:waypoint x="6320" y="1101" />
-        <di:waypoint x="6390" y="1101" />
+        <di:waypoint x="7940" y="1457" />
+        <di:waypoint x="8010" y="1457" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f16" bpmnElement="f16">
-        <di:waypoint x="3676" y="1304" />
-        <di:waypoint x="3676" y="1321" />
-        <di:waypoint x="5215" y="1321" />
-        <di:waypoint x="5215" y="1396" />
-        <di:waypoint x="5250" y="1396" />
+        <di:waypoint x="5296" y="1674" />
+        <di:waypoint x="5296" y="1685" />
+        <di:waypoint x="6829" y="1685" />
+        <di:waypoint x="6829" y="1766" />
+        <di:waypoint x="6870" y="1766" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f17" bpmnElement="f17">
-        <di:waypoint x="5350" y="1396" />
-        <di:waypoint x="5420" y="1396" />
+        <di:waypoint x="6970" y="1766" />
+        <di:waypoint x="7040" y="1766" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f18" bpmnElement="f18">
-        <di:waypoint x="5520" y="1396" />
-        <di:waypoint x="5590" y="1396" />
+        <di:waypoint x="7140" y="1766" />
+        <di:waypoint x="7210" y="1766" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f19" bpmnElement="f19">
-        <di:waypoint x="5662" y="1454" />
-        <di:waypoint x="5662" y="1459" />
-        <di:waypoint x="6173" y="1459" />
-        <di:waypoint x="6173" y="1546" />
-        <di:waypoint x="6252" y="1546" />
+        <di:waypoint x="7282" y="1824" />
+        <di:waypoint x="7282" y="1853" />
+        <di:waypoint x="7817" y="1853" />
+        <di:waypoint x="7817" y="1916" />
+        <di:waypoint x="7872" y="1916" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f20" bpmnElement="f20">
-        <di:waypoint x="5690" y="1396" />
-        <di:waypoint x="5760" y="1396" />
+        <di:waypoint x="7310" y="1766" />
+        <di:waypoint x="7380" y="1766" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f21" bpmnElement="f21">
-        <di:waypoint x="5860" y="1396" />
-        <di:waypoint x="5930" y="1396" />
+        <di:waypoint x="7480" y="1766" />
+        <di:waypoint x="7550" y="1766" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_fRevocaSi" bpmnElement="fRevocaSi">
-        <di:waypoint x="5980" y="1396" />
-        <di:waypoint x="6021" y="1396" />
-        <di:waypoint x="6021" y="1101" />
-        <di:waypoint x="6050" y="1101" />
+        <di:waypoint x="7600" y="1766" />
+        <di:waypoint x="7635" y="1766" />
+        <di:waypoint x="7635" y="1457" />
+        <di:waypoint x="7670" y="1457" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_fRevocaNo" bpmnElement="fRevocaNo">
-        <di:waypoint x="5980" y="1396" />
-        <di:waypoint x="6050" y="1396" />
+        <di:waypoint x="7600" y="1766" />
+        <di:waypoint x="7670" y="1766" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f22" bpmnElement="f22">
-        <di:waypoint x="6150" y="1396" />
-        <di:waypoint x="6173" y="1396" />
-        <di:waypoint x="6173" y="1546" />
-        <di:waypoint x="6252" y="1546" />
+        <di:waypoint x="7770" y="1766" />
+        <di:waypoint x="7817" y="1766" />
+        <di:waypoint x="7817" y="1916" />
+        <di:waypoint x="7872" y="1916" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f23" bpmnElement="f23">
-        <di:waypoint x="6490" y="1101" />
-        <di:waypoint x="6560" y="1101" />
+        <di:waypoint x="8110" y="1457" />
+        <di:waypoint x="8180" y="1457" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_i1" bpmnElement="i1">
-        <di:waypoint x="6636" y="1071" />
-        <di:waypoint x="6706" y="1071" />
+        <di:waypoint x="8256" y="1413" />
+        <di:waypoint x="8326" y="1413" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_i2" bpmnElement="i2">
-        <di:waypoint x="6806" y="1071" />
-        <di:waypoint x="6876" y="1071" />
+        <di:waypoint x="8426" y="1413" />
+        <di:waypoint x="8496" y="1413" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_i3" bpmnElement="i3">
-        <di:waypoint x="6948" y="1129" />
-        <di:waypoint x="6948" y="1136" />
-        <di:waypoint x="6671" y="1136" />
-        <di:waypoint x="6671" y="1071" />
-        <di:waypoint x="6706" y="1071" />
+        <di:waypoint x="8568" y="1471" />
+        <di:waypoint x="8568" y="1478" />
+        <di:waypoint x="8286" y="1478" />
+        <di:waypoint x="8286" y="1413" />
+        <di:waypoint x="8326" y="1413" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_i4" bpmnElement="i4">
-        <di:waypoint x="6976" y="1071" />
-        <di:waypoint x="7046" y="1071" />
+        <di:waypoint x="8596" y="1413" />
+        <di:waypoint x="8666" y="1413" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_iRicalcola" bpmnElement="iRicalcola">
-        <di:waypoint x="7096" y="1071" />
-        <di:waypoint x="7143" y="1071" />
-        <di:waypoint x="7143" y="1148" />
-        <di:waypoint x="6683" y="1148" />
-        <di:waypoint x="6683" y="1071" />
-        <di:waypoint x="6706" y="1071" />
+        <di:waypoint x="8716" y="1413" />
+        <di:waypoint x="8751" y="1413" />
+        <di:waypoint x="8751" y="1492" />
+        <di:waypoint x="8296" y="1492" />
+        <di:waypoint x="8296" y="1413" />
+        <di:waypoint x="8326" y="1413" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_iFatto" bpmnElement="iFatto">
-        <di:waypoint x="7096" y="1071" />
-        <di:waypoint x="7166" y="1071" />
+        <di:waypoint x="8716" y="1413" />
+        <di:waypoint x="8786" y="1413" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f24" bpmnElement="f24">
-        <di:waypoint x="6608" y="1229" />
-        <di:waypoint x="6608" y="1321" />
-        <di:waypoint x="7277" y="1321" />
-        <di:waypoint x="7277" y="1396" />
-        <di:waypoint x="7312" y="1396" />
+        <di:waypoint x="8228" y="1599" />
+        <di:waypoint x="8228" y="1685" />
+        <di:waypoint x="8891" y="1685" />
+        <di:waypoint x="8891" y="1766" />
+        <di:waypoint x="8932" y="1766" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f25" bpmnElement="f25">
-        <di:waypoint x="7412" y="1396" />
-        <di:waypoint x="7514" y="1396" />
+        <di:waypoint x="9032" y="1766" />
+        <di:waypoint x="9134" y="1766" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f26" bpmnElement="f26">
-        <di:waypoint x="6668" y="1229" />
-        <di:waypoint x="6668" y="1333" />
-        <di:waypoint x="7289" y="1333" />
-        <di:waypoint x="7289" y="1546" />
-        <di:waypoint x="7312" y="1546" />
+        <di:waypoint x="8288" y="1599" />
+        <di:waypoint x="8288" y="1697" />
+        <di:waypoint x="8903" y="1697" />
+        <di:waypoint x="8903" y="1916" />
+        <di:waypoint x="8932" y="1916" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f27" bpmnElement="f27">
-        <di:waypoint x="7412" y="1546" />
-        <di:waypoint x="7514" y="1546" />
+        <di:waypoint x="9032" y="1916" />
+        <di:waypoint x="9134" y="1916" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f28" bpmnElement="f28">
-        <di:waypoint x="6728" y="1229" />
-        <di:waypoint x="6728" y="1315" />
-        <di:waypoint x="7271" y="1315" />
-        <di:waypoint x="7271" y="1101" />
-        <di:waypoint x="7312" y="1101" />
+        <di:waypoint x="8348" y="1599" />
+        <di:waypoint x="8348" y="1679" />
+        <di:waypoint x="8885" y="1679" />
+        <di:waypoint x="8885" y="1457" />
+        <di:waypoint x="8932" y="1457" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f29" bpmnElement="f29">
-        <di:waypoint x="7242" y="1101" />
-        <di:waypoint x="7277" y="1101" />
-        <di:waypoint x="7277" y="1696" />
-        <di:waypoint x="7337" y="1696" />
+        <di:waypoint x="8862" y="1457" />
+        <di:waypoint x="8891" y="1457" />
+        <di:waypoint x="8891" y="2066" />
+        <di:waypoint x="8957" y="2066" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_fIntegrazione" bpmnElement="fIntegrazione">
-        <di:waypoint x="7387" y="1696" />
-        <di:waypoint x="7482" y="1696" />
+        <di:waypoint x="9007" y="2066" />
+        <di:waypoint x="9102" y="2066" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_fPreavviso" bpmnElement="fPreavviso">
-        <di:waypoint x="7387" y="1696" />
-        <di:waypoint x="7459" y="1696" />
-        <di:waypoint x="7459" y="1846" />
-        <di:waypoint x="7482" y="1846" />
+        <di:waypoint x="9007" y="2066" />
+        <di:waypoint x="9073" y="2066" />
+        <di:waypoint x="9073" y="2216" />
+        <di:waypoint x="9102" y="2216" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_fProvvedimento" bpmnElement="fProvvedimento">
-        <di:waypoint x="7387" y="1696" />
-        <di:waypoint x="7435" y="1696" />
-        <di:waypoint x="7435" y="1996" />
-        <di:waypoint x="7482" y="1996" />
+        <di:waypoint x="9007" y="2066" />
+        <di:waypoint x="9079" y="2066" />
+        <di:waypoint x="9079" y="2366" />
+        <di:waypoint x="9102" y="2366" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f30" bpmnElement="f30">
-        <di:waypoint x="7582" y="1696" />
-        <di:waypoint x="7652" y="1696" />
+        <di:waypoint x="9202" y="2066" />
+        <di:waypoint x="9272" y="2066" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f31" bpmnElement="f31">
-        <di:waypoint x="7752" y="1696" />
-        <di:waypoint x="7822" y="1696" />
+        <di:waypoint x="9372" y="2066" />
+        <di:waypoint x="9442" y="2066" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f32" bpmnElement="f32">
-        <di:waypoint x="7922" y="1696" />
-        <di:waypoint x="7992" y="1696" />
+        <di:waypoint x="9542" y="2066" />
+        <di:waypoint x="9612" y="2066" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f33" bpmnElement="f33">
-        <di:waypoint x="7894" y="1754" />
-        <di:waypoint x="7894" y="1783" />
-        <di:waypoint x="7969" y="1783" />
-        <di:waypoint x="7969" y="1696" />
-        <di:waypoint x="7992" y="1696" />
+        <di:waypoint x="9514" y="2124" />
+        <di:waypoint x="9514" y="2147" />
+        <di:waypoint x="9583" y="2147" />
+        <di:waypoint x="9583" y="2066" />
+        <di:waypoint x="9612" y="2066" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f34" bpmnElement="f34">
-        <di:waypoint x="8092" y="1696" />
-        <di:waypoint x="8115" y="1696" />
-        <di:waypoint x="8115" y="2261" />
-        <di:waypoint x="6513" y="2261" />
-        <di:waypoint x="6513" y="1101" />
-        <di:waypoint x="6560" y="1101" />
+        <di:waypoint x="9712" y="2066" />
+        <di:waypoint x="9747" y="2066" />
+        <di:waypoint x="9747" y="2671" />
+        <di:waypoint x="8155" y="2671" />
+        <di:waypoint x="8155" y="1457" />
+        <di:waypoint x="8180" y="1457" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f35" bpmnElement="f35">
-        <di:waypoint x="7582" y="1846" />
-        <di:waypoint x="7652" y="1846" />
+        <di:waypoint x="9202" y="2216" />
+        <di:waypoint x="9272" y="2216" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f36" bpmnElement="f36">
-        <di:waypoint x="7752" y="1846" />
-        <di:waypoint x="7787" y="1846" />
-        <di:waypoint x="7787" y="2273" />
-        <di:waypoint x="6525" y="2273" />
-        <di:waypoint x="6525" y="1101" />
-        <di:waypoint x="6560" y="1101" />
+        <di:waypoint x="9372" y="2216" />
+        <di:waypoint x="9402" y="2216" />
+        <di:waypoint x="9402" y="2643" />
+        <di:waypoint x="8135" y="2643" />
+        <di:waypoint x="8135" y="1457" />
+        <di:waypoint x="8180" y="1457" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f37" bpmnElement="f37">
-        <di:waypoint x="7724" y="1904" />
-        <di:waypoint x="7724" y="2279" />
-        <di:waypoint x="6531" y="2279" />
-        <di:waypoint x="6531" y="1101" />
-        <di:waypoint x="6560" y="1101" />
+        <di:waypoint x="9344" y="2274" />
+        <di:waypoint x="9344" y="2657" />
+        <di:waypoint x="8145" y="2657" />
+        <di:waypoint x="8145" y="1457" />
+        <di:waypoint x="8180" y="1457" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f38" bpmnElement="f38">
-        <di:waypoint x="7582" y="1996" />
-        <di:waypoint x="7652" y="1996" />
+        <di:waypoint x="9202" y="2366" />
+        <di:waypoint x="9272" y="2366" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f39" bpmnElement="f39">
-        <di:waypoint x="7752" y="1996" />
-        <di:waypoint x="7847" y="1996" />
+        <di:waypoint x="9372" y="2366" />
+        <di:waypoint x="9467" y="2366" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_fAmmessa" bpmnElement="fAmmessa">
-        <di:waypoint x="7897" y="1996" />
-        <di:waypoint x="8024" y="1996" />
+        <di:waypoint x="9517" y="2366" />
+        <di:waypoint x="9644" y="2366" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_fParziale" bpmnElement="fParziale">
-        <di:waypoint x="7897" y="1996" />
-        <di:waypoint x="7957" y="1996" />
-        <di:waypoint x="7957" y="2124" />
-        <di:waypoint x="8024" y="2124" />
+        <di:waypoint x="9517" y="2366" />
+        <di:waypoint x="9571" y="2366" />
+        <di:waypoint x="9571" y="2494" />
+        <di:waypoint x="9644" y="2494" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_fRespinta" bpmnElement="fRespinta">
-        <di:waypoint x="7897" y="1996" />
-        <di:waypoint x="7963" y="1996" />
-        <di:waypoint x="7963" y="2230" />
-        <di:waypoint x="8024" y="2230" />
+        <di:waypoint x="9517" y="2366" />
+        <di:waypoint x="9577" y="2366" />
+        <di:waypoint x="9577" y="2600" />
+        <di:waypoint x="9644" y="2600" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="e_f40" bpmnElement="f40">
-        <di:waypoint x="7412" y="1101" />
-        <di:waypoint x="7514" y="1101" />
+        <di:waypoint x="9032" y="1457" />
+        <di:waypoint x="9134" y="1457" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

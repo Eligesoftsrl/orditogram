@@ -38,7 +38,7 @@ class RegistroTest {
 
     @Test
     void registrazioneEFotografia() {
-        Map<String, String> r = registra(reg, "01234560789", "speseProgetto", "100000", "regione", "Toscana");
+        Map<String, String> r = registra(reg, "01234560785", "speseProgetto", "100000", "regione", "Toscana");
         assertThat(r.get("esitoRegistrazione")).isEqualTo("REGISTRATA");
         assertThat(r.get("gruppoSede")).isEqualTo("sede-toscana");
         Registro.Domanda x = reg.domanda(r.get("numeroDomanda"));
@@ -55,8 +55,8 @@ class RegistroTest {
 
     @Test
     void tc19UnaSolaDomanda() {
-        Map<String, String> a = registra(reg, "01234560789", "speseProgetto", "100000");
-        Map<String, String> b = registra(reg, "01234560789", "speseProgetto", "120000");
+        Map<String, String> a = registra(reg, "01234560785", "speseProgetto", "100000");
+        Map<String, String> b = registra(reg, "01234560785", "speseProgetto", "120000");
         assertThat(a.get("esitoRegistrazione")).isEqualTo("REGISTRATA");
         assertThat(b.get("esitoRegistrazione")).isEqualTo("GIA_REGISTRATA");
         assertThat(b.get("messaggioRegistrazione")).isEqualTo("L'impresa ha già registrato una domanda per questo Avviso");
@@ -80,7 +80,7 @@ class RegistroTest {
 
     @Test
     void codiceNonAmbiguo() {
-        String n = registra(reg, "01234560789", "speseProgetto", "100000").get("numeroDomanda");
+        String n = registra(reg, "01234560785", "speseProgetto", "100000").get("numeroDomanda");
         String c = reg.codice(n).get("codiceIdentificativo");
         assertThat(c).hasSize(12).doesNotContain("0", "O", "1", "I");
         assertThat(reg.codice(n).get("codiceIdentificativo")).isEqualTo(c); // si rivede finché non è usato

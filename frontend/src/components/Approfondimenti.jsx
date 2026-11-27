@@ -12,7 +12,11 @@ import { Cassetto, Selettore } from './ui.jsx'
  * e i dati hanno tutta la larghezza. La capsula dei documenti non compare se non ce ne sono e non se ne possono
  * aggiungere; se l'attività li chiede (`richiesti`) e mancano, lo dice.
  */
-export default function Approfondimenti({ pratica, suggerimentoDocumenti, richiesti, onDocumenti, className }) {
+/**
+ * `aggiorna`: un valore che cambia quando può cambiare chi può aggiungere documenti (es. chi ha l'attività in
+ * carico): i conteggi si rileggono, così dopo "Riservala a me" compare la capsula dei documenti.
+ */
+export default function Approfondimenti({ pratica, suggerimentoDocumenti, richiesti, onDocumenti, aggiorna, className }) {
   const [aperto, setAperto] = useState(null)   // 'documenti' | 'storico' | null
   const [documenti, setDocumenti] = useState(null)   // { n, modificabile }
 
@@ -20,7 +24,7 @@ export default function Approfondimenti({ pratica, suggerimentoDocumenti, richie
     api.documenti(pratica.id)
       .then(d => setDocumenti({ n: d.documenti.length, modificabile: d.modificabile }))
       .catch(() => setDocumenti(null))
-  }, [pratica.id])
+  }, [pratica.id, aggiorna])
   useEffect(() => { conta() }, [conta])
 
   const eventi = pratica.eventi?.length || 0

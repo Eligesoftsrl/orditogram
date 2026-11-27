@@ -1,0 +1,240 @@
+{
+  "title": "Criteri di punteggio e piano economico",
+  "description": "Indica i criteri che danno punti e le spese del progetto. Punteggio e contributo si calcolano dopo le dichiarazioni.",
+  "fields": [
+    {
+      "name": "erroriPunteggio",
+      "label": "Da correggere in questo passo",
+      "type": "textarea",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "name": "asse",
+      "label": "Asse scelto",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "type": "sezione",
+      "label": "Criteri di punteggio"
+    },
+    {
+      "name": "tassoMedio",
+      "label": "Tasso medio di tariffa INAIL (‰)",
+      "type": "number",
+      "min": 0,
+      "max": 1000,
+      "help": "Lascia vuoto se non è definito (4 punti). Per l'Asse 4 la rischiosità dipende dall'ATECO.",
+      "visibileSe": {
+        "campo": "asse",
+        "valori": [
+          "1.1 Rischi tecnopatici",
+          "1.2 Modelli organizzativi",
+          "2 Rischi infortunistici",
+          "3 Bonifica amianto"
+        ]
+      }
+    },
+    {
+      "name": "partiSociali",
+      "label": "Condivisione con le parti sociali",
+      "type": "select",
+      "options": [
+        "Nessuna",
+        "Ente bilaterale o Organismo paritetico",
+        "Due o più parti sociali"
+      ],
+      "help": "Serve il Modulo E1."
+    },
+    {
+      "name": "rls",
+      "label": "Informativa o condivisione con RLS/RLST",
+      "type": "checkbox",
+      "help": "Serve il Modulo E2."
+    },
+    {
+      "name": "certIso45001",
+      "label": "Certificazione SGSL UNI EN ISO 45001:2023",
+      "type": "checkbox",
+      "visibileSe": {
+        "campo": "asse",
+        "valori": [
+          "1.1 Rischi tecnopatici",
+          "2 Rischi infortunistici",
+          "3 Bonifica amianto",
+          "4 Settori specifici (micro e piccole)"
+        ]
+      }
+    },
+    {
+      "name": "certIso14001",
+      "label": "Certificazione UNI EN ISO 14001:2015",
+      "type": "checkbox",
+      "visibileSe": {
+        "campo": "asse",
+        "valori": [
+          "1.1 Rischi tecnopatici",
+          "2 Rischi infortunistici",
+          "3 Bonifica amianto",
+          "4 Settori specifici (micro e piccole)"
+        ]
+      }
+    },
+    {
+      "name": "certEmas",
+      "label": "Registrazione EMAS",
+      "type": "checkbox",
+      "visibileSe": {
+        "campo": "asse",
+        "valori": [
+          "1.1 Rischi tecnopatici",
+          "2 Rischi infortunistici",
+          "3 Bonifica amianto",
+          "4 Settori specifici (micro e piccole)"
+        ]
+      }
+    },
+    {
+      "name": "certIso39001",
+      "label": "Certificazione UNI ISO 39001:2016",
+      "type": "checkbox",
+      "visibileSe": {
+        "campo": "asse",
+        "valori": [
+          "1.1 Rischi tecnopatici",
+          "2 Rischi infortunistici",
+          "3 Bonifica amianto",
+          "4 Settori specifici (micro e piccole)"
+        ]
+      }
+    },
+    {
+      "name": "certMog",
+      "label": "MOG art. 30 d.lgs. 81/08 asseverato",
+      "type": "checkbox",
+      "visibileSe": {
+        "campo": "asse",
+        "valori": [
+          "1.1 Rischi tecnopatici",
+          "2 Rischi infortunistici",
+          "3 Bonifica amianto",
+          "4 Settori specifici (micro e piccole)"
+        ]
+      }
+    },
+    {
+      "name": "certRlaq",
+      "label": "Iscrizione alla Rete del lavoro agricolo di qualità (RLAQ)",
+      "type": "checkbox",
+      "visibileSe": {
+        "campo": "asse",
+        "valori": [
+          "1.1 Rischi tecnopatici",
+          "1.2 Modelli organizzativi",
+          "2 Rischi infortunistici",
+          "3 Bonifica amianto",
+          "5.1 Agricoltura",
+          "5.2 Giovani agricoltori"
+        ]
+      }
+    },
+    {
+      "name": "ratingLegalita",
+      "label": "Rating di legalità",
+      "type": "checkbox",
+      "help": "Conta solo a parità di ora di invio, per fatturati oltre 2 milioni."
+    },
+    {
+      "type": "sezione",
+      "label": "Piano economico",
+      "help": "Importi al netto dell'IVA; se l'IVA non è recuperabile scrivili con l'IVA."
+    },
+    {
+      "name": "speseProgetto",
+      "label": "Spese di progetto, escluse le macchine del passo 4 (€)",
+      "type": "number",
+      "min": 0
+    },
+    {
+      "name": "speseTecniche",
+      "label": "Spese tecniche, esclusa la perizia (€)",
+      "type": "number",
+      "min": 0,
+      "help": "Fino al 10% delle spese di progetto, massimo 10.000 € (5% e 5.000 € se il progetto è solo acquisto di macchine)."
+    },
+    {
+      "name": "costoPerizia",
+      "label": "Costo della perizia (€)",
+      "type": "number",
+      "min": 0,
+      "help": "Massimo 1.850 €."
+    },
+    {
+      "name": "speseAggiuntivo",
+      "label": "Spese dell'intervento aggiuntivo (€)",
+      "type": "number",
+      "min": 0
+    },
+    {
+      "name": "ivaNonRecuperabile",
+      "label": "IVA non recuperabile",
+      "type": "checkbox"
+    },
+    {
+      "name": "motivazioneIva",
+      "label": "Perché l'IVA non è recuperabile",
+      "type": "textarea",
+      "visibileSe": {
+        "campo": "ivaNonRecuperabile",
+        "valori": [
+          "true"
+        ]
+      }
+    },
+    {
+      "name": "anticipo",
+      "label": "Chiedo l'anticipo",
+      "type": "checkbox"
+    },
+    {
+      "name": "nessunaSpesaNonAmmessa",
+      "label": "Confermo che il piano non contiene spese non ammesse",
+      "type": "checkbox",
+      "help": "Non ammessi: DPI (salvo Asse 2 c e DPI intelligenti), veicoli, ponteggi fissi, trasporto, consulenza per la domanda, formazione, valutazione dei rischi, manutenzione ordinaria, leasing, personale interno, costi autofatturati o fatturati da soci e imprese collegate."
+    },
+    {
+      "type": "sezione",
+      "label": "Come vuoi proseguire",
+      "help": "I dati che hai scritto restano salvati anche se torni indietro."
+    },
+    {
+      "name": "azione",
+      "label": "Prossimo passo",
+      "type": "select",
+      "options": [
+        "Continua",
+        "Torna al passo precedente",
+        "Annulla la bozza"
+      ],
+      "required": true,
+      "default": "Continua",
+      "precompila": false
+    },
+    {
+      "name": "confermaAnnullamento",
+      "label": "Ho capito: la bozza annullata non si recupera",
+      "type": "checkbox",
+      "required": true,
+      "visibileSe": {
+        "campo": "azione",
+        "valori": [
+          "Annulla la bozza"
+        ]
+      },
+      "precompila": false
+    }
+  ],
+  "submitLabel": "Conferma"
+}

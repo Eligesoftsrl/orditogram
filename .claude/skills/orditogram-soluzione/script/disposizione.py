@@ -141,6 +141,33 @@ def disponi(contenitore, flussi_tutti):
     def gap_sotto(r): return ys[r] + alt[r] + GAP_Y // 2
     def gap_sopra(r): return ys[r] - GAP_Y // 2
     fondo = hh + 25
+    CORSIA = 14
+
+    def passa_sotto(f):
+        so, ta = f.get("sourceRef"), f.get("targetRef")
+        if so not in box or ta not in ids: return False
+        sh = ospite.get(so, so)
+        if sh not in ids: return False
+        cs, ct, rs, rt = colonna[sh], colonna[ta], riga[sh], riga[ta]
+        if so in ospite:
+            return not (ct > cs or (ct == cs and rt > rs))
+        return ct <= cs
+
+    sotto = [f for f in flussi if passa_sotto(f)]
+    sotto.sort(key=lambda f: colonna[ospite.get(f.get("sourceRef"), f.get("sourceRef"))] - colonna[f.get("targetRef")])
+    corsia = {f.get("id"): fondo + CORSIA * k for k, f in enumerate(sotto)}
+    # dove scendono e dove risalgono: frecce diverse nello stesso corridoio restano affiancate
+    def scarti(chiave):
+        gruppi, out = {}, {}
+        for f in sotto:
+            gruppi.setdefault(chiave(f), []).append(f.get("id"))
+        for ids_g in gruppi.values():
+            passo = min(10, (GAP_X - 16) // max(1, len(ids_g)))
+            for k, i in enumerate(ids_g):
+                out[i] = (k - (len(ids_g) - 1) / 2) * passo
+        return out
+    scarto_su = scarti(lambda f: colonna[f.get("targetRef")])
+    scarto_giu = scarti(lambda f: colonna[ospite.get(f.get("sourceRef"), f.get("sourceRef"))])
     for n, f in enumerate(flussi):
         so, ta = f.get("sourceRef"), f.get("targetRef")
         if so not in box or ta not in ids: continue
@@ -158,11 +185,12 @@ def disponi(contenitore, flussi_tutti):
                 pts = [(bx, by), (bx, gy), (gx, gy)]
                 pts += [(gx, ty), (t.x, ty)] if ct > cs else [(gx, t.y)]
             else:
-                pts = [(bx, by), (bx, fondo + d), (gap_prima(ct) + d, fondo + d), (gap_prima(ct) + d, ty), (t.x, ty)]
+                fy, gx = corsia[f.get("id")], int(gap_prima(ct) + scarto_su[f.get("id")])
+                pts = [(bx, by), (bx, fy), (gx, fy), (gx, ty), (t.x, ty)]
         elif ct <= cs:                  # torna indietro
-            sy, gx = s.y + s.h // 2, gap_dopo(cs) + d
-            pts = [(s.x + s.w, sy), (gx, sy), (gx, fondo + d), (gap_prima(ct) + d, fondo + d),
-                   (gap_prima(ct) + d, ty), (t.x, ty)]
+            sy, gx = s.y + s.h // 2, int(gap_dopo(cs) + scarto_giu[f.get("id")])
+            fy, gx2 = corsia[f.get("id")], int(gap_prima(ct) + scarto_su[f.get("id")])
+            pts = [(s.x + s.w, sy), (gx, sy), (gx, fy), (gx2, fy), (gx2, ty), (t.x, ty)]
         else:
             sx, sy = s.x + s.w, s.y + s.h // 2
             libera = rs == rt and all(not (colonna[i] == c and riga[i] == rs) for i in ids for c in range(cs + 1, ct))
@@ -184,7 +212,7 @@ def disponi(contenitore, flussi_tutti):
             box[b.id] = b
         for k, pts in f_int.items():
             frecce[k] = [(x + ox, y + oy) for x, y in pts]
-    return box, frecce, w, hh + 60
+    return box, frecce, w, hh + 60 + CORSIA * len(sotto)
 
 
 def main(argv):

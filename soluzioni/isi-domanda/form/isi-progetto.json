@@ -1,269 +1,13 @@
 {
-  "title": "Compila la domanda ISI",
-  "description": "Compila i passi in qualsiasi ordine. «Calcola e salva» conserva i dati e aggiorna punteggio, contributo ed errori; quando non ci sono errori scegli «Registra la domanda».",
+  "title": "Scegli asse e progetto",
+  "description": "Scegli l'asse tra quelli ammessi per l'impresa, la tipologia di intervento e descrivi il progetto.",
   "fields": [
     {
-      "type": "sezione",
-      "label": "Situazione della domanda",
-      "help": "Si aggiorna ogni volta che confermi con «Calcola e salva»."
-    },
-    {
-      "name": "riepilogo",
-      "label": "Punteggio e contributo",
-      "type": "text",
-      "readonly": true,
-      "visibileAlleParti": true
-    },
-    {
-      "name": "erroriBloccanti",
-      "label": "Errori che bloccano la registrazione",
+      "name": "erroriProgetto",
+      "label": "Da correggere in questo passo",
       "type": "textarea",
       "readonly": true,
       "visibileAlleParti": true
-    },
-    {
-      "name": "avvisiCalcolo",
-      "label": "Avvisi del calcolo",
-      "type": "textarea",
-      "readonly": true,
-      "visibileAlleParti": true
-    },
-    {
-      "name": "messaggioRegistrazione",
-      "label": "Esito dell'ultima registrazione",
-      "type": "text",
-      "readonly": true,
-      "visibileAlleParti": true
-    },
-    {
-      "name": "avvisoAnagrafica",
-      "label": "Dati dell'impresa",
-      "type": "text",
-      "readonly": true,
-      "visibileAlleParti": true
-    },
-    {
-      "type": "sezione",
-      "label": "Passo 1. Dati dell'impresa",
-      "help": "Precompilati dall'anagrafica INAIL: controllali e correggili se serve."
-    },
-    {
-      "name": "ragioneSociale",
-      "label": "Ragione sociale",
-      "type": "text",
-      "maxLunghezza": 200,
-      "visibileAlleParti": true
-    },
-    {
-      "name": "codiceFiscaleImpresa",
-      "label": "Codice fiscale",
-      "type": "text",
-      "readonly": true,
-      "visibileAlleParti": true
-    },
-    {
-      "name": "partitaIva",
-      "label": "Partita IVA",
-      "type": "text",
-      "formato": "partitaIva",
-      "help": "Facoltativa per gli Enti del Terzo settore."
-    },
-    {
-      "name": "formaGiuridica",
-      "label": "Forma giuridica",
-      "type": "select",
-      "options": [
-        "Impresa individuale",
-        "Società di persone",
-        "Società di capitali",
-        "Società cooperativa",
-        "Società agricola",
-        "Ente del Terzo settore",
-        "Altro"
-      ]
-    },
-    {
-      "name": "ateco",
-      "label": "Codice ATECO 2025",
-      "type": "text",
-      "formato": "espressione",
-      "espressione": "^[0-9]{2}(\\.[0-9]{1,2}){0,2}$",
-      "messaggioFormato": "Scrivi il codice nella forma 25.11 o 25.11.00",
-      "visibileAlleParti": true
-    },
-    {
-      "name": "dataCostituzione",
-      "label": "Data di costituzione",
-      "type": "date",
-      "max": "oggi"
-    },
-    {
-      "name": "dataIscrizioneCciaa",
-      "label": "Data di iscrizione alla CCIAA (o al RUNTS o all'Albo)",
-      "type": "date",
-      "max": "oggi"
-    },
-    {
-      "name": "sedeLegale",
-      "label": "Sede legale",
-      "type": "text",
-      "visibileAlleParti": true
-    },
-    {
-      "name": "codiceDitta",
-      "label": "Codice ditta INAIL",
-      "type": "text"
-    },
-    {
-      "name": "pec",
-      "label": "PEC dell'impresa",
-      "type": "text",
-      "formato": "email",
-      "help": "Tutte le comunicazioni del bando arrivano qui."
-    },
-    {
-      "name": "tipoSoggetto",
-      "label": "Tipo di soggetto",
-      "type": "select",
-      "options": [
-        "Impresa",
-        "ETS iscritto al RUNTS",
-        "ETS iscritto al Registro imprese",
-        "ONLUS"
-      ]
-    },
-    {
-      "name": "agricolaPrimaria",
-      "label": "Impresa agricola primaria",
-      "type": "checkbox"
-    },
-    {
-      "name": "iap",
-      "label": "Imprenditore agricolo professionale (IAP)",
-      "type": "checkbox"
-    },
-    {
-      "name": "associataCollegata",
-      "label": "Impresa associata o collegata",
-      "type": "checkbox",
-      "help": "In questo caso ULA e fatturato del passo 2 vanno scritti già sommati."
-    },
-    {
-      "name": "rapportoAssicurativo",
-      "label": "Rapporto assicurativo",
-      "type": "select",
-      "options": [
-        "INAIL",
-        "INPS gestione agricola",
-        "Nessuno"
-      ]
-    },
-    {
-      "name": "dataAssociazionePortale",
-      "label": "Data di associazione al portale INAIL",
-      "type": "date",
-      "help": "Almeno 5 giorni lavorativi prima della chiusura della compilazione (art. 12)."
-    },
-    {
-      "type": "sezione",
-      "label": "Passo 2. Unità produttiva e dimensione"
-    },
-    {
-      "name": "indirizzoUnita",
-      "label": "Indirizzo dell'unità produttiva",
-      "type": "text"
-    },
-    {
-      "name": "regione",
-      "label": "Regione dell'unità produttiva",
-      "type": "select",
-      "options": [
-        "Abruzzo",
-        "Basilicata",
-        "Calabria",
-        "Campania",
-        "Emilia-Romagna",
-        "Friuli-Venezia Giulia",
-        "Lazio",
-        "Liguria",
-        "Lombardia",
-        "Marche",
-        "Molise",
-        "Piemonte",
-        "Puglia",
-        "Sardegna",
-        "Sicilia",
-        "Toscana",
-        "Trentino-Alto Adige",
-        "Umbria",
-        "Valle d'Aosta",
-        "Veneto"
-      ],
-      "visibileAlleParti": true,
-      "help": "Decide lo stanziamento a cui concorre la domanda."
-    },
-    {
-      "name": "ula",
-      "label": "ULA dell'anno di riferimento",
-      "type": "number",
-      "min": 0,
-      "help": "Con un decimale: 10,44 diventa 10,4."
-    },
-    {
-      "name": "fatturato",
-      "label": "Fatturato annuo (€)",
-      "type": "number",
-      "min": 0
-    },
-    {
-      "name": "totaleBilancio",
-      "label": "Totale di bilancio (€)",
-      "type": "number",
-      "min": 0
-    },
-    {
-      "name": "dipendentiImpresa",
-      "label": "Dipendenti dell'impresa",
-      "type": "number",
-      "min": 0
-    },
-    {
-      "name": "dipendentiUnita",
-      "label": "Dipendenti dell'unità produttiva",
-      "type": "number",
-      "min": 0
-    },
-    {
-      "name": "attivitaStagionale",
-      "label": "Attività stagionale",
-      "type": "checkbox"
-    },
-    {
-      "name": "dataInizioAttivita",
-      "label": "Data di inizio dell'attività",
-      "type": "date",
-      "visibileSe": {
-        "campo": "attivitaStagionale",
-        "valori": [
-          "true"
-        ]
-      }
-    },
-    {
-      "name": "dittaSenzaDipendenti",
-      "label": "Ditta individuale senza dipendenti con titolare autonomo",
-      "type": "checkbox"
-    },
-    {
-      "name": "ulaCalcolate",
-      "label": "ULA considerate",
-      "type": "text",
-      "readonly": true
-    },
-    {
-      "type": "sezione",
-      "label": "Passo 3. Asse e tipologia",
-      "help": "Si vedono gli assi ammessi per l'impresa e il motivo di quelli esclusi."
     },
     {
       "name": "assiAmmessi",
@@ -278,6 +22,18 @@
       "type": "textarea",
       "readonly": true,
       "visibileAlleParti": true
+    },
+    {
+      "name": "ulaCalcolate",
+      "label": "ULA considerate",
+      "type": "text",
+      "readonly": true,
+      "visibileAlleParti": true
+    },
+    {
+      "type": "sezione",
+      "label": "Asse e tipologia",
+      "help": "Si vedono gli assi ammessi per l'impresa e il motivo di quelli esclusi."
     },
     {
       "name": "asse",
@@ -805,14 +561,16 @@
     },
     {
       "type": "sezione",
-      "label": "Passo 4. Dati del progetto"
+      "label": "Dati del progetto"
     },
     {
       "name": "titoloProgetto",
       "label": "Titolo del progetto",
       "type": "text",
+      "titolo": true,
       "maxLunghezza": 200,
-      "visibileAlleParti": true
+      "visibileAlleParti": true,
+      "help": "È anche il titolo della pratica: se lo cambi, cambia nella scrivania e nelle ricerche."
     },
     {
       "name": "descrizioneProgetto",
@@ -1199,390 +957,20 @@
     },
     {
       "type": "sezione",
-      "label": "Passo 5. Criteri di punteggio"
-    },
-    {
-      "name": "tassoMedio",
-      "label": "Tasso medio di tariffa INAIL (‰)",
-      "type": "number",
-      "min": 0,
-      "max": 1000,
-      "help": "Lascia vuoto se non è definito (4 punti). Per l'Asse 4 la rischiosità dipende dall'ATECO.",
-      "visibileSe": {
-        "campo": "asse",
-        "valori": [
-          "1.1 Rischi tecnopatici",
-          "1.2 Modelli organizzativi",
-          "2 Rischi infortunistici",
-          "3 Bonifica amianto"
-        ]
-      }
-    },
-    {
-      "name": "partiSociali",
-      "label": "Condivisione con le parti sociali",
-      "type": "select",
-      "options": [
-        "Nessuna",
-        "Ente bilaterale o Organismo paritetico",
-        "Due o più parti sociali"
-      ],
-      "help": "Serve il Modulo E1."
-    },
-    {
-      "name": "rls",
-      "label": "Informativa o condivisione con RLS/RLST",
-      "type": "checkbox",
-      "help": "Serve il Modulo E2."
-    },
-    {
-      "name": "certIso45001",
-      "label": "Certificazione SGSL UNI EN ISO 45001:2023",
-      "type": "checkbox",
-      "visibileSe": {
-        "campo": "asse",
-        "valori": [
-          "1.1 Rischi tecnopatici",
-          "2 Rischi infortunistici",
-          "3 Bonifica amianto",
-          "4 Settori specifici (micro e piccole)"
-        ]
-      }
-    },
-    {
-      "name": "certIso14001",
-      "label": "Certificazione UNI EN ISO 14001:2015",
-      "type": "checkbox",
-      "visibileSe": {
-        "campo": "asse",
-        "valori": [
-          "1.1 Rischi tecnopatici",
-          "2 Rischi infortunistici",
-          "3 Bonifica amianto",
-          "4 Settori specifici (micro e piccole)"
-        ]
-      }
-    },
-    {
-      "name": "certEmas",
-      "label": "Registrazione EMAS",
-      "type": "checkbox",
-      "visibileSe": {
-        "campo": "asse",
-        "valori": [
-          "1.1 Rischi tecnopatici",
-          "2 Rischi infortunistici",
-          "3 Bonifica amianto",
-          "4 Settori specifici (micro e piccole)"
-        ]
-      }
-    },
-    {
-      "name": "certIso39001",
-      "label": "Certificazione UNI ISO 39001:2016",
-      "type": "checkbox",
-      "visibileSe": {
-        "campo": "asse",
-        "valori": [
-          "1.1 Rischi tecnopatici",
-          "2 Rischi infortunistici",
-          "3 Bonifica amianto",
-          "4 Settori specifici (micro e piccole)"
-        ]
-      }
-    },
-    {
-      "name": "certMog",
-      "label": "MOG art. 30 d.lgs. 81/08 asseverato",
-      "type": "checkbox",
-      "visibileSe": {
-        "campo": "asse",
-        "valori": [
-          "1.1 Rischi tecnopatici",
-          "2 Rischi infortunistici",
-          "3 Bonifica amianto",
-          "4 Settori specifici (micro e piccole)"
-        ]
-      }
-    },
-    {
-      "name": "certRlaq",
-      "label": "Iscrizione alla Rete del lavoro agricolo di qualità (RLAQ)",
-      "type": "checkbox",
-      "visibileSe": {
-        "campo": "asse",
-        "valori": [
-          "1.1 Rischi tecnopatici",
-          "1.2 Modelli organizzativi",
-          "2 Rischi infortunistici",
-          "3 Bonifica amianto",
-          "5.1 Agricoltura",
-          "5.2 Giovani agricoltori"
-        ]
-      }
-    },
-    {
-      "name": "ratingLegalita",
-      "label": "Rating di legalità",
-      "type": "checkbox",
-      "help": "Conta solo a parità di ora di invio, per fatturati oltre 2 milioni."
-    },
-    {
-      "type": "sezione",
-      "label": "Passo 6. Piano economico",
-      "help": "Importi al netto dell'IVA; se l'IVA non è recuperabile scrivili con l'IVA."
-    },
-    {
-      "name": "speseProgetto",
-      "label": "Spese di progetto, escluse le macchine del passo 4 (€)",
-      "type": "number",
-      "min": 0
-    },
-    {
-      "name": "speseTecniche",
-      "label": "Spese tecniche, esclusa la perizia (€)",
-      "type": "number",
-      "min": 0,
-      "help": "Fino al 10% delle spese di progetto, massimo 10.000 € (5% e 5.000 € se il progetto è solo acquisto di macchine)."
-    },
-    {
-      "name": "costoPerizia",
-      "label": "Costo della perizia (€)",
-      "type": "number",
-      "min": 0,
-      "help": "Massimo 1.850 €."
-    },
-    {
-      "name": "speseAggiuntivo",
-      "label": "Spese dell'intervento aggiuntivo (€)",
-      "type": "number",
-      "min": 0
-    },
-    {
-      "name": "ivaNonRecuperabile",
-      "label": "IVA non recuperabile",
-      "type": "checkbox"
-    },
-    {
-      "name": "motivazioneIva",
-      "label": "Perché l'IVA non è recuperabile",
-      "type": "textarea",
-      "visibileSe": {
-        "campo": "ivaNonRecuperabile",
-        "valori": [
-          "true"
-        ]
-      }
-    },
-    {
-      "name": "anticipo",
-      "label": "Chiedo l'anticipo",
-      "type": "checkbox"
-    },
-    {
-      "name": "nessunaSpesaNonAmmessa",
-      "label": "Confermo che il piano non contiene spese non ammesse",
-      "type": "checkbox",
-      "help": "Non ammessi: DPI (salvo Asse 2 c e DPI intelligenti), veicoli, ponteggi fissi, trasporto, consulenza per la domanda, formazione, valutazione dei rischi, manutenzione ordinaria, leasing, personale interno, costi autofatturati o fatturati da soci e imprese collegate."
-    },
-    {
-      "name": "dettaglioImporti",
-      "label": "Calcolo degli importi voce per voce",
-      "type": "textarea",
-      "readonly": true,
-      "visibileAlleParti": true
-    },
-    {
-      "type": "sezione",
-      "label": "Passo 7. Dichiarazioni",
-      "help": "Una casella per ogni requisito dell'Avviso: senza tutte non si registra."
-    },
-    {
-      "name": "dichR02",
-      "label": "Il progetto riguarda lavorazioni già attive alla data di pubblicazione, con rischio documentato nel DVR (art. 5)",
-      "type": "checkbox"
-    },
-    {
-      "name": "dichR03",
-      "label": "Il progetto non amplia la sede produttiva e non comprende beni usati (art. 5)",
-      "type": "checkbox"
-    },
-    {
-      "name": "dichR05",
-      "label": "Le macchine o i trattori da sostituire sono di piena proprietà da almeno 3 anni al 31/12/2025 (art. 5)",
-      "type": "checkbox",
-      "visibileSe": {
-        "campo": "asse",
-        "valori": [
-          "1.1 Rischi tecnopatici",
-          "2 Rischi infortunistici",
-          "4 Settori specifici (micro e piccole)",
-          "5.1 Agricoltura",
-          "5.2 Giovani agricoltori"
-        ]
-      }
-    },
-    {
-      "name": "dichR06",
-      "label": "Gli immobili sono nella disponibilità dell'impresa da almeno 3 anni al 31/12/2025 (art. 5)",
-      "type": "checkbox",
-      "visibileSe": {
-        "campo": "asse",
-        "valori": [
-          "3 Bonifica amianto"
-        ]
-      }
-    },
-    {
-      "name": "dichR07",
-      "label": "L'unità produttiva è attiva nella Regione dell'Avviso (art. 2)",
-      "type": "checkbox"
-    },
-    {
-      "name": "dichR08",
-      "label": "L'impresa è iscritta a registri o albi entro il 18/12/2025 (art. 2)",
-      "type": "checkbox"
-    },
-    {
-      "name": "dichR09",
-      "label": "L'impresa è iscritta alla gestione assicurativa e previdenziale ed è in regola con il DURC (art. 2)",
-      "type": "checkbox"
-    },
-    {
-      "name": "dichR10",
-      "label": "Nessuna procedura concorsuale o liquidazione in corso (art. 2)",
-      "type": "checkbox"
-    },
-    {
-      "name": "dichR11",
-      "label": "Nessuna condanna definitiva per omicidio o lesioni colpose legate alla sicurezza sul lavoro (art. 2)",
-      "type": "checkbox"
-    },
-    {
-      "name": "dichR12",
-      "label": "Nessun provvedimento interdittivo art. 9 c. 2 lett. d) d.lgs. 231/2001 (art. 2)",
-      "type": "checkbox"
-    },
-    {
-      "name": "dichR15",
-      "label": "Sono rispettate le regole sul cumulo di aiuti pubblici sugli stessi costi (art. 9)",
-      "type": "checkbox"
-    },
-    {
-      "name": "dichR16",
-      "label": "Nessun ordine di recupero pendente e impresa non in difficoltà (Reg. UE 2022/2472)",
-      "type": "checkbox",
-      "visibileSe": {
-        "campo": "asse",
-        "valori": [
-          "5.1 Agricoltura",
-          "5.2 Giovani agricoltori"
-        ]
-      }
-    },
-    {
-      "name": "dichR17",
-      "label": "L'impresa ha la polizza contro calamità naturali ed eventi catastrofali, dove obbligatoria (non richiesta alle imprese agricole art. 2135 c.c.)",
-      "type": "checkbox"
-    },
-    {
-      "name": "dichR18",
-      "label": "L'impresa sottoscrive il Patto di integrità (Modulo G)",
-      "type": "checkbox"
-    },
-    {
-      "name": "finanziamentiPrecedenti",
-      "label": "Finanziamenti ISI ottenuti nelle edizioni precedenti",
-      "type": "select",
-      "options": [
-        "Nessuno",
-        "ISI 2022",
-        "ISI 2023",
-        "ISI 2024"
-      ]
-    },
-    {
-      "name": "assePrecedente",
-      "label": "Asse del finanziamento precedente",
-      "type": "select",
-      "options": [
-        "1.1 Rischi tecnopatici",
-        "1.2 Modelli organizzativi",
-        "2 Rischi infortunistici",
-        "3 Bonifica amianto",
-        "4 Settori specifici (micro e piccole)",
-        "5.1 Agricoltura",
-        "5.2 Giovani agricoltori"
-      ],
-      "visibileSe": {
-        "campo": "finanziamentiPrecedenti",
-        "valori": [
-          "ISI 2022",
-          "ISI 2023",
-          "ISI 2024"
-        ]
-      }
-    },
-    {
-      "name": "rinunciaPec",
-      "label": "Ho rinunciato via PEC al finanziamento precedente entro il giorno prima dell'apertura (R-REQ-13)",
-      "type": "checkbox",
-      "visibileSe": {
-        "campo": "finanziamentiPrecedenti",
-        "valori": [
-          "ISI 2022",
-          "ISI 2023",
-          "ISI 2024"
-        ]
-      }
-    },
-    {
-      "type": "sezione",
-      "label": "Passo 8. Riepilogo"
-    },
-    {
-      "name": "dettaglioPunteggio",
-      "label": "Punteggio per criterio",
-      "type": "textarea",
-      "readonly": true,
-      "visibileAlleParti": true
-    },
-    {
-      "name": "documentiRichiesti",
-      "label": "Documenti da preparare",
-      "type": "textarea",
-      "readonly": true,
-      "visibileAlleParti": true
-    },
-    {
-      "type": "sezione",
-      "label": "Cosa vuoi fare"
+      "label": "Come vuoi proseguire",
+      "help": "I dati che hai scritto restano salvati anche se torni indietro."
     },
     {
       "name": "azione",
-      "label": "Azione",
+      "label": "Prossimo passo",
       "type": "select",
       "options": [
-        "Calcola e salva",
-        "Registra la domanda",
+        "Continua",
+        "Torna al passo precedente",
         "Annulla la bozza"
       ],
       "required": true,
-      "default": "Calcola e salva",
-      "precompila": false,
-      "help": "«Calcola e salva» conserva i dati anche incompleti e aggiorna punteggio ed errori."
-    },
-    {
-      "name": "confermaRegistrazione",
-      "label": "Ho capito: dopo la registrazione la domanda non sarà più modificabile",
-      "type": "checkbox",
-      "required": true,
-      "visibileSe": {
-        "campo": "azione",
-        "valori": [
-          "Registra la domanda"
-        ]
-      },
+      "default": "Continua",
       "precompila": false
     },
     {

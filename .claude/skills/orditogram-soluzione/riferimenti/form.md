@@ -23,7 +23,10 @@ pratica nuova per vedere la correzione.
 ```
 - `documenti`: `carica` (si allegano file), `lettura` (si vedono i documenti della pratica), `modifica`
   (si possono aggiungere versioni). Omesso = nessun pannello documenti.
-- `documentiObbligatori: true` con `carica`: almeno un file.
+- **`carica` vale solo nel form di avvio**: in un form di attività il pannello per allegare non compare e la persona
+  non può caricare niente. Nelle attività in cui si allegano file usa `modifica` (`verifica.py` lo segnala).
+- `documentiObbligatori: true` con `carica`: almeno un file (solo all'avvio; nelle attività non c'è ancora un controllo
+  equivalente: chiedi una conferma con una casella obbligatoria, es. "Ho caricato tutti i documenti").
 - `documentiVisibilita`: `interna` (predefinito) o `parti` (i documenti caricati qui li vedono le parti esterne).
 
 ## Campi
@@ -40,7 +43,7 @@ pratica nuova per vedere la correzione.
 | `required` | obbligatorio (se il campo è nascosto da una condizione non lo è) |
 | `readonly` | mostra il dato già nella pratica senza farlo modificare (riepilogo nelle attività successive) |
 | `options` | per `select`: elenco di testi; le condizioni del BPMN li confrontano alla lettera |
-| `titolo: true` | il valore diventa il titolo della pratica (uno per form, nel form di avvio) |
+| `titolo: true` | il valore diventa il titolo della pratica (uno per form): nel form di avvio lo dà, in un form di attività lo aggiorna (es. il titolo del progetto cambiato durante la compilazione) |
 | `help` | testo d'aiuto sotto il campo |
 | `placeholder`, `default` | esempio nel campo vuoto, valore iniziale |
 | `precompila: false` | non riproporre il valore precedente (utile quando un'attività si ripete in un ciclo) |

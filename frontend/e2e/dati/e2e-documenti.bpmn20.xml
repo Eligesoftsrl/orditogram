@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:activiti="http://activiti.org/bpmn"
+             targetNamespace="http://orditogram.it/e2e">
+  <process id="e2eDocumenti" name="Domanda con allegati di prova" isExecutable="true" activiti:candidateStarterGroups="operatori">
+    <startEvent id="inizio" activiti:formKey="e2e-doc-avvio"/>
+    <sequenceFlow id="f1" sourceRef="inizio" targetRef="dati"/>
+    <userTask id="dati" name="Completa i dati e allega i documenti" activiti:candidateGroups="operatori" activiti:formKey="e2e-doc-dati"/>
+    <sequenceFlow id="f2" sourceRef="dati" targetRef="verifica"/>
+    <userTask id="verifica" name="Verifica la domanda" activiti:candidateGroups="operatori" activiti:formKey="e2e-doc-verifica"/>
+    <sequenceFlow id="f3" sourceRef="verifica" targetRef="fine"/>
+    <endEvent id="fine"/>
+  </process>
+</definitions>

@@ -60,14 +60,15 @@ public final class Calcolo {
         }
         r.microPiccola = microPiccola(r.ula, d, regole);
         assiAmmessi(d, regole, r);
+        controlliImpresa(d, regole, r);
 
         String asse = codiceAsse(d.get("asse"));
         if (asse.isEmpty()) {
-            r.errori.add("Scegli l'asse di finanziamento (passo 3)");
+            r.errore(Risultato.PROGETTO, "Scegli l'asse di finanziamento (Scegli asse e progetto)");
             return r;
         }
         if (!r.assiAmmessi.contains(asse)) {
-            r.errori.add("Asse " + asse + " non ammesso: " + r.assiNonAmmessi.get(asse));
+            r.errore(Risultato.PROGETTO, "Asse " + asse + " non ammesso: " + r.assiNonAmmessi.get(asse));
         }
 
         if (asse.startsWith("5")) {
@@ -85,7 +86,7 @@ public final class Calcolo {
         }
         r.dettaglioPunteggio.add("Totale: " + punti(r.punteggio));
         if (r.punteggio.compareTo(regole.soglia()) < 0) {
-            r.errori.add(0, "Punteggio " + punti(r.punteggio) + " inferiore alla soglia di " + numero(regole.soglia()));
+            r.errorePrimo(Risultato.PUNTEGGIO, "Punteggio " + punti(r.punteggio) + " inferiore alla soglia di " + numero(regole.soglia()));
         }
 
         importi(asse, d, regole, r);
@@ -241,7 +242,7 @@ public final class Calcolo {
             List<String> scelte = new ArrayList<>();
             for (String k : List.of("a", "b", "c")) if (si(d.get("tipologia4" + k))) scelte.add(k);
             if (scelte.isEmpty()) {
-                r.errori.add("Scegli almeno una tipologia di intervento dell'Asse 4 (passo 3)");
+                r.errore(Risultato.PROGETTO, "Scegli almeno una tipologia di intervento dell'Asse 4 (Scegli asse e progetto)");
                 return ZERO;
             }
             String k = scelte.get(0);
@@ -255,11 +256,11 @@ public final class Calcolo {
         }
         String k = codiceVoce(d.get("tipologia" + asse.replace(".", "")));
         if (k.isEmpty() || !tab.has(k)) {
-            r.errori.add("Scegli la tipologia di intervento dell'Asse " + asse + " (passo 3)");
+            r.errore(Risultato.PROGETTO, "Scegli la tipologia di intervento dell'Asse " + asse + " (Scegli asse e progetto)");
             return ZERO;
         }
         if (testo(d.get("tipoSoggetto")).equals("ETS iscritto al RUNTS") && !(asse.equals("1.1") && k.equals("d"))) {
-            r.errori.add("Gli ETS iscritti al RUNTS possono scegliere solo l'Asse 1.1 tipologia d (R-DEST-02)");
+            r.errore(Risultato.PROGETTO, "Gli ETS iscritti al RUNTS possono scegliere solo l'Asse 1.1 tipologia d (R-DEST-02)");
         }
         BigDecimal v = Regole.numero(tab.get(k).get(1));
         r.dettaglioPunteggio.add("Tipologia: " + numero(v) + " (tipologia " + k + ") [9.4.6]");
@@ -344,18 +345,18 @@ public final class Calcolo {
         BigDecimal comuni = puntiComuni(asse, d, regole, r, false);
         List<Bene> beni = beniAsse5(d);
         if (beni.size() == 2 && !combinazioneAmmessa(regole, beni.get(0).tipo, beni.get(1).tipo)) {
-            r.errori.add("Combinazione di beni non ammessa: " + beni.get(0).tipo + " + " + beni.get(1).tipo + " (R-ALL-07)");
+            r.errore(Risultato.PROGETTO, "Combinazione di beni non ammessa: " + beni.get(0).tipo + " + " + beni.get(1).tipo + " (R-ALL-07)");
         }
         BigDecimal migliore = ZERO;
         for (Bene b : beni) {
             JsonNode m = regole.nodo("misureAsse5", b.misura);
             JsonNode f = regole.nodo("fattoriAsse5", b.fattore);
             if (b.misura.isEmpty() || b.fattore.isEmpty() || m.isMissingNode() || f.isMissingNode()) {
-                r.errori.add("Bene " + b.n + ": scegli misura e fattore di rischio (R-ALL-07)");
+                r.errore(Risultato.PROGETTO, "Bene " + b.n + ": scegli misura e fattore di rischio (R-ALL-07)");
                 continue;
             }
             if (b.tipo.equals("Mietitrebbiatrice") && contiene(regole.nodo("fattoriNonMietitrebbiatrice"), b.fattore)) {
-                r.errori.add("Bene " + b.n + ": per una mietitrebbiatrice i fattori 2c e 2d non sono ammessi (R-ALL-08)");
+                r.errore(Risultato.PROGETTO, "Bene " + b.n + ": per una mietitrebbiatrice i fattori 2c e 2d non sono ammessi (R-ALL-08)");
             }
             BigDecimal pm = Regole.numero(m.get(1)), pf = Regole.numero(f.get(1));
             BigDecimal tot = pm.add(pf).add(comuni);
@@ -588,7 +589,7 @@ public final class Calcolo {
             minimoOk = true; // H1: meno di 50 dipendenti, nessun minimo
         }
         if (!minimoOk) {
-            r.errori.add("Contributo " + euro(contributo) + " inferiore al minimo di " + euro(regole.parametro("contributoMinimo")) + " (R-CALC-04)");
+            r.errore(Risultato.PUNTEGGIO, "Contributo " + euro(contributo) + " inferiore al minimo di " + euro(regole.parametro("contributoMinimo")) + " (R-CALC-04)");
         }
 
         // intervento aggiuntivo (R-CALC-05)
@@ -646,7 +647,8 @@ public final class Calcolo {
         return g;
     }
 
-    static void controlliRegistrazione(String asse, Map<String, ?> d, Regole regole, Risultato r) {
+    /** Requisiti dell'impresa, controllati anche prima che sia scelto l'asse (passo «Controlla i dati dell'impresa»). */
+    static void controlliImpresa(Map<String, ?> d, Regole regole, Risultato r) {
         // RF-03: associazione al portale almeno 5 giorni lavorativi prima della chiusura
         LocalDate chiusura = OffsetDateTime.parse(regole.testo("calendario", "chiusuraCompilazione")).toLocalDate();
         Set<String> festivita = new HashSet<>();
@@ -654,13 +656,19 @@ public final class Calcolo {
         LocalDate limite = giorniLavorativiPrima(chiusura, regole.parametro("giorniLavorativiAssociazionePortale").intValue(), festivita);
         LocalDate ass = data(d.get("dataAssociazionePortale"));
         if (ass != null && ass.isAfter(limite)) {
-            r.errori.add("Registrazione al portale avvenuta oltre il termine previsto dall'art. 12 dell'Avviso");
+            r.errore(Risultato.IMPRESA, "Registrazione al portale avvenuta oltre il termine previsto dall'art. 12 dell'Avviso");
         }
         // forza lavoro minima (R-REQ-01)
         if (r.ula != null && r.ula.compareTo(BigDecimal.ONE) < 0 && !si(d.get("dittaSenzaDipendenti"))
                 && !si(d.get("attivitaStagionale"))) {
-            r.errori.add("Forza lavoro inferiore a 1 ULA (R-REQ-01)");
+            r.errore(Risultato.IMPRESA, "Forza lavoro inferiore a 1 ULA (R-REQ-01)");
         }
+        if (r.assiAmmessi.isEmpty()) {
+            r.errore(Risultato.IMPRESA, "Con questi dati nessun asse è ammesso per l'impresa: controlla dimensione, ATECO e rapporto assicurativo");
+        }
+    }
+
+    static void controlliRegistrazione(String asse, Map<String, ?> d, Regole regole, Risultato r) {
         // dichiarazioni (RF-16)
         boolean agricola2135 = si(d.get("agricolaPrimaria"));
         boolean sostituzione = !zero(dec(d.get("macchina1AnnoSostituito")));
@@ -673,32 +681,32 @@ public final class Calcolo {
             if (x.path("soloConSostituzione").asBoolean() && !sostituzione) continue;
             if (x.path("nonAgricole2135").asBoolean() && agricola2135) continue;
             if (!si(d.get(x.get("campo").asText()))) {
-                r.errori.add("Manca la dichiarazione " + x.get("codice").asText() + " (passo 7)");
+                r.errore(Risultato.DICHIARAZIONI, "Manca la dichiarazione " + x.get("codice").asText() + " (Firma le dichiarazioni)");
             }
         }
         String prec = testo(d.get("finanziamentiPrecedenti"));
         if (!prec.isEmpty() && !prec.equals("Nessuno") && !asse.equals("1.2")
                 && !codiceAsse(d.get("assePrecedente")).equals("1.2") && !si(d.get("rinunciaPec"))) {
-            r.errori.add("Finanziamento ISI precedente: serve la rinuncia via PEC (R-REQ-13)");
+            r.errore(Risultato.DICHIARAZIONI, "Finanziamento ISI precedente: serve la rinuncia via PEC (R-REQ-13)");
         }
         if (!si(d.get("nessunaSpesaNonAmmessa"))) {
-            r.errori.add("Conferma che il piano economico non contiene spese non ammesse (passo 6)");
+            r.errore(Risultato.PUNTEGGIO, "Conferma che il piano economico non contiene spese non ammesse (Criteri di punteggio e piano economico)");
         }
         // 9.6: beni sostituiti
         for (Bene b : r.beni) {
             if (b.tipo.equals("Trattore") && b.annoSostituito != null) {
                 if (b.annoSostituito.compareTo(BigDecimal.valueOf(2013)) >= 0) {
-                    r.errori.add("Bene " + b.n + ": trattori immessi sul mercato dal 2013 non sono sostituibili (9.6)");
+                    r.errore(Risultato.PROGETTO, "Bene " + b.n + ": trattori immessi sul mercato dal 2013 non sono sostituibili (9.6)");
                 } else if (b.annoSostituito.compareTo(BigDecimal.valueOf(2005)) < 0 && b.modalita.equals("Permuta")) {
-                    r.errori.add("Bene " + b.n + ": trattori immessi prima del 2005 solo con rottamazione (9.6)");
+                    r.errore(Risultato.PROGETTO, "Bene " + b.n + ": trattori immessi prima del 2005 solo con rottamazione (9.6)");
                 }
             }
             if (b.tipo.equals("Trattore") && b.potenzaKw != null && b.potenzaKw.compareTo(BigDecimal.valueOf(130)) > 0) {
-                r.errori.add("Bene " + b.n + ": potenza massima 130 kW (9.6)");
+                r.errore(Risultato.PROGETTO, "Bene " + b.n + ": potenza massima 130 kW (9.6)");
             }
         }
         if (asse.equals("4") && testo(d.get("macchina1Modalita")).equals("Permuta")) {
-            r.errori.add("Asse 4: il bene sostituito va rottamato, la permuta non è ammessa (9.6)");
+            r.errore(Risultato.PROGETTO, "Asse 4: il bene sostituito va rottamato, la permuta non è ammessa (9.6)");
         }
     }
 
