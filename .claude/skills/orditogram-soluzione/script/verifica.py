@@ -354,6 +354,60 @@ def valida_anagrafica(path, codici_noti, pb):
     return t
 
 
+# ------------------------------------------------------------------ glossario e attori della demo
+
+# glossario/Termine.java e GlossarioService.PAROLA
+TERMINI = {"ente", "ufficio", "esterno", "pratica", "processo"}
+PAROLA = re.compile(r"[^\W\d_][\w '’.\-]{0,59}", re.UNICODE)
+
+
+def valida_glossario(path, pb):
+    pre = "glossario.json: "
+    try:
+        g = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        pb.errore(pre + "non è un JSON valido: %s" % e); return
+    if not isinstance(g, dict): pb.errore(pre + "deve essere un oggetto {termine: {singolare, plurale, genere}}"); return
+    for chiave, v in g.items():
+        if chiave not in TERMINI: pb.errore(pre + "Termine sconosciuto: %s" % chiave); continue
+        v = v or {}
+        s, pl, gen = (v.get("singolare") or "").strip(), (v.get("plurale") or "").strip(), (v.get("genere") or "M").strip().upper()
+        if not PAROLA.fullmatch(s) or not PAROLA.fullmatch(pl) or any(c.isdigit() for c in s + pl):
+            pb.errore(pre + "\"%s\": singolare e plurale da 1 a 60 caratteri, solo lettere, spazi, apostrofi e trattini" % chiave)
+        if gen not in ("M", "F"):
+            pb.errore(pre + "\"%s\": il genere è M (maschile) o F (femminile)" % chiave)
+
+
+# user/UtentiProvaService.importa
+USERNAME_PROVA = re.compile(r"[a-z][a-z0-9._-]{1,59}")
+GRUPPO_PROVA = re.compile(r"[a-zA-Z0-9][a-zA-Z0-9._:-]{0,99}")
+
+
+def valida_utenti_prova(path, info, pb):
+    pre = "utenti-prova.json: "
+    try:
+        attori = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        pb.errore(pre + "non è un JSON valido: %s" % e); return
+    if not isinstance(attori, list): pb.errore(pre + "deve essere un elenco di attori"); return
+    gruppi_usati = set()
+    for a in attori:
+        u = (a.get("username") or "").strip()
+        if not USERNAME_PROVA.fullmatch(u) or u == "admin":
+            pb.errore(pre + "nome utente non valido: %s" % u); continue
+        ruolo = (a.get("ruolo") or "").strip()
+        if not ruolo or len(ruolo) > 80:
+            pb.errore(pre + "indica il ruolo di %s (al massimo 80 caratteri)" % u)
+        for g in a.get("gruppi") or []:
+            if not isinstance(g, str) or not GRUPPO_PROVA.fullmatch(g) or g.startswith("org:") or g == "esterni":
+                pb.errore(pre + "gruppo non valido per %s: %s" % (u, g))
+            else: gruppi_usati.add(g)
+    if info:
+        senza = sorted(g for g in info.get("gruppi", []) if g not in gruppi_usati
+                       and not g.startswith("parte:") and not g.startswith("${"))
+        if senza: pb.avviso(pre + "nessun attore della demo nei gruppi %s: chi prova non vede quelle attività" % ", ".join(senza))
+
+
 # ------------------------------------------------------------------ permessi
 
 def valida_permessi(path, avvio_bpmn, pb):
@@ -838,6 +892,8 @@ def main(argv):
         info = analizza_bpmn(bpmn[0], forms, pb, {x for x in a.credenziali.split(",") if x},
                              {x for x in a.processi_pubblicati.split(",") if x})
     if (base / "permessi.json").exists(): valida_permessi(base / "permessi.json", info["avvio"] if info else [], pb)
+    if (base / "glossario.json").exists(): valida_glossario(base / "glossario.json", pb)
+    if (base / "utenti-prova.json").exists(): valida_utenti_prova(base / "utenti-prova.json", info, pb)
     if (base / "permessi-anagrafiche.json").exists():
         valida_permessi_anagrafiche(base / "permessi-anagrafiche.json", codici, pb)
     elif tipi_file:
@@ -852,7 +908,7 @@ def main(argv):
             print("Processo: %s (%s)" % (info["nome"], info["chiave"]))
             print("Form: %s" % (", ".join(info["form"]) or "nessuno"))
             print("Gruppi che lavorano: %s" % (", ".join(info["gruppi"]) or "nessuno"))
-            print("Chi avvia (BPMN): %s" % (", ".join(info["avvio"]) or "tutti"))
+            print("Chi avvia (BPMN): %s" % (", ".join(info["avvio"]) or "tutto il personale, nessun utente esterno"))
         print()
         for m, el in pb.errori: print("ERRORE  %s%s" % (m, "  [%s]" % el if el else ""))
         for m, el in pb.avvisi: print("AVVISO  %s%s" % (m, "  [%s]" % el if el else ""))

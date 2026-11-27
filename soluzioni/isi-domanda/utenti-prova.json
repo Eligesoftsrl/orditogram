@@ -1,0 +1,9 @@
+[
+  { "username": "marco", "nome": "Marco", "cognome": "Ferri", "ruolo": "Impresa richiedente", "esterno": true },
+  { "username": "elena", "nome": "Elena", "cognome": "Conti", "ruolo": "Tecnico della perizia", "esterno": true },
+  { "username": "istruttore.toscana", "nome": "Sara", "cognome": "Neri", "ruolo": "Istruttore, sede Toscana",
+    "gruppi": ["sede-toscana"] },
+  { "username": "supporto.isi", "nome": "Luca", "cognome": "Moretti", "ruolo": "Supporto ISI", "gruppi": ["supporto-isi"] },
+  { "username": "direzione.isi", "nome": "Giorgia", "cognome": "Fabbri", "ruolo": "Direzione ISI (vede ed esporta)",
+    "gruppi": ["direzione-isi"] }
+]

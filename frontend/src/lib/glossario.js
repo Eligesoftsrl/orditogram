@@ -7,7 +7,8 @@ export const PREDEFINITO = {
   ente: { singolare: 'ente', plurale: 'enti', genere: 'M' },
   ufficio: { singolare: 'Ufficio', plurale: 'Uffici', genere: 'M' },
   esterno: { singolare: 'cittadino', plurale: 'cittadini', genere: 'M' },
-  pratica: { singolare: 'pratica', plurale: 'pratiche', genere: 'F' }
+  pratica: { singolare: 'pratica', plurale: 'pratiche', genere: 'F' },
+  processo: { singolare: 'processo', plurale: 'processi', genere: 'M' }
 }
 
 const VOCALE = /^[aeiouàèéìòóùh]/i

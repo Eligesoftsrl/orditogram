@@ -32,6 +32,7 @@ public class AccessoEsterni {
     static final List<RequestMatcher> CONSENTITE = List.of(
         P.matcher(HttpMethod.GET, "/api/me"),
         P.matcher(HttpMethod.GET, "/api/info"),
+        P.matcher(HttpMethod.GET, "/api/info/logo"),
         P.matcher("/api/auth/**"),
         P.matcher(HttpMethod.GET, "/api/calendario/**"),
         P.matcher("/api/notifiche/**"),
@@ -62,6 +63,7 @@ public class AccessoEsterni {
     static final List<RequestMatcher> CON_PASSWORD_TEMPORANEA = List.of(
         P.matcher(HttpMethod.GET, "/api/me"),
         P.matcher(HttpMethod.GET, "/api/info"),
+        P.matcher(HttpMethod.GET, "/api/info/logo"),
         P.matcher("/api/auth/**"),
         P.matcher(HttpMethod.POST, "/api/me/password"));
 

@@ -5,12 +5,16 @@ import { creaGlossario, impostaGlossario } from './glossario.js'
 const GlossarioContext = createContext({ g: creaGlossario(null), info: null, ricarica: () => {} })
 
 /**
- * Carica una volta /api/info (versione e glossario, pubblico: serve anche alla pagina di accesso).
+ * Carica una volta /api/info (nome e logo, versione e glossario, pubblico: serve anche alla pagina di accesso).
  * Finché non risponde valgono le parole predefinite.
  */
 export function GlossarioProvider({ children }) {
   const [info, setInfo] = useState(null)
-  const ricarica = () => api.info().then(i => { impostaGlossario(i?.glossario); setInfo(i) }).catch(() => {})
+  const ricarica = () => api.info().then(i => {
+    impostaGlossario(i?.glossario)
+    if (i?.nome) document.title = i.nome
+    setInfo(i)
+  }).catch(() => {})
   useEffect(() => { ricarica() }, [])
   const valore = useMemo(() => ({ g: creaGlossario(info?.glossario), info, ricarica }), [info])
   return <GlossarioContext.Provider value={valore}>{children}</GlossarioContext.Provider>

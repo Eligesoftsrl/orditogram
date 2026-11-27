@@ -30,6 +30,8 @@ Lingua: italiano, in tutto (nomi, etichette, testi, documenti). Testi per person
   anagrafiche/<codice>.json   se servono
   permessi.json               chi avvia, vede, esporta (viaggia nel pacchetto)
   permessi-anagrafiche.json   chi vede, modifica, sceglie le schede (si applica con installa.py)
+  glossario.json              le parole del cliente: domanda, bando, impresa... (viaggia nel pacchetto)
+  utenti-prova.json           gli attori della demo, uno per ruolo (viaggia nel pacchetto, solo per le demo)
   servizio-<nome>/            solo se serve codice del cliente: Spring Boot (riferimenti/servizio-soluzione.md)
   collaudo/scenari.json  collaudo/checklist.md  collaudo/report.md
   documentazione/             fase 7
@@ -39,7 +41,8 @@ Lingua: italiano, in tutto (nomi, etichette, testi, documenti). Testi per person
 Leggi il riferimento giusto prima di scrivere ogni artefatto: `riferimenti/bpmn.md`, `riferimenti/form.md`,
 `riferimenti/anagrafiche-e-accessi.md`, `riferimenti/collaudo.md`, `riferimenti/documentazione.md`,
 `riferimenti/interfaccia.md` (nomi delle parti dell'interfaccia e regole per le schermate dei manuali),
-`riferimenti/servizio-soluzione.md` (codice del cliente, solo Java e Spring Boot).
+`riferimenti/servizio-soluzione.md` (codice del cliente, solo Java e Spring Boot),
+`riferimenti/installazione-cliente.md` (parole, nome e logo del cliente, attori della demo, niente esempi).
 Un esempio completo e collaudato è in `esempio/` (specifica di partenza compresa): imitane la forma.
 
 ## Fase 1. Capire e verificare le specifiche
@@ -136,6 +139,12 @@ domande aperte, richieste di sviluppo per Orditogram, dove sono pacchetto, check
 - Date di prova o codici fiscali/partite IVA di prova non validi: i form li rifiutano (`formato: "partitaIva"`).
   Usa valori con la cifra di controllo giusta.
 - Processo "compitino": una sola attività con un form lunghissimo e la scelta dell'azione in fondo. Dividi in passi.
+- Testi del cliente scritti a mano dove vale il glossario: "pratica" al posto di "domanda". Le parole vanno in
+  `glossario.json` (pratica, processo, esterno, ente, ufficio), non nei form né nei nomi delle attività.
+- Processo senza `candidateStarterGroups` né regole AVVIA pensato per gli esterni: li avvia solo il personale.
+  Per un portale metti `esterni` (o una regola AVVIA sul gruppo `esterni`).
+- Demo senza `utenti-prova.json`: chi prova non sa con chi entrare. Uno per ogni ruolo, con il ruolo scritto come
+  lo chiama il cliente.
 
 - Opzione di un `select` scritta diversamente nella condizione (`'Accolta'` vs `'Accolto'`): la strada non si prende mai.
 - Numeri confrontati come testo: usa `${importo > 5000.0}`.
@@ -147,8 +156,8 @@ domande aperte, richieste di sviluppo per Orditogram, dove sono pacchetto, check
 - Gateway parallelo di riunione con più frecce in ingresso dei rami aperti: aspetta un arrivo per **ogni** freccia.
   Se un ramo ha due strade (es. "serve la perizia?" sì/no), riuniscile prima con una decisione di raccordo.
 - Caselle nei dati degli scenari scritte `"true"`: il backend vuole `true` (booleano).
-- Date dei form nei testi dei connettori (`${data}`): escono nel formato di Java (`Mon Mar 01 00:00:00 UTC 2010`),
-  non `AAAA-MM-GG`. Un servizio che le riceve deve saperle leggere (richiesta di sviluppo aperta).
+- Date dei form: restano testo `AAAA-MM-GG` (anche nelle attività e nei testi dei connettori `${data}`); un servizio
+  che le riceve le legge come `LocalDate`.
 - BPMN senza disegno: lo Studio mostra una tela vuota.
 
 ## Tenere aggiornata questa skill

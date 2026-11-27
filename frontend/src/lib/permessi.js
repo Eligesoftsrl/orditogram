@@ -32,7 +32,7 @@ export const SEZIONI_STUDIO = [
   { chiave: 'integrazioni', to: '/studio/integrazioni', label: 'Integrazioni', permessi: [PERMESSI.integrazioni] },
   { chiave: 'registro', to: '/studio/registro', label: 'Registro', permessi: [PERMESSI.registro] },
   // impostazioni dell'installazione: solo l'amministratore (regola generale di /api/admin/** nel backend)
-  { chiave: 'glossario', to: '/studio/glossario', label: 'Glossario', soloAdmin: true, permessi: [] },
+  { chiave: 'glossario', to: '/studio/glossario', label: 'Glossario e logo', soloAdmin: true, permessi: [] },
   { chiave: 'moduli', to: '/studio/moduli', label: 'Moduli', soloAdmin: true, permessi: [] }
 ]
 

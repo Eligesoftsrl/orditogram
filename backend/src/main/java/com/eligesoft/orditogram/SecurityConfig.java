@@ -118,7 +118,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // pagina di errore di Spring (es. 404): risponde con il codice giusto anche a chi non è autenticato
                 .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ERROR).permitAll()
-                .requestMatchers("/api/auth/metodi", "/api/info").permitAll()
+                .requestMatchers("/api/auth/metodi", "/api/info", "/api/info/logo").permitAll()
                 .requestMatchers("/actuator/health/**", "/actuator/health").permitAll()
                 .requestMatchers("/api/messaggi/**").permitAll()  // sistemi esterni: si autenticano con X-API-Key (app.messaggi.chiavi)
                 .requestMatchers("/api/demo/**").permitAll()      // servizi di prova chiamati dai processi (app.demo.servizi)

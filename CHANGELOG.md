@@ -5,6 +5,29 @@ la MAGGIORE quando un aggiornamento richiede interventi (indicati qui sotto).
 
 ## Non rilasciato
 
+### Software del cliente: nome, logo, parole, niente esempi
+- **Nome e logo del cliente** (Studio → *Glossario e logo*): il nome va nel menu, nella pagina di accesso e nel
+  titolo della finestra, il logo (PNG, JPEG o WebP fino a 512 KB, mai SVG) al posto del marchio. Senza, restano
+  quelli di Orditogram. Nuova tabella `personalizzazione` (migrazione V15), nel registro ogni modifica.
+- **Termine nuovo nel glossario**: "processo" (il modello da cui nasce la pratica), per scrivere "bando",
+  "servizio" o "procedimento" nelle schermate di chi avvia. Nell'avvio: "Nessun bando da avviare", "Altri bandi".
+- **Le parole viaggiano nel pacchetto** (`glossario.json`): l'esportazione porta le parole scelte, l'importazione
+  dell'amministratore le applica solo ai termini ancora predefiniti.
+- **Processi di esempio solo per provare**: "Hello World BPMN" e "Pratica" non si pubblicano più all'avvio, ma
+  solo con `app.demo.processi: true` (Docker: `PROCESSI_DI_PROVA`); il profilo di produzione si rifiuta di partire
+  se sono accesi. Dove c'erano, all'avvio si tolgono (o, se hanno pratiche, non si avviano più).
+  *Intervento*: chi li usa per provare accende `app.demo.processi`.
+- **Utenti esterni e processi senza indicazioni**: un processo senza `candidateStarterGroups` né regole AVVIA lo
+  avvia solo il personale. Prima lo vedevano anche gli utenti esterni, che ora vedono solo i processi aperti a loro.
+  *Intervento*: un processo per esterni pubblicato senza indicazioni va aperto al gruppo `esterni`.
+- **Attori della demo e accessi rapidi**: un pacchetto può portare `utenti-prova.json`; l'amministratore che lo
+  importa con gli utenti di prova accesi crea gli attori mancanti (password `password`, nuova tabella
+  `utente_prova`, migrazione V16). La pagina di accesso li offre con un clic solo su `localhost`, fuori dalla
+  produzione e con gli utenti di prova accesi; prima gli utenti di prova si vedevano da qualunque indirizzo.
+- Skill: nuovo riferimento `installazione-cliente.md`; `verifica.py` controlla `glossario.json` e
+  `utenti-prova.json` (con gli stessi messaggi del backend) e avvisa dei gruppi senza attori; `pacchetto.py` li
+  mette nel pacchetto.
+
 ### Il percorso della pratica, sempre a un tocco
 - In ogni pratica e attività il pulsante *Il percorso* (in basso a destra) apre il diagramma BPMN in un pannello da
   destra: il resto si spegne, un segnalino lascia una scia blu dall'inizio al passo attuale, accende i passi che

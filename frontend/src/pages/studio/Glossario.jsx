@@ -1,8 +1,9 @@
 import { useEffect, useId, useMemo, useState } from 'react'
 import { BookA, RotateCcw, Save } from 'lucide-react'
 import { api } from '../../api.js'
-import { creaGlossario, gl } from '../../lib/glossario.js'
+import { creaGlossario, gl, maiuscola } from '../../lib/glossario.js'
 import { useInfo } from '../../lib/useGlossario.jsx'
+import NomeELogo from '../../components/NomeELogo.jsx'
 import { Badge, Button, Caricamento, Errore, Pannello, useToast, IntestazionePagina } from '../../components/ui.jsx'
 
 /**
@@ -45,15 +46,18 @@ export default function Glossario() {
 
   return (
     <div className="in-sequenza space-y-6">
-      <IntestazionePagina percorso={[{ label: 'Studio' }, { label: 'Glossario' }]}>
+      <IntestazionePagina percorso={[{ label: 'Studio' }, { label: 'Glossario e logo' }]}>
         <div>
-          <h1 className="text-[34px] font-semibold leading-tight">Glossario</h1>
+          <h1 className="text-[34px] font-semibold leading-tight">Glossario e logo</h1>
           <p className="mt-1 max-w-2xl text-grafite">
-            Le parole con cui Orditogram chiama chi lo usa, chi entra da fuori e il caso che si lavora. Un'azienda può
-            scegliere "azienda", "Assistenza", "cliente" e "richiesta"; un ente pubblico lascia quelle predefinite. Valgono subito per tutti.
+            Il nome, il logo e le parole di questa installazione: chi la usa, chi entra da fuori, il caso che si lavora e
+            il modello da cui nasce. Un bando può scegliere "domanda" e "bando", un'azienda "cliente" e "richiesta";
+            senza scelte restano Orditogram e le parole predefinite. Valgono subito per tutti.
           </p>
         </div>
       </IntestazionePagina>
+
+      <NomeELogo />
 
       {!termini ? (errore ? <Errore>{errore}</Errore> : <Caricamento />) : (
         <form onSubmit={salva} className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
@@ -101,6 +105,7 @@ export default function Glossario() {
           <Pannello titolo={<h2 className="flex items-center gap-2 text-lg font-semibold"><BookA className="size-5 text-verde-600" aria-hidden="true" /> Come si leggerà</h2>}
                     corpoClassName="space-y-3 p-5 text-[15px]">
             <p className="rounded-blocco bg-verde-50 px-4 py-3">Pulsante: <strong>{maiuscola(anteprima.agg('pratica', 'nuov'))} {anteprima('pratica')}</strong>; menu: <strong>{anteprima('pratica', 'Nomi')}</strong>.</p>
+            <p className="rounded-blocco bg-carta px-4 py-3">Avvio: scegli {anteprima('processo', 'il')}; se non ce n'è: <strong>{maiuscola(anteprima('processo', 'nessun'))} da avviare</strong>.</p>
             <p className="rounded-blocco bg-acqua-50 px-4 py-3">Entra con l'account {anteprima('ente', 'del')}.</p>
             <p className="rounded-blocco bg-lilla-50 px-4 py-3">{anteprima('esterno', 'Nome')} o referente di un'organizzazione: vede solo {anteprima('pratica', 'i')} in cui è parte.</p>
             <p className="rounded-blocco bg-carta px-4 py-3">Nello storico {anteprima('pratica', 'del')} gli utenti esterni leggono: <strong>{anteprima('ufficio')}</strong> ha completato l'attività.</p>

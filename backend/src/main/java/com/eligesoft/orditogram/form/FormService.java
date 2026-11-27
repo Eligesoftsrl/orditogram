@@ -331,7 +331,10 @@ public class FormService {
 
     private String readClasspath(String formKey) throws IOException {
         if (!formKey.matches("[a-zA-Z0-9_-]+")) return null;
-        Resource r = new PathMatchingResourcePatternResolver().getResource("classpath:forms/" + formKey + ".json");
+        PathMatchingResourcePatternResolver risolutore = new PathMatchingResourcePatternResolver();
+        Resource r = risolutore.getResource("classpath:forms/" + formKey + ".json");
+        // i form dei processi di esempio (config/EsempiDemo): si leggono, ma non compaiono nell'elenco dello Studio
+        if (!r.exists()) r = risolutore.getResource("classpath:esempi-demo/forms/" + formKey + ".json");
         if (!r.exists()) return null;
         try (InputStream in = r.getInputStream()) {
             return new String(in.readAllBytes(), StandardCharsets.UTF_8);

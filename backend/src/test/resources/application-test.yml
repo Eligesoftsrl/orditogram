@@ -16,6 +16,7 @@ app:
   demo:
     utenti: true
     servizi: true
+    processi: true
   messaggi:
     chiavi:
       test: chiave-test

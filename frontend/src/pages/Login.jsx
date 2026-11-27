@@ -4,17 +4,10 @@ import { api } from '../api.js'
 import { useAuth } from '../lib/auth.jsx'
 import Logo from '../components/Logo.jsx'
 import { Button, Errore } from '../components/ui.jsx'
-import { useGlossario } from '../lib/useGlossario.jsx'
-import { gl } from '../lib/glossario.js'
+import { useGlossario, useInfo } from '../lib/useGlossario.jsx'
+import { gl, maiuscola } from '../lib/glossario.js'
 
 const FERMATE = ['Avvio', 'Verifica', 'Revisione', 'Accettata']
-
-const PROVA = [
-  { u: 'laura', ruolo: 'Dirigente', nome: 'Laura Verdi' },
-  { u: 'paolo', ruolo: 'Analista', nome: 'Paolo Neri' },
-  { u: 'giulia', ruolo: 'Revisore', nome: 'Giulia Russo' },
-  { u: 'admin', ruolo: 'Amministratore', nome: 'admin / admin' }
-]
 
 export default function Login() {
   const g = useGlossario()
@@ -25,10 +18,13 @@ export default function Login() {
   const [attesa, setAttesa] = useState(false)
   const [metodi, setMetodi] = useState({ locale: true, oidc: [], utentiProva: false })
   const [versione, setVersione] = useState(null)
+  // con il nome del cliente la pagina parla del suo servizio, non di Orditogram
+  const { info } = useInfo()
+  const delCliente = !!info?.nome && info.nome !== 'Orditogram'
 
   useEffect(() => {
     api.info().then(i => setVersione(i.versione)).catch(() => {})
-    api.metodiAccesso().then(setMetodi).catch(() => setMetodi({ locale: true, oidc: [], utentiProva: true }))
+    api.metodiAccesso().then(setMetodi).catch(() => setMetodi({ locale: true, oidc: [], utentiProva: false }))
     // ritorno dal provider con un errore (utente disattivato, non abilitato, accesso annullato)
     const p = new URLSearchParams(window.location.search)
     if (p.get('errore')) {
@@ -37,11 +33,11 @@ export default function Login() {
     }
   }, [])
 
-  const entra = async (e) => {
-    e.preventDefault()
+  const accedi = async (utente, password) => {
     setAttesa(true); setErrore('')
-    try { await login(user.trim(), pass) } catch (err) { setErrore(err.message) } finally { setAttesa(false) }
+    try { await login(utente, password) } catch (err) { setErrore(err.message) } finally { setAttesa(false) }
   }
+  const entra = (e) => { e.preventDefault(); accedi(user.trim(), pass) }
 
   return (
     <div className="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
@@ -53,7 +49,9 @@ export default function Login() {
             Ogni {gl('pratica')}<br />sa dove si trova.
           </h1>
           <p className="mt-5 max-w-md text-lg leading-relaxed text-pino-200">
-            Disegni il processo, Orditogram lo fa funzionare: attività, documenti firmati, notifiche e storico, senza scrivere codice.
+            {delCliente
+              ? `${maiuscola(gl('pratica', 'i'))}, i documenti e lo storico in un solo posto: sai sempre a che punto sei e cosa resta da fare.`
+              : 'Disegni il processo, Orditogram lo fa funzionare: attività, documenti firmati, notifiche e storico, senza scrivere codice.'}
           </p>
 
           <div className="mt-16" aria-hidden="true">
@@ -73,7 +71,8 @@ export default function Login() {
             </div>
           </div>
         </div>
-        <p className="text-sm text-pino-300">Spring Boot, Activiti, PostgreSQL. Open source, sui vostri server.{versione && ` Versione ${versione}.`}</p>
+        <p className="text-sm text-pino-300">{delCliente ? `Realizzato con Orditogram${versione ? ` ${versione}` : ''}.`
+          : <>Spring Boot, Activiti, PostgreSQL. Open source, sui vostri server.{versione && ` Versione ${versione}.`}</>}</p>
       </section>
 
       {/* --- accesso */}
@@ -113,14 +112,14 @@ export default function Login() {
             <Button type="submit" variante="primario" misura="lg" className="w-full" attesa={attesa}>Accedi</Button>
           </form>}
 
-          {metodi.utentiProva && <div className="mt-10 border-t border-linea pt-6">
-            <p className="text-sm font-medium text-pino-800">Utenti di prova</p>
-            <p className="mt-0.5 text-[13px] text-grafite">Password "password", tranne admin.</p>
+          {metodi.utentiProva && metodi.accessiRapidi?.length > 0 && <div className="mt-10 border-t border-linea pt-6">
+            <p className="text-sm font-medium text-pino-800">Accessi rapidi della demo</p>
+            <p className="mt-0.5 text-[13px] text-grafite">Solo su questo computer: un clic ed entri con quel ruolo.</p>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              {PROVA.map(p => (
-                <button key={p.u} type="button"
-                        onClick={() => { setUser(p.u); setPass(p.u === 'admin' ? 'admin' : 'password') }}
-                        className="rounded-campo border border-linea bg-white px-3 py-2 text-left hover:border-pino-200">
+              {metodi.accessiRapidi.map(p => (
+                <button key={p.username} type="button" disabled={attesa}
+                        onClick={() => accedi(p.username, p.username === 'admin' ? 'admin' : 'password')}
+                        className="rounded-campo border border-linea bg-white px-3 py-2 text-left hover:border-pino-200 disabled:opacity-60">
                   <span className="block text-[15px] font-medium text-pino-900">{p.ruolo}</span>
                   <span className="block text-[13px] text-grafite">{p.nome}</span>
                 </button>

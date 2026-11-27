@@ -318,7 +318,7 @@ public class BpmController {
 
     /**
      * Chi può avviare: le regole "avvia" dello Studio, se il processo ne ha; altrimenti candidateStarterGroups/Users
-     * del BPMN e, se non indicati, tutti. Nessuna eccezione per l'amministratore.
+     * del BPMN e, se non indicati, tutto il personale (mai gli utenti esterni). Nessuna eccezione per l'amministratore.
      */
     private boolean canStart(String processDefinitionId) {
         Process p = repositoryService.getBpmnModel(processDefinitionId).getMainProcess();
@@ -328,7 +328,8 @@ public class BpmController {
     private boolean canStartBpmn(Process p) {
         List<String> groups = p.getCandidateStarterGroups();
         List<String> users = p.getCandidateStarterUsers();
-        if (groups.isEmpty() && users.isEmpty()) return true;
+        // senza indicazioni avvia il personale; un utente esterno solo se il processo è aperto a lui
+        if (groups.isEmpty() && users.isEmpty()) return !currentUser.esterno();
         if (users.contains(currentUser.username())) return true;
         Set<String> mine = currentUser.groups();
         return groups.stream().anyMatch(mine::contains);

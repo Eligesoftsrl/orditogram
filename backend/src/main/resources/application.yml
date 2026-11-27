@@ -47,7 +47,7 @@ spring:
     database-schema-update: true      # crea/aggiorna le tabelle ACT_* su Postgres
     history-level: audit              # serve per storico e pratiche concluse
     db-history-used: true             # crea le tabelle ACT_HI_* (in Activiti 7/8 è false di default)
-    check-process-definitions: true   # deploya automaticamente i .bpmn20.xml
+    check-process-definitions: false  # i processi si pubblicano dallo Studio; gli esempi con app.demo.processi
     process-definition-location-prefix: classpath:/processes/
     async-executor-activate: true     # fa scattare scadenze, solleciti e attese (timer del BPMN)
 
@@ -94,6 +94,7 @@ app:
   demo:
     utenti: true                      # crea gli utenti di esempio mancanti all'avvio (metti false in produzione)
     servizi: true                     # servizi di prova (es. /api/demo/protocollo) per provare il connettore API
+    processi: false                   # processi di esempio "Hello World BPMN" e "Pratica" (true solo per provare)
 
   login:
     locale: true                      # false: la pagina di accesso mostra solo i provider OIDC

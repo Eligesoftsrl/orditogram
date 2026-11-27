@@ -65,7 +65,7 @@ function DoveSiTrovano({ processi }) {
   const righe = conPratiche.flatMap(p => p.passi.map(s => [p.nome, s.nome, s.pratiche]))
   return (
     <Riquadro titolo="Dove si trovano" icona={Route} sottotitolo={`${gl('pratica', 'nomi')} in corso per passo del flusso`}
-              tabella={{ colonne: ['Processo', 'Passo', gl('pratica', 'Nomi')], righe }}>
+              tabella={{ colonne: [gl('processo', 'Nome'), 'Passo', gl('pratica', 'Nomi')], righe }}>
       {conPratiche.length === 0 ? <p className="text-grafite">Niente in corso.</p> : (
         <div className="space-y-6">
           {conPratiche.map(p => {
@@ -111,7 +111,7 @@ function Avanzamento({ dati }) {
   // dal chiaro allo scuro, tutti almeno 3:1 sul bianco (WCAG 1.4.11)
   const toni = ['bg-verde-400', 'bg-verde-500', 'bg-verde-600', 'bg-verde-700']
   return (
-    <Riquadro titolo="Avanzamento" icona={Gauge} sottotitolo="stima: attività fatte sul totale del processo"
+    <Riquadro titolo="Avanzamento" icona={Gauge} sottotitolo={`stima: attività fatte sul totale ${gl('processo', 'del')}`}
               tabella={{ colonne: ['Avanzamento', gl('pratica', 'Nomi')], righe: fasce.map(f => [f.etichetta, f.n]) }}>
       <div className="flex h-40 items-end gap-3" role="img" aria-label={fasce.map(f => `${f.etichetta}: ${f.n}`).join(', ')}>
         {fasce.map((f, i) => (

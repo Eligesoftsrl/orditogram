@@ -119,4 +119,23 @@ class GlossarioIntegrationTest {
         assertThat(stato("mario", Map.of("ente", Map.of("singolare", "azienda", "plurale", "aziende", "genere", "F")))).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(glossarioPubblico().get("ente")).containsEntry("singolare", "ente");
     }
+
+    @Autowired GlossarioService glossario;
+
+    @Test
+    void ilPacchettoPortaLeParoleSoloDoveMancano() {
+        repo.save(new TermineGlossario("esterno", "cliente", "clienti", "M"));
+        String esito = glossario.importaDalPacchetto(Map.of(
+            "pratica", Map.of("singolare", "domanda", "plurale", "domande", "genere", "F"),
+            "processo", Map.of("singolare", "bando", "plurale", "bandi", "genere", "M"),
+            "esterno", Map.of("singolare", "impresa", "plurale", "imprese", "genere", "F"),
+            "sconosciuto", Map.of("singolare", "x", "plurale", "x", "genere", "M")));
+
+        assertThat(esito).contains("pratica = domanda", "processo = bando", "tenute quelle già scelte qui: esterno");
+        Map<String, Map<String, String>> parole = glossarioPubblico();
+        assertThat(parole.get("pratica")).containsEntry("singolare", "domanda");
+        assertThat(parole.get("processo")).containsEntry("plurale", "bandi");
+        assertThat(parole.get("esterno")).containsEntry("singolare", "cliente");
+        assertThat(glossario.scelti()).containsOnlyKeys("pratica", "processo", "esterno");
+    }
 }
